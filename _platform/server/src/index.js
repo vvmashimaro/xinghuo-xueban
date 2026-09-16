@@ -8,7 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 
-const PORT = 8787;
+const PORT = Number(process.env.PORT) || 8787;
 const HOST = '0.0.0.0';
 
 const app = express();
