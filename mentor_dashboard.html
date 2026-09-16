@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火学伴 - 导师工作台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(14px);
+    }
+
+    /* 复选/单选选项字号加大 */
+    label:has(> input[type="checkbox"]),
+    label:has(> input[type="radio"]),
+    #spaceCheckboxes label {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    input[type="checkbox"] + span,
+    input[type="checkbox"] ~ span,
+    #spaceCheckboxes label span {
+      font-size: 16px !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
+
+  <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-teal-600/20 shrink-0">
+          <i class="fa-solid fa-chalkboard-user"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
+            <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">MENTOR-HUB</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 truncate">
+            <i class="fa-solid fa-circle-user text-teal-600 text-[11px]"></i>
+            <span class="font-bold text-slate-800" id="headerMentorName">导师</span>
+            <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 rounded font-medium truncate" id="headerMentorMeta">工作台</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" onclick="safeNavigate('index.html', '导师认证与建库')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer hidden sm:inline-flex items-center gap-1">
+          <i class="fa-solid fa-id-card text-teal-600 text-[11px]"></i>
+          <span>补件 / 重新建档</span>
+        </button>
+        <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
+          <i class="fa-solid fa-arrow-right-from-bracket text-slate-400"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="bg-gradient-to-r from-teal-50 via-slate-50 to-cyan-50 text-slate-800 px-4 py-5 sm:py-6 border-b border-teal-100 relative overflow-hidden">
+    <div class="absolute -right-28 -top-28 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="max-w-6xl mx-auto relative z-10 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-lg sm:text-xl font-black tracking-tight text-slate-900">导师工作台</h1>
+          <p class="text-xs text-slate-500 mt-1">审核进度 · 资料维护 · 约课申请箱</p>
+        </div>
+        <div id="heroStatusPill" class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+          审核状态加载中…
+        </div>
+      </div>
+      <div id="statusBanner" class="hidden rounded-2xl border px-4 py-3 text-xs leading-relaxed"></div>
+    </div>
+  </section>
+
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-5 sm:py-6 space-y-5">
+
+    <!-- 无档案空态 -->
+    <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-xl">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <h2 class="text-base font-black text-slate-900">尚未建立导师档案</h2>
+      <p class="text-xs text-slate-500 max-w-md mx-auto">请先完成 L1/L2 资质认证与入库申请。提交后可在此查看审核进度并维护资料。</p>
+      <button type="button" onclick="safeNavigate('index.html', '导师认证与建库')" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-teal-600/20 cursor-pointer">
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+        <span>前往认证建档</span>
+      </button>
+    </div>
+
+    <div id="dashboardBody" class="space-y-5">
+
+      <!-- 1. 审核状态 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
+          <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-check text-teal-600"></i>
+            审核状态
+          </h2>
+          <span id="auditStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">—</span>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="grid sm:grid-cols-3 gap-3 text-xs">
+            <div class="rounded-xl bg-teal-50/60 border border-teal-100 p-3">
+              <div class="text-[10px] text-slate-400 mb-0.5">档案编号</div>
+              <div id="auditCode" class="font-mono font-bold text-slate-800">—</div>
+            </div>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3">
+              <div class="text-[10px] text-slate-400 mb-0.5">提交时间</div>
+              <div id="auditSubmitTime" class="font-medium text-slate-800">—</div>
+            </div>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3">
+              <div class="text-[10px] text-slate-400 mb-0.5">教研评级</div>
+              <div id="auditGrade" class="font-medium text-slate-800">—</div>
+            </div>
+          </div>
+          <div id="auditCommentBox" class="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3 text-xs text-slate-600 leading-relaxed">
+            <span class="text-slate-400">审核意见：</span>
+            <span id="auditComment">暂无</span>
+          </div>
+          <div id="supplementEntry" class="hidden flex flex-wrap gap-2">
+            <button type="button" onclick="safeNavigate('index.html', '补件重填')" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl cursor-pointer inline-flex items-center gap-1.5">
+              <i class="fa-solid fa-cloud-arrow-up text-[11px]"></i>
+              进入补件 / 重填资料
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 资料维护 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
+          <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-user-pen text-teal-600"></i>
+            资料维护
+          </h2>
+          <span class="text-[10px] text-slate-400">非敏感字段可直接保存；敏感信息需申请变更</span>
+        </div>
+        <div class="p-4 sm:p-5 space-y-5">
+
+          <!-- 敏感只读 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold text-slate-700">敏感信息（只读）</h3>
+              <button type="button" id="btnRequestSensitiveChange" onclick="openSensitiveChangeModal()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg cursor-pointer">
+                申请变更
+              </button>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">真实姓名</label>
+                <input id="roRealName" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 cursor-not-allowed">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">身份证号</label>
+                <input id="roIdCard" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-mono cursor-not-allowed">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">学信网验证码</label>
+                <input id="roChsi" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-mono cursor-not-allowed">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">收款银行卡</label>
+                <input id="roBank" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-mono cursor-not-allowed">
+              </div>
+            </div>
+          </div>
+
+          <!-- 可编辑 -->
+          <div class="border-t border-slate-100 pt-4 space-y-4">
+            <h3 class="text-xs font-bold text-slate-700">可编辑服务画像</h3>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5">擅长学科（逗号分隔）</label>
+              <input id="edSubjects" type="text" placeholder="例：初中数学, 高中数学, 考研数学(一)" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1.5">期望时薪（元/小时）</label>
+                <input id="edHourlyRate" type="number" min="50" max="600" placeholder="例：135" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1.5">试讲 / 板书网盘链接</label>
+                <input id="edLectureUrl" type="url" placeholder="例：https://pan.baidu.com/s/示例链接" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5">教学风格标签（逗号分隔）</label>
+              <input id="edStyles" type="text" placeholder="例：引导启发解题, 大题压轴模型归纳" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            </div>
+
+            <div>
+              <div class="text-[10px] font-bold text-slate-500 mb-1.5">可约时段（主控 · 以周为循环）</div>
+              <div id="edAvailabilityPicker"></div>
+              <p class="text-[10px] text-slate-400 mt-1.5">按「每周循环」设置：先勾选周几，再仅为当天拖选半小时格。保存后家长预约「每周固定」时可见可约提示。此为唯一时段设置入口。</p>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5">偏好教学仓（可多选）</label>
+              <div id="spaceCheckboxes" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button type="button" onclick="saveProfileEdits()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-teal-600/15 cursor-pointer inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-floppy-disk text-[11px]"></i>
+                保存服务画像
+              </button>
+              <button type="button" onclick="reloadDashboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer">
+                重置未保存修改
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 约课申请箱 + 已完课 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
+          <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-inbox text-teal-600"></i>
+            约课申请箱
+          </h2>
+          <span id="inboxCountBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">0 待处理</span>
+        </div>
+        <div class="px-4 sm:px-5 pt-3 flex flex-wrap gap-1.5" id="mentorBookingFilterBar">
+          <button type="button" data-filter="all" onclick="setMentorBookingFilter('all', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
+          <button type="button" data-filter="pending" onclick="setMentorBookingFilter('pending', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
+          <button type="button" data-filter="accepted" onclick="setMentorBookingFilter('accepted', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
+          <button type="button" data-filter="completed" onclick="setMentorBookingFilter('completed', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
+          <button type="button" data-filter="declined" onclick="setMentorBookingFilter('declined', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
+        </div>
+        <div id="bookingInbox" class="p-4 sm:p-5 space-y-3">
+          <!-- 动态注入 -->
+        </div>
+        <div id="completedSessionsPanel" class="hidden border-t border-slate-100 px-4 sm:px-5 py-4 space-y-3 bg-emerald-50/30">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              已完课
+            </h3>
+            <span id="completedSessionsCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
+          </div>
+          <div id="completedSessionsList" class="space-y-2.5"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="w-full py-4 text-center text-[11px] text-slate-400 border-t border-slate-200 bg-white/60">
+    <p>© 2026 星火学伴 · 导师工作台 · 阳光合规课辅</p>
+  </footer>
+
+  <!-- 敏感变更确认模态 -->
+  <div id="sensitiveModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="sensitiveModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-900">申请变更敏感信息</h3>
+        <button type="button" onclick="closeSensitiveChangeModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+        <p>变更真实姓名、身份证、学信网验证码或银行卡后，档案将<strong class="text-amber-700">回退为「待审核」</strong>，需教研复审通过后方可再次接单展示。</p>
+        <div class="space-y-2">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更姓名</label>
+            <input id="sensRealName" type="text" placeholder="例：张若愚" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更身份证号</label>
+            <input id="sensIdCard" type="text" placeholder="例：510107************" maxlength="18" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更学信网验证码</label>
+            <input id="sensChsi" type="text" placeholder="例：A98F72KL50198821" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1">开户行</label>
+              <input id="sensBankName" type="text" placeholder="例：招商银行" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1">银行卡号</label>
+              <input id="sensBankCard" type="text" placeholder="例：621483********8000" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closeSensitiveChangeModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">取消</button>
+        <button type="button" onclick="submitSensitiveChange()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">确认申请变更</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 婉拒原因模态 -->
+  <div id="declineModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden" id="declineModalContent">
+      <div class="px-5 py-4 border-b border-slate-100">
+        <h3 class="text-sm font-black text-slate-900">婉拒约课申请</h3>
+        <p class="text-[11px] text-slate-500 mt-1">请填写原因，家长端将可见。</p>
+      </div>
+      <div class="px-5 py-4">
+        <textarea id="declineReasonInput" rows="3" placeholder="例：该时段已有排课，请改约周日下午" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400 resize-y"></textarea>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closeDeclineModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">取消</button>
+        <button type="button" onclick="confirmDeclineBooking()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white cursor-pointer">确认婉拒</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-[60] transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
+    <i class="fa-solid fa-circle-info text-teal-400 text-sm" id="toastIcon"></i>
+    <span id="toastMessage">已更新状态</span>
+  </div>
+
+  
+  <!-- 查看课后小结 -->
+  <div id="viewSummaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="viewSummaryModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>查看小结</h3>
+        <button type="button" onclick="closeViewSummaryModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-2.5">
+        <div id="viewSummaryMeta" class="text-[11px] text-slate-400"></div>
+        <h4 id="viewSummaryTitle" class="text-sm font-bold text-slate-900"></h4>
+        <div id="viewSummaryTags" class="flex flex-wrap gap-1.5"></div>
+        <div id="viewSummaryBody" class="rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap"></div>
+        <p id="viewSummaryTime" class="text-[10px] text-slate-400"></p>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button type="button" onclick="closeViewSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 确认结课 + 课后小结 -->
+  <div id="completeSessionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="completeSessionModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-teal-600"></i>确认结课 · 课后小结</h3>
+        <button type="button" onclick="closeCompleteSessionModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-3 text-xs text-slate-600">
+        <p class="text-[11px] text-slate-500 leading-relaxed">确认后进入 <strong class="text-teal-800">48 小时</strong> 无投诉划拨观察期。可同步填写课后小结供家长查看。</p>
+        <div id="completeSessionMeta" class="rounded-xl border border-teal-100 bg-teal-50/50 px-3 py-2 text-[11px] text-teal-900"></div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-1">小结标题（可选）</label>
+          <input id="summaryTitle" type="text" placeholder="例：二次函数最值专题复盘" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-1">课后小结 <span class="text-rose-500">*</span></label>
+          <textarea id="summaryContent" rows="4" placeholder="本课掌握情况、作业布置、下次建议…" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400 resize-y"></textarea>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-1.5">标签（可多选）</label>
+          <div class="flex flex-wrap gap-1.5" id="summaryTagBox">
+            <label class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="掌握情况" class="summary-tag hidden">掌握情况</label>
+            <label class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="作业" class="summary-tag hidden">作业</label>
+            <label class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="下次建议" class="summary-tag hidden">下次建议</label>
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closeCompleteSessionModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">取消</button>
+        <button type="button" onclick="confirmCompleteSession(false)" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-teal-200 text-teal-800 cursor-pointer">仅确认结课</button>
+        <button type="button" onclick="confirmCompleteSession(true)" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">结课并保存小结</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/config.js"></script>
+  <script src="js/storage-service.js"></script>
+  <script src="js/availability-picker.js"></script>
+
+    <script>
+    // 统一库 hydrate：页面脚本可 await StorageService.ready()
+    (function () {
+      if (window.StorageService && StorageService.hydrateFromServer) {
+        StorageService.hydrateFromServer();
+      }
+    })();
+    </script>
+
+  <script>
+    'use strict';
+
+    let CURRENT_MENTOR = null;
+    let pendingDeclineBookingId = null;
+
+    const STATUS_META = {
+      pending: { label: '待审核', pill: 'bg-amber-50 text-amber-800 border-amber-200', badge: 'bg-amber-50 text-amber-800 border border-amber-200', banner: 'border-amber-300 bg-amber-50 text-amber-900' },
+      supplement: { label: '需补件', pill: 'bg-orange-50 text-orange-800 border-orange-200', badge: 'bg-orange-50 text-orange-800 border border-orange-200', banner: 'border-orange-300 bg-orange-50 text-orange-900' },
+      approved: { label: '已入库', pill: 'bg-emerald-50 text-emerald-800 border-emerald-200', badge: 'bg-emerald-50 text-emerald-800 border border-emerald-200', banner: 'border-emerald-300 bg-emerald-50 text-emerald-900' },
+      rejected: { label: '已驳回', pill: 'bg-rose-50 text-rose-800 border-rose-200', badge: 'bg-rose-50 text-rose-800 border border-rose-200', banner: 'border-rose-300 bg-rose-50 text-rose-900' }
+    };
+
+    const BOOKING_STATUS_LABEL = {
+      pending_accept: { text: '待接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+      escrow_locked: { text: '待接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+      accepted: { text: '已接单', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+      declined: { text: '已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+    };
+
+    function maskIdCard(v) {
+      const s = String(v || '');
+      if (s.length < 8) return s || '—';
+      return s.slice(0, 4) + '**********' + s.slice(-4);
+    }
+    function maskBank(v) {
+      const s = String(v || '');
+      if (s.length < 8) return s || '—';
+      return s.slice(0, 4) + ' **** **** ' + s.slice(-4);
+    }
+    function splitList(raw) {
+      return String(raw || '')
+        .split(/[,，\n、]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    function safeNavigate(targetUrl, targetTitle) {
+      showToast('正在跳转至【' + (targetTitle || targetUrl) + '】...');
+      setTimeout(() => {
+        try { window.location.assign(targetUrl); } catch (e) {
+          try { window.location.href = targetUrl; } catch (_) {}
+        }
+      }, 400);
+    }
+
+    let toastTimer = null;
+    function showToast(message, type) {
+      type = type || 'success';
+      const toast = document.getElementById('toastNotification');
+      const toastText = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      toastText.innerText = message;
+      if (type === 'error') toastIcon.className = 'fa-solid fa-circle-xmark text-rose-400 text-sm';
+      else if (type === 'warning') toastIcon.className = 'fa-solid fa-triangle-exclamation text-amber-400 text-sm';
+      else toastIcon.className = 'fa-solid fa-circle-check text-teal-400 text-sm';
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2800);
+    }
+
+    function renderSpaceChecks(selected) {
+      const box = document.getElementById('spaceCheckboxes');
+      const opts = (window.StorageService && StorageService.SPACE_OPTIONS) || [
+        '青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'
+      ];
+      const sel = selected || [];
+      box.innerHTML = opts.map((name) => {
+        const checked = sel.indexOf(name) >= 0 ? 'checked' : '';
+        return '<label class="inline-flex items-center gap-1.5 text-base bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-teal-50 hover:border-teal-200">' +
+          '<input type="checkbox" class="space-pref-cb rounded text-teal-600 focus:ring-teal-500" value="' + name.replace(/"/g, '&quot;') + '" ' + checked + '>' +
+          '<span>' + name + '</span></label>';
+      }).join('');
+    }
+
+    function renderAudit(mentor) {
+      const st = mentor.status || 'pending';
+      const meta = STATUS_META[st] || STATUS_META.pending;
+      const pill = document.getElementById('heroStatusPill');
+      pill.className = 'text-[11px] font-bold px-3 py-1.5 rounded-full border ' + meta.pill;
+      pill.innerText = meta.label + (mentor.sensitiveChangePending ? ' · 敏感变更复审' : '');
+
+      const badge = document.getElementById('auditStatusBadge');
+      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full ' + meta.badge;
+      badge.innerText = meta.label;
+
+      document.getElementById('auditCode').innerText = mentor.code || mentor.id || '—';
+      document.getElementById('auditSubmitTime').innerText = mentor.submitTime || mentor.updatedAt || '—';
+      document.getElementById('auditGrade').innerText = mentor.evalGrade || '待教研评级';
+      document.getElementById('auditComment').innerText = mentor.reviewComment || '暂无审核意见';
+
+      const banner = document.getElementById('statusBanner');
+      banner.classList.remove('hidden');
+      banner.className = 'rounded-2xl border px-4 py-3 text-xs leading-relaxed ' + meta.banner;
+      if (st === 'approved' && !mentor.sensitiveChangePending) {
+        banner.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i>您已正式入库，可接单并维护服务画像。家长端可匹配到您的卡片。';
+      } else if (st === 'pending') {
+        banner.innerHTML = mentor.sensitiveChangePending
+          ? '<i class="fa-solid fa-rotate mr-1.5"></i>敏感信息变更申请已提交，档案回退为<strong>待审核</strong>，教研复审通过前暂停公开展示。'
+          : '<i class="fa-solid fa-hourglass-half mr-1.5"></i>入库申请审核中，预计 24 小时内完成。通过后即可在约课申请箱接单。';
+      } else if (st === 'supplement') {
+        banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1.5"></i>需补件：' + (mentor.reviewComment || '请完善证明材料与试讲链接') + '。请点击下方入口重新提交。';
+      } else if (st === 'rejected') {
+        banner.innerHTML = '<i class="fa-solid fa-ban mr-1.5"></i>申请未通过：' + (mentor.reviewComment || '不符合平台合规要求');
+      }
+
+      const supp = document.getElementById('supplementEntry');
+      if (st === 'supplement' || st === 'rejected') supp.classList.remove('hidden');
+      else supp.classList.add('hidden');
+    }
+
+    function renderProfileForm(mentor) {
+      document.getElementById('headerMentorName').innerText = (mentor.realName || '导师') + '老师';
+      document.getElementById('headerMentorMeta').innerText = (mentor.university || '') + (mentor.code ? ' · ' + mentor.code : '');
+
+      document.getElementById('roRealName').value = mentor.realName || '';
+      document.getElementById('roIdCard').value = maskIdCard(mentor.idCard);
+      document.getElementById('roChsi').value = mentor.chsiCode || '';
+      document.getElementById('roBank').value = (mentor.bankName ? mentor.bankName + ' ' : '') + maskBank(mentor.bankCardNumber);
+
+      document.getElementById('edSubjects').value = (mentor.subjects || []).join(', ');
+      document.getElementById('edHourlyRate').value = mentor.hourlyRate || '';
+      document.getElementById('edLectureUrl').value = mentor.lectureUrl || '';
+      document.getElementById('edStyles').value = (mentor.styles || []).join(', ');
+      mountAvailabilityPicker(mentor);
+      renderSpaceChecks(mentor.preferredSpaces || (mentor.spacePreference ? [mentor.spacePreference] : []));
+    }
+
+    let availabilityPickerApi = null;
+    function mountAvailabilityPicker(mentor) {
+      const el = document.getElementById('edAvailabilityPicker');
+      if (!el || !window.AvailabilityPicker) return;
+      if (availabilityPickerApi && availabilityPickerApi.destroy) {
+        try { availabilityPickerApi.destroy(); } catch (_) {}
+      }
+      const value = (mentor && mentor.availability && mentor.availability.length)
+        ? mentor.availability
+        : (StorageService.getMentorAvailability ? StorageService.getMentorAvailability(mentor.id) : []);
+      availabilityPickerApi = AvailabilityPicker.mount(el, { value: value });
+    }
+
+    function sessionStatusBadge(st) {
+      const map = {
+        scheduled: { text: '已排课', cls: 'bg-slate-50 text-slate-600 border-slate-200' },
+        completed: { text: '已结课', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        leave_pending: { text: '请假待确认', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+        leave_approved: { text: '已批准请假', cls: 'bg-sky-50 text-sky-800 border-sky-200' },
+        leave_too_late: { text: '请假过晚', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
+        cancelled: { text: '已取消', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
+      };
+      return map[st] || { text: st || '—', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+    }
+
+    function mentorConfirmLeave(bookingId, sessionId, approve) {
+      const res = StorageService.confirmSessionLeave(bookingId, sessionId, approve !== false);
+      if (res && res.ok) {
+        showToast(approve === false ? '已驳回请假，课次恢复' : '已确认请假（提前一日规则已校验）');
+      } else {
+        showToast((res && res.error) || '操作失败', 'warning');
+      }
+      if (CURRENT_MENTOR) renderInbox(CURRENT_MENTOR);
+    }
+
+    let pendingComplete = null;
+
+    function openCompleteSessionModal(bookingId, sessionId) {
+      pendingComplete = { bookingId: bookingId, sessionId: sessionId };
+      const booking = StorageService.getBookingById(bookingId);
+      const b = booking ? (StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(booking) : booking) : null;
+      const session = b && (b.sessions || []).find((s) => s.id === sessionId);
+      const meta = document.getElementById('completeSessionMeta');
+      if (meta) {
+        meta.innerText = (b ? ((b.studentNickname || '学员') + ' · ' + (b.subject || '')) : '') +
+          (session ? (' · ' + (session.date || '') + ' ' + (session.timeLabel || session.timeStart || '')) : '');
+      }
+      document.getElementById('summaryTitle').value = '';
+      document.getElementById('summaryContent').value = '';
+      Array.prototype.forEach.call(document.querySelectorAll('.summary-tag'), function (el) { el.checked = false; });
+      const modal = document.getElementById('completeSessionModal');
+      const content = document.getElementById('completeSessionModalContent');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+    }
+
+    function closeCompleteSessionModal() {
+      const modal = document.getElementById('completeSessionModal');
+      const content = document.getElementById('completeSessionModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+      pendingComplete = null;
+    }
+
+    function confirmCompleteSession(withSummary) {
+      if (!pendingComplete || !CURRENT_MENTOR) return;
+      const { bookingId, sessionId, editOnly } = pendingComplete;
+      const content = (document.getElementById('summaryContent').value || '').trim();
+      const tags = Array.from(document.querySelectorAll('.summary-tag:checked')).map((el) => el.value);
+      const classSummary = {
+        title: (document.getElementById('summaryTitle').value || '').trim(),
+        content: content,
+        tags: tags,
+        mentorId: CURRENT_MENTOR.id
+      };
+      if (editOnly) {
+        if (!content) { showToast('请填写课后小结内容', 'warning'); return; }
+        const res = StorageService.saveClassSummary(bookingId, sessionId, classSummary, CURRENT_MENTOR.id);
+        closeCompleteSessionModal();
+        showToast(res && res.ok ? '课后小结已更新' : ((res && res.error) || '保存失败'), res && res.ok ? 'success' : 'warning');
+        renderInbox(CURRENT_MENTOR);
+        return;
+      }
+      if (withSummary && !content) {
+        showToast('请填写课后小结内容，或选择「仅确认结课」', 'warning');
+        return;
+      }
+      const res = StorageService.completeSession(bookingId, sessionId, {
+        completedBy: 'mentor',
+        mentorId: CURRENT_MENTOR.id,
+        classSummary: withSummary ? classSummary : null
+      });
+      closeCompleteSessionModal();
+      if (res && res.ok) {
+        showToast(withSummary ? '已确认结课并保存小结 · 进入 48h 观察期' : '已确认结课 · 进入 48 小时无投诉划拨观察期');
+      } else {
+        showToast((res && res.error) || '结课失败', 'warning');
+      }
+      renderInbox(CURRENT_MENTOR);
+    }
+
+    function markSessionCompletedFromMentor(bookingId, sessionId) {
+      openCompleteSessionModal(bookingId, sessionId);
+    }
+
+    function openEditSummaryModal(bookingId, sessionId) {
+      pendingComplete = { bookingId: bookingId, sessionId: sessionId, editOnly: true };
+      const summary = StorageService.getClassSummary(bookingId, sessionId);
+      document.getElementById('summaryTitle').value = (summary && summary.title) || '';
+      document.getElementById('summaryContent').value = (summary && summary.content) || '';
+      const tagSet = {};
+      ((summary && summary.tags) || []).forEach((t) => { tagSet[t] = true; });
+      Array.prototype.forEach.call(document.querySelectorAll('.summary-tag'), function (el) {
+        el.checked = !!tagSet[el.value];
+      });
+      const booking = StorageService.getBookingById(bookingId);
+      const meta = document.getElementById('completeSessionMeta');
+      if (meta) meta.innerText = '编辑课后小结 · ' + ((booking && booking.studentNickname) || '');
+      const modal = document.getElementById('completeSessionModal');
+      const content = document.getElementById('completeSessionModalContent');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+      // override confirm for edit-only via flag — handled in confirmCompleteSession if already completed
+    }
+
+    function mentorRequestLeave(bookingId, sessionId) {
+      const res = StorageService.requestSessionLeave(bookingId, sessionId, 'mentor');
+      if (res && res.ok) showToast('已代为提交请假（待确认）');
+      else showToast((res && res.error) || '请假失败', 'warning');
+      if (CURRENT_MENTOR) renderInbox(CURRENT_MENTOR);
+    }
+
+    let mentorBookingFilter = 'all';
+
+    function setMentorBookingFilter(key, btn) {
+      mentorBookingFilter = key || 'all';
+      Array.prototype.forEach.call(document.querySelectorAll('.mentor-bk-filter'), function (el) {
+        const on = el.getAttribute('data-filter') === mentorBookingFilter;
+        el.className = 'mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
+          (on ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50');
+      });
+      if (CURRENT_MENTOR) renderInbox(CURRENT_MENTOR);
+    }
+
+    function collectCompletedSessions(list) {
+      if (window.StorageService && StorageService.collectCompletedSessions) {
+        return StorageService.collectCompletedSessions(list);
+      }
+      const rows = [];
+      (list || []).forEach(function (raw) {
+        const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
+        (b.sessions || []).forEach(function (s) {
+          if (s && s.status === 'completed') rows.push({ booking: b, session: s });
+        });
+      });
+      rows.sort(function (a, b) {
+        return String(b.session.completedAt || b.session.date || '').localeCompare(String(a.session.completedAt || a.session.date || ''));
+      });
+      return rows;
+    }
+
+    function openViewSummaryModal(bookingId, sessionId) {
+      const summary = StorageService.getClassSummary(bookingId, sessionId);
+      const booking = StorageService.getBookingById(bookingId);
+      const b = booking ? (StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(booking) : booking) : null;
+      const session = b && (b.sessions || []).find(function (s) { return s.id === sessionId; });
+      document.getElementById('viewSummaryMeta').innerText =
+        ((b && (b.studentNickname || b.parentName)) || '学员') + ' · ' + ((b && b.subject) || '') +
+        (session ? (' · ' + (session.date || '') + ' ' + (session.timeLabel || '')) : '');
+      document.getElementById('viewSummaryTitle').innerText = (summary && summary.title) || '课后小结';
+      const tags = (summary && summary.tags) || [];
+      document.getElementById('viewSummaryTags').innerHTML = tags.map(function (t) {
+        return '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">' + escapeHtml(t) + '</span>';
+      }).join('') || '<span class="text-[10px] text-slate-400">无标签</span>';
+      document.getElementById('viewSummaryBody').innerText = (summary && summary.content) || '（暂无内容）';
+      document.getElementById('viewSummaryTime').innerText = (summary && summary.createdAt) ? ('填写于 ' + summary.createdAt) : '';
+      const modal = document.getElementById('viewSummaryModal');
+      const content = document.getElementById('viewSummaryModalContent');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(function () {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+    }
+
+    function closeViewSummaryModal() {
+      const modal = document.getElementById('viewSummaryModal');
+      const content = document.getElementById('viewSummaryModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(function () { modal.classList.add('hidden'); }, 200);
+    }
+
+    function renderCompletedSessionsPanel(list) {
+      const panel = document.getElementById('completedSessionsPanel');
+      const box = document.getElementById('completedSessionsList');
+      const countEl = document.getElementById('completedSessionsCount');
+      if (!panel || !box) return;
+      const rows = collectCompletedSessions(list);
+      if (countEl) countEl.innerText = String(rows.length);
+      if (!rows.length) {
+        if (mentorBookingFilter === 'completed') {
+          panel.classList.remove('hidden');
+          box.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">暂无已完课记录</div>';
+        } else {
+          panel.classList.add('hidden');
+          box.innerHTML = '';
+        }
+        return;
+      }
+      if (mentorBookingFilter === 'all' || mentorBookingFilter === 'completed') panel.classList.remove('hidden');
+      else panel.classList.add('hidden');
+      box.innerHTML = rows.map(function (row) {
+        const b = row.booking;
+        const s = row.session;
+        const escrow = s.escrowStatus === 'released'
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
+        const sumBtn = s.classSummary
+          ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
+          : '<span class="text-[10px] text-slate-400">暂无小结</span>';
+        const typePill = b.type === 'weekly'
+          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+          : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>';
+        return '<div class="rounded-xl border border-emerald-100 bg-white p-3 space-y-1.5">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div class="min-w-0 space-y-0.5">' +
+              '<div class="flex items-center gap-1.5 flex-wrap">' +
+                '<span class="text-sm font-bold text-slate-900">' + escapeHtml(b.studentNickname || '学员') + '</span>' +
+                typePill +
+                '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
+              '</div>' +
+              '<div class="text-[11px] text-slate-500">' + escapeHtml(b.subject || '') + ' · 家长 ' + escapeHtml(b.parentName || '—') + '</div>' +
+              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
+                escapeHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</div>' +
+            '</div>' +
+            '<div class="flex flex-col items-end gap-1.5 shrink-0">' + escrow + sumBtn + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderInbox(mentor) {
+      try { StorageService.processEscrowReleases && StorageService.processEscrowReleases(); } catch (_) {}
+      const list = StorageService.getBookingsForMentor(mentor.id);
+      const pending = list.filter((b) => b.status === 'pending_accept' || b.status === 'escrow_locked');
+      const leavePendingCount = list.reduce((n, b) => n + ((b.sessions || []).filter((s) => s.status === 'leave_pending').length), 0);
+      const completedCount = collectCompletedSessions(list).length;
+      document.getElementById('inboxCountBadge').innerText = pending.length + ' 待处理' + (leavePendingCount ? ' · ' + leavePendingCount + ' 请假' : '') + (completedCount ? ' · ' + completedCount + ' 已完课' : '');
+
+      renderCompletedSessionsPanel(list);
+
+      const box = document.getElementById('bookingInbox');
+      if (mentorBookingFilter === 'completed') {
+        box.innerHTML = '<div class="text-[11px] text-slate-400 text-center py-2">下方「已完课」面板展示结课明细</div>';
+        return;
+      }
+
+      let filtered = list.slice();
+      if (mentorBookingFilter === 'pending') {
+        filtered = list.filter((b) => b.status === 'pending_accept' || b.status === 'escrow_locked');
+      } else if (mentorBookingFilter === 'accepted') {
+        filtered = list.filter((b) => b.status === 'accepted');
+      } else if (mentorBookingFilter === 'declined') {
+        filtered = list.filter((b) => b.status === 'declined');
+      }
+
+      if (!list.length) {
+        box.innerHTML = '<div class="text-center py-8 text-xs text-slate-400"><i class="fa-regular fa-inbox text-2xl mb-2 block text-slate-300"></i>暂无约课申请。家长预约后将出现在此处。</div>';
+        return;
+      }
+      if (!filtered.length) {
+        box.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">该状态下暂无约课</div>';
+        return;
+      }
+
+      box.innerHTML = filtered.map((raw) => {
+        const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
+        const st = BOOKING_STATUS_LABEL[b.status] || { text: b.status, cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+        const canAct = b.status === 'pending_accept' || b.status === 'escrow_locked';
+        const isWeekly = b.type === 'weekly';
+        const typePill = isWeekly
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>';
+        const actions = canAct
+          ? '<div class="flex flex-wrap gap-2 mt-3">' +
+              '<button type="button" onclick="acceptBooking(\'' + b.id + '\')" class="text-[11px] font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-check"></i>接单</button>' +
+              '<button type="button" onclick="openDeclineModal(\'' + b.id + '\')" class="text-[11px] font-bold bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i>婉拒</button>' +
+            '</div>'
+          : (b.status === 'declined' && b.declineReason
+            ? '<div class="mt-2 text-[11px] text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-2.5 py-1.5">婉拒原因：' + escapeHtml(b.declineReason) + '</div>'
+            : (b.status === 'accepted'
+              ? '<div class="mt-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单 · 家长端可开启 IoT 通行凭证 · 结课后 48h 划拨</div>'
+              : ''));
+
+        let sessionsHtml = '';
+        if (Array.isArray(b.sessions) && b.sessions.length) {
+          sessionsHtml = '<div class="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2">' +
+            (isWeekly ? '<div class="text-[10px] font-bold text-teal-800 mb-1">每周系列课次 · 费用已提前冻结</div>' : '') +
+            b.sessions.map((s) => {
+              const sb = sessionStatusBadge(s.status);
+              let leaveActs = '';
+              if (s.status === 'leave_pending') {
+                leaveActs = '<button type="button" onclick="mentorConfirmLeave(\'' + b.id + '\',\'' + s.id + '\',true)" class="text-[10px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-2 py-0.5 rounded-lg cursor-pointer">确认请假</button>' +
+                  '<button type="button" onclick="mentorConfirmLeave(\'' + b.id + '\',\'' + s.id + '\',false)" class="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">驳回</button>';
+              } else if (s.status === 'scheduled' && b.status === 'accepted') {
+                leaveActs = '<button type="button" onclick="mentorRequestLeave(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">代请假</button>' +
+                  '<button type="button" onclick="markSessionCompletedFromMentor(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">确认结课</button>';
+              } else if (s.status === 'completed') {
+                leaveActs = (s.classSummary
+                  ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>' +
+                    '<button type="button" onclick="openEditSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">编辑小结</button>'
+                  : '<button type="button" onclick="openEditSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">补写小结</button>');
+              }
+              const escrow = s.escrowStatus === 'released'
+                ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
+                : (s.status === 'completed' ? '<span class="text-[10px] text-amber-700">48h观察中</span>' : '<span class="text-[10px] text-slate-400">冻结中</span>');
+              const sumHint = s.classSummary
+                ? '<div class="w-full text-[10px] text-slate-500 mt-0.5 truncate">小结：' + escapeHtml((s.classSummary.title ? s.classSummary.title + ' · ' : '') + (s.classSummary.content || '').slice(0, 40)) + '</div>'
+                : '';
+              return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
+                '<div class="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">' +
+                  '<span class="font-medium text-slate-800">' + escapeHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</span>' +
+                  '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border ' + sb.cls + '">' + sb.text + '</span>' +
+                  sumHint +
+                '</div>' +
+                '<div class="flex items-center gap-1.5">' + escrow + leaveActs + '</div>' +
+              '</div>';
+            }).join('') + '</div>';
+        }
+
+        return '<div class="rounded-2xl border border-slate-200 bg-teal-50/30 p-3.5 sm:p-4">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div class="space-y-1 min-w-0">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="text-sm font-bold text-slate-900">' + escapeHtml(b.studentNickname || '学员') + '</span>' +
+                typePill +
+                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+              '</div>' +
+              '<div class="text-[11px] text-slate-500">' +
+                escapeHtml(b.studentGrade || '年级待填') + ' · ' + escapeHtml(b.subject || '学科待定') +
+              '</div>' +
+            '</div>' +
+            '<div class="text-right shrink-0">' +
+              '<div class="text-sm font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
+              '<div class="text-[10px] text-slate-400">' + (isWeekly ? '系列包冻结' : '托管锁定') + ' · ' + (b.hours || 2) + 'h' + (isWeekly && b.sessionCount ? ' ×' + b.sessionCount : '') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mt-2.5 grid sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600">' +
+            '<div><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + escapeHtml(b.space || '—') + '</div>' +
+            '<div><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' + escapeHtml(b.schedule || b.timeSlot || '—') + '</div>' +
+            '<div class="sm:col-span-2 text-slate-400">家长：' + escapeHtml(b.parentName || '—') + (b.createdAt ? ' · 申请于 ' + escapeHtml(b.createdAt) : '') + '</div>' +
+          '</div>' +
+          sessionsHtml +
+          actions +
+        '</div>';
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function saveProfileEdits() {
+      if (!CURRENT_MENTOR) return;
+      const subjects = splitList(document.getElementById('edSubjects').value);
+      const styles = splitList(document.getElementById('edStyles').value);
+      const availability = (availabilityPickerApi && availabilityPickerApi.getValue)
+        ? availabilityPickerApi.getValue()
+        : (CURRENT_MENTOR.availability || []);
+      const rate = parseInt(document.getElementById('edHourlyRate').value, 10);
+      const lectureUrl = document.getElementById('edLectureUrl').value.trim();
+      const preferredSpaces = Array.from(document.querySelectorAll('.space-pref-cb:checked')).map((el) => el.value);
+
+      if (!subjects.length) {
+        showToast('请至少填写一门擅长学科', 'warning');
+        return;
+      }
+      if (!rate || rate < 50) {
+        showToast('请填写合理时薪（建议 ≥ 50）', 'warning');
+        return;
+      }
+
+      const updated = StorageService.setMentorAvailability
+        ? StorageService.setMentorAvailability(CURRENT_MENTOR.id, availability)
+        : CURRENT_MENTOR;
+      const updated2 = StorageService.updateMentorProfile(CURRENT_MENTOR.id, {
+        subjects: subjects,
+        styles: styles.length ? styles : ['引导启发解题'],
+        availability: availability,
+        hourlyRate: rate,
+        lectureUrl: lectureUrl,
+        preferredSpaces: preferredSpaces.length ? preferredSpaces : [StorageService.SPACE_OPTIONS[0]],
+        spacePreference: (preferredSpaces[0] || CURRENT_MENTOR.spacePreference)
+      }, { sensitiveChange: false });
+      const updatedFinal = updated2 || updated;
+
+      CURRENT_MENTOR = updatedFinal;
+      showToast('服务画像已保存');
+      renderAudit(CURRENT_MENTOR);
+      renderProfileForm(CURRENT_MENTOR);
+    }
+
+    function openSensitiveChangeModal() {
+      if (!CURRENT_MENTOR) return;
+      document.getElementById('sensRealName').value = CURRENT_MENTOR.realName || '';
+      document.getElementById('sensIdCard').value = CURRENT_MENTOR.idCard || '';
+      document.getElementById('sensChsi').value = CURRENT_MENTOR.chsiCode || '';
+      document.getElementById('sensBankName').value = CURRENT_MENTOR.bankName || '';
+      document.getElementById('sensBankCard').value = CURRENT_MENTOR.bankCardNumber || '';
+      const modal = document.getElementById('sensitiveModal');
+      const content = document.getElementById('sensitiveModalContent');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+    }
+
+    function closeSensitiveChangeModal() {
+      const modal = document.getElementById('sensitiveModal');
+      const content = document.getElementById('sensitiveModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function submitSensitiveChange() {
+      if (!CURRENT_MENTOR) return;
+      const realName = document.getElementById('sensRealName').value.trim();
+      const idCard = document.getElementById('sensIdCard').value.trim();
+      const chsiCode = document.getElementById('sensChsi').value.trim();
+      const bankName = document.getElementById('sensBankName').value.trim();
+      const bankCardNumber = document.getElementById('sensBankCard').value.trim();
+      if (!realName || idCard.length < 15) {
+        showToast('请填写有效姓名与身份证号', 'warning');
+        return;
+      }
+      if (!chsiCode || chsiCode.length < 10) {
+        showToast('请填写有效学信网验证码', 'warning');
+        return;
+      }
+      if (!bankCardNumber || bankCardNumber.length < 16) {
+        showToast('请填写 16-19 位借记卡号', 'warning');
+        return;
+      }
+      CURRENT_MENTOR = StorageService.updateMentorProfile(CURRENT_MENTOR.id, {
+        realName: realName,
+        idCard: idCard,
+        chsiCode: chsiCode,
+        bankName: bankName || '招商银行',
+        bankCardNumber: bankCardNumber
+      }, { sensitiveChange: true });
+      closeSensitiveChangeModal();
+      showToast('敏感变更已提交，档案回退待审核', 'warning');
+      renderAudit(CURRENT_MENTOR);
+      renderProfileForm(CURRENT_MENTOR);
+    }
+
+    function acceptBooking(id) {
+      const updated = StorageService.respondToBooking(id, { accept: true });
+      if (!updated) {
+        showToast('未找到该约课申请', 'error');
+        return;
+      }
+      showToast('已接单 · 家长端可开启通行凭证');
+      renderInbox(CURRENT_MENTOR);
+    }
+
+    function openDeclineModal(id) {
+      pendingDeclineBookingId = id;
+      document.getElementById('declineReasonInput').value = '';
+      const modal = document.getElementById('declineModal');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => modal.classList.remove('opacity-0'));
+    }
+
+    function closeDeclineModal() {
+      const modal = document.getElementById('declineModal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+      pendingDeclineBookingId = null;
+    }
+
+    function confirmDeclineBooking() {
+      if (!pendingDeclineBookingId) return;
+      const reason = document.getElementById('declineReasonInput').value.trim();
+      if (!reason || reason.length < 2) {
+        showToast('请填写婉拒原因', 'warning');
+        return;
+      }
+      StorageService.respondToBooking(pendingDeclineBookingId, { decline: true, reason: reason });
+      closeDeclineModal();
+      showToast('已婉拒，原因将对家长可见', 'warning');
+      renderInbox(CURRENT_MENTOR);
+    }
+
+    function reloadDashboard() {
+      initDashboard();
+      showToast('已刷新工作台数据');
+    }
+
+    async function initDashboard() {
+      if (!window.StorageService) {
+        document.getElementById('emptyState').classList.remove('hidden');
+        document.getElementById('dashboardBody').classList.add('hidden');
+        return;
+      }
+      if (StorageService.ready) await StorageService.ready();
+      StorageService.seedIfEmpty();
+      CURRENT_MENTOR = StorageService.getCurrentMentor();
+      // 若会话无导师但有手机号，再试一次
+      if (!CURRENT_MENTOR) {
+        const session = StorageService.getSession();
+        if (session && session.phone) {
+          CURRENT_MENTOR = StorageService.getMentorByPhone(session.phone);
+          if (CURRENT_MENTOR) {
+            StorageService.setSession(Object.assign({}, session, {
+              role: 'mentor',
+              mentorId: CURRENT_MENTOR.id,
+              phone: CURRENT_MENTOR.phone
+            }));
+          }
+        }
+      }
+
+      if (!CURRENT_MENTOR) {
+        document.getElementById('emptyState').classList.remove('hidden');
+        document.getElementById('dashboardBody').classList.add('hidden');
+        document.getElementById('statusBanner').classList.add('hidden');
+        document.getElementById('heroStatusPill').innerText = '未建档';
+        return;
+      }
+
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('dashboardBody').classList.remove('hidden');
+      renderAudit(CURRENT_MENTOR);
+      renderProfileForm(CURRENT_MENTOR);
+      renderInbox(CURRENT_MENTOR);
+    }
+
+    window.onload = initDashboard;
+  </script>
+</body>
+</html>

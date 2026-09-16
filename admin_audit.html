@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火导师智库 - 管理端入库资质审核工作台</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+    }
+    .status-badge-pending { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .status-badge-approved { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+    .status-badge-rejected { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .status-badge-supplement { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+  
+    /* 复选/单选选项字号加大，便于阅读 */
+    label:has(> input[type="checkbox"]),
+    label:has(> input[type="radio"]),
+    label.subject-tag,
+    .opt-chip-label,
+    .filter-tab {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    label:has(> input[type="checkbox"]) span,
+    label:has(> input[type="radio"]) span,
+    label.subject-tag span {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    input[type="checkbox"] + span,
+    input[type="checkbox"] ~ span {
+      font-size: 16px !important;
+      line-height: 1.45;
+    }
+    #subjectCheckboxGroup label {
+      font-size: 16px !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- 顶部系统导航栏 -->
+  <header class="sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-400 text-slate-900 flex items-center justify-center font-black text-lg shadow-md shadow-teal-500/20">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-black text-white text-base tracking-tight">星火学伴 · 导师智库管理中心</span>
+            <span class="text-[10px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded border border-teal-500/30 font-mono">B-END V3.4</span>
+          </div>
+          <span class="text-[11px] text-slate-400 font-medium block">L1 准入合规硬排查 · L2 试讲能力画像教研评审</span>
+        </div>
+      </div>
+
+      <!-- 快速功能区与审核员身份 -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-300">学信网 API 直连正常</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-slate-300">公安实名认证通畅</span>
+        </div>
+
+        <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1.5 rounded-xl transition cursor-pointer">
+          <i class="fa-solid fa-right-to-bracket mr-1"></i>登录
+        </button>
+        <button type="button" onclick="safeNavigate('mentor_dashboard.html', '导师工作台')" class="hidden sm:inline-flex text-xs text-teal-200 hover:text-white bg-teal-600/20 hover:bg-teal-600/40 border border-teal-500/30 px-2.5 py-1.5 rounded-xl transition cursor-pointer items-center gap-1">
+          <i class="fa-solid fa-chalkboard-user text-[10px]"></i>
+          <span>导师工作台</span>
+        </button>
+        <button type="button" onclick="safeNavigate('parent_dashboard.html', '家长主控台')" class="hidden sm:inline-flex text-xs text-teal-200 hover:text-white bg-teal-600/20 hover:bg-teal-600/40 border border-teal-500/30 px-2.5 py-1.5 rounded-xl transition cursor-pointer items-center gap-1">
+          <i class="fa-solid fa-house-user"></i><span>家长端</span>
+        </button>
+        <div class="flex items-center gap-2 pl-2 border-l border-slate-700">
+          <div class="w-8 h-8 rounded-full bg-teal-800 text-teal-200 border border-teal-500/40 flex items-center justify-center font-bold text-xs">
+            审
+          </div>
+          <div class="text-left text-xs hidden md:block">
+            <div class="text-slate-200 font-semibold leading-tight">教研风控组-04号</div>
+            <div class="text-slate-400 text-[10px]">高级审核员</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 核心指标状态横条 -->
+  <section class="bg-white border-b border-slate-200 py-3 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-slate-500 font-medium">待审核队列</div>
+            <div class="text-xl font-black text-amber-600" id="statPendingCount">4 <span class="text-xs font-normal text-slate-400">人</span></div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-slate-500 font-medium">今日已入库通过</div>
+            <div class="text-xl font-black text-teal-700" id="statApprovedCount">18 <span class="text-xs font-normal text-slate-400">人</span></div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-slate-500 font-medium">红线拦截/违规率</div>
+            <div class="text-xl font-black text-rose-600">1.8% <span class="text-xs font-normal text-slate-400">公校排查</span></div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-slate-500 font-medium">平均申报时薪</div>
+            <div class="text-xl font-black text-slate-800">¥138 <span class="text-xs font-normal text-slate-400">/小时</span></div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 工作台视图切换：导师审核 / 已完课监管 -->
+  <section class="bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-2">
+      <span class="text-[10px] font-bold text-slate-500 mr-1">工作台</span>
+      <button type="button" id="adminViewAuditBtn" onclick="setAdminWorkbenchView('audit')" class="admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-slate-900 text-white border-slate-900 cursor-pointer">导师审核</button>
+      <button type="button" id="adminViewCompletedBtn" onclick="setAdminWorkbenchView('completed')" class="admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课监管</button>
+      <span id="adminCompletedStatHint" class="text-[10px] text-slate-400 ml-auto">平台级已完课只读视图 · 与家长/导师共用种子</span>
+    </div>
+  </section>
+
+  <!-- 已完课监管面板（与 StorageService 种子 / API db 同源） -->
+  <section id="adminCompletedSection" class="hidden max-w-7xl mx-auto px-4 sm:px-6 py-5 flex-1 w-full">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-4 sm:px-5 py-3.5 border-b border-emerald-100 bg-emerald-50/40 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm font-black text-emerald-900 flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            已完课监管
+          </h2>
+          <p class="text-[10px] text-slate-500 mt-0.5">展示平台已完课课次（导师 · 家长 · 学科 · 日期 · 托管划拨 · 小结摘要）</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="adminCompletedCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
+          <button type="button" onclick="renderAdminCompletedSessions()" class="text-[11px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg cursor-pointer">刷新</button>
+        </div>
+      </div>
+      <div id="adminCompletedList" class="p-4 sm:p-5 space-y-2.5 max-h-[calc(100vh-260px)] overflow-y-auto">
+        <div class="text-center py-8 text-xs text-slate-400">加载中…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主工作台：左侧导师列表与筛选 + 右侧深度审核核验区 -->
+  <main id="adminAuditMain" class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex-1 w-full">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- 左侧：待审列表与检索过滤区 (占 5 列) -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+          <!-- 检索栏 -->
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+            <input type="text" id="searchInput" oninput="filterApplicants()" placeholder="搜索姓名、高校、手机、学科或编号..." class="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+            <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          </div>
+
+          <!-- 状态 Filter 胶囊标签 -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <button onclick="setFilterStatus('all')" class="filter-tab px-3 py-1.5 rounded-lg font-medium transition bg-slate-900 text-white" data-status="all">全部 (7)</button>
+            <button onclick="setFilterStatus('pending')" class="filter-tab px-3 py-1.5 rounded-lg font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-status="pending">待初审 (4)</button>
+            <button onclick="setFilterStatus('approved')" class="filter-tab px-3 py-1.5 rounded-lg font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-status="approved">已入库 (2)</button>
+            <button onclick="setFilterStatus('supplement')" class="filter-tab px-3 py-1.5 rounded-lg font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-status="supplement">待补件 (1)</button>
+          </div>
+        </div>
+
+        <!-- 申请卡片滚动容器 -->
+        <div class="space-y-2.5 max-h-[calc(100vh-270px)] overflow-y-auto pr-1" id="applicantListContainer">
+          <!-- 动态注入候选导师简道列表项 -->
+        </div>
+      </div>
+
+      <!-- 右侧：选定导师资料全景核验与教研决策台 (占 7 列) -->
+      <div class="lg:col-span-7" id="auditDetailPanel">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[600px]">
+
+          <!-- 顶部状态横幅与操作快捷条 -->
+          <div class="bg-gradient-to-r from-teal-50 via-slate-50 to-cyan-50 p-4 text-slate-800 border-b border-teal-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 text-white font-black text-xl flex items-center justify-center border-2 border-white shadow-md" id="detailAvatar">
+                张
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base font-black tracking-tight" id="detailRealName">张若愚</h2>
+                  <span class="text-xs text-teal-700 font-mono" id="detailMaskedName">(张老师)</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold" id="detailStatusBadge">待初审</span>
+                </div>
+                <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                  <span id="detailUniversity">四川大学</span>
+                  <span>·</span>
+                  <span id="detailDegree">硕士研究生在读</span>
+                  <span>·</span>
+                  <span class="font-mono text-slate-400" id="detailCode">CD-2026-8809</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 决策响应时间提示 -->
+            <div class="text-right text-xs">
+              <div class="text-slate-400 text-[10px]">提交时间</div>
+              <div class="font-mono text-slate-200" id="detailSubmitTime">2026-09-09 18:24</div>
+            </div>
+          </div>
+
+          <!-- 核心核验内容主区 -->
+          <div class="p-5 space-y-6 flex-1 overflow-y-auto max-h-[calc(100vh-340px)]">
+
+            <!-- ===================== 模块一：L1 合规与身份红线排查 ===================== -->
+            <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3.5">
+              <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-4 bg-teal-600 rounded-sm"></span>
+                  <h3 class="text-xs font-black text-slate-900 uppercase tracking-wide">L1 基础实名与监管红线核验</h3>
+                </div>
+                <span class="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded font-semibold border border-teal-200">学信网 API 联调</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <!-- 真实身份证核验 -->
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                  <div class="text-[10px] text-slate-400 mb-1 flex items-center justify-between">
+                    <span>居民身份证实名 (公安接口)</span>
+                    <span class="text-emerald-600 font-semibold flex items-center gap-1">
+                      <i class="fa-solid fa-circle-check text-[10px]"></i> 比对一致
+                    </span>
+                  </div>
+                  <div class="font-mono font-bold text-slate-800" id="detailIdCard">51010720020815****</div>
+                  <div class="text-[10px] text-slate-500 mt-1">关联手机号：<span class="font-mono" id="detailPhone">18628009821</span></div>
+                </div>
+
+                <!-- 学信网在线核验报告 -->
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                  <div class="text-[10px] text-slate-400 mb-1 flex items-center justify-between">
+                    <span>学信网学籍验证码 (16位)</span>
+                    <span class="text-teal-700 font-semibold flex items-center gap-1" id="chsiStatusTag">
+                      <i class="fa-solid fa-shield-check text-[10px]"></i> 验证有效
+                    </span>
+                  </div>
+                  <div class="font-mono font-bold text-teal-900" id="detailChsiCode">A98F72KL50198821</div>
+                  <div class="text-[10px] text-slate-500 mt-1 truncate" id="detailChsiMajor">学籍状态：在籍 (应用数学专业 · 硕士)</div>
+                </div>
+              </div>
+
+              <!-- 公立校在职教师禁入承诺核验 -->
+              <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-start justify-between gap-2">
+                <div class="space-y-1">
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-contract text-teal-600"></i>
+                    <span>公立中小学在职教师红线排查</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 leading-relaxed">
+                    申请人已全选签署《非在职编制教师合规承诺书》，全国教师资格系统社保交叉比对未发现公办在岗代课记录。
+                  </p>
+                </div>
+                <span class="shrink-0 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-semibold">
+                  红线合规通过
+                </span>
+              </div>
+            </div>
+
+            <!-- ===================== 模块二：L2 能力画像与试讲评审 ===================== -->
+            <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3.5">
+              <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-4 bg-teal-600 rounded-sm"></span>
+                  <h3 class="text-xs font-black text-slate-900 uppercase tracking-wide">L2 辅导能力画像与资历佐证链</h3>
+                </div>
+                <span class="text-[10px] text-slate-400 font-medium">双一流/省市竞赛加权</span>
+              </div>
+
+              <!-- 申报学科与自主时薪比对 -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                  <span class="text-[10px] text-slate-400 block mb-1.5">申报主讲学段与学科</span>
+                  <div class="flex flex-wrap gap-1.5" id="detailSubjectTags">
+                    <!-- 动态注入学科胶囊 -->
+                  </div>
+                </div>
+
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] text-slate-400">自主设定时薪</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" id="detailRateDifficulty">容易成交</span>
+                  </div>
+                  <div class="text-base font-black text-teal-700">
+                    ¥<span id="detailHourlyRate" class="text-xl">135</span><span class="text-xs font-normal text-slate-500"> /小时</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-1" id="detailRateTierNote">
+                    所选学段指导区间：¥100 - ¥200/h (未见异常恶意溢价)
+                  </div>
+                </div>
+              </div>
+
+              <!-- 高考分/竞赛荣誉与教学风格 -->
+              <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <div>
+                  <span class="text-[10px] text-slate-400 block mb-0.5">申报战绩亮点 / 荣誉称号</span>
+                  <div class="font-bold text-slate-800 text-xs" id="detailHighlight">高考数学145分 · 全国数学竞赛二等奖</div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                  <span class="text-[10px] text-slate-400 block mb-1">导师教学风格标签</span>
+                  <div class="flex flex-wrap gap-1.5" id="detailStyleTags">
+                    <!-- 风格标签 -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- 证明材料与附件预览 -->
+              <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-paperclip text-teal-600"></i>
+                    资历证明与佐证材料附件
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-mono" id="detailProofCount">共 3 份文件</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="detailProofFilesContainer">
+                  <!-- 动态插入证明附件条目 -->
+                </div>
+              </div>
+
+              <!-- 试讲视频核验与教研快速测评 -->
+              <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-video text-teal-600"></i>
+                    5-10分钟真实真题试讲课件/视频
+                  </span>
+                  <a id="detailLectureLink" href="#" target="_blank" class="text-xs text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-1 bg-teal-50 px-2 py-1 rounded-lg border border-teal-200 transition">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    <span>点击新窗口调阅试讲资源</span>
+                  </a>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2">
+                  <span class="text-[11px] font-bold text-slate-700 block">教研组综合评审评分量表：</span>
+                  <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span class="text-[10px] text-slate-400 block mb-1">板书书写规范</span>
+                      <select id="evalBoardScore" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 bg-white font-medium">
+                        <option value="5">5分 (规范清晰)</option>
+                        <option value="4" selected>4分 (良好整洁)</option>
+                        <option value="3">3分 (尚可)</option>
+                        <option value="2">2分 (潦草)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 block mb-1">思路逻辑表达</span>
+                      <select id="evalLogicScore" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 bg-white font-medium">
+                        <option value="5" selected>5分 (深入浅出)</option>
+                        <option value="4">4分 (层次分明)</option>
+                        <option value="3">3分 (中规中矩)</option>
+                        <option value="2">2分 (表述不清)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 block mb-1">解题启发性</span>
+                      <select id="evalHeuristicScore" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 bg-white font-medium">
+                        <option value="5" selected>5分 (题型模型化)</option>
+                        <option value="4">4分 (良好)</option>
+                        <option value="3">3分 (一般刷题)</option>
+                        <option value="2">2分 (死记硬背)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ===================== 模块三：审核决策与审批动作 ===================== -->
+            <div class="border border-slate-200 rounded-2xl p-4 bg-white space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-signature text-teal-600"></i>
+                  审核评语与通知模板
+                </span>
+                <span class="text-[10px] text-slate-400">将作为短信通知推送给导师</span>
+              </div>
+
+              <!-- 快捷意见模板 -->
+              <div class="flex flex-wrap gap-1.5 text-xs">
+                <button type="button" onclick="applyCommentTemplate(1)" class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition">
+                  ✅ 准予入库 (优秀金牌导师)
+                </button>
+                <button type="button" onclick="applyCommentTemplate(2)" class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-600 transition">
+                  ⚠️ 补充试讲板书 (需补件)
+                </button>
+                <button type="button" onclick="applyCommentTemplate(3)" class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-300 text-slate-600 transition">
+                  ⛔ 学信网未查实 (驳回)
+                </button>
+              </div>
+
+              <textarea id="auditReviewComment" rows="2" placeholder="输入风控/教研审核备注意见，将加密同步于内部履约档案..." class="w-full p-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-sans"></textarea>
+
+              <!-- 终审动作按钮栏 -->
+              <div class="pt-2 flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                <button type="button" onclick="handleDecision('rejected')" class="w-full sm:w-1/4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2.5 rounded-xl text-xs transition active:scale-95 flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-ban"></i>
+                  <span>一票否决/违规</span>
+                </button>
+
+                <button type="button" onclick="handleDecision('supplement')" class="w-full sm:w-1/4 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold py-2.5 rounded-xl text-xs transition active:scale-95 flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-rotate-left"></i>
+                  <span>打回补充材料</span>
+                </button>
+
+                <button type="button" onclick="handleDecision('approved')" class="w-full sm:w-1/2 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-stamp"></i>
+                  <span>审核通过 · 正式入库建档发证</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 弹窗：审核通过发证与智能仓开门权限卡片 -->
+  <div id="credentialModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 transform transition-all duration-300 scale-95" id="credentialModalContent">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <h3 class="text-base font-black text-slate-900">导师已正式入库 · 授证授权成功</h3>
+        <p class="text-xs text-slate-500">已为导师生成专属档案序列号及智能教学仓门禁授信</p>
+      </div>
+
+      <!-- 电子凭证卡片 -->
+      <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 rounded-2xl p-4.5 space-y-3 shadow-sm border border-teal-100 relative overflow-hidden">
+        <div class="flex items-center justify-between border-b border-teal-100 pb-2.5">
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-id-badge text-teal-600"></i>
+            <span class="text-xs font-bold text-slate-800">星火学伴 · 青年导师执业凭证</span>
+          </div>
+          <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200 font-mono">
+            AUTH-VERIFIED
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span class="text-slate-400 text-[10px] block">导师姓名</span>
+            <span class="font-bold text-slate-900 text-sm" id="modalCertName">张若愚 (张老师)</span>
+          </div>
+          <div>
+            <span class="text-slate-400 text-[10px] block">官方入库编号</span>
+            <span class="font-mono font-bold text-teal-700" id="modalCertCode">CD-2026-8809</span>
+          </div>
+          <div>
+            <span class="text-slate-400 text-[10px] block">学籍高校</span>
+            <span class="font-medium text-slate-700 truncate block" id="modalCertUniversity">四川大学</span>
+          </div>
+          <div>
+            <span class="text-slate-400 text-[10px] block">教研评定等级</span>
+            <span class="font-bold text-amber-600" id="modalCertGrade">V2 级金牌导师</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-teal-100 flex items-center justify-between text-[11px] text-teal-700">
+          <span>智能仓权限：<strong class="text-slate-900">免押开锁已激活</strong></span>
+          <span class="font-mono text-slate-500">首期送30小时体验仓位</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2.5 pt-1">
+        <button type="button" onclick="closeCredentialModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition">
+          完成审核，处理下一位
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 轻量全局 Toast 提示条 -->
+  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+    <i class="fa-solid fa-circle-info text-teal-400 text-sm" id="toastIcon"></i>
+    <span id="toastMessage">已更新审核状态</span>
+  </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/storage-service.js"></script>
+
+    <script>
+    // 统一库 hydrate：页面脚本可 await StorageService.ready()
+    (function () {
+      if (window.StorageService && StorageService.hydrateFromServer) {
+        StorageService.hydrateFromServer();
+      }
+    })();
+    </script>
+
+<script>
+    /* ==========================================================================
+       1. 模拟收到入库资料的候选导师数据集 (涵盖典型与边缘案卷)
+       ========================================================================== */
+    // 从共享 StorageService 加载审核队列（导师端提交实时入库）
+    let applicantsData = [];
+    async function bootFromStorage() {
+      if (window.StorageService && StorageService.ready) await StorageService.ready();
+      applicantsData = (window.StorageService ? StorageService.getMentors() : []).slice();
+      if (!applicantsData.length && window.StorageService) {
+        StorageService.seedIfEmpty();
+        applicantsData = StorageService.getMentors().slice();
+      }
+      if (typeof renderApplicantList === 'function') renderApplicantList();
+      if (typeof updateStats === 'function') updateStats();
+      if (typeof renderAdminCompletedSessions === 'function') renderAdminCompletedSessions();
+    }
+    bootFromStorage();
+
+    // 当前选中的导师
+    let currentApplicant = applicantsData[0];
+    let currentFilter = "all";
+
+    /* ==========================================================================
+       2. 渲染候选人列表卡片与状态筛选
+       ========================================================================== */
+    function renderApplicantList() {
+      const container = document.getElementById('applicantListContainer');
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      container.innerHTML = '';
+
+      const filtered = applicantsData.filter(item => {
+        // 状态筛选
+        if (currentFilter !== "all" && item.status !== currentFilter) return false;
+        // 关键字筛选
+        if (keyword) {
+          const matchStr = (item.realName + item.code + item.university + item.phone + item.subjects.join(' ')).toLowerCase();
+          if (!matchStr.includes(keyword)) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl p-8 text-center text-slate-400 border border-slate-200">
+            <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300"></i>
+            <p class="text-xs">未找到符合筛选条件的入库申请记录</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isSelected = currentApplicant && item.id === currentApplicant.id;
+        const card = document.createElement('div');
+        
+        let statusBadgeHtml = '';
+        if (item.status === 'pending') {
+          statusBadgeHtml = '<span class="text-[10px] status-badge-pending px-2 py-0.5 rounded-full font-semibold">待初审</span>';
+        } else if (item.status === 'approved') {
+          statusBadgeHtml = '<span class="text-[10px] status-badge-approved px-2 py-0.5 rounded-full font-semibold">已入库</span>';
+        } else if (item.status === 'supplement') {
+          statusBadgeHtml = '<span class="text-[10px] status-badge-supplement px-2 py-0.5 rounded-full font-semibold">待补件</span>';
+        } else if (item.status === 'rejected') {
+          statusBadgeHtml = '<span class="text-[10px] status-badge-rejected px-2 py-0.5 rounded-full font-semibold">已否决</span>';
+        }
+
+        const maskedSurname = item.realName.charAt(0) + '老师';
+
+        card.className = `p-3.5 rounded-2xl border transition-all cursor-pointer bg-white ${
+          isSelected 
+            ? 'border-teal-600 ring-2 ring-teal-500/20 shadow-md bg-teal-50/20' 
+            : 'border-slate-200 hover:border-slate-300 hover:shadow-xs'
+        }`;
+        card.onclick = () => selectApplicant(item.id);
+
+        const phoneStr = String(item.phone || '');
+        const phoneLast4 = phoneStr.length >= 4 ? phoneStr.slice(-4) : '----';
+        const appId = item.id || item.code || 'AP-????';
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl ${
+                item.status === 'approved' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-700'
+              } font-bold text-sm flex items-center justify-center shrink-0">
+                ${item.realName.charAt(0)}
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-xs font-black text-slate-900">${item.realName}</span>
+                  <span class="text-[10px] text-slate-400 font-medium">${maskedSurname}</span>
+                  ${item.customSubjects && item.customSubjects.length > 0 ? '<span class="text-[9px] bg-amber-100 text-amber-800 px-1 py-0.2 rounded font-semibold">特色艺考</span>' : ''}
+                </div>
+                <div class="text-[11px] text-slate-500 truncate max-w-[180px]">
+                  ${item.university} · ${item.degree.split(' ')[0]}
+                </div>
+                <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[9px] font-mono bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded">${appId}</span>
+                  <span class="text-[9px] font-mono bg-slate-50 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded">尾号 ${phoneLast4}</span>
+                </div>
+              </div>
+            </div>
+            ${statusBadgeHtml}
+          </div>
+
+          <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1 text-slate-600 truncate max-w-[200px]">
+              <i class="fa-solid fa-book-open text-teal-600 text-[10px]"></i>
+              <span class="truncate">${item.subjects.slice(0, 2).join(' / ')}${item.subjects.length > 2 ? '...' : ''}</span>
+            </div>
+            <div class="font-bold text-teal-700 font-mono">
+              ¥${item.hourlyRate}/h
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateStatsSummary();
+    }
+
+    function selectApplicant(id) {
+      const found = applicantsData.find(a => a.id === id);
+      if (found) {
+        currentApplicant = found;
+        renderApplicantList();
+        renderAuditDetail();
+      }
+    }
+
+    /* ==========================================================================
+       3. 渲染右侧审核案卷详尽视图 (L1 + L2 + 教研量规)
+       ========================================================================== */
+    function renderAuditDetail() {
+      const a = currentApplicant;
+      if (!a) return;
+
+      const surname = a.realName.charAt(0);
+      document.getElementById('detailAvatar').innerText = surname;
+      document.getElementById('detailRealName').innerText = a.realName;
+      document.getElementById('detailMaskedName').innerText = `(${surname}老师)`;
+      document.getElementById('detailCode').innerText = a.code;
+      document.getElementById('detailUniversity').innerText = a.university;
+      document.getElementById('detailDegree').innerText = a.degree;
+      document.getElementById('detailSubmitTime').innerText = a.submitTime;
+
+      // 状态徽章
+      const statusBadge = document.getElementById('detailStatusBadge');
+      if (a.status === 'pending') {
+        statusBadge.className = "text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-semibold";
+        statusBadge.innerText = "待初审 (Queue)";
+      } else if (a.status === 'approved') {
+        statusBadge.className = "text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full font-semibold";
+        statusBadge.innerText = "已入库已发证";
+      } else if (a.status === 'supplement') {
+        statusBadge.className = "text-[10px] bg-indigo-400/20 text-indigo-300 border border-indigo-400/40 px-2 py-0.5 rounded-full font-semibold";
+        statusBadge.innerText = "待补交佐证";
+      } else if (a.status === 'rejected') {
+        statusBadge.className = "text-[10px] bg-rose-400/20 text-rose-300 border border-rose-400/40 px-2 py-0.5 rounded-full font-semibold";
+        statusBadge.innerText = "违规拉黑/已驳回";
+      }
+
+      // L1 身份与学信网
+      document.getElementById('detailIdCard').innerText = a.idCard.slice(0, 6) + '********' + a.idCard.slice(-4);
+      document.getElementById('detailPhone').innerText = a.phone;
+      document.getElementById('detailChsiCode').innerText = a.chsiCode;
+      document.getElementById('detailChsiMajor').innerText = `学籍验证：${a.chsiStatus} · ${a.chsiMajor}`;
+
+      const chsiStatusTag = document.getElementById('chsiStatusTag');
+      if (a.chsiStatus.includes('有效')) {
+        chsiStatusTag.className = "text-teal-700 font-semibold flex items-center gap-1";
+        chsiStatusTag.innerHTML = '<i class="fa-solid fa-shield-check text-[10px]"></i> 验证有效';
+      } else {
+        chsiStatusTag.className = "text-amber-700 font-semibold flex items-center gap-1";
+        chsiStatusTag.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-[10px]"></i> 待核验/超时';
+      }
+
+      // L2 申报学科
+      const subjectContainer = document.getElementById('detailSubjectTags');
+      subjectContainer.innerHTML = '';
+      a.subjects.forEach(subj => {
+        const isCustom = a.customSubjects && a.customSubjects.includes(subj);
+        const tag = document.createElement('span');
+        tag.className = isCustom 
+          ? "text-[10px] bg-amber-50 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-md font-medium flex items-center gap-1"
+          : "text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded-md font-medium";
+        tag.innerHTML = isCustom ? `<i class="fa-solid fa-star text-[8px] text-amber-600"></i>${subj}` : subj;
+        subjectContainer.appendChild(tag);
+      });
+
+      // 时薪与难易度
+      document.getElementById('detailHourlyRate').innerText = a.hourlyRate;
+      const rateDiffElem = document.getElementById('detailRateDifficulty');
+      rateDiffElem.innerText = a.rateDifficulty;
+      if (a.rateDifficulty.includes('容易') || a.rateDifficulty.includes('极易')) {
+        rateDiffElem.className = "text-[10px] px-1.5 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
+      } else {
+        rateDiffElem.className = "text-[10px] px-1.5 py-0.5 rounded font-semibold bg-rose-50 text-rose-700 border border-rose-200";
+      }
+      document.getElementById('detailRateTierNote').innerText = a.rateTierNote;
+
+      // 战绩亮点与风格
+      document.getElementById('detailHighlight').innerText = a.scoreHighlight || '无特殊申报亮点';
+      const styleContainer = document.getElementById('detailStyleTags');
+      styleContainer.innerHTML = '';
+      if (a.styles && a.styles.length > 0) {
+        a.styles.forEach(st => {
+          const stBadge = document.createElement('span');
+          stBadge.className = "text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-medium";
+          stBadge.innerText = st;
+          styleContainer.appendChild(stBadge);
+        });
+      } else {
+        styleContainer.innerHTML = '<span class="text-[10px] text-slate-400">未选风格</span>';
+      }
+
+      // 证明佐证材料文件列表
+      const proofContainer = document.getElementById('detailProofFilesContainer');
+      document.getElementById('detailProofCount').innerText = `共 ${a.proofFiles.length} 份文件`;
+      proofContainer.innerHTML = '';
+      if (a.proofFiles.length === 0) {
+        proofContainer.innerHTML = '<div class="text-[11px] text-amber-700 italic col-span-2">⚠️ 申请人未上传佐证材料附件，需在初审阶段重点关注。</div>';
+      } else {
+        a.proofFiles.forEach((file, idx) => {
+          const fileCard = document.createElement('div');
+          fileCard.className = "p-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between text-xs";
+          fileCard.innerHTML = `
+            <div class="flex items-center gap-1.5 truncate mr-2">
+              <i class="fa-solid fa-file-pdf text-teal-600 text-sm"></i>
+              <span class="truncate text-[11px] font-medium text-slate-700" title="${file.name}">${file.name}</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="text-[10px] text-slate-400 font-mono">${file.size}</span>
+              <button type="button" onclick="previewFileNotice('${file.name}')" class="text-teal-600 hover:text-teal-800 text-[11px] font-semibold ml-1">
+                查验
+              </button>
+            </div>
+          `;
+          proofContainer.appendChild(fileCard);
+        });
+      }
+
+      // 试讲视频外链
+      document.getElementById('detailLectureLink').href = a.lectureUrl;
+      document.getElementById('auditReviewComment').value = a.reviewComment || '';
+    }
+
+    /* ==========================================================================
+       4. 审核决策动作与快捷批注模板
+       ========================================================================== */
+    function applyCommentTemplate(type) {
+      const textarea = document.getElementById('auditReviewComment');
+      if (type === 1) {
+        textarea.value = `【教研复核合格】学籍及高分战绩核验无误，试讲板书整洁、思路清晰，予以核发星火金牌导师资格证及专属教学仓电子通行码。`;
+      } else if (type === 2) {
+        textarea.value = `【需补充试讲材料】请重新上传 5-10 分钟包含智能白板书写及核心考点压轴解法示范的完整视频，原网盘链接提取码受限。`;
+      } else if (type === 3) {
+        textarea.value = `【红线驳回处理】学信网学籍核验信息不符，或在公办学校具有任职任教记录，不符合国家校外辅导治理准入条件。`;
+      }
+    }
+
+    function handleDecision(newStatus) {
+      if (!currentApplicant) return;
+
+      const comment = document.getElementById('auditReviewComment').value.trim();
+      currentApplicant.status = newStatus;
+      currentApplicant.reviewComment = comment;
+      if (newStatus === 'approved' && (!currentApplicant.evalGrade || currentApplicant.evalGrade === '待教研评级' || currentApplicant.evalGrade === '待复评')) {
+        currentApplicant.evalGrade = 'V2 级金牌导师';
+      }
+
+      // 同步到 LocalStorage，家长端即可召回已入库导师
+      if (window.StorageService) {
+        StorageService.updateMentor(currentApplicant.id, {
+          status: newStatus,
+          reviewComment: comment,
+          evalGrade: currentApplicant.evalGrade
+        });
+        applicantsData = StorageService.getMentors().slice();
+        currentApplicant = applicantsData.find(a => a.id === currentApplicant.id) || currentApplicant;
+      }
+
+      if (newStatus === 'approved') {
+        document.getElementById('modalCertName').innerText = `${currentApplicant.realName} (${currentApplicant.realName.charAt(0)}老师)`;
+        document.getElementById('modalCertCode').innerText = currentApplicant.code;
+        document.getElementById('modalCertUniversity').innerText = currentApplicant.university;
+        document.getElementById('modalCertGrade').innerText = currentApplicant.evalGrade || 'V2 级金牌导师';
+        
+        openCredentialModal();
+        showToast(`已成功核准【${currentApplicant.realName}】入库！家长端已可匹配`);
+      } else if (newStatus === 'supplement') {
+        showToast(`已将【${currentApplicant.realName}】置为待补交材料，已发送短信通知`, 'warning');
+      } else if (newStatus === 'rejected') {
+        showToast(`已否决【${currentApplicant.realName}】的申请并记录红线日志`, 'error');
+      }
+
+      renderApplicantList();
+      renderAuditDetail();
+    }
+
+    function previewFileNotice(name) {
+      showToast(`已调取电子凭证柜档案【${name}】完成模拟核对`);
+    }
+
+    /* 证书弹窗控制 */
+    function openCredentialModal() {
+      const modal = document.getElementById('credentialModal');
+      const content = document.getElementById('credentialModalContent');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeCredentialModal() {
+      const modal = document.getElementById('credentialModal');
+      const content = document.getElementById('credentialModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    /* ==========================================================================
+       5. 过滤筛选、统计指标与 Toast 消息通知
+       ========================================================================== */
+    function setFilterStatus(status) {
+      currentFilter = status;
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        if (tab.dataset.status === status) {
+          tab.className = "filter-tab px-3 py-1.5 rounded-lg font-medium transition bg-slate-900 text-white";
+        } else {
+          tab.className = "filter-tab px-3 py-1.5 rounded-lg font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200";
+        }
+      });
+      renderApplicantList();
+    }
+
+    function filterApplicants() {
+      const val = document.getElementById('searchInput').value.trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (val) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderApplicantList();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderApplicantList();
+    }
+
+    function updateStatsSummary() {
+      const pendingCount = applicantsData.filter(a => a.status === 'pending').length;
+      const approvedCount = applicantsData.filter(a => a.status === 'approved').length;
+      document.getElementById('statPendingCount').innerHTML = `${pendingCount} <span class="text-xs font-normal text-slate-400">人</span>`;
+      document.getElementById('statApprovedCount').innerHTML = `${approvedCount} <span class="text-xs font-normal text-slate-400">人</span>`;
+    }
+
+    function safeNavigate(targetUrl, targetTitle) {
+      showToast(`正在跳转至【${targetTitle || targetUrl}】...`);
+      setTimeout(() => {
+        try {
+          if (targetUrl && typeof targetUrl === 'string' && targetUrl.trim() !== '') {
+            window.location.assign(targetUrl);
+          }
+        } catch (e) {
+          console.warn('Sandbox navigation fallback:', e);
+          showToast(`已成功切换至【${targetTitle || targetUrl}】演示态`);
+        }
+      }, 600);
+    }
+
+    let toastTimer = null;
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const toastText = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastText.innerText = message;
+      if (type === 'error') {
+        toastIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-sm";
+      } else if (type === 'warning') {
+        toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-teal-400 text-sm";
+      }
+
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 3000);
+    }
+
+    /* ==========================================================================
+       已完课监管：与 mentor/parent 共用 StorageService.collectCompletedSessions
+       ========================================================================== */
+    let adminWorkbenchView = 'audit';
+
+    function escapeAdminHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function setAdminWorkbenchView(view) {
+      adminWorkbenchView = view === 'completed' ? 'completed' : 'audit';
+      const auditMain = document.getElementById('adminAuditMain');
+      const completedSec = document.getElementById('adminCompletedSection');
+      const btnAudit = document.getElementById('adminViewAuditBtn');
+      const btnDone = document.getElementById('adminViewCompletedBtn');
+      const onCls = 'admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-slate-900 text-white border-slate-900 cursor-pointer';
+      const offCls = 'admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer';
+      if (adminWorkbenchView === 'completed') {
+        if (auditMain) auditMain.classList.add('hidden');
+        if (completedSec) completedSec.classList.remove('hidden');
+        if (btnAudit) btnAudit.className = offCls;
+        if (btnDone) btnDone.className = onCls;
+        renderAdminCompletedSessions();
+      } else {
+        if (auditMain) auditMain.classList.remove('hidden');
+        if (completedSec) completedSec.classList.add('hidden');
+        if (btnAudit) btnAudit.className = onCls;
+        if (btnDone) btnDone.className = offCls;
+      }
+    }
+
+    function renderAdminCompletedSessions() {
+      const box = document.getElementById('adminCompletedList');
+      const countEl = document.getElementById('adminCompletedCount');
+      if (!box) return;
+      try { StorageService.processEscrowReleases && StorageService.processEscrowReleases(); } catch (_) {}
+      let rows = [];
+      if (window.StorageService && StorageService.getCompletedSessions) {
+        rows = StorageService.getCompletedSessions();
+      } else if (window.StorageService && StorageService.collectCompletedSessions) {
+        rows = StorageService.collectCompletedSessions(StorageService.getBookings());
+      }
+      if (countEl) countEl.innerText = String(rows.length);
+      if (!rows.length) {
+        box.innerHTML = '<div class="text-center py-10 text-xs text-slate-400">暂无已完课记录。重置演示数据后将显示家长 13980889211 / 导师 AP-8802 的结课明细。</div>';
+        return;
+      }
+      box.innerHTML = rows.map(function (row) {
+        const b = row.booking;
+        const s = row.session;
+        const escrow = s.escrowStatus === 'released'
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
+        const snippet = (s.classSummary && (s.classSummary.title || s.classSummary.content))
+          ? escapeAdminHtml(s.classSummary.title || String(s.classSummary.content).slice(0, 48))
+          : '（暂无小结）';
+        const typePill = b.type === 'weekly'
+          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+          : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>';
+        return '<div class="rounded-xl border border-emerald-100 bg-white p-3.5 flex flex-col gap-1.5 hover:border-emerald-200 transition">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div class="min-w-0 space-y-0.5">' +
+              '<div class="flex items-center gap-1.5 flex-wrap">' +
+                '<span class="font-bold text-slate-900">' + escapeAdminHtml(b.tutorName || '导师') + '</span>' +
+                typePill +
+                '<span class="text-[10px] font-mono text-slate-400">' + escapeAdminHtml(b.id) + '</span>' +
+                '<span class="text-[10px] font-mono text-slate-400">' + escapeAdminHtml(s.id || '') + '</span>' +
+              '</div>' +
+              '<div class="text-[11px] text-slate-600">' +
+                '家长 <strong class="text-slate-800">' + escapeAdminHtml(b.parentName || '') + '</strong>' +
+                ' <span class="font-mono text-slate-400">' + escapeAdminHtml(b.parentPhone || '') + '</span>' +
+                ' · ' + escapeAdminHtml(b.subject || '') +
+                ' · ' + escapeAdminHtml(b.studentNickname || '') +
+              '</div>' +
+              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
+                escapeAdminHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) +
+                (s.completedAt ? ' · 结课 ' + escapeAdminHtml(s.completedAt) : '') +
+              '</div>' +
+              '<div class="text-[11px] text-slate-500 truncate"><i class="fa-regular fa-file-lines text-teal-600 mr-1"></i>' + snippet + '</div>' +
+            '</div>' +
+            '<div class="flex flex-col items-end gap-1.5 shrink-0">' + escrow +
+              '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // 初始化启动
+    window.onload = function() {
+      if (window.StorageService) {
+        StorageService.seedIfEmpty();
+        applicantsData = StorageService.getMentors().slice();
+      }
+      currentApplicant = applicantsData[0] || null;
+      renderApplicantList();
+      if (currentApplicant) renderAuditDetail();
+      renderAdminCompletedSessions();
+    };
+  </script>
+</body>
+</html>

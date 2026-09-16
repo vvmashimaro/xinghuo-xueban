@@ -1,0 +1,58 @@
+<view class="container">
+  <view class="hero">
+    <view class="hero-title">星火学伴</view>
+    <view class="hero-sub">阳光课业辅导 · 智能微仓 · 银行合约资金托管</view>
+  </view>
+
+  <view class="role-tabs">
+    <view class="role-tab {{role==='mentor'?'on':''}}" data-role="mentor" bindtap="onSwitchRole">青年导师</view>
+    <view class="role-tab {{role==='parent'?'on':''}}" data-role="parent" bindtap="onSwitchRole">家长 / 学员</view>
+    <view class="role-tab {{role==='admin'?'on':''}}" data-role="admin" bindtap="onSwitchRole">管理审核</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">{{roleTitle}}</view>
+    <view class="muted" style="margin-bottom:24rpx;">{{roleSubtitle}}</view>
+
+    <view class="field">
+      <text class="label">手机号</text>
+      <input class="input" type="number" maxlength="11" placeholder="例：138****8000" placeholder-class="input-placeholder" value="{{mobile}}" bindinput="onMobile" />
+    </view>
+
+    <view class="field" wx:if="{{role!=='admin'}}">
+      <text class="label">短信验证码</text>
+      <view class="flex-row gap-8">
+        <input class="input" style="flex:1;" type="number" maxlength="6" placeholder="例：888888" placeholder-class="input-placeholder" value="{{smsCode}}" bindinput="onSms" />
+        <button class="btn-ghost" style="white-space:nowrap;" bindtap="onSendSms" disabled="{{smsCooldown>0}}">{{smsCooldown>0 ? smsCooldown+'s' : '获取验证码'}}</button>
+      </view>
+      <view class="muted" style="margin-top:8rpx;">演示环境免密测试码：<text style="color:#0f766e;font-family:monospace;font-weight:700;">888888</text></view>
+    </view>
+
+    <view class="check-row field" wx:if="{{role!=='admin'}}" bindtap="onToggleAgree">
+      <view class="check-box {{agreed?'on':''}}">{{agreed?'✓':''}}</view>
+      <text>我已阅读并同意
+        <text class="link" catchtap="onShowProtocol">《服务协议》</text>
+        与
+        <text class="link" catchtap="onShowPrivacy">《个人信息保护政策》</text>
+      </text>
+    </view>
+
+    <button class="btn-primary" style="width:100%;" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+      {{role==='admin' ? '进入管理端质审台' : '安全登录'}}
+    </button>
+
+    <view class="fallback" wx:if="{{showFallback}}">
+      <view class="muted" style="margin-bottom:12rpx;">自动跳转未完成，请手动进入：</view>
+      <button class="btn-ghost" style="width:100%;" bindtap="onManualEnter">手动进入 → {{fallbackTitle}}</button>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{role==='mentor'}}">
+    <view class="muted">新导师可直接进入认证建库（无需先登录）</view>
+    <button class="btn-ghost" style="margin-top:16rpx;width:100%;" bindtap="goOnboard">进入导师认证与建库 (L1/L2)</button>
+  </view>
+
+  <view class="muted" style="text-align:center;margin-top:16rpx;">
+    演示号：导师 13880123456 · 家长 13980889211 · 码 888888
+  </view>
+</view>

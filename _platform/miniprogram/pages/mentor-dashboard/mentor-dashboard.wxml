@@ -1,0 +1,120 @@
+<view class="container">
+  <view class="hero">
+    <view class="hero-title">{{mentorName}} 的工作台</view>
+    <view class="hero-sub">{{university}} · {{code}}</view>
+  </view>
+
+  <view class="banner {{bannerClass}}" wx:if="{{bannerText}}">{{bannerText}}</view>
+
+  <view class="card">
+    <view class="row-between">
+      <view class="card-title" style="margin:0;">审核状态</view>
+      <text class="badge badge-{{status}}">{{statusLabel}}</text>
+    </view>
+    <view class="detail-line">案卷编号：{{code}}</view>
+    <view class="detail-line">提交时间：{{submitTime}}</view>
+    <view class="detail-line">教研定级：{{evalGrade}}</view>
+    <view class="detail-line">审核意见：{{reviewComment}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">资料维护（非敏感）</view>
+    <view class="field">
+      <text class="label">期望时薪</text>
+      <input class="input" type="number" value="{{edit.hourlyRate}}" data-k="hourlyRate" bindinput="onEdit" />
+    </view>
+    <view class="field">
+      <text class="label">成绩亮点</text>
+      <input class="input" placeholder="例：高考理综278分" placeholder-class="input-placeholder" value="{{edit.scoreHighlight}}" data-k="scoreHighlight" bindinput="onEdit" />
+    </view>
+    <view class="field">
+      <text class="label">试讲链接</text>
+      <input class="input" placeholder="例：https://pan.baidu.com/s/..." placeholder-class="input-placeholder" value="{{edit.lectureUrl}}" data-k="lectureUrl" bindinput="onEdit" />
+    </view>
+    <view class="field">
+      <text class="label">偏好网点</text>
+      <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onSpace">
+        <view class="input">{{spaces[spaceIndex]}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="label">可约时段（逗号分隔）</text>
+      <input class="input" value="{{edit.slotsText}}" data-k="slotsText" bindinput="onEdit" />
+    </view>
+    <button class="btn-primary" style="width:100%;" bindtap="saveProfile">保存画像（不触发复审）</button>
+  </view>
+
+  <view class="card">
+    <view class="card-title">敏感信息（变更将回退待审）</view>
+    <view class="detail-line">姓名：{{realName}}（只读）</view>
+    <view class="detail-line">手机：{{phone}}（只读）</view>
+    <view class="detail-line">身份证：{{idCardMasked}}</view>
+    <view class="detail-line">银行卡：{{bankMasked}}</view>
+    <button class="btn-ghost" style="width:100%;margin-top:12rpx;" bindtap="openSensitive">申请变更敏感信息</button>
+  </view>
+
+  <view class="card">
+    <view class="row-between">
+      <view class="card-title" style="margin:0;">约课申请箱</view>
+      <text class="badge badge-teal">{{pendingInbox}} 待处理</text>
+    </view>
+    <view wx:if="{{inbox.length===0}}" class="muted" style="margin-top:12rpx;text-align:center;">暂无约课申请。家长预约后将出现在此处。</view>
+    <view class="inbox-row" wx:for="{{inbox}}" wx:key="id">
+      <view class="row-between">
+        <text style="font-weight:800;">{{item.parentName}} · {{item.subject}}</text>
+        <text class="badge {{item.statusBadge}}">{{item.statusText}}</text>
+      </view>
+      <view class="muted">{{item.studentNickname}} · {{item.studentGrade}}</view>
+      <view class="muted">{{item.schedule}} · {{item.space}} · ¥{{item.amount}}</view>
+      <view class="muted" wx:if="{{item.declineReason}}">婉拒：{{item.declineReason}}</view>
+      <view class="flex-row gap-8" style="margin-top:12rpx;" wx:if="{{item.canAct}}">
+        <button class="btn-primary" style="flex:1;" data-id="{{item.id}}" bindtap="acceptBooking">接单</button>
+        <button class="btn-danger" style="flex:1;" data-id="{{item.id}}" bindtap="openDecline">婉拒</button>
+      </view>
+    </view>
+  </view>
+
+  <button class="btn-ghost" style="width:100%;" bindtap="goLogin">退出登录</button>
+</view>
+
+<!-- 敏感变更 -->
+<view class="modal-mask" wx:if="{{sensitiveShow}}">
+  <view class="modal-panel">
+    <view class="modal-head">
+      <view style="font-weight:900;">申请变更敏感信息</view>
+      <view style="font-size:20rpx;color:#99f6e4;">提交后状态回退为待审，需管理端复审</view>
+    </view>
+    <view class="modal-body">
+      <view class="field">
+        <text class="label">新手机号</text>
+        <input class="input" type="number" maxlength="11" placeholder="例：138****8000" placeholder-class="input-placeholder" value="{{sens.phone}}" data-k="phone" bindinput="onSens" />
+      </view>
+      <view class="field">
+        <text class="label">新银行卡号</text>
+        <input class="input" type="number" placeholder="例：621483********8000" placeholder-class="input-placeholder" value="{{sens.bankCardNumber}}" data-k="bankCardNumber" bindinput="onSens" />
+      </view>
+      <view class="field">
+        <text class="label">变更说明</text>
+        <textarea class="input" style="min-height:100rpx;" placeholder="说明变更原因" placeholder-class="input-placeholder" value="{{sens.note}}" data-k="note" bindinput="onSens" />
+      </view>
+    </view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closeSensitive">取消</button>
+      <button class="btn-primary" bindtap="submitSensitive">提交并进入复审</button>
+    </view>
+  </view>
+</view>
+
+<!-- 婉拒 -->
+<view class="modal-mask" wx:if="{{declineShow}}">
+  <view class="modal-panel">
+    <view class="modal-head"><view style="font-weight:900;">婉拒约课</view></view>
+    <view class="modal-body">
+      <textarea class="input" style="min-height:140rpx;" placeholder="例：该时段已有排课，请改约周日下午" placeholder-class="input-placeholder" value="{{declineReason}}" bindinput="onDeclineReason" />
+    </view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closeDecline">取消</button>
+      <button class="btn-danger" bindtap="confirmDecline">确认婉拒</button>
+    </view>
+  </view>
+</view>

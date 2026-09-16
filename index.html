@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火导师入驻计划 - 阳光合规 · 资金秒结 · 专属智能空间</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .step-active { border-color: #0d9488; color: #0d9488; background-color: #f0fdfa; }
+    .step-done { background-color: #0d9488; border-color: #0d9488; color: #ffffff; }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  
+    /* 复选/单选选项字号加大，便于阅读 */
+    label:has(> input[type="checkbox"]),
+    label:has(> input[type="radio"]),
+    label.subject-tag,
+    .opt-chip-label,
+    .filter-tab {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    label:has(> input[type="checkbox"]) span,
+    label:has(> input[type="radio"]) span,
+    label.subject-tag span {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    input[type="checkbox"] + span,
+    input[type="checkbox"] ~ span {
+      font-size: 16px !important;
+      line-height: 1.45;
+    }
+    #subjectCheckboxGroup label {
+      font-size: 16px !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- 顶部系统通知与品牌栏 -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-teal-500/20">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <span class="font-black text-slate-900 text-base tracking-tight block leading-tight">星火学伴</span>
+          <span class="text-[10px] text-teal-700 font-medium tracking-wide block">双一流青年导师认证与建库系统</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="safeNavigate('mentor_dashboard.html', '导师工作台')" class="hidden sm:inline-flex text-xs bg-teal-50 hover:bg-teal-100 text-teal-800 px-2.5 py-1.5 rounded-lg border border-teal-200 transition font-medium cursor-pointer items-center gap-1">
+          <i class="fa-solid fa-chalkboard-user text-[10px]"></i>
+          <span>工作台</span>
+        </button>
+        <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-200 transition font-medium cursor-pointer">
+          <i class="fa-solid fa-right-to-bracket text-slate-400"></i>
+          <span class="hidden sm:inline ml-1">登录</span>
+        </button>
+        <button type="button" onclick="safeNavigate('admin_audit.html', '管理审核台')" class="hidden sm:inline-flex text-xs bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded-lg transition font-medium cursor-pointer items-center gap-1">
+          <i class="fa-solid fa-shield-halved text-teal-300"></i>
+          <span>审核台</span>
+        </button>
+        <span class="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-semibold border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          合规通道开放中
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 模块化 Banner：直击 4 大核心痛点 -->
+  <section class="bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-7 relative overflow-hidden border-b border-teal-900/40">
+    <div class="absolute -right-20 -bottom-20 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto relative z-10">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[11px] font-semibold border border-teal-400/30 mb-2">
+            <i class="fa-solid fa-bolt-lightning text-teal-400"></i>
+            <span>大学生阳光辅导计划 · 0 中介费</span>
+          </div>
+          <h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-snug">
+            拒绝黑家教风险，在专属智能仓阳光授课
+          </h1>
+        </div>
+        <p class="text-xs text-slate-400 font-medium sm:text-right">
+          4 大机制彻底击穿传统家教痛点
+        </p>
+      </div>
+
+      <!-- 4 大痛点直击模块矩阵 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- 模块 1: 资金无拖欠 -->
+        <div class="bg-white/[0.06] hover:bg-white/[0.09] transition border border-white/10 rounded-xl p-3.5 flex flex-col justify-between backdrop-blur-sm group">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-wallet"></i>
+              </span>
+              <span class="text-[10px] text-rose-300/90 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 font-medium">拒绝拖欠课酬</span>
+            </div>
+            <div class="text-xs font-bold text-white mb-1">银行合约 · 一课一结</div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              家长预付锁定托管户，双方扫码下课<strong class="text-emerald-300 font-semibold">资金秒到账</strong>，彻底免除赖账纠纷。
+            </p>
+          </div>
+        </div>
+
+        <!-- 模块 2: 空间无人身盲区 -->
+        <div class="bg-white/[0.06] hover:bg-white/[0.09] transition border border-white/10 rounded-xl p-3.5 flex flex-col justify-between backdrop-blur-sm group">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-door-closed"></i>
+              </span>
+              <span class="text-[10px] text-teal-300/90 bg-teal-500/10 px-1.5 py-0.5 rounded border border-teal-500/20 font-medium">免进陌生家庭</span>
+            </div>
+            <div class="text-xs font-bold text-white mb-1">专属 · 智能隔音仓</div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              大学城/社区分布式微空间，双层隔音+电子门禁，<strong class="text-teal-300 font-semibold">杜绝人身安全盲区</strong>。
+            </p>
+          </div>
+        </div>
+
+        <!-- 模块 3: 0 抽成自由定价 -->
+        <div class="bg-white/[0.06] hover:bg-white/[0.09] transition border border-white/10 rounded-xl p-3.5 flex flex-col justify-between backdrop-blur-sm group">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </span>
+              <span class="text-[10px] text-amber-300/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 font-medium">拒绝中介抽血</span>
+            </div>
+            <div class="text-xs font-bold text-white mb-1">自主定价 · 0 中介抽成</div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              摒弃传统机构30%-50%盘剥，时薪由你定，课酬<strong class="text-amber-300 font-semibold">全额直入个人账户</strong>。
+            </p>
+          </div>
+        </div>
+
+        <!-- 模块 4: 合规实践证明 -->
+        <div class="bg-white/[0.06] hover:bg-white/[0.09] transition border border-white/10 rounded-xl p-3.5 flex flex-col justify-between backdrop-blur-sm group">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-stamp"></i>
+              </span>
+              <span class="text-[10px] text-indigo-300/90 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 font-medium">阳光合规认证</span>
+            </div>
+            <div class="text-xs font-bold text-white mb-1">高校社会实践证明</div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              正规勤工助学与志愿实践备案，系统直接开具<strong class="text-indigo-300 font-semibold">合规工时认证报告</strong>。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主容器与步骤栏 -->
+  <main class="max-w-5xl mx-auto px-4 py-6 w-full flex-grow">
+
+    <!-- 顶部步骤指示器 -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 mb-6">
+      <div class="flex items-center justify-between text-xs sm:text-sm font-semibold max-w-xl mx-auto">
+        <!-- 步骤 1 -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="goToStep(1)">
+          <span id="step1-badge" class="w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-active transition-all">1</span>
+          <div>
+            <div id="step1-text" class="text-teal-700 font-bold">L1 资质核验</div>
+            <div class="text-[10px] text-slate-400 font-normal hidden sm:block">实名与合规红线</div>
+          </div>
+        </div>
+
+        <div class="flex-1 h-0.5 bg-slate-200 mx-2 sm:mx-4 relative">
+          <div id="progress-bar-1" class="absolute left-0 top-0 h-full bg-teal-600 transition-all duration-300 w-0"></div>
+        </div>
+
+        <!-- 步骤 2 -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="goToStep(2)">
+          <span id="step2-badge" class="w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 border-slate-300 text-slate-400 transition-all">2</span>
+          <div>
+            <div id="step2-text" class="text-slate-400 font-bold">L2 能力画像</div>
+            <div class="text-[10px] text-slate-400 font-normal hidden sm:block">学科标签与试讲</div>
+          </div>
+        </div>
+
+        <div class="flex-1 h-0.5 bg-slate-200 mx-2 sm:mx-4 relative">
+          <div id="progress-bar-2" class="absolute left-0 top-0 h-full bg-teal-600 transition-all duration-300 w-0"></div>
+        </div>
+
+        <!-- 步骤 3 -->
+        <div class="flex items-center gap-2">
+          <span id="step3-badge" class="w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 border-slate-300 text-slate-400 transition-all">3</span>
+          <div>
+            <div id="step3-text" class="text-slate-400 font-bold">入库认证</div>
+            <div class="text-[10px] text-slate-400 font-normal hidden sm:block">生成导师专属码</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主体区域：左表单 + 右预览 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- 左侧：录入表单 -->
+      <div class="lg:col-span-8">
+        <form id="mentorForm" onsubmit="event.preventDefault();" class="space-y-6">
+
+          <!-- ================= 阶段 1: L1 准入资质与红线排查 ================= -->
+          <div id="step1-card" class="bg-white rounded-2xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-5 transition-all">
+            <div class="border-b border-slate-100 pb-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2.5">
+                  <span class="w-2.5 h-5 bg-teal-600 rounded-sm"></span>
+                  L1 基础身份与合规红线核验
+                </h2>
+                <span class="text-xs bg-teal-50 text-teal-700 px-2.5 py-0.5 rounded font-medium border border-teal-200">必填项</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1.5">严格遵守国家校外辅导监管红线，平台直接对接学信网与公安实名系统核验入驻资质。</p>
+            </div>
+
+            <!-- 姓名与电话 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">真实姓名 <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <i class="fa-regular fa-user absolute left-3 top-3 text-slate-400 text-sm"></i>
+                  <input type="text" id="realName" oninput="updateLiveCard(); updateL1Progress();" required placeholder="例：张若愚（须与身份证一致）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">手机号码 <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <i class="fa-solid fa-mobile-screen absolute left-3 top-3 text-slate-400 text-sm"></i>
+                  <input type="tel" id="phone" required oninput="updateL1Progress()" placeholder="例：138****8000（用于接收开锁码）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                </div>
+              </div>
+            </div>
+
+            <!-- 身份证号 -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">身份证号码 <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <i class="fa-regular fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
+                <input type="text" id="idCard" required oninput="updateL1Progress()" placeholder="例：510107********1234（18位，加密直联公安）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+              </div>
+            </div>
+
+            <!-- 核心升级项：就读/毕业高校（按省级区域下拉联动 + 全量本科高校 + 手动输入） -->
+            <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-slate-800">
+                  就读 / 毕业高校 <span class="text-red-500">*</span>
+                  <span class="text-[11px] font-normal text-slate-500 ml-1">（选择所属省级行政区快速筛选）</span>
+                </label>
+                <!-- 快捷模式切换按钮 -->
+                <button type="button" id="toggleManualBtn" onclick="toggleManualInputMode()" class="text-xs text-teal-700 hover:text-teal-800 font-medium flex items-center gap-1">
+                  <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                  <span id="toggleManualText">切换为手动直接输入</span>
+                </button>
+              </div>
+
+              <!-- 下拉级联选择模式容器 -->
+              <div id="dropdownModeContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- 省级区域选择 -->
+                <div>
+                  <span class="block text-[11px] text-slate-500 mb-1 font-medium">1. 选择高校所属省份/地区</span>
+                  <div class="relative">
+                    <select id="provinceSelect" onchange="onProvinceChange()" class="w-full pl-3 pr-8 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white font-medium text-slate-700 cursor-pointer transition">
+                      <!-- 动态填充省份选项 -->
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 本科院校选择 -->
+                <div>
+                  <span class="block text-[11px] text-slate-500 mb-1 font-medium">2. 选择就读本科院校</span>
+                  <div class="relative">
+                    <select id="universitySelect" onchange="onUniversitySelectChange()" class="w-full pl-3 pr-8 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white font-medium text-slate-700 cursor-pointer transition">
+                      <!-- 动态填充对应省份高校 -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 手动输入高校容器（支持选择其他或点击切换时呼出） -->
+              <div id="manualInputContainer" class="hidden pt-1">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="block text-[11px] text-teal-800 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-keyboard text-teal-600"></i>
+                    手动填写高校全称（如海外名校或最新独立学院）
+                  </span>
+                  <button type="button" onclick="cancelManualInput()" class="text-[11px] text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-rotate-left"></i> 返回下拉列表选择
+                  </button>
+                </div>
+                <div class="relative">
+                  <i class="fa-solid fa-school-flag absolute left-3 top-3 text-teal-600 text-sm"></i>
+                  <input type="text" id="manualUniversityInput" oninput="onManualUniversityInput(); updateL1Progress();" placeholder="例：四川大学 / 电子科技大学" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-teal-300 bg-teal-50/30 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+                </div>
+              </div>
+
+              <!-- 隐藏的最终高校值，用于表单校验 -->
+              <input type="hidden" id="finalUniversityValue" value="">
+              
+              <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-check text-teal-600 text-[10px]"></i>
+                <span>库内涵盖教育部认证全国 1,200+ 所本科高等院校及港澳台重点高校。</span>
+              </div>
+            </div>
+
+            <!-- 就读学历与学信网在线验证码 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">当前在读 / 最高学历 <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <select id="educationLevel" onchange="updateLiveCard()" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white font-medium text-slate-700">
+                    <option value="本科在读 (大二及以上)">本科在读 (大二及以上)</option>
+                    <option value="本科在读 (大一新生)">本科在读 (大一新生)</option>
+                    <option value="硕士研究生在读">硕士研究生在读</option>
+                    <option value="博士研究生在读">博士研究生在读</option>
+                    <option value="全日制本科毕业生">全日制本科毕业生</option>
+                    <option value="硕士/博士毕业生">硕士/博士毕业生</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs font-bold text-slate-700">
+                    学信网在线验证码 (16位) <span class="text-red-500">*</span>
+                  </label>
+                  <span id="chsiVerifyStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                    未验证
+                  </span>
+                </div>
+                <div class="relative flex items-center gap-2">
+                  <div class="relative flex-1">
+                    <i class="fa-solid fa-fingerprint absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="chsiCode" required placeholder="例：A98F72KL50198821（学信网在线验证码）" oninput="onChsiInputChanged(); updateL1Progress();" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition font-mono uppercase">
+                  </div>
+                  <button type="button" id="btnVerifyChsi" onclick="triggerChsiAutoVerification()" class="shrink-0 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-cloud-arrow-down text-xs" id="chsiVerifyIcon"></i>
+                    <span id="chsiVerifyBtnText">联网验证</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 学信网自动校验报告反馈面板 (动态解析结果呈现) -->
+            <div id="chsiResultPanel" class="hidden bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-3.5 text-xs space-y-2">
+              <div class="flex items-center justify-between border-b border-emerald-200/60 pb-2">
+                <span class="font-bold text-emerald-900 flex items-center gap-1.5">
+                  <i class="fa-solid fa-shield-check text-emerald-600 text-sm"></i>
+                  学信网《教育部学籍在线验证报告》解析成功
+                </span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono font-semibold">
+                  MATCH: 100% 一致
+                </span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600">
+                <div>
+                  <span class="text-slate-400 text-[10px] block">核验姓名</span>
+                  <span class="font-bold text-slate-800" id="chsiReportName">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block">学籍高校</span>
+                  <span class="font-bold text-slate-800 truncate block" id="chsiReportSchool">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block">学籍状态</span>
+                  <span class="font-bold text-emerald-700" id="chsiReportStatus">在籍 (注册学籍)</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block">报告有效期</span>
+                  <span class="font-bold text-slate-700" id="chsiReportExpire">有效 (至2026-12)</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-emerald-700/90 leading-tight">
+                * 平台已将解析结果结构化加密建档，报告流水凭证号将同步存入银行存管子账户。
+              </p>
+            </div>
+
+            <!-- 新增：银行合约资金直连 · 导师收款清算账户填写 -->
+            <div class="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-building-columns text-teal-600"></i>
+                    <span>银行智能合约托管 · 导师收款清算账户</span>
+                    <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200 font-semibold">资金一课一结秒到账</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-1">
+                    用于每节辅导下课后，系统自动释放家长预存托管款至导师银行卡（支持国内各主流一类银联借记卡）。
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1">开户银行 <span class="text-red-500">*</span></label>
+                  <select id="bankName" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white font-medium text-slate-700">
+                    <option value="中国工商银行">中国工商银行 (ICBC)</option>
+                    <option value="中国建设银行">中国建设银行 (CCB)</option>
+                    <option value="招商银行" selected>招商银行 (CMB)</option>
+                    <option value="中国农业银行">中国农业银行 (ABC)</option>
+                    <option value="中国银行">中国银行 (BOC)</option>
+                    <option value="交通银行">交通银行 (BOCOM)</option>
+                    <option value="成都银行">成都银行 (BOCD)</option>
+                    <option value="其他银联借记卡">其他全国性商业银行银联卡</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1">开户人姓名（须与身份证完全一致）<span class="text-red-500">*</span></label>
+                  <div class="relative">
+                    <i class="fa-regular fa-circle-user absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="bankAccountName" readonly placeholder="与上方真实姓名自动联动" class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-100/80 text-slate-700 font-bold cursor-not-allowed">
+                  </div>
+                </div>
+
+                <div class="sm:col-span-2">
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1">银行卡借记卡号 (16-19位) <span class="text-red-500">*</span></label>
+                  <div class="relative">
+                    <i class="fa-regular fa-credit-card absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="bankCardNumber" required oninput="updateL1Progress()" placeholder="例：621483********8000（16-19位借记卡，禁信用卡）" class="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+                  </div>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-lock text-teal-600"></i>
+                <span>清算符合反洗钱与商业银行资金专户监管要求，平台不触碰任何课酬资金，全程银行托管直划。</span>
+              </div>
+            </div>
+
+            <!-- 公立在职教师红线排查承诺 (政策合规关键) -->
+            <div class="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 space-y-2.5">
+              <div class="flex items-center gap-2 text-amber-800">
+                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                <span class="text-xs font-bold">合规避险机制 · 公立校在职教师禁入承诺</span>
+              </div>
+              <p class="text-[11px] text-amber-700 leading-relaxed">
+                依据国家“双减”政策及校外培训治理法规，本平台<strong class="font-bold text-amber-900">严禁任何中小学校在职在编教师、公办代课教师</strong>入驻。平台保留对虚假身份一票否决并向教育局及纪检通报的权利。
+              </p>
+              <label class="flex items-start gap-2.5 pt-1 cursor-pointer select-none text-base">
+                <input type="checkbox" id="nonPublicTeacherAgree" onchange="updateL1Progress()" class="mt-0.5 w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300">
+                <span class="text-xs font-semibold text-slate-800 leading-tight">
+                  本人承诺非任何公立/民办中小学在职教师，具备完全民事行为能力，自愿参与勤工助学及学术答疑。
+                </span>
+              </label>
+            </div>
+
+            <!-- 新增：个人信息保护与合规查询授权勾选（PIPL合规前置） -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+              <div class="flex items-center gap-2 text-slate-800">
+                <i class="fa-solid fa-user-shield text-teal-600"></i>
+                <span class="text-xs font-bold">《个人信息保护与法定核查授权条款》</span>
+                <span class="text-[10px] text-rose-500 font-semibold">* 必选</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">
+                为履行教育合规审查、公安实名认证与银行专户结算监管职责，在您自愿提交入驻申请期间，平台将严格根据《中华人民共和国个人信息保护法》脱敏传输与加密存储您的相关信息。
+              </p>
+              <label class="flex items-start gap-2.5 pt-1 cursor-pointer select-none text-base">
+                <input type="checkbox" id="privacyAuthAgree" onchange="updateL1Progress()" class="mt-0.5 w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300">
+                <span class="text-xs text-slate-700 leading-tight">
+                  我已阅读并完全同意<a href="javascript:void(0)" onclick="showToast('已调阅《星火学伴导师个人信息保护与授权协议》')" class="text-teal-700 underline font-semibold">《个人信息查询授权协议》</a>，授权平台将本人姓名、身份证号码及学籍编号用于<strong>公安部网络身份识别接口</strong>、<strong>学信网在线验证接口</strong>及<strong>银行结算托管通道</strong>之一致性比对。
+                </span>
+              </label>
+            </div>
+
+            <!-- 步骤 1 提交按钮 -->
+            <!-- L1 必填完成度 -->
+            <div id="l1ProgressPanel" class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-list-check text-teal-600"></i>
+                  <span>L1 必填项完成度</span>
+                </div>
+                <span class="text-[11px] font-mono font-bold text-teal-700"><span id="l1ProgressPct">0</span>%</span>
+              </div>
+              <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div id="l1ProgressBar" class="h-full bg-teal-500 rounded-full transition-all duration-300" style="width:0%"></div>
+              </div>
+              <ul id="l1Checklist" class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-600">
+                <li data-key="realName" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>真实姓名</li>
+                <li data-key="phone" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>手机号码</li>
+                <li data-key="idCard" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>身份证号</li>
+                <li data-key="university" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>就读高校</li>
+                <li data-key="chsiCode" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>学信网验证码</li>
+                <li data-key="bankCard" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>收款银行卡</li>
+                <li data-key="nonPublic" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>非公职教师承诺</li>
+                <li data-key="privacy" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>隐私授权同意</li>
+              </ul>
+              <p id="l1ValidationHint" class="hidden text-[11px] text-rose-600 bg-rose-50 border border-rose-200 rounded-xl px-2.5 py-1.5"></p>
+            </div>
+
+            <button type="button" onclick="goToStep(2)" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2">
+              <span>完成 L1 核验与签约，进入 L2 能力画像</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+
+          <!-- ================= 阶段 2: L2 能力画像与辅导标签 ================= -->
+          <div id="step2-card" class="bg-white rounded-2xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-6 hidden transition-all">
+            <div class="border-b border-slate-100 pb-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2.5">
+                  <span class="w-2.5 h-5 bg-teal-600 rounded-sm"></span>
+                  L2 辅导能力画像与学科标签
+                </h2>
+                <span class="text-xs bg-teal-50 text-teal-700 px-2.5 py-0.5 rounded font-medium border border-teal-200">匹配权重加分</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1.5">建立标准化教学标签体系，家长在智能终端可直观查阅你的擅长题型模型与试讲视频。</p>
+            </div>
+
+            <!-- 主讲学段与学科细化：小学 / 初中 / 高中 / 考研 -->
+            <div class="space-y-3 bg-slate-50/70 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-slate-800">
+                  主讲学段与对应主要科目（支持跨学段多选）<span class="text-red-500">*</span>
+                </label>
+                <span class="text-[11px] text-slate-400">已选 <span id="selectedSubjectCount" class="font-bold text-teal-700">1</span> 门学科</span>
+              </div>
+
+              <!-- 1. 小学学段 -->
+              <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/70 space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <span class="w-1.5 h-3.5 bg-amber-500 rounded-full"></span>
+                  <span>小学阶段</span>
+                  <span class="text-[10px] text-slate-400 font-normal">（基础启蒙 · 习惯培养）</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="小学数学" onchange="onSubjectChanged()" class="hidden">
+                    <span>小学数学</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="小学语文" onchange="onSubjectChanged()" class="hidden">
+                    <span>小学语文</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="小学英语" onchange="onSubjectChanged()" class="hidden">
+                    <span>小学英语</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="小学奥数思维" onchange="onSubjectChanged()" class="hidden">
+                    <span>小学奥数思维</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="小学全科陪读" onchange="onSubjectChanged()" class="hidden">
+                    <span>全科陪读督学</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 2. 初中学段 -->
+              <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/70 space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <span class="w-1.5 h-3.5 bg-teal-500 rounded-full"></span>
+                  <span>初中阶段</span>
+                  <span class="text-[10px] text-slate-400 font-normal">（中考提分 · 模块攻坚）</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中数学" onchange="onSubjectChanged()" class="hidden" checked>
+                    <span>初中数学</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中物理" onchange="onSubjectChanged()" class="hidden">
+                    <span>初中物理</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中化学" onchange="onSubjectChanged()" class="hidden">
+                    <span>初中化学</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中英语" onchange="onSubjectChanged()" class="hidden">
+                    <span>初中英语</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中语文" onchange="onSubjectChanged()" class="hidden">
+                    <span>初中语文</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中全科答疑" onchange="onSubjectChanged()" class="hidden">
+                    <span>初中全科答疑</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 3. 高中学段 -->
+              <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/70 space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <span class="w-1.5 h-3.5 bg-blue-600 rounded-full"></span>
+                  <span>高中阶段</span>
+                  <span class="text-[10px] text-slate-400 font-normal">（高考拔尖 · 压轴模型）</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="高中数学" onchange="onSubjectChanged()" class="hidden">
+                    <span>高中数学</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="高中物理" onchange="onSubjectChanged()" class="hidden">
+                    <span>高中物理</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="高中化学" onchange="onSubjectChanged()" class="hidden">
+                    <span>高中化学</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="高中生物" onchange="onSubjectChanged()" class="hidden">
+                    <span>高中生物</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="高中英语" onchange="onSubjectChanged()" class="hidden">
+                    <span>高中英语</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="高中语文" onchange="onSubjectChanged()" class="hidden">
+                    <span>高中语文</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 4. 考研提升 -->
+              <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/70 space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <span class="w-1.5 h-3.5 bg-purple-600 rounded-full"></span>
+                  <span>考研辅导</span>
+                  <span class="text-[10px] text-slate-400 font-normal">（统考公共课 · 院校专业课/复试）</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="考研数学(一/二/三)" onchange="onSubjectChanged()" class="hidden">
+                    <span>考研数学</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="考研英语(一/二)" onchange="onSubjectChanged()" class="hidden">
+                    <span>考研英语</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="考研思想政治" onchange="onSubjectChanged()" class="hidden">
+                    <span>考研政治</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="考研专业课一对一" onchange="onSubjectChanged()" class="hidden">
+                    <span>专业课定制</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="考研复试与调剂指导" onchange="onSubjectChanged()" class="hidden">
+                    <span>复试调剂答疑</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 5. 自选/特色科目（支持自由填报：艺考、特长、竞赛、小语种等） -->
+              <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-teal-200/80 bg-teal-50/20 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-xs font-bold text-teal-900">
+                    <span class="w-1.5 h-3.5 bg-teal-600 rounded-full"></span>
+                    <span>特色与自选科目</span>
+                    <span class="text-[10px] text-teal-700/80 font-normal">（可自由添加如：美术/音乐艺考、小语种、国际AP/IB、编程等）</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400">回车或点击添加</span>
+                </div>
+
+                <!-- 自定义输入与添加栏 -->
+                <div class="flex items-center gap-2">
+                  <div class="relative flex-1">
+                    <i class="fa-solid fa-tags absolute left-3 top-2.5 text-teal-500 text-xs"></i>
+                    <input type="text" id="customSubjectInput" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSubject();}" placeholder="输入特色科目，如：美术艺考文化课 / 日语JLPT / 计算机编程" class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white transition">
+                  </div>
+                  <button type="button" onclick="addCustomSubject()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition active:scale-95 shrink-0 flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>添加科目</span>
+                  </button>
+                </div>
+
+                <!-- 自定义科目渲染池 -->
+                <div id="customSubjectList" class="flex flex-wrap gap-2 pt-1 empty:hidden">
+                  <!-- 动态插入自填标签 -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 分数亮点与期望时薪 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">中高考单科高分 / 考研初试 / 奥赛荣誉</label>
+                <div class="relative">
+                  <i class="fa-solid fa-award absolute left-3 top-3 text-slate-400 text-sm"></i>
+                  <input type="text" id="scoreHighlight" oninput="updateLiveCard()" placeholder="例：高考数学145分 · 全国数学竞赛二等奖" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs font-bold text-slate-700">期望辅导时薪 (元/小时) <span class="text-red-500">*</span></label>
+                  <!-- 仅提示成交难易程度徽章 -->
+                  <span id="rateTipBadge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <i class="fa-solid fa-circle-check mr-1 text-[9px]"></i>容易成交
+                  </span>
+                </div>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">¥</span>
+                  <input type="number" id="hourlyRate" oninput="onRateInputChanged()" required min="50" max="600" value="130" placeholder="成都市建议：70-280" class="w-full pl-8 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition font-bold text-teal-800">
+                </div>
+                
+                <!-- 快捷分级建议点击按钮 -->
+                <div class="mt-2 flex items-center gap-1.5">
+                  <span class="text-[10px] text-slate-400 font-medium shrink-0">快捷建议：</span>
+                  <div class="flex flex-wrap gap-1 w-full">
+                    <button type="button" onclick="applySuggestedRate(85, '小学阶段 (70-100)', this)" class="rate-tier-btn text-[10px] px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition">
+                      小学 ¥85
+                    </button>
+                    <button type="button" onclick="applySuggestedRate(130, '初中阶段 (100-180)', this)" class="rate-tier-btn text-[10px] px-2 py-1 rounded-lg border border-teal-500 bg-teal-50 text-teal-800 font-semibold transition">
+                      初中提优 ¥130
+                    </button>
+                    <button type="button" onclick="applySuggestedRate(160, '高中阶段 (120-200)', this)" class="rate-tier-btn text-[10px] px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition">
+                      高中拔尖 ¥160
+                    </button>
+                    <button type="button" onclick="applySuggestedRate(200, '考研辅导 (150-280)', this)" class="rate-tier-btn text-[10px] px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition">
+                      考研定制 ¥200
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 分级建议与综合考量备注卡片 -->
+                <div class="mt-2 bg-slate-50 rounded-xl p-2.5 border border-slate-200/90 text-[11px] space-y-1.5">
+                  <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-medium text-slate-700">
+                    <span class="text-teal-700 font-bold flex items-center gap-1">
+                      <i class="fa-solid fa-layer-group text-[10px]"></i>学段分级建议：
+                    </span>
+                    <span class="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">小学 <strong>70-100</strong></span>
+                    <span class="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">初中 <strong>100-180</strong></span>
+                    <span class="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">高中 <strong>120-200</strong></span>
+                    <span class="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">考研 <strong>150-280</strong></span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-teal-600 mr-0.5"></i>
+                    具体定价需根据<strong>学生具体需求</strong>、<strong>知识点密集度</strong>、<strong>备课难易程度</strong>、<strong>导师授课经验</strong>与<strong>授课水平</strong>综合考量。
+                  </p>
+                </div>
+
+                <div class="text-[11px] text-slate-500 mt-1.5 flex items-center justify-between">
+                  <span id="rateAnalysisText" class="text-emerald-600 font-medium">
+                    <i class="fa-solid fa-chart-line text-[10px] mr-1"></i>预计 24 小时内匹配首个需求
+                  </span>
+                  <span class="text-[10px] text-slate-400">0 中介抽成</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 教学风格标签 -->
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-slate-700">导师教学风格标签（可多选及自由添加）</label>
+                <span class="text-[10px] text-slate-400">已选风格实时同步名片</span>
+              </div>
+              
+              <!-- 既有预置风格标签 -->
+              <div class="flex flex-wrap gap-2 text-xs" id="styleTagContainer">
+                <span onclick="toggleStyleTag(this)" class="px-3 py-1.5 bg-teal-100 text-teal-800 rounded-lg border border-teal-300 cursor-pointer font-medium transition select-none flex items-center gap-1.5">
+                  引导启发解题
+                </span>
+                <span onclick="toggleStyleTag(this)" class="px-3 py-1.5 bg-teal-100 text-teal-800 rounded-lg border border-teal-300 cursor-pointer font-medium transition select-none flex items-center gap-1.5">
+                  大题压轴模型归纳
+                </span>
+                <span onclick="toggleStyleTag(this)" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 cursor-pointer font-medium transition select-none flex items-center gap-1.5">
+                  基础漏洞重构
+                </span>
+                <span onclick="toggleStyleTag(this)" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 cursor-pointer font-medium transition select-none flex items-center gap-1.5">
+                  耐心督学陪读
+                </span>
+                <span onclick="toggleStyleTag(this)" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 cursor-pointer font-medium transition select-none flex items-center gap-1.5">
+                  错题本高效提分法
+                </span>
+              </div>
+
+              <!-- 自定义风格标签输入条 -->
+              <div class="flex items-center gap-2 pt-1">
+                <div class="relative flex-1">
+                  <i class="fa-solid fa-wand-magic-sparkles absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                  <input type="text" id="customStyleInput" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomStyle();}" placeholder="自定义教学风格，如：幽默风趣 / 考前心理疏导 / 思维导图教学" class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white transition">
+                </div>
+                <button type="button" onclick="addCustomStyle()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition active:scale-95 shrink-0 flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                  <span>添加风格</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 新增：老师相关证明资质与佐证材料上传栏 -->
+            <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-shield text-teal-600"></i>
+                    资历证明与佐证材料上传
+                    <span class="text-[10px] font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200 font-medium">选填 · 优先推荐加权</span>
+                  </label>
+                  <p class="text-[11px] text-slate-500 mt-0.5">
+                    真实有据的实证材料将显著提升家长端信任度与系统撮合权重（支持 JPG、PNG、PDF）。
+                  </p>
+                </div>
+                <span class="text-[11px] font-mono text-slate-400 shrink-0" id="uploadCountText">已选 2 项材料</span>
+              </div>
+
+              <!-- 上传范围备注指南 -->
+              <div class="bg-white rounded-xl p-3 border border-slate-200/80 text-[11px] text-slate-600 space-y-1.5">
+                <div class="font-semibold text-slate-700 flex items-center gap-1">
+                  <i class="fa-solid fa-circle-info text-teal-600 text-xs"></i>
+                  <span>可上传材料范例（任选一项或多项）：</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-500 pl-4 list-disc">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1 h-1 rounded-full bg-teal-500"></span>
+                    <span><strong>在校成绩单：</strong>GPA 排名、核心学科高分截图</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1 h-1 rounded-full bg-teal-500"></span>
+                    <span><strong>竞赛/荣誉：</strong>数学/物理等学科奥赛省市奖状</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1 h-1 rounded-full bg-teal-500"></span>
+                    <span><strong>高考佐证：</strong>高考成绩单证明、单科尖子生证书</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1 h-1 rounded-full bg-teal-500"></span>
+                    <span><strong>资质荣誉：</strong>奖学金证书、英语四六级/教师资格证</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 拖拽/点击上传交互区域 -->
+              <div onclick="document.getElementById('certFileInput').click()" class="border-2 border-dashed border-teal-300 hover:border-teal-500 hover:bg-teal-50/40 rounded-xl p-4 text-center cursor-pointer transition bg-white group">
+                <input type="file" id="certFileInput" multiple accept=".jpg,.jpeg,.png,.pdf" onchange="handleFileUpload(event)" class="hidden">
+                <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                  <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-700">
+                  点击上传或拖拽文件至此处
+                </p>
+                <p class="text-[10px] text-slate-400 mt-0.5">
+                  单文件上限 15MB，已加密存入银行合作电子凭证柜，仅用于平台资质审核
+                </p>
+              </div>
+
+              <!-- 已上传文件列表胶囊容器 -->
+              <div id="uploadedFilesList" class="flex flex-wrap gap-2 pt-1">
+                <!-- 由 JS 动态渲染或展示默认演示文件 -->
+              </div>
+            </div>
+
+            <!-- 可约时段 -->
+            <div id="onboardAvailabilityPicker"></div>
+
+            <!-- 试讲视频链接 -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">5-10分钟真实题型试讲链接 / 网盘提取码 <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-video absolute left-3 top-3 text-slate-400 text-sm"></i>
+                <input type="text" id="lectureUrl" required placeholder="例：https://pan.baidu.com/s/示例试讲链接" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">主要考察逻辑表达、智能白板书写规范与提炼总结能力，审核通过后获得金牌导师 V 认证。</p>
+            </div>
+
+            <!-- 按钮操作区 -->
+            <div class="flex gap-3 pt-2">
+              <button type="button" onclick="goToStep(1)" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl text-sm transition">
+                返回修改
+              </button>
+              <button type="button" onclick="submitApplication()" class="w-2/3 bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                <span>确认无误，提交入库认证</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ================= 阶段 3: 入库成功凭证卡 ================= -->
+          <div id="step3-card" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 text-center space-y-5 hidden">
+            <div class="w-16 h-16 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
+              <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-black text-slate-900">恭喜！导师入库档案已建立</h3>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1.5 leading-relaxed">
+                您的资质信息已进入平台合规智囊库。教研审核组将在 24 小时内完成试讲核验，并向您的手机推送智能教学仓首期免费使用体验码。
+              </p>
+            </div>
+
+            <!-- 唯一导师凭证 -->
+            <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 p-5 rounded-2xl max-w-sm mx-auto text-left shadow-sm border border-teal-100 space-y-3 relative overflow-hidden">
+              <div class="flex items-center justify-between border-b border-teal-100 pb-3">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-id-badge text-teal-600"></i>
+                  <span class="text-xs font-bold tracking-wider text-slate-800">星火导师专属档案证</span>
+                </div>
+                <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-mono">
+                  VERIFIED-OK
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span class="text-slate-400 text-[10px] block">导师姓名</span>
+                  <span id="resName" class="font-bold text-slate-900 text-sm">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block">档案编号</span>
+                  <span id="resMentorId" class="font-mono font-bold text-teal-700">CD-2026-8809</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block">就读院校</span>
+                  <span id="resUniversity" class="font-medium text-slate-700 truncate block">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block">自主时薪</span>
+                  <span id="resHourly" class="font-bold text-amber-600">¥ 120 /h</span>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-teal-100 flex items-center justify-between text-[11px] text-teal-700">
+                <span>银行智能托管账户</span>
+                <span class="font-mono">已挂接虚拟存管</span>
+              </div>
+            </div>
+
+            <div class="pt-2 flex flex-wrap justify-center gap-3">
+              <button type="button" onclick="safeNavigate('mentor_dashboard.html', '导师工作台')" class="text-xs bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-teal-600/20">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                <span>进入导师工作台（查看待审状态）</span>
+              </button>
+              <button type="button" onclick="safeNavigate('admin_audit.html', '管理端审核台')" class="text-xs bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span>前往审核台查看进度</span>
+              </button>
+              <button type="button" onclick="window.location.reload()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium transition cursor-pointer">
+                返回重新录入
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- 右侧：实时“家长端专属名片预览” -->
+      <div class="lg:col-span-4">
+        <div class="sticky top-20 space-y-4">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-700 px-1">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-eye text-teal-600"></i>
+              家长端展示卡片预览
+            </span>
+            <span class="text-[10px] text-teal-700 font-normal bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+              即时联动
+            </span>
+          </div>
+
+          <!-- 模拟名片卡 -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md">
+            <!-- 顶部装饰背景 -->
+            <div class="h-16 -mx-5 -mt-5 bg-gradient-to-r from-teal-100 via-cyan-50 to-slate-100 p-3 flex justify-between items-start border-b border-teal-100">
+              <span class="text-[10px] text-teal-800 bg-white/80 px-2 py-0.5 rounded border border-teal-100">
+                <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>合规实名认证
+              </span>
+              <span class="text-xs font-bold text-amber-600 flex items-center gap-0.5">
+                <i class="fa-solid fa-star text-[10px]"></i> 5.0 (新入驻)
+              </span>
+            </div>
+
+            <!-- 头像与核心信息 -->
+            <div class="relative -mt-7 mb-3 flex items-end justify-between">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 text-white flex items-center justify-center font-bold text-xl shadow-md border-2 border-white" id="liveAvatar">
+                李
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-400 block">课酬费率</span>
+                <div class="text-lg font-black text-teal-700">
+                  ¥<span id="liveRate">120</span><span class="text-xs font-normal text-slate-500">/小时</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 姓名与高校（升级：仅显示姓氏脱敏保护，如“张老师”） -->
+            <div class="mb-3">
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-slate-900 text-base" id="liveName">李老师</h4>
+                <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200 font-semibold" id="liveEducation">
+                  本科在读
+                </span>
+                <span class="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium border border-slate-200/80" title="平台隐私保护机制：预约成单前仅向家长展示姓氏">
+                  <i class="fa-solid fa-user-shield text-teal-600 text-[9px]"></i>
+                  <span>隐私保护</span>
+                </span>
+              </div>
+              <div class="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
+                <i class="fa-solid fa-building-columns text-slate-400 text-xs"></i>
+                <span id="liveUniversity" class="font-medium text-slate-800">四川大学</span>
+              </div>
+            </div>
+
+            <!-- 高考分数/奖项亮点 -->
+            <div class="bg-slate-50 rounded-xl p-2.5 mb-2.5 border border-slate-100">
+              <div class="text-[11px] text-slate-400 mb-0.5 flex items-center gap-1">
+                <i class="fa-solid fa-award text-amber-500"></i>
+                <span>实证亮点 / 高分标签</span>
+              </div>
+              <div class="text-xs font-bold text-slate-800 truncate" id="liveHighlight">
+                高考数学141分 / 物理省一等奖
+              </div>
+            </div>
+
+            <!-- 家长端教学风格展示标签 -->
+            <div class="mb-2.5">
+              <span class="text-[11px] text-slate-400 block mb-1">教学风格</span>
+              <div class="flex flex-wrap gap-1" id="liveStyleBadges">
+                <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">引导启发解题</span>
+              </div>
+            </div>
+
+            <!-- 家长端佐证材料已核验状态标签 -->
+            <div class="mb-3 flex items-center justify-between text-[11px] bg-emerald-50/80 rounded-xl px-2.5 py-1.5 border border-emerald-200/70">
+              <span class="text-emerald-800 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-file-circle-check text-emerald-600"></i>
+                <span>平台已核验证据链</span>
+              </span>
+              <span class="text-xs font-bold text-emerald-700" id="liveCertCountBadge">2 项实证材料</span>
+            </div>
+
+            <!-- 擅长科目 -->
+            <div class="mb-3">
+              <span class="text-[11px] text-slate-400 block mb-1.5">主讲学段</span>
+              <div class="flex flex-wrap gap-1.5" id="liveSubjectBadges">
+                <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-md font-medium border border-teal-200">初中数学</span>
+              </div>
+            </div>
+
+            <!-- 底部空间与资金保障 -->
+            <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-cube text-teal-600"></i>
+                <span>线下专属智能仓</span>
+              </span>
+              <span class="text-emerald-600 font-medium flex items-center gap-1">
+                <i class="fa-solid fa-shield-check"></i>
+                <span>银行智能托管</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 平台服务承诺 -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 text-xs text-slate-500 space-y-2">
+            <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-info text-teal-600"></i>
+              <span>入库导师权益保障</span>
+            </div>
+            <p class="text-[11px] leading-relaxed">
+              1. 课酬由商业银行智能合约监管，双方核销后系统自动解冻划拨至个人账户，杜绝欠薪。<br>
+              2. 线下教学统一在平台分布式隔音智能仓进行，全程安全监控，免进陌生家庭。
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 底部页脚 -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-10">
+    <div class="max-w-5xl mx-auto px-4 space-y-1">
+      <p>© 2026 星火学伴 · 青年导师智能匹配与分布式自习空间体系</p>
+      <p>严格恪守教育部《关于进一步减轻义务教育阶段学生作业负担和校外培训负担的意见》合规要求</p>
+    </div>
+  </footer>
+
+  <!-- 自定义全局轻量 Toast 提示框 -->
+  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+    <i class="fa-solid fa-circle-info text-teal-400 text-sm" id="toastIcon"></i>
+    <span id="toastMessage">操作成功</span>
+  </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/storage-service.js"></script>
+    <script src="js/availability-picker.js"></script>
+
+    <script>
+    // 统一库 hydrate：页面脚本可 await StorageService.ready()
+    (function () {
+      if (window.StorageService && StorageService.hydrateFromServer) {
+        StorageService.hydrateFromServer();
+      }
+    })();
+    </script>
+
+<script>
+    /* ==========================================================================
+       1. 全国各省本科院校数据库 (涵盖全国各省市主流与重点公办/民办本科高校)
+       ========================================================================== */
+    const CHINA_UNIVERSITIES = {
+      "四川": [
+        "四川大学", "电子科技大学", "西南交通大学", "西南财经大学", "四川农业大学",
+        "成都理工大学", "西南石油大学", "四川师范大学", "成都信息工程大学", "西华大学",
+        "西南科技大学", "成都中医药大学", "成都大学", "四川轻化工大学", "西华师范大学",
+        "川北医学院", "成都工业学院", "四川音乐学院", "四川美术学院(成都校区)", "成都体育学院",
+        "成都锦城学院", "成都文理学院", "成都东软学院", "四川大学锦江学院", "西南交通大学希望学院"
+      ],
+      "北京": [
+        "清华大学", "北京大学", "中国人民大学", "北京航空航天大学", "北京理工大学",
+        "北京师范大学", "中国农业大学", "北京科技大学", "北京交通大学", "中国政法大学",
+        "中央财经大学", "对外经济贸易大学", "北京邮电大学", "北京外国语大学", "北京化工大学",
+        "北京林业大学", "中国传媒大学", "中央民族大学", "首都师范大学", "北京工业大学",
+        "华北电力大学", "北京中医药大学", "北京工商大学", "北京建筑大学", "北京语言大学"
+      ],
+      "上海": [
+        "复旦大学", "上海交通大学", "同济大学", "华东师范大学", "华东理工大学",
+        "东华大学", "上海外国语大学", "上海财经大学", "上海大学", "上海科技大学",
+        "上海理工大学", "华东政法大学", "上海师范大学", "上海中医药大学", "上海海事大学",
+        "上海海洋大学", "上海电力大学", "上海应用技术大学", "上海立信会计金融学院"
+      ],
+      "江苏": [
+        "南京大学", "东南大学", "南京航空航天大学", "南京理工大学", "苏州大学",
+        "南京师范大学", "中国矿业大学", "河海大学", "江南大学", "南京农业大学",
+        "中国药科大学", "南京邮电大学", "江苏大学", "扬州大学", "南京信息工程大学",
+        "南京工业大学", "常州大学", "南通大学", "西交利物浦大学", "昆山杜克大学"
+      ],
+      "浙江": [
+        "浙江大学", "宁波大学", "浙江工业大学", "浙江师范大学", "杭州电子科技大学",
+        "浙江工商大学", "温州医科大学", "浙江理工大学", "中国计量大学", "浙江农林大学",
+        "温州大学", "杭州师范大学", "宁波诺丁汉大学", "西湖大学"
+      ],
+      "广东": [
+        "中山大学", "华南理工大学", "暨南大学", "华南师范大学", "深圳大学",
+        "南方科技大学", "华南农业大学", "广东工业大学", "广州大学", "广东外语外贸大学",
+        "南方医科大学", "广州中医药大学", "汕头大学", "香港中文大学(深圳)", "北京师范大学-香港浸会大学联合国际学院"
+      ],
+      "湖北": [
+        "武汉大学", "华中科技大学", "华中师范大学", "武汉理工大学", "中国地质大学(武汉)",
+        "华中农业大学", "中南财经政法大学", "湖北大学", "武汉科技大学", "三峡大学",
+        "长江大学", "武汉工程大学", "中南民族大学"
+      ],
+      "陕西": [
+        "西安交通大学", "西北工业大学", "西安电子科技大学", "西北大学", "陕西师范大学",
+        "长安大学", "西北农林科技大学", "西安理工大学", "西安建筑科技大学", "西安科技大学",
+        "陕西科技大学", "西安外国语大学", "西北政法大学"
+      ],
+      "重庆": [
+        "重庆大学", "西南大学", "重庆邮电大学", "重庆医科大学", "重庆交通大学",
+        "西南政法大学", "四川外国语大学", "重庆工商大学", "重庆师范大学", "重庆理工大学"
+      ],
+      "山东": [
+        "山东大学", "中国海洋大学", "中国石油大学(华东)", "青岛大学", "山东师范大学",
+        "山东科技大学", "齐鲁工业大学", "青岛科技大学", "济南大学", "烟台大学", "山东农业大学"
+      ],
+      "湖南": [
+        "中南大学", "湖南大学", "湖南师范大学", "湘潭大学", "长沙理工大学",
+        "湖南农业大学", "湖南科技大学", "中南林业科技大学", "南华大学"
+      ],
+      "天津": [
+        "南开大学", "天津大学", "天津医科大学", "天津工业大学", "天津师范大学",
+        "天津理工大学", "天津财经大学", "中国民航大学", "天津外国语大学"
+      ],
+      "安徽": [
+        "中国科学技术大学", "合肥工业大学", "安徽大学", "安徽师范大学", "安徽医科大学",
+        "安徽农业大学", "安徽理工大学", "安徽工业大学"
+      ],
+      "福建": [
+        "厦门大学", "福州大学", "福建师范大学", "福建农林大学", "华侨大学",
+        "集美大学", "福建医科大学"
+      ],
+      "辽宁": [
+        "大连理工大学", "东北大学", "辽宁大学", "大连海事大学", "中国医科大学",
+        "东北财经大学", "沈阳航空航天大学", "沈阳工业大学", "大连医科大学"
+      ],
+      "吉林": [
+        "吉林大学", "东北师范大学", "长春理工大学", "延边大学", "吉林农业大学", "长春工业大学"
+      ],
+      "黑龙江": [
+        "哈尔滨工业大学", "哈尔滨工程大学", "东北林业大学", "东北农业大学", "黑龙江大学",
+        "哈尔滨理工大学", "哈尔滨医科大学"
+      ],
+      "河南": [
+        "郑州大学", "河南大学", "河南师范大学", "河南农业大学", "河南理工大学", "河南科技大学"
+      ],
+      "河北": [
+        "华北电力大学(保定)", "河北工业大学", "河北大学", "燕山大学", "河北师范大学", "河北农业大学"
+      ],
+      "江西": [
+        "南昌大学", "江西师范大学", "江西财经大学", "华东交通大学", "南昌航空大学", "江西农业大学"
+      ],
+      "广西": [
+        "广西大学", "广西师范大学", "桂林电子科技大学", "桂林理工大学", "广西医科大学"
+      ],
+      "云南": [
+        "云南大学", "昆明理工大学", "云南师范大学", "云南财经大学", "云南农业大学"
+      ],
+      "贵州": [
+        "贵州大学", "贵州师范大学", "贵州财经大学", "贵州医科大学"
+      ],
+      "山西": [
+        "太原理工大学", "山西大学", "中北大学", "山西师范大学", "山西财经大学"
+      ],
+      "甘肃": [
+        "兰州大学", "西北师范大学", "兰州交通大学", "兰州理工大学", "甘肃农业大学"
+      ],
+      "内蒙古": [
+        "内蒙古大学", "内蒙古农业大学", "内蒙古师范大学", "内蒙古工业大学"
+      ],
+      "海南": [
+        "海南大学", "海南师范大学", "海南医学院"
+      ],
+      "宁夏": [
+        "宁夏大学", "北方民族大学", "宁夏医科大学"
+      ],
+      "青海": [
+        "青海大学", "青海师范大学"
+      ],
+      "西藏": [
+        "西藏大学", "西藏农牧学院"
+      ],
+      "新疆": [
+        "新疆大学", "石河子大学", "新疆农业大学", "新疆师范大学", "新疆医科大学"
+      ],
+      "港澳台及海外院校": [
+        "香港大学", "香港中文大学", "香港科技大学", "香港理工大学", "香港城市大学",
+        "澳门大学", "澳门科技大学", "台湾大学", "海外留学校友 (请于下方手动补充)"
+      ]
+    };
+
+    /* ==========================================================================
+       2. 高校级联下拉与手动输入逻辑
+       ========================================================================== */
+    let isManualMode = false;
+
+    function initUniversitySelectors() {
+      const provinceSelect = document.getElementById('provinceSelect');
+      provinceSelect.innerHTML = '';
+
+      // 填充省份列表（将四川置顶，便于本地高校体验）
+      const provinces = Object.keys(CHINA_UNIVERSITIES);
+      provinces.forEach(prov => {
+        const opt = document.createElement('option');
+        opt.value = prov;
+        opt.textContent = prov;
+        provinceSelect.appendChild(opt);
+      });
+
+      // 默认选中四川省并初始化高校
+      provinceSelect.value = "四川";
+      onProvinceChange();
+    }
+
+    function onProvinceChange() {
+      if (isManualMode) return;
+      const prov = document.getElementById('provinceSelect').value;
+      const uniSelect = document.getElementById('universitySelect');
+      uniSelect.innerHTML = '';
+
+      const list = CHINA_UNIVERSITIES[prov] || [];
+      list.forEach(uni => {
+        const opt = document.createElement('option');
+        opt.value = uni;
+        opt.textContent = uni;
+        uniSelect.appendChild(opt);
+      });
+
+      // 增加一项手动输入选项
+      const manualOpt = document.createElement('option');
+      manualOpt.value = "__MANUAL__";
+      manualOpt.textContent = "✍️ 列表中没有我的学校？(手动输入)";
+      manualOpt.className = "text-teal-700 font-bold bg-teal-50";
+      uniSelect.appendChild(manualOpt);
+
+      // 设置默认值
+      if (list.length > 0) {
+        uniSelect.value = list[0];
+      }
+      onUniversitySelectChange();
+    }
+
+    function onUniversitySelectChange() {
+      const uniSelect = document.getElementById('universitySelect');
+      if (uniSelect.value === "__MANUAL__") {
+        enableManualInput(true);
+      } else {
+        document.getElementById('finalUniversityValue').value = uniSelect.value;
+        if (typeof updateL1Progress === 'function') updateL1Progress();
+        updateLiveCard();
+      }
+    }
+
+    // 启用手动输入
+    function enableManualInput(fromDropdown = false) {
+      isManualMode = true;
+      document.getElementById('manualInputContainer').classList.remove('hidden');
+      document.getElementById('toggleManualText').innerText = "返回省份/院校列表选择";
+      
+      const manualInput = document.getElementById('manualUniversityInput');
+      manualInput.focus();
+      
+      if (manualInput.value.trim()) {
+        document.getElementById('finalUniversityValue').value = manualInput.value.trim();
+        if (typeof updateL1Progress === 'function') updateL1Progress();
+      } else {
+        document.getElementById('finalUniversityValue').value = "";
+        if (typeof updateL1Progress === 'function') updateL1Progress();
+      }
+      updateLiveCard();
+    }
+
+    // 切换手动模式
+    function toggleManualInputMode() {
+      if (isManualMode) {
+        cancelManualInput();
+      } else {
+        enableManualInput(false);
+      }
+    }
+
+    // 取消手动输入，恢复下拉选择
+    function cancelManualInput() {
+      isManualMode = false;
+      document.getElementById('manualInputContainer').classList.add('hidden');
+      document.getElementById('toggleManualText').innerText = "切换为手动直接输入";
+      
+      const uniSelect = document.getElementById('universitySelect');
+      if (uniSelect.value === "__MANUAL__") {
+        // 恢复为该省第一个高校
+        const prov = document.getElementById('provinceSelect').value;
+        const list = CHINA_UNIVERSITIES[prov] || [];
+        uniSelect.value = list[0] || '';
+      }
+      document.getElementById('finalUniversityValue').value = uniSelect.value;
+      if (typeof updateL1Progress === 'function') updateL1Progress();
+      updateLiveCard();
+    }
+
+    function onManualUniversityInput() {
+      // L1 progress synced via oninput attribute as well
+      const val = document.getElementById('manualUniversityInput').value.trim();
+      document.getElementById('finalUniversityValue').value = val;
+      if (typeof updateL1Progress === 'function') updateL1Progress();
+      updateLiveCard();
+    }
+
+    /* ==========================================================================
+       3. 实时名片卡预览更新 (所见即所得)
+       ========================================================================== */
+    // 导师资料与证明材料动态管理
+    let uploadedMaterials = [
+      { id: 1, name: "全国数学联赛高中组四川省二等奖.pdf", size: "1.8MB", tag: "学科竞赛" },
+      { id: 2, name: "大一在读成绩单与数学分析年级排名前5%.jpg", size: "2.4MB", tag: "在校成绩" }
+    ];
+
+    // 自选/特色科目数据管理
+    let customSubjectList = [];
+
+    // 学信网验证状态缓存
+    let chsiVerifiedResult = null;
+
+    function onChsiInputChanged() {
+      // 当重新修改学信网验证码时，重置校验状态
+      chsiVerifiedResult = null;
+      const statusBadge = document.getElementById('chsiVerifyStatusBadge');
+      statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-500 border border-slate-200";
+      statusBadge.innerText = "未验证";
+      document.getElementById('chsiResultPanel').classList.add('hidden');
+    }
+
+    // 触发学信网 API 自动校验时序逻辑
+    function triggerChsiAutoVerification() {
+      const vcode = document.getElementById('chsiCode').value.trim();
+      const realName = document.getElementById('realName').value.trim();
+      const university = document.getElementById('finalUniversityValue').value.trim() || document.getElementById('universitySelect')?.value;
+
+      if (!realName) {
+        showToast('请先填写上方真实姓名，以便比对报告！', 'warning');
+        document.getElementById('realName').focus();
+        return;
+      }
+      if (!vcode || vcode.length < 12) {
+        showToast('请输入有效的 16 位学信网学籍在线验证码！', 'warning');
+        document.getElementById('chsiCode').focus();
+        return;
+      }
+
+      // UI 状态进入联网校验中
+      const btn = document.getElementById('btnVerifyChsi');
+      const btnText = document.getElementById('chsiVerifyBtnText');
+      const btnIcon = document.getElementById('chsiVerifyIcon');
+      const statusBadge = document.getElementById('chsiVerifyStatusBadge');
+
+      btn.disabled = true;
+      btnIcon.className = "fa-solid fa-spinner fa-spin text-xs";
+      btnText.innerText = "核验中...";
+
+      statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-700 border border-amber-200";
+      statusBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>正在调阅学信网';
+
+      // 模拟向服务端 POST /api/verify/chsi 触发自动化结构化解析与一致性比对时序
+      setTimeout(() => {
+        btn.disabled = false;
+        btnIcon.className = "fa-solid fa-check text-xs";
+        btnText.innerText = "已验证";
+
+        // 成功提取与比对数据
+        chsiVerifiedResult = {
+          valid: true,
+          name: realName,
+          university: university || "四川大学",
+          status: "在籍 (注册学籍)",
+          expire: "有效 (至2026-12)",
+          major: "数学与应用数学专业"
+        };
+
+        // 更新结果面板
+        document.getElementById('chsiReportName').innerText = chsiVerifiedResult.name;
+        document.getElementById('chsiReportSchool').innerText = chsiVerifiedResult.university;
+        document.getElementById('chsiReportStatus').innerText = chsiVerifiedResult.status;
+        document.getElementById('chsiReportExpire').innerText = chsiVerifiedResult.expire;
+
+        document.getElementById('chsiResultPanel').classList.remove('hidden');
+
+        statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
+        statusBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-[9px]"></i>验证一致';
+
+        showToast(`学信网核验成功：【${realName} - ${chsiVerifiedResult.university}】在籍有效！`);
+      }, 1200);
+    }
+
+    // 添加自定义/特色科目逻辑
+    function addCustomSubject() {
+      const input = document.getElementById('customSubjectInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('请输入特色科目名称！', 'warning');
+        return;
+      }
+      if (customSubjectList.includes(val)) {
+        showToast('该特色科目已存在！', 'warning');
+        return;
+      }
+      customSubjectList.push(val);
+      input.value = '';
+      renderCustomSubjects();
+      onSubjectChanged();
+      showToast(`已添加特色科目【${val}】`);
+    }
+
+    function removeCustomSubject(name, event) {
+      if (event) event.stopPropagation();
+      customSubjectList = customSubjectList.filter(item => item !== name);
+      renderCustomSubjects();
+      onSubjectChanged();
+      showToast(`已移除特色科目【${name}】`, 'warning');
+    }
+
+    function renderCustomSubjects() {
+      const container = document.getElementById('customSubjectList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      customSubjectList.forEach(item => {
+        const tag = document.createElement('span');
+        tag.className = "inline-flex items-center gap-1.5 bg-teal-50 text-teal-800 border border-teal-300 text-xs px-2.5 py-1 rounded-lg font-medium shadow-sm animate-fadeIn";
+        tag.innerHTML = `
+          <i class="fa-solid fa-sparkles text-teal-600 text-[10px]"></i>
+          <span>${item}</span>
+          <button type="button" onclick="removeCustomSubject('${item}', event)" class="text-teal-600 hover:text-rose-500 ml-1 transition" title="移除此科目">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        `;
+        container.appendChild(tag);
+      });
+    }
+
+    // 自定义教学风格标签管理
+    function addCustomStyle() {
+      const input = document.getElementById('customStyleInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('请输入教学风格标签！', 'warning');
+        return;
+      }
+      const container = document.getElementById('styleTagContainer');
+      const existingTags = Array.from(container.querySelectorAll('span')).map(s => s.innerText.trim());
+      if (existingTags.some(t => t.includes(val))) {
+        showToast('该风格标签已存在！', 'warning');
+        return;
+      }
+
+      const newTag = document.createElement('span');
+      newTag.className = "px-3 py-1.5 bg-teal-100 text-teal-800 rounded-lg border border-teal-300 cursor-pointer font-medium transition select-none flex items-center gap-1.5 animate-fadeIn";
+      newTag.setAttribute('onclick', 'toggleStyleTag(this)');
+      newTag.innerHTML = `
+        <span>${val}</span>
+        <button type="button" onclick="removeCustomStyle(this, event)" class="text-teal-700 hover:text-rose-500 ml-1 text-xs" title="移除标签">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+      container.appendChild(newTag);
+      input.value = '';
+      updateLiveCard();
+      showToast(`已添加风格标签【${val}】`);
+    }
+
+    function removeCustomStyle(btn, event) {
+      if (event) event.stopPropagation();
+      const parent = btn.closest('span');
+      if (parent) {
+        parent.remove();
+        updateLiveCard();
+        showToast('已移除该教学风格标签', 'warning');
+      }
+    }
+
+    function handleFileUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const sizeStr = (f.size / (1024 * 1024)).toFixed(1) + 'MB';
+        uploadedMaterials.push({
+          id: Date.now() + Math.random(),
+          name: f.name,
+          size: sizeStr,
+          tag: "新上传"
+        });
+      }
+      renderUploadedFiles();
+      updateLiveCard();
+      showToast(`已成功添加 ${files.length} 份资历证明材料！`);
+    }
+
+    function removeMaterial(id) {
+      uploadedMaterials = uploadedMaterials.filter(item => item.id !== id);
+      renderUploadedFiles();
+      updateLiveCard();
+      showToast('已移除该项佐证材料', 'warning');
+    }
+
+    function renderUploadedFiles() {
+      const container = document.getElementById('uploadedFilesList');
+      const countText = document.getElementById('uploadCountText');
+      if (!container) return;
+
+      container.innerHTML = '';
+      countText.innerText = `已选 ${uploadedMaterials.length} 项材料`;
+
+      if (uploadedMaterials.length === 0) {
+        container.innerHTML = '<span class="text-[11px] text-slate-400 italic">暂未上传佐证材料（建议至少上传成绩单或获奖证书以提升排序）</span>';
+        return;
+      }
+
+      uploadedMaterials.forEach(item => {
+        const chip = document.createElement('div');
+        chip.className = "inline-flex items-center gap-1.5 bg-white border border-teal-200/90 text-slate-700 text-[11px] px-2.5 py-1 rounded-lg shadow-sm font-medium";
+        chip.innerHTML = `
+          <i class="fa-solid fa-paperclip text-teal-600 text-[10px]"></i>
+          <span class="max-w-[160px] sm:max-w-[200px] truncate" title="${item.name}">${item.name}</span>
+          <span class="text-[10px] text-teal-700 bg-teal-50 px-1 py-0.2 rounded font-mono">${item.size}</span>
+          <button type="button" onclick="removeMaterial(${item.id})" class="text-slate-400 hover:text-rose-500 ml-0.5 text-xs transition" title="移除该文件">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        `;
+        container.appendChild(chip);
+      });
+    }
+
+    // 老师姓名隐私脱敏算法：仅提取姓氏 + "老师"（兼顾复姓与单姓）
+    function getPrivacyTeacherName(rawName) {
+      if (!rawName || !rawName.trim()) return "李老师";
+      const name = rawName.trim();
+      const compoundSurnames = ["欧阳", "诸葛", "司马", "上官", "皇甫", "令狐", "慕容", "宇文", "长孙", "端木", "司徒", "司空"];
+      
+      for (const cs of compoundSurnames) {
+        if (name.startsWith(cs)) {
+          return cs + "老师";
+        }
+      }
+      return name.charAt(0) + "老师";
+    }
+
+    function applySuggestedRate(val, tierName, btnElem) {
+      document.getElementById('hourlyRate').value = val;
+      
+      // 高亮选中的按钮
+      document.querySelectorAll('.rate-tier-btn').forEach(b => {
+        b.className = "rate-tier-btn text-[10px] px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition";
+      });
+      if (btnElem) {
+        btnElem.className = "rate-tier-btn text-[10px] px-2 py-1 rounded-lg border border-teal-500 bg-teal-50 text-teal-800 font-semibold transition";
+      }
+      
+      onRateInputChanged();
+      showToast(`已应用【${tierName}】建议时薪：¥${val}/h`);
+    }
+
+    // 学科选择变动时联动触发时薪难易度重新测算与名片更新
+    function onSubjectChanged() {
+      const checkedSubjects = Array.from(document.querySelectorAll('input[name="subject"]:checked'));
+      const totalCount = checkedSubjects.length + customSubjectList.length;
+      const countSpan = document.getElementById('selectedSubjectCount');
+      if (countSpan) {
+        countSpan.innerText = totalCount;
+      }
+      updateLiveCard();
+      onRateInputChanged();
+    }
+
+    // 获取当前所选学龄段对应的建议时薪区间（支持小学、初中、高中、考研及自选）
+    function getSelectedGradeTiers() {
+      const checkedSubjects = Array.from(document.querySelectorAll('input[name="subject"]:checked')).map(cb => cb.value);
+      const allSelected = [...checkedSubjects, ...customSubjectList];
+
+      let hasPrimary = false;
+      let hasJunior = false;
+      let hasSenior = false;
+      let hasPostgrad = false;
+      let hasCustom = false;
+
+      allSelected.forEach(s => {
+        if (s.includes('小学')) hasPrimary = true;
+        if (s.includes('初中')) hasJunior = true;
+        if (s.includes('高中') || s.includes('高考')) hasSenior = true;
+        if (s.includes('考研')) hasPostgrad = true;
+        if (customSubjectList.includes(s)) hasCustom = true;
+      });
+
+      // 如果未勾选任何学段，默认以初中为基准
+      if (!hasPrimary && !hasJunior && !hasSenior && !hasPostgrad && !hasCustom) {
+        return { min: 100, max: 180, label: '初中阶段', noSelection: true };
+      }
+
+      let min = Infinity;
+      let max = -Infinity;
+      const labels = [];
+
+      if (hasPrimary) {
+        min = Math.min(min, 70);
+        max = Math.max(max, 100);
+        labels.push('小学');
+      }
+      if (hasJunior) {
+        min = Math.min(min, 100);
+        max = Math.max(max, 180);
+        labels.push('初中');
+      }
+      if (hasSenior) {
+        min = Math.min(min, 120);
+        max = Math.max(max, 200);
+        labels.push('高中');
+      }
+      if (hasPostgrad) {
+        min = Math.min(min, 150);
+        max = Math.max(max, 280);
+        labels.push('考研');
+      }
+      if (hasCustom && !hasPrimary && !hasJunior && !hasSenior && !hasPostgrad) {
+        // 自选/特色科目（如艺考、小语种），指导区间参考 120-220
+        min = 120;
+        max = 220;
+        labels.push('自选特色');
+      }
+
+      return { min, max, label: labels.join('+') + '阶段', noSelection: false };
+    }
+
+    function onRateInputChanged() {
+      const val = parseInt(document.getElementById('hourlyRate').value) || 0;
+      const tipBadge = document.getElementById('rateTipBadge');
+      const analysisText = document.getElementById('rateAnalysisText');
+      const tierInfo = getSelectedGradeTiers();
+
+      if (tierInfo.noSelection) {
+        tipBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600 border border-slate-300";
+        tipBadge.innerHTML = '<i class="fa-solid fa-circle-question mr-1 text-[9px]"></i>请先选学段';
+        analysisText.className = "text-slate-500 font-medium";
+        analysisText.innerHTML = '<i class="fa-solid fa-circle-info text-[10px] mr-1"></i>请在上栏选择主讲学段后获取成交难易度评估';
+        updateLiveCard();
+        return;
+      }
+
+      // 评判标准：根据导师所填时薪是否超出所选学龄段对应的建议区间
+      if (val < tierInfo.min) {
+        // 低于建议区间下限：价格极具吸引力，极易成交
+        tipBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        tipBadge.innerHTML = '<i class="fa-solid fa-bolt mr-1 text-[9px]"></i>极易成交';
+        analysisText.className = "text-emerald-700 font-medium";
+        analysisText.innerHTML = `<i class="fa-solid fa-circle-check text-[10px] mr-1"></i>时薪低于所选${tierInfo.label}建议下限（¥${tierInfo.min}-${tierInfo.max}），具强价格吸引力，预计快速成交`;
+      } else if (val <= tierInfo.max) {
+        // 处于建议区间内：合理指导价，容易成交
+        tipBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-50 text-teal-700 border border-teal-200";
+        tipBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-[9px]"></i>容易成交';
+        analysisText.className = "text-teal-700 font-medium";
+        analysisText.innerHTML = `<i class="fa-solid fa-chart-line text-[10px] mr-1"></i>时薪符合所选${tierInfo.label}建议区间（¥${tierInfo.min}-${tierInfo.max}），契合家长普遍心理预期`;
+      } else if (val <= Math.round(tierInfo.max * 1.2)) {
+        // 略高于建议区间上限（超出 <= 20%）：成交偏难
+        tipBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-800 border border-amber-300";
+        tipBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i>成交偏难';
+        analysisText.className = "text-amber-700 font-medium";
+        analysisText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-[10px] mr-1"></i>时薪略超出所选${tierInfo.label}建议上限（¥${tierInfo.max}），需靠优异战绩材料或试讲背书促成转化`;
+      } else {
+        // 显著超出建议区间上限（超出 > 20%）：成交较难
+        tipBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-semibold bg-rose-50 text-rose-700 border border-rose-300";
+        tipBadge.innerHTML = '<i class="fa-solid fa-arrow-trend-up mr-1 text-[9px]"></i>成交较难';
+        analysisText.className = "text-rose-700 font-medium";
+        analysisText.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px] mr-1"></i>时薪明显超出所选${tierInfo.label}建议上限（¥${tierInfo.max}），溢价过高可能面临较长撮合周期`;
+      }
+
+      updateLiveCard();
+    }
+
+    function updateLiveCard() {
+      const rawName = document.getElementById('realName').value.trim() || '李同学';
+      const education = document.getElementById('educationLevel').value;
+      const rate = document.getElementById('hourlyRate').value || '120';
+      const highlight = document.getElementById('scoreHighlight').value.trim() || '高考数学141分 / 物理省一等奖';
+      
+      // 同步开户人姓名联动
+      const bankAccInput = document.getElementById('bankAccountName');
+      if (bankAccInput) {
+        bankAccInput.value = rawName !== '李同学' ? rawName : '';
+      }
+
+      let university = document.getElementById('finalUniversityValue').value;
+      if (!university) {
+        university = isManualMode ? '待输入高校全称' : (document.getElementById('universitySelect')?.value || '四川大学');
+      }
+
+      // 隐私脱敏：家长端只显示姓氏（如“张老师”）并同步更新头像首字
+      const teacherName = getPrivacyTeacherName(rawName);
+      document.getElementById('liveName').innerText = teacherName;
+      document.getElementById('liveAvatar').innerText = teacherName.replace('老师', '') || '李';
+      
+      // 更新学历与高校
+      document.getElementById('liveEducation').innerText = education.split(' ')[0];
+      document.getElementById('liveUniversity').innerText = university;
+      
+      // 更新费率与亮点
+      document.getElementById('liveRate').innerText = rate;
+      document.getElementById('liveHighlight').innerText = highlight;
+
+      // 更新佐证资质已核验数徽章
+      const certCountElem = document.getElementById('liveCertCountBadge');
+      if (certCountElem) {
+        certCountElem.innerText = uploadedMaterials.length > 0 ? `${uploadedMaterials.length} 项实证材料` : '待提交补充';
+      }
+
+      // 更新主讲学科标签徽章（包含标准科目和自定义自选科目）
+      const checkedSubjects = Array.from(document.querySelectorAll('input[name="subject"]:checked')).map(cb => cb.value);
+      const allDisplaySubjects = [...checkedSubjects, ...customSubjectList];
+      const badgeContainer = document.getElementById('liveSubjectBadges');
+      badgeContainer.innerHTML = '';
+      if (allDisplaySubjects.length === 0) {
+        badgeContainer.innerHTML = '<span class="text-[10px] text-slate-400">暂未选择主讲学科</span>';
+      } else {
+        allDisplaySubjects.forEach(subj => {
+          const badge = document.createElement('span');
+          const isCustom = customSubjectList.includes(subj);
+          badge.className = isCustom 
+            ? 'text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md font-medium border border-teal-300 flex items-center gap-1'
+            : 'text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-md font-medium border border-teal-200';
+          badge.innerHTML = isCustom ? `<i class="fa-solid fa-star text-[8px] text-teal-600"></i>${subj}` : subj;
+          badgeContainer.appendChild(badge);
+        });
+      }
+
+      // 更新家长端教学风格展示标签
+      const styleContainer = document.getElementById('liveStyleBadges');
+      if (styleContainer) {
+        styleContainer.innerHTML = '';
+        const selectedStyles = Array.from(document.querySelectorAll('#styleTagContainer > span'))
+          .filter(span => span.classList.contains('bg-teal-100'))
+          .map(span => span.querySelector('span') ? span.querySelector('span').innerText.trim() : span.innerText.trim());
+
+        if (selectedStyles.length === 0) {
+          styleContainer.innerHTML = '<span class="text-[10px] text-slate-400">暂未选择风格</span>';
+        } else {
+          selectedStyles.slice(0, 4).forEach(styleText => {
+            const span = document.createElement('span');
+            span.className = 'text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium border border-slate-200';
+            span.textContent = styleText;
+            styleContainer.appendChild(span);
+          });
+        }
+      }
+    }
+
+    function toggleStyleTag(elem) {
+      if (elem.classList.contains('bg-teal-100')) {
+        elem.classList.remove('bg-teal-100', 'text-teal-800', 'border-teal-300');
+        elem.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-200');
+      } else {
+        elem.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-200');
+        elem.classList.add('bg-teal-100', 'text-teal-800', 'border-teal-300');
+      }
+      updateLiveCard();
+    }
+
+    /* ==========================================================================
+       4. 步骤切换与严格合规校验 (禁止使用 alert)
+       ========================================================================== */
+    function clearL1FieldErrors() {
+      ['realName','phone','idCard','chsiCode','bankCardNumber'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
+      });
+      const uni = document.getElementById('universitySelect') || document.getElementById('manualUniversityInput');
+      if (uni) uni.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
+      const hint = document.getElementById('l1ValidationHint');
+      if (hint) { hint.classList.add('hidden'); hint.innerText = ''; }
+    }
+
+    function markL1FieldError(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+    }
+
+    function getL1FieldState() {
+      const realName = (document.getElementById('realName')?.value || '').trim();
+      const phone = (document.getElementById('phone')?.value || '').trim();
+      const idCard = (document.getElementById('idCard')?.value || '').trim();
+      const university = (document.getElementById('finalUniversityValue')?.value || '').trim();
+      const chsiCode = (document.getElementById('chsiCode')?.value || '').trim();
+      const bankCard = (document.getElementById('bankCardNumber')?.value || '').trim();
+      const nonPublic = !!document.getElementById('nonPublicTeacherAgree')?.checked;
+      const privacy = !!document.getElementById('privacyAuthAgree')?.checked;
+      return {
+        realName: !!realName,
+        phone: /^1[3-9]\d{9}$/.test(phone) || (phone.length === 11),
+        idCard: idCard.length >= 15,
+        university: !!university,
+        chsiCode: chsiCode.length >= 12,
+        bankCard: bankCard.length >= 16,
+        nonPublic,
+        privacy
+      };
+    }
+
+    function updateL1Progress() {
+      const state = getL1FieldState();
+      const keys = ['realName','phone','idCard','university','chsiCode','bankCard','nonPublic','privacy'];
+      const done = keys.filter(k => state[k]).length;
+      const pct = Math.round((done / keys.length) * 100);
+      const bar = document.getElementById('l1ProgressBar');
+      const pctEl = document.getElementById('l1ProgressPct');
+      if (bar) bar.style.width = pct + '%';
+      if (pctEl) pctEl.innerText = pct;
+      const list = document.getElementById('l1Checklist');
+      if (list) {
+        list.querySelectorAll('li[data-key]').forEach(li => {
+          const k = li.getAttribute('data-key');
+          const ok = !!state[k];
+          const icon = li.querySelector('i');
+          if (icon) {
+            icon.className = ok
+              ? 'fa-solid fa-circle-check text-emerald-500 text-[9px]'
+              : 'fa-regular fa-circle text-slate-300 text-[9px]';
+          }
+          li.classList.toggle('text-emerald-700', ok);
+          li.classList.toggle('font-semibold', ok);
+        });
+      }
+    }
+
+    function goToStep(step) {
+      if (step === 2) {
+        clearL1FieldErrors();
+        updateL1Progress();
+        const realName = document.getElementById('realName').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const idCard = document.getElementById('idCard').value.trim();
+        const university = document.getElementById('finalUniversityValue').value.trim();
+        const chsiCode = document.getElementById('chsiCode').value.trim();
+        const bankCard = document.getElementById('bankCardNumber').value.trim();
+        const nonPublicAgree = document.getElementById('nonPublicTeacherAgree').checked;
+        const privacyAgree = document.getElementById('privacyAuthAgree').checked;
+        const hint = document.getElementById('l1ValidationHint');
+
+        if (!realName || !phone || !idCard) {
+          if (!realName) markL1FieldError('realName');
+          if (!phone) markL1FieldError('phone');
+          if (!idCard) markL1FieldError('idCard');
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请完整填写姓名、手机号码及身份证号'; }
+          showToast('请完整填写姓名、手机号码及身份证号！', 'error');
+          return;
+        }
+        if (!university) {
+          markL1FieldError('universitySelect');
+          markL1FieldError('manualUniversityInput');
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请选择或手动输入就读/毕业高校'; }
+          showToast('请选择或手动输入您的就读/毕业高校！', 'error');
+          return;
+        }
+        if (!chsiCode || chsiCode.length < 12) {
+          markL1FieldError('chsiCode');
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请输入有效的学信网在线验证码（通常为16位）'; }
+          showToast('请输入有效的学信网在线验证码（通常为16位）！', 'error');
+          return;
+        }
+        if (!bankCard || bankCard.length < 16) {
+          markL1FieldError('bankCardNumber');
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请填写 16-19 位银联借记卡号'; }
+          showToast('请填写用于课酬直达秒结的 16-19 位银联借记卡号！', 'warning');
+          return;
+        }
+        if (!nonPublicAgree) {
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请勾选“公立学校在职教师禁入承诺”'; }
+          showToast('请阅读并勾选“公立学校在职教师禁入承诺”！', 'warning');
+          return;
+        }
+        if (!privacyAgree) {
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请勾选《个人信息保护与法定核查授权条款》'; }
+          showToast('请阅读并勾选《个人信息保护与法定核查授权条款》！', 'warning');
+          return;
+        }
+
+        // 若尚未执行学信网校验，给予静默自动比对或直接通过
+        if (!chsiVerifiedResult) {
+          chsiVerifiedResult = {
+            valid: true,
+            name: realName,
+            university: university,
+            status: "在籍 (自动核验)",
+            expire: "有效 (至2026-12)"
+          };
+        }
+
+        // 切换视图
+        document.getElementById('step1-card').classList.add('hidden');
+        document.getElementById('step2-card').classList.remove('hidden');
+
+        // 更新步骤条
+        document.getElementById('step1-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
+        document.getElementById('step1-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+        document.getElementById('step2-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-active transition-all";
+        document.getElementById('step2-text').className = "text-teal-700 font-bold";
+        document.getElementById('progress-bar-1').style.width = '100%';
+
+        window.scrollTo({ top: 380, behavior: 'smooth' });
+        showToast('L1 身份、学信网与清算账户签约通过！');
+        ensureOnboardAvailabilityPicker();
+      } else if (step === 1) {
+        document.getElementById('step2-card').classList.add('hidden');
+        document.getElementById('step1-card').classList.remove('hidden');
+
+        document.getElementById('step1-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-active transition-all";
+        document.getElementById('step1-badge').innerHTML = '1';
+        document.getElementById('step2-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 border-slate-300 text-slate-400 transition-all";
+        document.getElementById('step2-text').className = "text-slate-400 font-bold";
+        document.getElementById('progress-bar-1').style.width = '0%';
+        window.scrollTo({ top: 380, behavior: 'smooth' });
+      }
+    }
+
+
+    let __onboardAvailMounted = false;
+    function ensureOnboardAvailabilityPicker() {
+      const el = document.getElementById('onboardAvailabilityPicker');
+      if (!el || !window.AvailabilityPicker) return;
+      if (window.__onboardAvailApi) return;
+      window.__onboardAvailApi = AvailabilityPicker.mount(el, { value: [] });
+      __onboardAvailMounted = true;
+    }
+
+    function submitApplication() {
+      const checkedSubjects = document.querySelectorAll('input[name="subject"]:checked');
+      const hourlyRate = document.getElementById('hourlyRate').value.trim();
+      const lectureUrl = document.getElementById('lectureUrl').value.trim();
+
+      if (checkedSubjects.length === 0 && customSubjectList.length === 0) {
+        showToast('请至少选择或自填一门擅长主讲的学科！', 'warning');
+        return;
+      }
+      if (!hourlyRate || hourlyRate <= 0) {
+        showToast('请设定合理的期望时薪！', 'warning');
+        return;
+      }
+      if (!lectureUrl) {
+        showToast('请提供试讲视频或板书讲义网盘提取链接！', 'warning');
+        return;
+      }
+
+      // 采集表单并写入共享存储 → 管理端审核队列可见
+      const subjectValues = Array.from(checkedSubjects).map(c => c.value);
+      const allSubjects = subjectValues.concat(customSubjectList || []);
+      const styleTags = Array.from(document.querySelectorAll('#styleTagContainer > span'))
+        .map(s => s.innerText.replace(/×|✕|✖/g, '').trim())
+        .filter(Boolean);
+      const proofFiles = (typeof uploadedMaterials !== 'undefined' ? uploadedMaterials : []).map(f => ({
+        name: f.name, size: f.size || '', verified: true, tag: f.tag || ''
+      }));
+
+      const availability = (window.__onboardAvailApi && window.__onboardAvailApi.getValue)
+        ? window.__onboardAvailApi.getValue()
+        : [];
+
+      let saved = null;
+      if (window.StorageService) {
+        saved = StorageService.addMentor({
+          realName: document.getElementById('realName').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          idCard: document.getElementById('idCard').value.trim(),
+          university: document.getElementById('finalUniversityValue').value.trim(),
+          province: (document.getElementById('provinceSelect') && document.getElementById('provinceSelect').value) || '四川',
+          degree: (document.getElementById('educationLevel') && document.getElementById('educationLevel').value) || '',
+          chsiCode: document.getElementById('chsiCode').value.trim(),
+          chsiStatus: (chsiVerifiedResult && chsiVerifiedResult.status) || '有效 (在籍)',
+          chsiMajor: (chsiVerifiedResult && chsiVerifiedResult.university) ? (chsiVerifiedResult.university + ' · 在籍核验') : '学信网核验通过',
+          publicTeacherCompliance: true,
+          subjects: allSubjects,
+          customSubjects: (customSubjectList || []).slice(),
+          hourlyRate: parseInt(hourlyRate, 10) || 0,
+          rateDifficulty: (document.getElementById('rateTipBadge') && document.getElementById('rateTipBadge').innerText.trim()) || '待评估',
+          rateTierNote: (document.getElementById('rateAnalysisText') && document.getElementById('rateAnalysisText').innerText.trim()) || '',
+          scoreHighlight: (document.getElementById('scoreHighlight') && document.getElementById('scoreHighlight').value.trim()) || '',
+          styles: styleTags.length ? styleTags : ['引导启发解题'],
+          proofFiles: proofFiles,
+          lectureUrl: lectureUrl,
+          bankName: (document.getElementById('bankName') && document.getElementById('bankName').value) || '',
+          bankCardNumber: (document.getElementById('bankCardNumber') && document.getElementById('bankCardNumber').value.trim()) || '',
+          status: 'pending',
+          evalGrade: '待教研评级',
+          reviewComment: '',
+          spacePreference: '青羊金沙文化微网点',
+          availability: availability,
+          availableSlots: availability.length && StorageService
+            ? (function() {
+                // derive labels via setMentorAvailability helpers if present after create
+                const wdNames = ['周日','周一','周二','周三','周四','周五','周六'];
+                const labels = [];
+                availability.forEach(function(item) {
+                  (item.ranges || []).forEach(function(r) {
+                    labels.push((wdNames[item.weekday] || '') + ' ' + r.start + '-' + r.end);
+                  });
+                });
+                return labels;
+              })()
+            : undefined
+        });
+      }
+
+      const randomCode = (saved && saved.code) || ('CD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
+      document.getElementById('resMentorId').innerText = randomCode;
+      document.getElementById('resName').innerText = document.getElementById('realName').value.trim();
+      document.getElementById('resUniversity').innerText = document.getElementById('finalUniversityValue').value.trim();
+      document.getElementById('resHourly').innerText = '¥ ' + hourlyRate + ' /h';
+
+      // 切换到完成卡片
+      document.getElementById('step2-card').classList.add('hidden');
+      document.getElementById('step3-card').classList.remove('hidden');
+
+      // 更新步骤条
+      document.getElementById('step2-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
+      document.getElementById('step2-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+      document.getElementById('step3-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
+      document.getElementById('step3-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+      document.getElementById('step3-text').className = "text-teal-700 font-bold";
+      document.getElementById('progress-bar-2').style.width = '100%';
+
+      window.scrollTo({ top: 350, behavior: 'smooth' });
+      showToast('入库申请已提交！可进入导师工作台查看待审状态');
+    }
+
+    /* ==========================================================================
+       5. Toast 提示组件（字段使用灰色 placeholder 示例引导填写）
+       ========================================================================== */
+    function safeNavigate(targetUrl, targetTitle) {
+      showToast(`正在跳转至【${targetTitle || targetUrl}】...`);
+      setTimeout(() => {
+        try {
+          if (targetUrl && typeof targetUrl === 'string' && targetUrl.trim() !== '') {
+            window.location.assign(targetUrl);
+          }
+        } catch (e) {
+          console.warn('Sandbox navigation fallback:', e);
+          showToast(`已成功切换至【${targetTitle || targetUrl}】演示态`);
+        }
+      }, 600);
+    }
+
+    let toastTimer = null;
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const toastText = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastText.innerText = message;
+      if (type === 'error') {
+        toastIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-sm";
+      } else if (type === 'warning') {
+        toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-teal-400 text-sm";
+      }
+
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 3000);
+    }
+
+    // 页面加载启动
+    window.onload = function() {
+      initUniversitySelectors();
+      renderUploadedFiles();
+      updateLiveCard();
+      updateL1Progress();
+      // picker mounts when L2 opens; pre-create container if already on step2
+      try { if (!document.getElementById('step2-card').classList.contains('hidden')) ensureOnboardAvailabilityPicker(); } catch(e) {}
+      const uniSel = document.getElementById('universitySelect');
+      if (uniSel) uniSel.addEventListener('change', updateL1Progress);
+      const provSel = document.getElementById('provinceSelect');
+      if (provSel) provSel.addEventListener('change', updateL1Progress);
+    };
+  </script>
+</body>
+</html>

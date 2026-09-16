@@ -1,0 +1,98 @@
+.chip-wrap { display: flex; flex-wrap: wrap; }
+.avatar {
+  width: 72rpx; height: 72rpx; border-radius: 18rpx;
+  background: #0d9488; color: #fff; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+.avatar.sm { width: 56rpx; height: 56rpx; border-radius: 14rpx; font-size: 24rpx; }
+.tutor-card { padding-bottom: 20rpx; }
+.tutor-top { border-color: #99f6e4; box-shadow: 0 4rpx 20rpx rgba(13, 148, 136, 0.12); }
+.bk-row {
+  margin-top: 14rpx; padding: 16rpx; background: #f8fafc;
+  border-radius: 14rpx; border: 1px solid #e2e8f0;
+}
+.slider-row { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
+.slider-row .val { width: 64rpx; text-align: right; font-weight: 700; color: #0f766e; font-size: 24rpx; }
+.iot-grid { display: flex; gap: 12rpx; margin-top: 16rpx; }
+.iot-cell {
+  flex: 1; text-align: center; padding: 16rpx 8rpx;
+  background: #f8fafc; border-radius: 14rpx; border: 1px solid #e2e8f0;
+  font-size: 24rpx; font-weight: 700;
+}
+.pace-row {
+  display: flex; align-items: center; gap: 12rpx;
+  padding: 14rpx; border: 1px solid #e2e8f0; border-radius: 14rpx; margin-bottom: 10rpx;
+  font-size: 24rpx;
+}
+.escrow-box {
+  margin-top: 20rpx; padding: 20rpx; background: #f0fdfa;
+  border: 1px solid #99f6e4; border-radius: 16rpx; font-size: 24rpx;
+}
+.agr-p { font-size: 22rpx; color: #475569; line-height: 1.6; margin-bottom: 6rpx; }
+.agr-tip {
+  margin-top: 16rpx; padding: 14rpx; background: #f0fdfa; border: 1px solid #99f6e4;
+  border-radius: 12rpx; font-size: 22rpx; color: #134e4a;
+}
+.btn-iot-idle {
+  background: #0d9488; color: #fff; border-radius: 20rpx; font-weight: 700; font-size: 26rpx; padding: 20rpx; border: none;
+}
+.btn-iot-idle::after { border: none; }
+.btn-iot-opened {
+  background: #e2e8f0; color: #475569; border-radius: 20rpx; font-weight: 700; font-size: 26rpx; padding: 20rpx; border: 1px solid #cbd5e1;
+}
+.btn-iot-opened::after { border: none; }
+.btn-iot-off {
+  background: #fff1f2; color: #be123c; border-radius: 20rpx; font-weight: 700; font-size: 26rpx; padding: 20rpx; border: 1px solid #fecdd3;
+}
+.btn-iot-off::after { border: none; }
+
+.action-row {
+  display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 24rpx;
+}
+.action-btn {
+  flex: 1; min-width: 28%; background: #f0fdfa; color: #0f766e;
+  border: 1px solid #99f6e4; border-radius: 16rpx; font-size: 22rpx; font-weight: 700;
+  padding: 16rpx 12rpx; line-height: 1.3;
+}
+.action-btn::after { border: none; }
+.action-btn.action-primary {
+  background: #0d9488; color: #fff; border-color: #0d9488;
+}
+.action-btn.action-muted {
+  background: #f8fafc; color: #64748b; border-color: #e2e8f0;
+}
+
+.wallet-card { padding: 22rpx 28rpx; }
+.wallet-bal { font-size: 30rpx; font-weight: 900; color: #0f172a; margin-top: 4rpx; }
+.wallet-frozen { font-size: 22rpx; color: #d97706; font-weight: 600; }
+
+.top-strip {
+  white-space: nowrap; margin-top: 16rpx;
+}
+.top-card {
+  display: inline-block; vertical-align: top;
+  width: 280rpx; margin-right: 16rpx; padding: 20rpx;
+  background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 18rpx;
+  white-space: normal;
+}
+
+.search-row { display: flex; align-items: center; gap: 12rpx; }
+.search-input { flex: 1; }
+.sort-row { display: flex; align-items: center; gap: 12rpx; margin: 12rpx 0; }
+.sort-picker { flex: 1; font-size: 24rpx; min-height: 72rpx; }
+
+.lecture-link {
+  margin-top: 10rpx; color: #0f766e; font-size: 22rpx; font-weight: 700;
+  text-decoration: underline;
+}
+
+.passport-hero {
+  padding: 24rpx; border-radius: 18rpx;
+  background: linear-gradient(135deg, #0f172a, #134e4a);
+  margin-bottom: 16rpx; color: #fff;
+}
+.passport-plan {
+  padding: 16rpx; background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 14rpx; margin-bottom: 12rpx; font-size: 24rpx;
+}
+.passport-panel .modal-body { padding-bottom: 8rpx; }

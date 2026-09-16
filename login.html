@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火学伴 - 极简登录与认证中心</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .field-soft {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .field-soft:focus {
+      background: rgba(255, 255, 255, 0.55);
+    }
+    /* 复选/单选选项字号加大，便于阅读 */
+    label:has(> input[type="checkbox"]),
+    label:has(> input[type="radio"]),
+    label.subject-tag,
+    .opt-chip-label,
+    .filter-tab {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    label:has(> input[type="checkbox"]) span,
+    label:has(> input[type="radio"]) span,
+    label.subject-tag span {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    input[type="checkbox"] + span,
+    input[type="checkbox"] ~ span {
+      font-size: 16px !important;
+      line-height: 1.45;
+    }
+    #subjectCheckboxGroup label {
+      font-size: 16px !important;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900 relative overflow-x-hidden">
+
+  <!-- 背景光影装饰 -->
+  <div class="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- 顶部轻量系统栏：左侧品牌，右侧角色切换 -->
+  <header class="w-full px-5 sm:px-8 py-4 flex items-center justify-between relative z-10 gap-3">
+    <div class="flex items-center space-x-2.5 min-w-0">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shadow-teal-500/20 shrink-0">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="font-black text-white text-base tracking-tight leading-none">星火学伴</span>
+          <span class="text-[10px] bg-teal-500/20 text-teal-300 px-1.5 py-0.5 rounded font-mono">AUTH</span>
+        </div>
+        <span class="text-[10px] text-slate-400 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
+      </div>
+    </div>
+
+    <!-- 角色切换：右上角紧凑分段控件 -->
+    <div id="roleSwitchBar" class="flex items-center gap-0.5 p-0.5 rounded-full bg-white/10 backdrop-blur-md shrink-0" role="tablist" aria-label="登录角色">
+      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false">
+        <i class="fa-solid fa-user-group text-[10px] opacity-70"></i>
+        <span class="hidden xs:inline sm:inline">家长学员端</span>
+        <span class="sm:hidden">家长</span>
+      </button>
+      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer" role="tab" aria-selected="true">
+        <i class="fa-solid fa-chalkboard-user text-[10px] text-teal-600"></i>
+        <span class="hidden xs:inline sm:inline">导师端</span>
+        <span class="sm:hidden">导师</span>
+      </button>
+      <button type="button" id="tabAdmin" onclick="switchRole('admin')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false">
+        <i class="fa-solid fa-shield-halved text-[10px] opacity-70"></i>
+        <span class="hidden xs:inline sm:inline">管理端</span>
+        <span class="sm:hidden">管理</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full max-w-md mx-auto px-4 py-4 sm:py-8 relative z-10 flex-1 flex flex-col justify-center">
+    <!-- 无边框、强融合背景的半透明面板 -->
+    <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-5 transition-all">
+
+      <!-- 动态标题说明 -->
+      <div class="space-y-1">
+        <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">青年导师端登录</h1>
+        <p id="roleSubtitle" class="text-xs text-slate-300/80 leading-relaxed">
+          银行合约直达秒结 · 免押扫码开启智能教学仓
+        </p>
+      </div>
+
+      <!-- 登录表单：显式设置 action 规避 iframe 相对路径解析异常 -->
+      <form id="loginForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleLoginSubmit(event); return false;" class="space-y-4">
+
+        <!-- 手机号输入 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-200/90 mb-1.5">手机号码</label>
+          <div class="relative">
+            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-500 text-xs font-bold pr-2 select-none">
+              <span>+86</span>
+            </div>
+            <input type="tel" id="loginMobile" required maxlength="11" placeholder="例：138****8000（入库登记或预留手机号）" class="field-soft w-full text-sm pl-14 pr-3.5 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition font-medium text-slate-800 placeholder:text-slate-500/70">
+          </div>
+        </div>
+
+        <!-- 登录方式一：短信验证码（默认免密优先） -->
+        <div id="codeLoginSection" class="space-y-1.5">
+          <label class="block text-xs font-bold text-slate-200/90">短信验证码</label>
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="text" id="smsCodeInput" maxlength="6" placeholder="例：888888（演示验证码）" class="field-soft w-full text-sm pl-9 pr-3 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition font-mono tracking-wider text-slate-800 placeholder:text-slate-500/70">
+            </div>
+            <button type="button" id="btnSendCode" onclick="sendSmsCode()" class="shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm">
+              获取验证码
+            </button>
+          </div>
+          <div class="text-[10px] text-slate-400 flex items-center gap-1 pt-0.5">
+            <i class="fa-solid fa-circle-check text-teal-400"></i>
+            <span>演示环境已预填免密测试码：<strong class="text-teal-300 font-mono">888888</strong></span>
+          </div>
+        </div>
+
+        <!-- 登录方式二：账户密码（默认隐藏，点击切换呼出） -->
+        <div id="pwdLoginSection" class="space-y-1.5 hidden">
+          <label class="block text-xs font-bold text-slate-200/90">登录密码</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="password" id="passwordInput" placeholder="请输入您的账户密码" class="field-soft w-full text-sm pl-9 pr-10 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition text-slate-800 placeholder:text-slate-500/70">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer">
+              <i class="fa-solid fa-eye-slash text-xs" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 登录方式切换链接与忘记密码 -->
+        <div class="flex items-center justify-between text-xs pt-0.5">
+          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-300 hover:text-teal-200 font-semibold flex items-center gap-1 transition cursor-pointer">
+            <i class="fa-solid fa-rotate text-[10px]"></i>
+            <span id="toggleLoginModeText">改用账号密码登录</span>
+          </button>
+          <button type="button" onclick="showToast('请联系平台教研客服或使用免密短信重置')" class="text-slate-400 hover:text-slate-200 transition cursor-pointer">
+            忘记密码？
+          </button>
+        </div>
+
+        <!-- 合规知情授权勾选 -->
+        <div class="pt-1">
+          <label class="flex items-start gap-2 text-xs text-slate-400 cursor-pointer select-none">
+            <input type="checkbox" id="agreementCheckbox" class="w-3.5 h-3.5 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-0 bg-white/40">
+            <span class="text-[11px] leading-tight text-slate-300">
+              已阅读并同意
+              <button type="button" onclick="openServiceAgreement(event)" class="text-teal-300 underline font-medium cursor-pointer p-0 bg-transparent border-none">《服务协议》</button>
+              与
+              <button type="button" onclick="openPrivacyPolicy(event)" class="text-teal-300 underline font-medium cursor-pointer p-0 bg-transparent border-none">《个人信息保护政策》</button>
+            </span>
+          </label>
+        </div>
+
+        <!-- 提交登录按钮 -->
+        <button type="submit" id="btnSubmitLogin" class="w-full bg-teal-500/90 hover:bg-teal-400 active:scale-[0.99] text-slate-950 text-sm font-bold py-3 rounded-xl shadow-lg shadow-teal-500/25 transition flex items-center justify-center gap-2 cursor-pointer">
+          <span>安全登录</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+
+        <!-- 跳转失败时的手动进入兜底 -->
+        <div id="manualEnterFallback" class="hidden mt-2 text-center">
+          <p class="text-[11px] text-amber-200/90 bg-amber-500/15 rounded-xl px-3 py-2 mb-2">
+            页面未自动跳转？请点击下方手动进入
+          </p>
+          <a id="manualEnterLink" href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-teal-200 hover:text-white bg-teal-500/20 hover:bg-teal-500/30 px-4 py-2 rounded-xl transition">
+            <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+            <span>手动进入</span>
+          </a>
+        </div>
+
+      </form>
+
+      <!-- 底部入驻指引（无分割线） -->
+      <div id="registerPromptBox" class="pt-2 flex items-center justify-between text-xs gap-2">
+        <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
+        <button type="button" onclick="safeNavigate('index.html', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <span>进入导师认证与建库 (L1/L2)</span>
+          <i class="fa-solid fa-angle-right text-[10px]"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 底部合规说明 -->
+    <div class="mt-5 text-center text-xs text-slate-400 space-y-1">
+      <div class="flex items-center justify-center gap-3 flex-wrap">
+        <span class="flex items-center gap-1">
+          <i class="fa-solid fa-shield-check text-teal-400"></i>
+          公安与学信网实名直连
+        </span>
+        <span class="text-slate-600">·</span>
+        <span class="flex items-center gap-1">
+          <i class="fa-solid fa-building-columns text-teal-400"></i>
+          商业银行托管专户
+        </span>
+      </div>
+    </div>
+  </main>
+
+  <!-- 极简页脚 -->
+  <footer class="w-full py-4 text-center text-[11px] text-slate-500 relative z-10">
+    <p>© 2026 星火学伴 · 阳光课业辅导匹配与智能微空间生态系统</p>
+  </footer>
+
+  <!-- 浮动通知 Toast 组件 -->
+  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+    <i class="fa-solid fa-circle-info text-teal-400 text-sm" id="toastIcon"></i>
+    <span id="toastMessage">已更新状态</span>
+  </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/storage-service.js"></script>
+    <script src="js/legal-docs.js"></script>
+
+    <script>
+    // 统一库 hydrate：页面脚本可 await StorageService.ready()
+    (function () {
+      if (window.StorageService && StorageService.hydrateFromServer) {
+        StorageService.hydrateFromServer();
+      }
+    })();
+    </script>
+
+<script>
+    'use strict';
+
+    let currentRole = 'mentor';
+    let isCodeMode = true;
+    let countdown = 0;
+    let timerInterval = null;
+
+    // 安全路由跳转：优先 location.assign / location.href，并暴露手动进入兜底
+    let pendingNavUrl = null;
+    let pendingNavWatch = null;
+
+    const ROLE_TAB_ACTIVE = "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer";
+    const ROLE_TAB_IDLE = "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer";
+
+    function showManualEnterFallback(targetUrl) {
+      const box = document.getElementById('manualEnterFallback');
+      const link = document.getElementById('manualEnterLink');
+      if (!box || !link || !targetUrl) return;
+      pendingNavUrl = targetUrl;
+      link.href = targetUrl;
+      link.onclick = function(e) {
+        e.preventDefault();
+        try { window.location.href = targetUrl; } catch (_) {}
+        try { window.location.assign(targetUrl); } catch (_) {}
+      };
+      box.classList.remove('hidden');
+    }
+
+    function safeNavigate(targetUrl, targetTitle) {
+      if (!targetUrl || typeof targetUrl !== 'string' || !targetUrl.trim()) return;
+      pendingNavUrl = targetUrl.trim();
+      showToast(`正在跳转至【${targetTitle || targetUrl}】...`);
+      try {
+        window.location.assign(pendingNavUrl);
+      } catch (e) {
+        console.warn('location.assign failed:', e);
+        try { window.location.href = pendingNavUrl; } catch (e2) {
+          console.warn('location.href failed:', e2);
+        }
+      }
+      // 若 2.5s 后仍停留在登录页，展示「手动进入」
+      if (pendingNavWatch) clearTimeout(pendingNavWatch);
+      pendingNavWatch = setTimeout(() => {
+        const stillHere = /login\.html/i.test(window.location.pathname || '') ||
+          (window.location.href || '').indexOf('login.html') !== -1 ||
+          document.getElementById('btnSubmitLogin');
+        if (stillHere && pendingNavUrl) {
+          showManualEnterFallback(pendingNavUrl);
+          showToast('自动跳转未完成，请点击「手动进入」', 'warning');
+        }
+      }, 2500);
+    }
+
+    // 切换家长 / 导师 / 管理端角色（右上角分段控件）
+    function switchRole(role) {
+      currentRole = role;
+      const tabMentor = document.getElementById('tabMentor');
+      const tabParent = document.getElementById('tabParent');
+      const tabAdmin = document.getElementById('tabAdmin');
+      const roleTitle = document.getElementById('roleTitle');
+      const roleSubtitle = document.getElementById('roleSubtitle');
+      const regBox = document.getElementById('registerPromptBox');
+
+      tabMentor.className = ROLE_TAB_IDLE;
+      tabParent.className = ROLE_TAB_IDLE;
+      if (tabAdmin) tabAdmin.className = ROLE_TAB_IDLE;
+      tabMentor.setAttribute('aria-selected', 'false');
+      tabParent.setAttribute('aria-selected', 'false');
+      if (tabAdmin) tabAdmin.setAttribute('aria-selected', 'false');
+
+      if (role === 'mentor') {
+        tabMentor.className = ROLE_TAB_ACTIVE;
+        tabMentor.setAttribute('aria-selected', 'true');
+        roleTitle.innerText = "青年导师端登录";
+        roleSubtitle.innerText = "银行合约直达秒结 · 免押扫码开启智能教学仓";
+        regBox.innerHTML = `
+          <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
+          <button type="button" onclick="safeNavigate('index.html', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+            <span>进入导师认证与建库 (L1/L2)</span>
+            <i class="fa-solid fa-angle-right text-[10px]"></i>
+          </button>
+        `;
+      } else if (role === 'admin') {
+        if (tabAdmin) {
+          tabAdmin.className = ROLE_TAB_ACTIVE;
+          tabAdmin.setAttribute('aria-selected', 'true');
+        }
+        roleTitle.innerText = "管理端登录";
+        roleSubtitle.innerText = "资质审核 · 合规风控 · 平台运营总控台";
+        regBox.innerHTML = `
+          <span class="text-slate-400 shrink-0">管理审核入口</span>
+          <button type="button" onclick="safeNavigate('admin_audit.html', '管理端审核台')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+            <span>直达管理审核台</span>
+            <i class="fa-solid fa-angle-right text-[10px]"></i>
+          </button>
+        `;
+      } else {
+        tabParent.className = ROLE_TAB_ACTIVE;
+        tabParent.setAttribute('aria-selected', 'true');
+        roleTitle.innerText = "家长 / 学员登录";
+        roleSubtitle.innerText = "单次约课零预付 · 优选双一流学霸与合规微空间";
+        regBox.innerHTML = `
+          <span class="text-slate-400 shrink-0">首次约课辅导？</span>
+          <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+            <span>前往学情建档注册</span>
+            <i class="fa-solid fa-angle-right text-[10px]"></i>
+          </button>
+        `;
+      }
+    }
+
+    // 切换验证码 / 密码登录模式
+    function toggleLoginMode() {
+      isCodeMode = !isCodeMode;
+      const codeSec = document.getElementById('codeLoginSection');
+      const pwdSec = document.getElementById('pwdLoginSection');
+      const toggleText = document.getElementById('toggleLoginModeText');
+
+      if (isCodeMode) {
+        codeSec.classList.remove('hidden');
+        pwdSec.classList.add('hidden');
+        toggleText.innerText = "改用账号密码登录";
+      } else {
+        codeSec.classList.add('hidden');
+        pwdSec.classList.remove('hidden');
+        toggleText.innerText = "改用短信免密登录";
+      }
+    }
+
+    // 切换密码明文/密文可见性
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('passwordInput');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        eyeIcon.className = "fa-solid fa-eye text-xs text-teal-600";
+      } else {
+        pwdInput.type = 'password';
+        eyeIcon.className = "fa-solid fa-eye-slash text-xs text-slate-400";
+      }
+    }
+
+    // 发送验证码模拟
+    function sendSmsCode() {
+      const mobile = document.getElementById('loginMobile').value.trim();
+      if (!/^1[3-9]\d{9}$/.test(mobile)) {
+        showToast('请输入有效的 11 位手机号码！', 'warning');
+        return;
+      }
+      if (countdown > 0) return;
+
+      countdown = 60;
+      const btn = document.getElementById('btnSendCode');
+      btn.disabled = true;
+      btn.innerText = `${countdown}s 重发`;
+      btn.className = "shrink-0 bg-white/10 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-not-allowed backdrop-blur-sm";
+
+      timerInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          btn.innerText = `${countdown}s 重发`;
+        } else {
+          clearInterval(timerInterval);
+          btn.disabled = false;
+          btn.innerText = "获取验证码";
+          btn.className = "shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm";
+        }
+      }, 1000);
+
+      showToast('短信验证码已发送（演示可用：888888）');
+    }
+
+    // 提交登录逻辑
+    function resolvePostLoginTarget(mobileVal) {
+      if (currentRole === 'admin') {
+        if (window.StorageService) {
+          StorageService.setSession({
+            role: 'admin',
+            phone: mobileVal,
+            loggedInAt: new Date().toISOString()
+          });
+        }
+        return { url: 'admin_audit.html', title: '管理端审核台' };
+      }
+      if (currentRole === 'mentor') {
+        let mentor = null;
+        if (window.StorageService) {
+          mentor = StorageService.getMentorByPhone(mobileVal);
+          if (mentor) {
+            StorageService.setSession({
+              role: 'mentor',
+              phone: mobileVal,
+              mentorId: mentor.id,
+              loggedInAt: new Date().toISOString()
+            });
+            return { url: 'mentor_dashboard.html', title: '导师工作台' };
+          }
+          StorageService.setSession({
+            role: 'mentor',
+            phone: mobileVal,
+            loggedInAt: new Date().toISOString()
+          });
+        }
+        return { url: 'index.html', title: '导师入库招募页' };
+      }
+      if (window.StorageService) {
+        StorageService.setSession({ role: currentRole, phone: mobileVal, loggedInAt: new Date().toISOString() });
+      }
+      let hasProfile = false;
+      if (window.StorageService) {
+        const parents = StorageService.getParents();
+        hasProfile = parents.some(p => p.phone === mobileVal);
+        if (hasProfile) {
+          const hit = parents.find(p => p.phone === mobileVal);
+          StorageService.setSession({ role: 'parent', phone: mobileVal, parentId: hit.id, loggedInAt: new Date().toISOString() });
+        }
+      }
+      if (hasProfile) {
+        return { url: 'parent_dashboard.html', title: '家长主控与智能匹配' };
+      }
+      return { url: 'parent_register.html', title: '学情建档与注册' };
+    }
+
+    function handleLoginSubmit(event) {
+      if (event && event.preventDefault) {
+        event.preventDefault();
+      }
+
+      const mobile = document.getElementById('loginMobile').value.trim();
+      const agreed = document.getElementById('agreementCheckbox').checked;
+      const fallbackBox = document.getElementById('manualEnterFallback');
+      if (fallbackBox) fallbackBox.classList.add('hidden');
+
+      if (!mobile) {
+        showToast('请先输入手机号！', 'warning');
+        return;
+      }
+      if (!agreed) {
+        showToast('请阅读并勾选服务协议与隐私政策！', 'warning');
+        return;
+      }
+
+      if (isCodeMode) {
+        const code = document.getElementById('smsCodeInput').value.trim();
+        if (code !== '888888' && code.length !== 6) {
+          showToast('请输入正确的 6 位短信验证码 (888888)！', 'error');
+          return;
+        }
+      }
+
+      const submitBtn = document.getElementById('btnSubmitLogin');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>安全验证通过，正在进入...</span>';
+
+      const roleLabel = currentRole === 'mentor' ? '导师工作台' : (currentRole === 'admin' ? '管理审核台' : '预约中心');
+      showToast(`欢迎回来！正在进入${roleLabel}...`);
+
+      const mobileVal = mobile;
+      const target = resolvePostLoginTarget(mobileVal);
+      pendingNavUrl = target.url;
+
+      // 预填手动进入链接（隐藏），验证通过后显式导航
+      const link = document.getElementById('manualEnterLink');
+      if (link) {
+        link.href = target.url;
+        link.onclick = function(e) {
+          e.preventDefault();
+          try { window.location.href = target.url; } catch (_) {}
+          try { window.location.assign(target.url); } catch (_) {}
+        };
+      }
+
+      setTimeout(() => {
+        try {
+          window.location.assign(target.url);
+        } catch (e1) {
+          try { window.location.href = target.url; } catch (e2) {
+            console.warn('explicit navigate failed', e2);
+          }
+        }
+      }, 350);
+
+      // 若约 2.5s 后仍停留在登录页，展示「手动进入」并恢复按钮
+      if (pendingNavWatch) clearTimeout(pendingNavWatch);
+      pendingNavWatch = setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+        showManualEnterFallback(target.url);
+        showToast('自动跳转未完成，请点击「手动进入」', 'warning');
+      }, 2500);
+    }
+
+    // 自定义轻量 Toast 提示组件
+    let toastTimer = null;
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const toastText = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastText.innerText = message;
+      if (type === 'error') {
+        toastIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-sm";
+      } else if (type === 'warning') {
+        toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-teal-400 text-sm";
+      }
+
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2600);
+    }
+  </script>
+</body>
+</html>

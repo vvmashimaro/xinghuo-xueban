@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/mentor-onboard/mentor-onboard",
+    "pages/admin-audit/admin-audit",
+    "pages/parent-register/parent-register",
+    "pages/parent-dashboard/parent-dashboard",
+    "pages/mentor-dashboard/mentor-dashboard"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0f172a",
+    "navigationBarTitleText": "星火学伴",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f8fafc",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,20 @@
+.steps { display: flex; align-items: center; justify-content: space-between; padding: 24rpx; }
+.step-item { display: flex; flex-direction: column; align-items: center; gap: 8rpx; font-size: 20rpx; color: #94a3b8; flex: 0 0 auto; }
+.step-item .on { color: #0f766e; font-weight: 700; }
+.step-dot {
+  width: 48rpx; height: 48rpx; border-radius: 50%;
+  border: 2px solid #cbd5e1; color: #94a3b8;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 22rpx;
+}
+.step-dot.active { border-color: #0d9488; background: #0d9488; color: #fff; }
+.step-dot.done { border-color: #14b8a6; background: #ccfbf1; color: #0f766e; }
+.step-line { flex: 1; height: 4rpx; background: #e2e8f0; margin: 0 8rpx 28rpx; }
+.step-line.fill { background: #14b8a6; }
+.progress-box { background: #f8fafc; border-radius: 16rpx; padding: 20rpx; border: 1px solid #e2e8f0; }
+.bar-bg { height: 12rpx; background: #e2e8f0; border-radius: 999rpx; margin: 12rpx 0 16rpx; overflow: hidden; }
+.bar-fill { height: 100%; background: #0d9488; border-radius: 999rpx; }
+.checklist { display: flex; flex-wrap: wrap; gap: 8rpx 20rpx; }
+.cli { font-size: 20rpx; color: #94a3b8; }
+.cli.ok { color: #047857; font-weight: 700; }
+.chip-wrap { display: flex; flex-wrap: wrap; }

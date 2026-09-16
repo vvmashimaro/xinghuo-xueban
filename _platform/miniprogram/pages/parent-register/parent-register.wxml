@@ -1,0 +1,172 @@
+<view class="container">
+  <view class="hero">
+    <view class="hero-title">{{heroTitle}}</view>
+    <view class="hero-sub">{{heroSub}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">基础信息</view>
+    <view class="field">
+      <text class="label">家长称呼</text>
+      <input class="input" placeholder="例：刘女士" placeholder-class="input-placeholder" value="{{parentName}}" bindinput="onParentName" />
+    </view>
+    <view class="field">
+      <text class="label">手机号{{phoneReadonly?'（登录账号，不可更改）':''}}</text>
+      <input class="input {{phoneReadonly?'input-readonly':''}}" type="number" maxlength="11" placeholder="例：139****9211" placeholder-class="input-placeholder" value="{{phone}}" bindinput="onPhone" disabled="{{phoneReadonly}}" />
+    </view>
+    <view class="field">
+      <text class="label">学员昵称</text>
+      <input class="input" placeholder="例：乐乐同学" placeholder-class="input-placeholder" value="{{studentNickname}}" bindinput="onNickname" />
+    </view>
+    <view class="field">
+      <text class="label">年级</text>
+      <picker mode="selector" range="{{grades}}" value="{{gradeIndex}}" bindchange="onGrade">
+        <view class="input">{{grades[gradeIndex]}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="label">所在城区</text>
+      <picker mode="selector" range="{{districts}}" value="{{districtIndex}}" bindchange="onDistrict">
+        <view class="input">{{districts[districtIndex]}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="label">偏好教学仓</text>
+      <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onSpace">
+        <view class="input">{{spaces[spaceIndex]}}</view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row-between">
+      <view class="card-title" style="margin:0;">目标学科</view>
+      <text class="badge badge-teal">已配置 {{planCount}} 科 · {{topicCount}} 专题</text>
+    </view>
+    <view class="muted" style="margin:12rpx 0 16rpx;">勾选学科后将打开三步配置向导（薄弱考点 → 推进节奏 → 学习痛点）</view>
+    <view class="chip-wrap">
+      <view wx:for="{{subjectOptionChips}}" wx:key="name"
+        class="chip {{item.on?'chip-on':''}}"
+        data-v="{{item.name}}" bindtap="onSubjectTap">{{item.name}}</view>
+    </view>
+    <view wx:if="{{planChips.length===0}}" class="empty-hint">请勾选上方学科，系统将引导您配置薄弱考点与辅导策略</view>
+    <view class="plan-chip" wx:for="{{planChips}}" wx:key="name">
+      <view>
+        <view class="flex-row gap-8">
+          <text style="font-weight:900;">{{item.name}}</text>
+          <text class="badge badge-teal">{{item.topicN}} 考点</text>
+          <text class="muted">{{item.pacingShort}} · {{item.painN}} 痛点</text>
+        </view>
+        <view class="muted" style="margin-top:6rpx;">{{item.preview}}</view>
+      </view>
+      <button class="btn-ghost" size="mini" data-v="{{item.name}}" bindtap="openWizard">配置考点</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">时薪预算区间（双柄）</view>
+    <view class="budget-display">¥{{budgetMin}} – ¥{{budgetMax}}<text class="muted"> /时</text></view>
+    <view class="muted" style="margin-bottom:12rpx;">拖动下限与上限滑块，区间将用于匹配过滤</view>
+    <view class="slider-row">
+      <text class="muted">下限</text>
+      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMin}}" activeColor="#0d9488" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMin" bindchange="onBudgetMin" />
+      <text class="val">{{budgetMin}}</text>
+    </view>
+    <view class="slider-row">
+      <text class="muted">上限</text>
+      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMax}}" activeColor="#0d9488" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMax" bindchange="onBudgetMax" />
+      <text class="val">{{budgetMax}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">学情目标简述</view>
+    <textarea class="input" style="min-height:140rpx;" placeholder="例：中考前加强几何证明与函数动点…" placeholder-class="input-placeholder" value="{{targetGoal}}" bindinput="onGoal" />
+  </view>
+
+  <view class="card">
+    <view class="check-row" bindtap="onToggleConsent">
+      <view class="check-box {{consent?'on':''}}">{{consent?'✓':''}}</view>
+      <text>我已阅读并同意
+        <text class="link" catchtap="openAgreement">《资金托管与服务协议》</text>
+        ，知晓课酬按单次托管锁定，课后 <text style="color:#0f766e;font-weight:800;">48 小时</text>无投诉或其他冻结事由则自动划拨至导师，不设大额预存消费包。
+      </text>
+    </view>
+  </view>
+
+  <button class="btn-primary" style="width:100%;" bindtap="submitProfile">{{submitLabel}}</button>
+  <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="goLogin">{{editMode?'返回主控 / 登录':'返回登录'}}</button>
+</view>
+
+<!-- 学科三步向导 -->
+<view class="modal-mask" wx:if="{{wizardShow}}">
+  <view class="modal-panel">
+    <view class="modal-head">
+      <view style="font-weight:900;">配置学科学情 · {{wizardSubject}}</view>
+      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">步骤 {{wizardStep}} / 3</view>
+    </view>
+    <view class="modal-body">
+      <view class="wiz-dots">
+        <view class="wd {{wizardStep===1?'active':''}} {{wizardStep>1?'done':''}}">1</view>
+        <text class="muted">薄弱考点</text>
+        <view class="wd {{wizardStep===2?'active':''}} {{wizardStep>2?'done':''}}">2</view>
+        <text class="muted">推进节奏</text>
+        <view class="wd {{wizardStep===3?'active':''}}">3</view>
+        <text class="muted">学习痛点</text>
+      </view>
+
+      <block wx:if="{{wizardStep===1}}">
+        <view class="section-h">请勾选薄弱考点（可多选）</view>
+        <view class="chip-wrap">
+          <view wx:for="{{wizardTopics}}" wx:key="name"
+            class="chip {{item.on?'chip-on':''}}"
+            data-name="{{item.name}}" bindtap="toggleTopic">{{item.name}}</view>
+        </view>
+      </block>
+      <block wx:if="{{wizardStep===2}}">
+        <view class="section-h">选择辅导推进节奏</view>
+        <radio-group bindchange="onPacing">
+          <label class="pace-row" wx:for="{{pacingOptions}}" wx:key="*this">
+            <radio value="{{item}}" checked="{{item===wizardPacing}}" color="#0d9488" />
+            <text>{{item}}</text>
+          </label>
+        </radio-group>
+      </block>
+      <block wx:if="{{wizardStep===3}}">
+        <view class="section-h">学习痛点标签</view>
+        <view class="chip-wrap">
+          <view wx:for="{{wizardPains}}" wx:key="name"
+            class="chip {{item.on?'chip-on':''}}"
+            data-name="{{item.name}}" bindtap="togglePain">{{item.name}}</view>
+        </view>
+      </block>
+    </view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closeWizard">取消</button>
+      <button class="btn-ghost" wx:if="{{wizardStep>1}}" bindtap="wizPrev">上一步</button>
+      <button class="btn-primary" wx:if="{{wizardStep<3}}" bindtap="wizNext">下一步</button>
+      <button class="btn-primary" wx:if="{{wizardStep===3}}" bindtap="wizSave">完成配置</button>
+    </view>
+  </view>
+</view>
+
+<!-- 协议弹窗 -->
+<view class="modal-mask" wx:if="{{agreementShow}}">
+  <view class="modal-panel">
+    <view class="modal-head">
+      <view style="font-weight:900;">《星火学伴资金托管与服务协议》</view>
+      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">请完整阅读后勾选同意 · 银行存管专户前置要件</view>
+    </view>
+    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
+      <block wx:for="{{agreementSections}}" wx:key="h">
+        <view class="agr-h">{{item.h}}</view>
+        <view class="agr-p">{{item.p}}</view>
+      </block>
+      <view class="agr-tip">特别提示：本协议项下课酬并非课后立即/秒级划拨，而以课后 48 小时无异议自动解冻划拨为默认规则，保障家长冷静期与服务质量反馈权。</view>
+    </scroll-view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closeAgreement">关闭</button>
+      <button class="btn-primary" bindtap="agreeFromModal">已阅 · 勾选同意</button>
+    </view>
+  </view>
+</view>

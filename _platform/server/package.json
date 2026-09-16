@@ -1,0 +1,17 @@
+{
+  "name": "xinghuo-platform-server",
+  "version": "1.0.0",
+  "description": "星火学伴统一数据库 API（网页 + 微信小程序共享）",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "reset": "node -e \"require('./src/db').reset(); console.log('reset ok')\""
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

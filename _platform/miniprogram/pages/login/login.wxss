@@ -1,0 +1,33 @@
+.role-tabs {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+}
+.role-tab {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 8rpx;
+  border-radius: 16rpx;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #64748b;
+}
+.role-tab.on {
+  background: #f0fdfa;
+  border-color: #14b8a6;
+  color: #0f766e;
+}
+.link {
+  color: #0f766e;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.fallback {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 16rpx;
+}

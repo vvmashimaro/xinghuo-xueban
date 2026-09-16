@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火学伴 - 家长/学员主控中心与导师智能匹配平台</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(14px);
+    }
+    
+    .card-hover-effect {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-hover-effect:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px -6px rgba(15, 118, 110, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.04);
+    }
+
+    .shimmer-badge {
+      background: linear-gradient(90deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.35) 50%, rgba(20, 184, 166, 0.15) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2.2s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* 复选/单选选项字号加大，便于阅读 */
+    label:has(> input[type="checkbox"]),
+    label:has(> input[type="radio"]),
+    label.subject-tag,
+    .opt-chip-label {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    label:has(> input[type="checkbox"]) span,
+    label:has(> input[type="radio"]) span {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+    input[type="checkbox"] + span,
+    input[type="checkbox"] ~ span {
+      font-size: 16px !important;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
+
+  <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+      <!-- 品牌标识与当前学员身份卡 -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-teal-600/20 shrink-0">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
+            <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">
+              PARENT-HUB
+            </span>
+          </div>
+          <!-- 快捷学情档案切换 -->
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+            <i class="fa-solid fa-circle-user text-teal-600 text-[11px]"></i>
+            <span class="font-bold text-slate-800" id="headerStudentName">乐乐同学</span>
+            <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 rounded font-medium" id="headerGradeBadge">初三 · 中考冲刺</span>
+            <button type="button" onclick="openPassportDrawer()" class="text-teal-700 hover:text-teal-900 font-medium text-[11px] underline ml-1 cursor-pointer">
+              查阅学情护照
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：银行托管钱包简况与快捷导航 -->
+      <div class="flex items-center gap-2.5 sm:gap-4">
+        <!-- 银行托管账户资金小微模块 -->
+        <div class="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 text-xs">
+          <div class="w-7 h-7 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-building-columns"></i>
+          </div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-medium leading-none">招商银行合约存管专户</div>
+            <div class="text-xs font-black text-slate-900 mt-0.5">
+              可用 ¥<span id="headerEscrowBalance">315.00</span>
+              <span class="text-[10px] text-amber-600 font-medium ml-1">(冻结 ¥135)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 页面跳转工具 -->
+        <button type="button" onclick="safeNavigate('parent_register.html', '学情重构档案')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-sliders text-teal-600 text-xs"></i>
+          <span class="hidden sm:inline">重配学情与考纲</span>
+          <span class="sm:hidden">改学情</span>
+        </button>
+
+        <button type="button" onclick="safeNavigate('login.html', '登录认证中心')" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
+          <i class="fa-solid fa-arrow-right-from-bracket text-slate-400"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
+    <div class="absolute -right-28 -top-28 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto relative z-10 space-y-4">
+
+      <!-- AI 算力匹配状态头 -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-400/30 mb-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-teal-400 text-xs"></i>
+            <span>星火算力匹配引擎 · 基于【初三中考/几何动点/随堂查缺补漏】</span>
+          </div>
+          <h1 class="text-lg sm:text-xl md:text-2xl font-black tracking-tight leading-tight">
+            已为您精准召回 <span id="matchRecallCount">0</span> 位契合度 > 95% 的金牌学霸导师
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="recalculateMatch()" class="text-xs bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-rotate text-xs" id="recalcSpinIcon"></i>
+            <span>重新算力匹配</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI 智能首选导师横向极速推荐滑条 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="topMatchedTutorsContainer">
+        <!-- 动态注入推荐导师卡片 -->
+      </div>
+
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
+
+    <!-- 我的约课状态（导师接单/婉拒/已完课可见） -->
+    <section id="parentBookingsSection" class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-check text-teal-600"></i>
+          我的约课
+        </h2>
+        <button type="button" onclick="renderParentBookings()" class="text-[11px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg cursor-pointer">
+          刷新状态
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-1.5" id="parentBookingFilterBar">
+        <button type="button" data-filter="all" onclick="setParentBookingFilter('all', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
+        <button type="button" data-filter="pending" onclick="setParentBookingFilter('pending', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
+        <button type="button" data-filter="accepted" onclick="setParentBookingFilter('accepted', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
+        <button type="button" data-filter="completed" onclick="setParentBookingFilter('completed', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
+        <button type="button" data-filter="declined" onclick="setParentBookingFilter('declined', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
+      </div>
+      <div id="parentBookingsList" class="space-y-2.5 text-xs">
+        <div class="text-slate-400 text-center py-4">加载中…</div>
+      </div>
+      <div id="parentCompletedPanel" class="hidden border-t border-slate-100 pt-3 space-y-2.5 bg-emerald-50/20 -mx-1 px-1 rounded-xl">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            已完课
+          </h3>
+          <span id="parentCompletedCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
+        </div>
+        <div id="parentCompletedList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- 搜索与多维过滤条卡片 -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+      
+      <!-- 主搜索输入框 + 搜索按钮 -->
+      <div class="flex flex-col sm:flex-row gap-2.5">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="text" id="mainSearchInput" oninput="applyFilterAndSearch()" placeholder="搜索导师姓名、川大/电子科大、初中数学压轴模型、电学实验、艺考文化课..." class="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium transition">
+          <button type="button" onclick="clearSearchInput()" id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+            <i class="fa-solid fa-circle-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <button type="button" onclick="applyFilterAndSearch()" class="bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          <span>全域检索</span>
+        </button>
+
+        <button type="button" onclick="resetAllFilters()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium px-4 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+          <i class="fa-solid fa-arrow-rotate-left text-xs"></i>
+          <span>重置条件</span>
+        </button>
+      </div>
+
+      <!-- 快捷标签过滤矩阵 (科目、学段、微网点、预算排序) -->
+      <div class="space-y-2.5 pt-1 text-xs border-t border-slate-100">
+        
+        <!-- 学科分类筛选条 -->
+        <div class="flex items-start sm:items-center gap-2">
+          <span class="text-slate-400 font-bold shrink-0 w-16 text-[11px]">学科方向：</span>
+          <div class="flex flex-wrap gap-1.5" id="subjectFilterGroup">
+            <button type="button" onclick="setSubjectFilter('all', this)" class="filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer">全部学科</button>
+            <button type="button" onclick="setSubjectFilter('数学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中数学</button>
+            <button type="button" onclick="setSubjectFilter('物理', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中物理</button>
+            <button type="button" onclick="setSubjectFilter('英语', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">中高考英语</button>
+            <button type="button" onclick="setSubjectFilter('化学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中化学</button>
+            <button type="button" onclick="setSubjectFilter('语文', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">语文学科</button>
+            <button type="button" onclick="setSubjectFilter('艺考', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">美术/音乐艺考文化课</button>
+          </div>
+        </div>
+
+        <!-- 空间网点筛选条 -->
+        <div class="flex items-start sm:items-center gap-2">
+          <span class="text-slate-400 font-bold shrink-0 w-16 text-[11px]">空间网点：</span>
+          <div class="flex flex-wrap gap-1.5" id="spaceFilterGroup">
+            <button type="button" onclick="setSpaceFilter('all', this)" class="space-chip px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer">全部成都市网点</button>
+            <button type="button" onclick="setSpaceFilter('青羊金沙', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">青羊金沙微网点</button>
+            <button type="button" onclick="setSpaceFilter('高新大源', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">高新大源微网点</button>
+            <button type="button" onclick="setSpaceFilter('武侯川大', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">武侯川大望江微网点</button>
+          </div>
+        </div>
+
+        <!-- 综合排序与高级滑块面板 -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium">排序维度：</span>
+            <select id="sortSelect" onchange="applyFilterAndSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-700 text-xs cursor-pointer">
+              <option value="matchDesc" selected>AI 学情契合度最高</option>
+              <option value="ratingDesc">家长好评率最高 (5.0★)</option>
+              <option value="rateAsc">课酬时薪从低到高</option>
+              <option value="rateDesc">课酬时薪从高到低</option>
+              <option value="hoursDesc">累计履约授课最多</option>
+            </select>
+          </div>
+
+          <!-- 时薪区间过滤（与家长建档 budgetMin/Max 对齐，可再收窄） -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-slate-400 font-medium">时薪预算区间：</span>
+            <span class="font-mono font-bold text-teal-700">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">180</span>/h</span>
+            <input type="range" id="rateMinFilter" min="70" max="260" step="10" value="80" oninput="onMinRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="下限">
+            <input type="range" id="rateRangeFilter" min="70" max="260" step="10" value="180" oninput="onMaxRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="上限">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 导师列表主展示区 -->
+    <div class="space-y-3">
+      <!-- 状态与检索结果计数横条 -->
+      <div class="flex items-center justify-between text-xs px-1">
+        <div class="flex items-center gap-2 font-bold text-slate-800">
+          <i class="fa-solid fa-list text-teal-600"></i>
+          <span>可约双一流导师库</span>
+          <span class="text-[11px] font-mono text-slate-400">（共 <strong id="tutorCountBadge" class="text-teal-700">6</strong> 位符合条件）</span>
+        </div>
+        <div class="flex items-center gap-2 text-[11px] text-slate-400">
+          <i class="fa-solid fa-shield-check text-emerald-600"></i>
+          <span>100% 学信网核验 · 商业银行托管直结</span>
+        </div>
+      </div>
+
+      <!-- 导师卡片响应式网格 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="tutorListGrid">
+        <!-- 由 JavaScript 动态渲染导师卡片 -->
+      </div>
+    </div>
+
+  </main>
+
+  <div id="tutorDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="tutorModalContent">
+      
+      <!-- 弹窗顶栏 -->
+      <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 p-4 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center text-sm border border-teal-400/30">
+            <i class="fa-solid fa-id-card-clip"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm leading-tight flex items-center gap-1.5">
+              <span id="modalTutorName">张老师</span>
+              <span class="text-[10px] bg-teal-500/30 text-teal-300 px-1.5 py-0.2 rounded font-mono" id="modalTutorCode">CD-2026-8809</span>
+            </h3>
+            <div class="text-[10px] text-slate-300">官方实名存证已备案 · 试讲教研综合评分 4.9/5.0</div>
+          </div>
+        </div>
+        <button type="button" onclick="closeTutorDetailModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- 弹窗滚动主体 -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1">
+        
+        <!-- 导师核心卡 -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0" id="modalTutorAvatar">
+              张
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-base font-black text-slate-900" id="modalDetailName">张老师</span>
+                <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">学信网在籍有效</span>
+                <span class="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.2 rounded font-mono" id="modalRatingScore">5.0 ★</span>
+              </div>
+              <div class="text-slate-600 mt-1" id="modalUniversityAndDegree">四川大学 · 应用数学硕士在读</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">授课累计：<span class="text-teal-700 font-bold" id="modalTotalHours">142</span> 课时 · 0 差评违约记录</div>
+            </div>
+          </div>
+
+          <div class="text-right sm:border-l sm:border-slate-200 sm:pl-4">
+            <span class="text-[10px] text-slate-400 block">课酬直划费率</span>
+            <div class="text-xl font-black text-teal-700 font-mono">
+              ¥<span id="modalHourlyRate">135</span><span class="text-xs font-normal text-slate-500"> /h</span>
+            </div>
+            <span class="text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">一课一消 · 零大额预存</span>
+          </div>
+        </div>
+
+        <!-- 试讲视频演示播放模拟窗口 (5-10分钟真实微试讲) -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-play text-teal-600"></i>
+              <span>5-10分钟真题实景试讲视频（板书与解题思路复核）</span>
+            </span>
+            <span class="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+              教研组全流程打分合格
+            </span>
+          </div>
+
+          <!-- 模拟播放器容器 -->
+          <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-video border border-slate-800 shadow-inner flex flex-col justify-between p-4 group">
+            <div class="flex items-center justify-between text-white/80 text-[11px]">
+              <span class="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                <span>试讲录像 · <span id="modalVideoTitle">中考二次函数动点压轴模型解题法</span></span>
+              </span>
+              <span class="font-mono">08:45</span>
+            </div>
+
+            <!-- 视频中央播放按钮 -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <button type="button" onclick="simulatePlayVideo()" id="btnPlayTrialVideo" class="w-14 h-14 rounded-full bg-teal-600/90 hover:bg-teal-600 active:scale-95 text-white flex items-center justify-center text-xl shadow-lg transition cursor-pointer">
+                <i class="fa-solid fa-play ml-1" id="trialPlayIcon"></i>
+              </button>
+            </div>
+
+            <!-- 底部板书亮点 -->
+            <div class="bg-black/60 backdrop-blur-xs -mx-4 -mb-4 p-2.5 px-4 flex items-center justify-between text-[11px] text-slate-300">
+              <span>核心提炼：三步建系法 + 韦达定理联立速解技巧</span>
+              <span class="text-teal-400 font-medium cursor-pointer" onclick="showToast('已调阅试讲板书讲义 PDF')">查阅教案课件</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 擅长考纲专项与教学亮点标签 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+            <span class="text-slate-400 text-[10px] block font-medium">攻坚专项考点</span>
+            <div class="flex flex-wrap gap-1" id="modalSyllabusTags">
+              <!-- 考点标签 -->
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+            <span class="text-slate-400 text-[10px] block font-medium">实证成绩与荣誉</span>
+            <div class="font-bold text-slate-800" id="modalHighlightBadge">
+              高考数学145分 · 全国数学竞赛二等奖
+            </div>
+            <div class="flex flex-wrap gap-1 pt-1" id="modalStyleTags">
+              <!-- 风格标签 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 智能微空间排期选择提示 -->
+        <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200/80 text-[11px] text-teal-950 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-cube text-teal-700 text-sm"></i>
+            <div>
+              <div class="font-bold">线下教学专属智能自习仓</div>
+              <div class="text-slate-500 text-[10px]">成都市青羊金沙、武侯望江、高新大源微网点均可自由排期</div>
+            </div>
+          </div>
+          <span class="text-[10px] bg-teal-600 text-white px-2 py-0.5 rounded font-bold">支持单次试听</span>
+        </div>
+
+      </div>
+
+      <!-- 弹窗底栏操作 -->
+      <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+        <div class="text-xs">
+          <span class="text-slate-400">试听单次预估：</span>
+          <span class="font-black text-slate-900 font-mono text-sm" id="modalEstimatedCost">¥135.00</span>
+          <span class="text-[10px] text-slate-400">(1小时 / 银行锁定)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeTutorDetailModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">
+            稍后选择
+          </button>
+          <button type="button" onclick="openBookingDrawerFromModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-calendar-check text-xs"></i>
+            <span>立即预约该导师</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="bookingDrawerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="bookingDrawerContent">
+      
+      <!-- 约课抽屉顶栏 -->
+      <div class="bg-slate-900 p-4 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center text-sm border border-teal-400/30">
+            <i class="fa-solid fa-calendar-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm">预约辅导与智能隔音仓选座</h3>
+            <p class="text-[10px] text-slate-400">单次 / 每周固定 · 费用提前冻结 · 结课后 48h 划拨</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeBookingDrawer()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- 约课配置表单 -->
+      <div class="p-5 overflow-y-auto space-y-4 text-xs flex-1">
+        
+        <!-- 所选导师简况条 -->
+        <div class="bg-teal-50/60 p-3 rounded-xl border border-teal-200/80 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-teal-700 text-white font-bold flex items-center justify-center" id="bookingTutorAvatar">
+              张
+            </div>
+            <div>
+              <div class="font-black text-slate-900" id="bookingTutorName">张老师</div>
+              <div class="text-[10px] text-slate-500" id="bookingTutorInfo">初中数学 / 几何函数压轴模型</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold text-teal-700 font-mono" id="bookingTutorRate">¥135/h</div>
+            <span class="text-[9px] text-slate-400">单次约</span>
+          </div>
+        </div>
+
+
+        <!-- 约课模式：单次 / 每周固定 -->
+        <div class="space-y-1.5">
+          <label class="block font-bold text-slate-700">0. 约课模式</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+              <input type="radio" name="bookingType" value="one_off" checked class="hidden" onchange="onBookingTypeChange()">
+              <i class="fa-solid fa-calendar-day text-teal-600"></i>
+              <span class="font-bold">单次约课</span>
+            </label>
+            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+              <input type="radio" name="bookingType" value="weekly" class="hidden" onchange="onBookingTypeChange()">
+              <i class="fa-solid fa-calendar-week text-teal-600"></i>
+              <span class="font-bold">每周固定时间</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 每周固定配置（默认隐藏） -->
+        <div id="weeklyBookingPanel" class="space-y-3 hidden rounded-xl border border-teal-100 bg-teal-50/40 p-3">
+          <div class="text-[11px] text-teal-900 font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-repeat text-teal-600"></i>
+            每周固定档期 · 费用按课次包提前冻结
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">固定星期</label>
+              <select id="weeklyWeekday" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="updateBookingCost()">
+                <option value="1">周一</option>
+                <option value="2">周二</option>
+                <option value="3" selected>周三</option>
+                <option value="4">周四</option>
+                <option value="5">周五</option>
+                <option value="6">周六</option>
+                <option value="0">周日</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">固定开课时间</label>
+              <select id="weeklyTime" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="updateBookingCost()">
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="14:00">14:00</option>
+                <option value="16:00">16:00</option>
+                <option value="18:30">18:30</option>
+                <option value="19:00" selected>19:00</option>
+                <option value="19:30">19:30</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">连续课次</label>
+              <select id="weeklySessionCount" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="updateBookingCost()">
+                <option value="4" selected>4 次（约一个月）</option>
+                <option value="6">6 次</option>
+                <option value="8">8 次（约两月）</option>
+                <option value="12">12 次</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <div class="w-full text-[10px] text-slate-500 leading-relaxed bg-white/70 border border-teal-100 rounded-xl px-2.5 py-2">
+                请假须<strong class="text-teal-800">提前一日</strong>确认；结课后 48 小时无投诉自动划拨导师。
+              </div>
+            </div>
+          </div>
+          <div id="mentorAvailabilityHints" class="hidden text-[10px] text-teal-800 bg-white/80 border border-teal-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
+        </div>
+
+        <!-- 辅导日期与时段选择 -->
+        <div class="space-y-1.5" id="oneOffDatePanel">
+          <label class="block font-bold text-slate-700">1. 预约辅导日期与时间</label>
+          <div class="grid grid-cols-3 gap-2" id="bookingDateSlots">
+            <!-- 由 generateBookingDateSlots() 按本地日期动态注入 -->
+          </div>
+        </div>
+
+        <!-- 课时时长单选 -->
+        <div class="space-y-1.5">
+          <label class="block font-bold text-slate-700">2. 单次辅导时长</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+              <input type="radio" name="bookingDuration" value="2" checked class="hidden" onchange="updateBookingCost()">
+              <span class="font-bold">2 小时 (推荐·专题突破)</span>
+              <span class="text-teal-700 font-mono font-bold" id="labelCost2h">¥270</span>
+            </label>
+            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+              <input type="radio" name="bookingDuration" value="1" class="hidden" onchange="updateBookingCost()">
+              <span class="font-bold">1 小时 (体验试听/答疑)</span>
+              <span class="text-teal-700 font-mono font-bold" id="labelCost1h">¥135</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 空间智能仓微网点选择 -->
+        <div class="space-y-1.5">
+          <label class="block font-bold text-slate-700">3. 专属智能隔音自习仓网点（免进陌生家庭隐患）</label>
+          <select id="bookingSpaceSelect" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
+            <option value="青羊金沙文化微网点" selected>青羊金沙文化微网点 (4号线金沙博物馆站旁 · 01号独立隔音双人仓)</option>
+            <option value="高新大源中央微网点">高新大源中央微网点 (天府二街大源核心生活圈 · 03号讨论仓)</option>
+            <option value="武侯川大望江微网点">武侯川大望江微网点 (一环路南一段川大旁 · 02号智能互联仓)</option>
+          </select>
+        </div>
+
+        <!-- 银行托管与资金安全承诺 -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1">
+              <i class="fa-solid fa-lock text-teal-600"></i>
+              <span>银行智能合约冻结保障</span>
+            </span>
+            <span class="text-teal-700 font-mono" id="confirmLockAmount">¥270.00</span>
+          </div>
+          <p class="text-slate-500 text-[10px] leading-relaxed">
+            支付款项将暂存于您的招商银行存管子专户中（单次或每周系列课次费用<strong class="text-teal-800">提前冻结</strong>）。每次结课后进入 <strong class="text-teal-800">48 小时</strong> 解冻观察期，期满无投诉则按 92% 导师 / 8% 平台自动划拨；每周固定课请假须提前一日确认。
+          </p>
+        </div>
+
+      </div>
+
+      <!-- 托管锁定前摘要 -->
+      <div id="escrowLockSummary" class="mx-4 mb-2 p-3 rounded-xl border border-teal-200 bg-teal-50/70 text-[11px] space-y-1.5 hidden">
+        <div class="font-black text-teal-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-receipt text-teal-600"></i>
+          <span>银行托管锁定摘要（请确认后继续）</span>
+        </div>
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-700">
+          <div>课时时长：<strong id="escrowSumDuration" class="text-slate-900">—</strong></div>
+          <div>预约时段：<strong id="escrowSumDate" class="text-slate-900">—</strong></div>
+          <div class="col-span-2">教学空间：<strong id="escrowSumSpace" class="text-slate-900">—</strong></div>
+          <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-sm">—</strong></div>
+        </div>
+        <p class="text-[10px] text-slate-500 leading-relaxed border-t border-teal-100 pt-1.5">
+          退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。
+        </p>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="hideEscrowSummary()" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">返回修改</button>
+          <button type="button" onclick="proceedAfterEscrowSummary()" id="btnEscrowProceed" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer">确认摘要 · 签署协议</button>
+        </div>
+      </div>
+
+      <!-- 约课提交栏 -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+        <div>
+          <span class="text-slate-400 text-[10px] block">合约托管总额</span>
+          <span class="text-lg font-black text-teal-700 font-mono" id="finalBookingCost">¥270.00</span>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeBookingDrawer()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">
+            取消
+          </button>
+          <button type="button" onclick="showEscrowSummaryBeforeLock()" id="btnConfirmBooking" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-file-signature text-xs"></i>
+            <span>确认摘要 · 锁定托管</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="podPasscodeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 transform transition-all duration-300 scale-95" id="podPasscodeContent">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
+          <i class="fa-solid fa-door-open"></i>
+        </div>
+        <h3 class="text-base font-black text-slate-900">预约成功 · 智能仓开门凭证已就绪</h3>
+        <p class="text-xs text-slate-500">已为您生成专属进出权限，并在预约时段自动激活</p>
+      </div>
+
+      <!-- 电子通行证 -->
+      <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white rounded-2xl p-4 space-y-3 border border-teal-800/40 relative">
+        <div class="flex items-center justify-between border-b border-teal-800/50 pb-2">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-teal-300">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>智能隔音微仓通行码</span>
+          </div>
+          <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.2 rounded font-mono">
+            IoT-ACTIVE
+          </span>
+        </div>
+
+        <div class="flex items-center justify-center py-2">
+          <!-- 动态二维码占位图 -->
+          <div class="w-32 h-32 bg-white rounded-xl p-2 flex flex-col items-center justify-center shadow-md">
+            <div class="w-full h-full bg-slate-900 rounded-lg flex flex-col items-center justify-center text-white space-y-1">
+              <i class="fa-solid fa-qrcode text-4xl text-teal-400"></i>
+              <span class="text-[8px] font-mono text-slate-400 tracking-wider">动态防伪刷新</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center space-y-0.5">
+          <span class="text-[10px] text-slate-400">门锁备用数字口令 (有效时长 2小时)</span>
+          <div class="text-xl font-black font-mono tracking-widest text-amber-400" id="passcodeDisplay">890214</div>
+        </div>
+
+        <div class="pt-2 border-t border-teal-800/40 text-[10px] text-slate-300 space-y-1">
+          <div class="flex justify-between">
+            <span>网点仓位：</span>
+            <span class="font-bold text-white" id="passcodeSpaceName">青羊金沙文化微网点-01仓</span>
+          </div>
+          <div class="flex justify-between">
+            <span>排期时段：</span>
+            <span class="font-mono text-teal-300" id="passcodeScheduleTime">本周六 10:00 - 12:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- IoT 状态面板 -->
+      <div id="iotStatusPanel" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-black text-slate-800 flex items-center gap-1.5"><i class="fa-solid fa-microchip text-teal-600"></i>IoT 教学仓联动</span>
+          <span id="iotStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">STANDBY</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+          <div class="bg-white rounded-xl border border-slate-200 p-2">
+            <i id="iotDoorIcon" class="fa-solid fa-door-closed text-slate-400 text-sm"></i>
+            <div id="iotDoorText" class="mt-1 text-slate-500 font-medium">门禁关闭</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-2">
+            <i id="iotLightIcon" class="fa-solid fa-lightbulb text-slate-400 text-sm"></i>
+            <div id="iotLightText" class="mt-1 text-slate-500 font-medium">灯光关闭</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-2">
+            <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
+            <div id="iotCountdownText" class="mt-1 text-slate-700 font-mono font-bold">--:--:--</div>
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-500 leading-relaxed">系统将在 <strong class="text-rose-600">20:30</strong> 强制断电断电通风停机，保障合规收课。</p>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <button type="button" onclick="simulateIoTScanOpen()" id="btnIoTScan" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-teal-600/20">
+          <i class="fa-solid fa-qrcode"></i>
+          <span>模拟扫码开门 · 通电照明</span>
+        </button>
+        <button type="button" onclick="closePodPasscodeModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
+          已保存凭证，前往工作台
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 三方托管服务居间协议 E-Contract -->
+  <div id="eContractModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="eContractContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white">
+        <div>
+          <h3 class="font-black text-sm">《三方托管服务居间协议》</h3>
+          <p class="text-[10px] text-teal-200/90 mt-0.5">在线签署 · 银行智能合约存管前置要件</p>
+        </div>
+        <button type="button" onclick="closeEContractModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="px-5 py-4 overflow-y-auto text-xs text-slate-600 space-y-3 leading-relaxed flex-1">
+        <p class="text-slate-800 font-bold">甲方（平台）：星火学伴技术中立撮合与空间运营者</p>
+        <p class="text-slate-800 font-bold">乙方（家长/学员）：<span id="contractParentName">刘女士</span></p>
+        <p class="text-slate-800 font-bold">丙方（导师）：<span id="contractTutorName">张老师</span></p>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-[11px]">
+          <p>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
+          <p>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+          <p>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
+          <p>4. 开课前 2 小时可原路撤销；观察期内遇质量投诉，资金继续冻结并由平台协调处理。</p>
+          <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>
+        </div>
+        <label class="flex items-start gap-2 cursor-pointer select-none">
+          <input type="checkbox" id="eContractAgreeCheck" class="mt-0.5 w-3.5 h-3.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+          <span class="text-[11px] text-slate-700">我已阅读并同意签署本协议，授权银行智能合约锁定本次课酬托管资金。</span>
+        </label>
+        <div>
+          <label class="text-[10px] text-slate-500 font-medium">电子签名（输入姓名确认）</label>
+          <input type="text" id="eContractSignName" placeholder="请输入家长姓名作为电子签" class="mt-1 w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
+        </div>
+      </div>
+      <div class="px-5 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+        <button type="button" onclick="closeEContractModal()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">取消</button>
+        <button type="button" onclick="confirmEContractAndBook()" id="btnSignContract" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-pen-fancy text-xs"></i>
+          <span>确认签署并锁定托管</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="passportDrawerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-end hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white w-full max-w-md h-full shadow-2xl p-5 overflow-y-auto space-y-4 transform transition-all duration-300 translate-x-full" id="passportDrawerContent">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+            护
+          </div>
+          <div>
+            <h3 class="font-black text-slate-900 text-sm">孩子 AI 学情电子护照</h3>
+            <span class="text-[10px] text-slate-400 font-mono">SPK-PASSPORT-2026</span>
+          </div>
+        </div>
+        <button type="button" onclick="closePassportDrawer()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- 护照卡片内容 -->
+      <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 p-4 rounded-2xl space-y-3 shadow-sm border border-teal-100">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-teal-800">乐乐同学 (初三中考)</span>
+          <span class="text-[10px] bg-white/80 text-slate-600 px-2 py-0.5 rounded font-mono border border-teal-100">成都市 · 青羊区</span>
+        </div>
+        <div class="text-[11px] text-slate-600 space-y-1">
+          <div>目标科目：<span class="text-slate-900 font-bold">数学 (压轴题) / 物理 (动态电路)</span></div>
+          <div>推进模式：<span class="text-teal-700 font-medium">紧贴校内进度 · 随堂查漏补缺</span></div>
+          <div>期望课酬：<span class="text-amber-600 font-bold font-mono">¥100–160/小时</span></div>
+        </div>
+      </div>
+
+      <!-- 历史诊断考点 -->
+      <div class="space-y-2 text-xs">
+        <div class="font-bold text-slate-800">已标注薄弱大纲考点（导师重点备课）：</div>
+        <div class="flex flex-wrap gap-1.5" id="passportSyllabusChips">
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">二次函数图象性质与最值求法</span>
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">圆的切线性质与辅助线综合证明</span>
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">动态电路欧姆定律综合计算</span>
+        </div>
+      </div>
+
+      <div class="pt-3">
+        <button type="button" onclick="safeNavigate('parent_register.html', '重新配置考点')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
+          更新学情与考纲目标
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 轻量全局 Toast 通知条 -->
+  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
+    <i class="fa-solid fa-circle-check text-teal-400 text-sm" id="toastIcon"></i>
+    <span id="toastMessage">已完成操作</span>
+  </div>
+
+  <!-- 极简页脚 -->
+  <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 space-y-1">
+      <p>© 2026 星火学伴 · 中学O2O课业辅导匹配与智能分布式空间体系</p>
+      <p class="text-[10px] text-slate-400">银行存管专户资金闭环运作 · 严格执行中小学课外辅导合规治理规范</p>
+    </div>
+  </footer>
+
+  
+  <!-- 查看课后小结 -->
+  <div id="classSummaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="classSummaryModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>课后小结</h3>
+        <button type="button" onclick="closeClassSummaryModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-3 text-xs text-slate-600">
+        <div id="classSummaryMeta" class="text-[11px] text-slate-400"></div>
+        <h4 id="classSummaryTitle" class="text-sm font-bold text-slate-900"></h4>
+        <div id="classSummaryTags" class="flex flex-wrap gap-1.5"></div>
+        <div id="classSummaryBody" class="rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap"></div>
+        <p id="classSummaryTime" class="text-[10px] text-slate-400"></p>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closeClassSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">关闭</button>
+        <button type="button" id="classSummaryRenewBtn" onclick="renewFromSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">一键续课</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/config.js"></script>
+  <script src="js/storage-service.js"></script>
+
+    <script>
+    // 统一库 hydrate：页面脚本可 await StorageService.ready()
+    (function () {
+      if (window.StorageService && StorageService.hydrateFromServer) {
+        StorageService.hydrateFromServer();
+      }
+    })();
+    </script>
+
+  <script>
+    'use strict';
+
+    /* ==========================================================================
+       1. 导师智库数据集 (与已入库标准无缝对齐)
+       ========================================================================== */
+    // 导师列表：来自 StorageService 已审核入库导师 + 家长学情匹配
+    let TUTOR_DATABASE = [];
+    let CURRENT_PARENT = null;
+
+    async function reloadTutorDatabase() {
+      if (window.StorageService) {
+        if (StorageService.ready) await StorageService.ready();
+        StorageService.seedIfEmpty();
+        CURRENT_PARENT = StorageService.getCurrentParent();
+        TUTOR_DATABASE = StorageService.getTutorListForParent(CURRENT_PARENT);
+      } else {
+        TUTOR_DATABASE = [];
+      }
+      return TUTOR_DATABASE;
+    }
+
+    (async function bootParentDashboard() {
+      await reloadTutorDatabase();
+      if (typeof renderTopMatchedTutors === 'function') renderTopMatchedTutors();
+      if (typeof renderTutorList === 'function') renderTutorList();
+      if (typeof renderParentBookings === 'function') renderParentBookings();
+    })();
+
+    // 当前筛选与排序状态
+    let currentSubjectFilter = 'all';
+    let currentSpaceFilter = 'all';
+    let currentMinRate = 80;
+    let currentMaxRate = 180;
+    let selectedTutorForBooking = null;
+
+    /* ==========================================================================
+       2. 渲染顶部 AI 智能算力推荐导师
+       ========================================================================== */
+    function renderTopMatchedTutors() {
+      const container = document.getElementById('topMatchedTutorsContainer');
+      if (!container) return;
+
+      const topTutors = TUTOR_DATABASE.filter(t => t.isTopMatch).slice(0, 3);
+      container.innerHTML = '';
+
+      topTutors.forEach((tutor, idx) => {
+        const card = document.createElement('div');
+        card.className = "bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 backdrop-blur-md transition-all card-hover-effect flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-teal-600 text-white font-black text-base flex items-center justify-center border border-teal-300/40 shadow-sm shrink-0">
+                  ${tutor.avatarLetter}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-black text-sm text-white">${tutor.maskedName}</span>
+                    <span class="text-[9px] bg-teal-500/30 text-teal-200 px-1.5 py-0.2 rounded font-mono">${tutor.degreeShort}</span>
+                  </div>
+                  <div class="text-[10px] text-slate-300 mt-0.5 truncate max-w-[150px]">
+                    ${tutor.scoreHighlight}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="text-[10px] font-mono font-bold text-amber-300">${tutor.matchScore}% 契合</span>
+                <div class="text-sm font-black text-white font-mono">¥${tutor.hourlyRate}<span class="text-[10px] font-normal text-slate-300">/h</span></div>
+              </div>
+            </div>
+
+            <!-- 考点匹配微胶囊 -->
+            <div class="flex flex-wrap gap-1 mb-2.5">
+              ${tutor.syllabusTopics.slice(0, 2).map(topic => `
+                <span class="text-[9px] bg-black/30 text-teal-200 border border-white/10 px-1.5 py-0.5 rounded truncate max-w-[140px]">
+                  ${topic}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-white/10">
+            <span class="text-[10px] text-slate-300 truncate max-w-[130px]">
+              <i class="fa-solid fa-cube text-teal-400 mr-1"></i>${tutor.space.split('微网点')[0]}
+            </span>
+            <div class="flex gap-1.5">
+              <button type="button" onclick="openTutorDetail('${tutor.id}')" class="text-[10px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg transition font-medium cursor-pointer">
+                试讲视频
+              </button>
+              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="text-[10px] bg-teal-500 hover:bg-teal-400 text-slate-950 px-2.5 py-1 rounded-lg font-bold transition shadow-xs cursor-pointer">
+                约仓试听
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    /* ==========================================================================
+       3. 过滤、搜索与列表渲染逻辑
+       ========================================================================== */
+    function applyFilterAndSearch() {
+      const keyword = (document.getElementById('mainSearchInput')?.value || '').trim().toLowerCase();
+      const sortType = document.getElementById('sortSelect')?.value || 'matchDesc';
+      const clearBtn = document.getElementById('btnClearSearch');
+
+      if (keyword) {
+        clearBtn?.classList.remove('hidden');
+      } else {
+        clearBtn?.classList.add('hidden');
+      }
+
+      // 多维过滤
+      let results = TUTOR_DATABASE.filter(item => {
+        // 1. 学科过滤
+        if (currentSubjectFilter !== 'all') {
+          const matchSubj = item.subjects.some(s => s.toLowerCase().includes(currentSubjectFilter.toLowerCase()));
+          if (!matchSubj) return false;
+        }
+
+        // 2. 网点微空间过滤
+        if (currentSpaceFilter !== 'all') {
+          if (!item.space.includes(currentSpaceFilter)) return false;
+        }
+
+        // 3. 时薪预算区间过滤 [min, max]
+        if (item.hourlyRate < currentMinRate || item.hourlyRate > currentMaxRate) return false;
+
+        // 4. 关键字搜索（姓名、高校、专业、考点、风格、亮点）
+        if (keyword) {
+          const combinedStr = [
+            item.realName, item.maskedName, item.university, item.degree, item.scoreHighlight,
+            ...item.subjects, ...item.styles, ...item.syllabusTopics, item.space
+          ].join(' ').toLowerCase();
+
+          if (!combinedStr.includes(keyword)) return false;
+        }
+
+        return true;
+      });
+
+      // 排序处理
+      results.sort((a, b) => {
+        if (sortType === 'matchDesc') return b.matchScore - a.matchScore;
+        if (sortType === 'ratingDesc') return b.rating - a.rating;
+        if (sortType === 'rateAsc') return a.hourlyRate - b.hourlyRate;
+        if (sortType === 'rateDesc') return b.hourlyRate - a.hourlyRate;
+        if (sortType === 'hoursDesc') return b.totalHours - a.totalHours;
+        return 0;
+      });
+
+      // 更新徽章计数与顶部召回标题（同一过滤结果源）
+      const countBadge = document.getElementById('tutorCountBadge');
+      if (countBadge) countBadge.innerText = results.length;
+      const recallEl = document.getElementById('matchRecallCount');
+      if (recallEl) recallEl.innerText = results.length;
+
+      renderTutorGrid(results);
+    }
+
+    function renderTutorGrid(list) {
+      const grid = document.getElementById('tutorListGrid');
+      if (!grid) return;
+
+      if (list.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-white rounded-3xl p-10 text-center border border-slate-200 space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl">
+              <i class="fa-solid fa-user-slash"></i>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">暂无符合当前筛选条件的导师</h4>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">
+              建议放宽时薪预算区间，或切换空间网点尝试更宽泛的匹配方案
+            </p>
+            <button type="button" onclick="resetAllFilters()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">
+              一键重置筛选条件
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = '';
+
+      list.forEach(tutor => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs card-hover-effect flex flex-col justify-between space-y-3.5";
+
+        card.innerHTML = `
+          <div>
+            <!-- 顶栏：头像、姓名、高校与契合度 -->
+            <div class="flex items-start justify-between gap-2.5">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+                  ${tutor.avatarLetter}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="font-black text-slate-900 text-sm sm:text-base">${tutor.maskedName}</h3>
+                    <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-semibold">
+                      学信网在籍
+                    </span>
+                  </div>
+                  <div class="text-[11px] text-slate-600 font-medium mt-0.5">
+                    ${tutor.university} · <span class="text-slate-500">${tutor.degree.split(' ')[0]}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 价格与契合度 -->
+              <div class="text-right shrink-0">
+                <div class="text-base font-black text-teal-700 font-mono">
+                  ¥${tutor.hourlyRate}<span class="text-[10px] font-normal text-slate-500">/h</span>
+                </div>
+                <span class="text-[9px] text-teal-700 bg-teal-50 border border-teal-200 font-bold px-1.5 py-0.2 rounded font-mono">
+                  ${tutor.matchScore}% 契合
+                </span>
+              </div>
+            </div>
+
+            <!-- 成绩与战绩亮点 -->
+            <div class="mt-3 bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-1.5 truncate mr-2">
+                <i class="fa-solid fa-award text-amber-500 text-xs shrink-0"></i>
+                <span class="font-bold text-slate-800 text-[11px] truncate">${tutor.scoreHighlight}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 font-mono shrink-0">${tutor.totalHours}课时</span>
+            </div>
+
+            <!-- 攻坚大纲专项考点胶囊 -->
+            <div class="mt-2.5">
+              <span class="text-[10px] text-slate-400 block mb-1">主辅考纲重点：</span>
+              <div class="flex flex-wrap gap-1">
+                ${tutor.syllabusTopics.map(topic => `
+                  <span class="text-[10px] bg-teal-50/80 text-teal-900 border border-teal-200/80 px-2 py-0.5 rounded font-medium truncate max-w-[150px]" title="${topic}">
+                    ${topic}
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- 教学风格标签 -->
+            <div class="mt-2 flex flex-wrap gap-1">
+              ${tutor.styles.map(st => `
+                <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200">
+                  ${st}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- 底栏：网点空间与操作按钮 -->
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+            <div class="text-[11px] text-slate-500 truncate mr-1">
+              <i class="fa-solid fa-location-dot text-teal-600 mr-1 text-[10px]"></i>
+              <span class="truncate">${tutor.space.split('微网点')[0]}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="openTutorDetail('${tutor.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1">
+                <i class="fa-solid fa-circle-play text-teal-600 text-[10px]"></i>
+                <span>试讲视频</span>
+              </button>
+              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-1 cursor-pointer">
+                <span>约仓试听</span>
+                <i class="fa-solid fa-angle-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    /* ==========================================================================
+       4. 筛选按钮点击交互
+       ========================================================================== */
+    function setSubjectFilter(subject, btn) {
+      currentSubjectFilter = subject;
+      document.querySelectorAll('#subjectFilterGroup .filter-chip').forEach(el => {
+        el.className = "filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer";
+      });
+      if (btn) {
+        btn.className = "filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer";
+      }
+      applyFilterAndSearch();
+    }
+
+    function setSpaceFilter(space, btn) {
+      currentSpaceFilter = space;
+      document.querySelectorAll('#spaceFilterGroup .space-chip').forEach(el => {
+        el.className = "space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer";
+      });
+      if (btn) {
+        btn.className = "space-chip px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer";
+      }
+      applyFilterAndSearch();
+    }
+
+    function onMinRateFilterChange(val) {
+      let min = parseInt(val, 10);
+      if (min > currentMaxRate - 10) {
+        min = currentMaxRate - 10;
+        const el = document.getElementById('rateMinFilter');
+        if (el) el.value = String(min);
+      }
+      currentMinRate = min;
+      const label = document.getElementById('minRateLabel');
+      if (label) label.innerText = String(min);
+      applyFilterAndSearch();
+    }
+
+    function onMaxRateFilterChange(val) {
+      let max = parseInt(val, 10);
+      if (max < currentMinRate + 10) {
+        max = currentMinRate + 10;
+        const el = document.getElementById('rateRangeFilter');
+        if (el) el.value = String(max);
+      }
+      currentMaxRate = max;
+      const label = document.getElementById('maxRateLabel');
+      if (label) label.innerText = String(max);
+      applyFilterAndSearch();
+    }
+
+    function clearSearchInput() {
+      const input = document.getElementById('mainSearchInput');
+      if (input) input.value = '';
+      applyFilterAndSearch();
+    }
+
+    function resetAllFilters() {
+      const input = document.getElementById('mainSearchInput');
+      if (input) input.value = '';
+
+      currentSubjectFilter = 'all';
+      currentSpaceFilter = 'all';
+      const p = CURRENT_PARENT || {};
+      currentMinRate = Number(p.budgetMin) || 80;
+      currentMaxRate = Number(p.budgetMax) || 180;
+
+      const rateMin = document.getElementById('rateMinFilter');
+      if (rateMin) rateMin.value = currentMinRate;
+      const rateRange = document.getElementById('rateRangeFilter');
+      if (rateRange) rateRange.value = currentMaxRate;
+      const minLabel = document.getElementById('minRateLabel');
+      if (minLabel) minLabel.innerText = String(currentMinRate);
+      const rateLabel = document.getElementById('maxRateLabel');
+      if (rateLabel) rateLabel.innerText = String(currentMaxRate);
+
+      const sortSelect = document.getElementById('sortSelect');
+      if (sortSelect) sortSelect.value = 'matchDesc';
+
+      // 还原胶囊样式
+      setSubjectFilter('all', document.querySelector('#subjectFilterGroup .filter-chip'));
+      setSpaceFilter('all', document.querySelector('#spaceFilterGroup .space-chip'));
+
+      applyFilterAndSearch();
+      showToast('已重置所有检索过滤条件');
+    }
+
+    function recalculateMatch() {
+      const icon = document.getElementById('recalcSpinIcon');
+      if (icon) icon.classList.add('fa-spin');
+
+      showToast('星火 AI 算力引擎正在重构考点网络...', 'success');
+
+      setTimeout(() => {
+        if (icon) icon.classList.remove('fa-spin');
+        reloadTutorDatabase();
+        initBudgetFilterFromParent();
+        applyParentHeaderAndPassport();
+        renderTopMatchedTutors();
+        applyFilterAndSearch();
+        const n = TUTOR_DATABASE.filter(t => t.isTopMatch).length;
+        showToast('已为您重新锁定 ' + Math.max(n, 1) + ' 位高契合导师！');
+      }, 700);
+    }
+
+    /* ==========================================================================
+       5. 导师详情 & 试讲视频 Modal
+       ========================================================================== */
+    function openTutorDetail(tutorId) {
+      const tutor = TUTOR_DATABASE.find(t => t.id === tutorId) || TUTOR_DATABASE[0];
+      selectedTutorForBooking = tutor;
+
+      document.getElementById('modalTutorName').innerText = tutor.maskedName;
+      document.getElementById('modalDetailName').innerText = tutor.maskedName;
+      document.getElementById('modalTutorCode').innerText = tutor.id;
+      document.getElementById('modalTutorAvatar').innerText = tutor.avatarLetter;
+      document.getElementById('modalUniversityAndDegree').innerText = `${tutor.university} · ${tutor.degree}`;
+      document.getElementById('modalRatingScore').innerText = `${tutor.rating} ★`;
+      document.getElementById('modalTotalHours').innerText = tutor.totalHours;
+      document.getElementById('modalHourlyRate').innerText = tutor.hourlyRate;
+      document.getElementById('modalEstimatedCost').innerText = `¥${tutor.hourlyRate}.00`;
+      document.getElementById('modalHighlightBadge').innerText = tutor.scoreHighlight;
+      document.getElementById('modalVideoTitle').innerText = tutor.videoTitle;
+
+      // 考点胶囊
+      const syllabusContainer = document.getElementById('modalSyllabusTags');
+      if (syllabusContainer) {
+        syllabusContainer.innerHTML = tutor.syllabusTopics.map(t => `
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-0.5 rounded text-[11px] font-medium">${t}</span>
+        `).join('');
+      }
+
+      // 风格胶囊
+      const styleContainer = document.getElementById('modalStyleTags');
+      if (styleContainer) {
+        styleContainer.innerHTML = tutor.styles.map(s => `
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 text-[10px] font-medium">${s}</span>
+        `).join('');
+      }
+
+      // 打开弹窗（互斥）
+      closeAllStackedModals('tutorDetailModal');
+      const modal = document.getElementById('tutorDetailModal');
+      const content = document.getElementById('tutorModalContent');
+      modal?.classList.remove('hidden');
+      setTimeout(() => {
+        modal?.classList.remove('opacity-0');
+        content?.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeTutorDetailModal() {
+      const modal = document.getElementById('tutorDetailModal');
+      const content = document.getElementById('tutorModalContent');
+      modal?.classList.add('opacity-0');
+      content?.classList.add('scale-95');
+      setTimeout(() => {
+        modal?.classList.add('hidden');
+      }, 260);
+    }
+
+    function simulatePlayVideo() {
+      const btn = document.getElementById('btnPlayTrialVideo');
+      const icon = document.getElementById('trialPlayIcon');
+      if (icon?.classList.contains('fa-play')) {
+        icon.className = "fa-solid fa-pause text-xl";
+        showToast('试讲视频缓冲播放中 (支持 1.5X 倍速)');
+      } else if (icon) {
+        icon.className = "fa-solid fa-play ml-1 text-xl";
+        showToast('视频已暂停');
+      }
+    }
+
+    function openBookingDrawerFromModal() {
+      closeTutorDetailModal();
+      setTimeout(() => {
+        if (selectedTutorForBooking) {
+          openBookingDrawer(selectedTutorForBooking.id);
+        }
+      }, 280);
+    }
+
+    /* ==========================================================================
+       5b. 弹窗互斥：打开下一个前先关闭上一个，避免堆叠遮挡关闭按钮
+       ========================================================================== */
+    function closeAllStackedModals(exceptId) {
+      const map = {
+        tutorDetailModal: { content: 'tutorModalContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
+        bookingDrawerModal: { content: 'bookingDrawerContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
+        eContractModal: { content: 'eContractContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
+        podPasscodeModal: { content: 'podPasscodeContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
+        passportDrawerModal: { content: 'passportDrawerContent', hide: ['opacity-0'], contentHide: ['translate-x-full'] }
+      };
+      Object.keys(map).forEach(id => {
+        if (exceptId && id === exceptId) return;
+        const modal = document.getElementById(id);
+        if (!modal || modal.classList.contains('hidden')) return;
+        const cfg = map[id];
+        cfg.hide.forEach(c => modal.classList.add(c));
+        modal.classList.add('hidden');
+        const content = document.getElementById(cfg.content);
+        if (content) cfg.contentHide.forEach(c => content.classList.add(c));
+      });
+    }
+
+    /* ==========================================================================
+       5c. 动态预约日历：自今日起生成即将到来的可约时段，禁用过去日期
+       ========================================================================== */
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function formatSlotLabel(d) {
+      const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      const md = pad2(d.getMonth() + 1) + '/' + pad2(d.getDate());
+      return weekNames[d.getDay()] + ' (' + md + ')';
+    }
+
+    function generateBookingDateSlots() {
+      const container = document.getElementById('bookingDateSlots');
+      if (!container) return;
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // 候选模板：周末上午、周末下午、工作日晚
+      const candidates = [];
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const dow = d.getDay();
+        if (dow === 6) {
+          candidates.push({ date: d, timeLabel: '10:00 - 12:00', timeStart: '10:00', timeEnd: '12:00', kind: 'weekend-am' });
+        } else if (dow === 0) {
+          candidates.push({ date: d, timeLabel: '14:30 - 16:30', timeStart: '14:30', timeEnd: '16:30', kind: 'weekend-pm' });
+        } else if (dow === 3 || dow === 5) {
+          candidates.push({ date: d, timeLabel: '18:30 - 20:30', timeStart: '18:30', timeEnd: '20:30', kind: 'weekday-eve' });
+        }
+      }
+      // 过滤已过去的时段（同日且结束时间已过）
+      const usable = candidates.filter(c => {
+        const end = new Date(c.date);
+        const [eh, em] = c.timeEnd.split(':').map(Number);
+        end.setHours(eh, em, 0, 0);
+        return end.getTime() > now.getTime();
+      }).slice(0, 3);
+
+      if (usable.length === 0) {
+        container.innerHTML = '<div class="col-span-3 text-[11px] text-slate-500 text-center py-2">暂无可用时段，请稍后再试</div>';
+        return;
+      }
+
+      container.innerHTML = usable.map((c, idx) => {
+        const label = formatSlotLabel(c.date);
+        const value = label + ' ' + c.timeLabel;
+        const checked = idx === 0 ? 'checked' : '';
+        return (
+          '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
+            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-time-label="' + c.timeLabel + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
+            '<div class="font-bold">' + label + '</div>' +
+            '<div class="text-[10px] text-slate-400">' + c.timeLabel + '</div>' +
+          '</label>'
+        );
+      }).join('');
+    }
+
+    /* ==========================================================================
+       6. 约课与银行存管签约抽屉
+       ========================================================================== */
+    function openBookingDrawer(tutorId) {
+      closeAllStackedModals('bookingDrawerModal');
+      const tutor = TUTOR_DATABASE.find(t => t.id === tutorId) || TUTOR_DATABASE[0];
+      selectedTutorForBooking = tutor;
+
+      document.getElementById('bookingTutorName').innerText = tutor.maskedName;
+      document.getElementById('bookingTutorAvatar').innerText = tutor.avatarLetter;
+      document.getElementById('bookingTutorInfo').innerText = `${tutor.subjects[0]} / ${tutor.syllabusTopics[0]}`;
+      document.getElementById('bookingTutorRate').innerText = `¥${tutor.hourlyRate}/h`;
+
+      document.getElementById('labelCost1h').innerText = `¥${tutor.hourlyRate}`;
+      document.getElementById('labelCost2h').innerText = `¥${tutor.hourlyRate * 2}`;
+
+      // 默认选中空间
+      const spaceSelect = document.getElementById('bookingSpaceSelect');
+      if (spaceSelect && tutor.space) {
+        spaceSelect.value = tutor.space;
+      }
+
+      const typeOne = document.querySelector('input[name="bookingType"][value="one_off"]');
+      if (typeOne) typeOne.checked = true;
+      onBookingTypeChange();
+      generateBookingDateSlots();
+      hideEscrowSummary();
+      updateBookingCost();
+      window.__renewalSourceBookingId = null;
+      if (tutor && tutor.mentorId) renderMentorAvailabilityHints(tutor.mentorId);
+      else if (typeof renderMentorAvailabilityHints === 'function') renderMentorAvailabilityHints(null);
+
+      const modal = document.getElementById('bookingDrawerModal');
+      const content = document.getElementById('bookingDrawerContent');
+      modal?.classList.remove('hidden');
+      setTimeout(() => {
+        modal?.classList.remove('opacity-0');
+        content?.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeBookingDrawer() {
+      const modal = document.getElementById('bookingDrawerModal');
+      const content = document.getElementById('bookingDrawerContent');
+      modal?.classList.add('opacity-0');
+      content?.classList.add('scale-95');
+      setTimeout(() => {
+        modal?.classList.add('hidden');
+      }, 260);
+    }
+
+    function getSelectedBookingType() {
+      return document.querySelector('input[name="bookingType"]:checked')?.value || 'one_off';
+    }
+
+    function onBookingTypeChange() {
+      const type = getSelectedBookingType();
+      const weekly = document.getElementById('weeklyBookingPanel');
+      const oneOff = document.getElementById('oneOffDatePanel');
+      if (weekly) weekly.classList.toggle('hidden', type !== 'weekly');
+      if (oneOff) oneOff.classList.toggle('hidden', type === 'weekly');
+      updateBookingCost();
+    }
+
+    function updateBookingCost() {
+      if (!selectedTutorForBooking) return;
+      const durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
+      const hours = parseInt(durationVal, 10);
+      const perSession = selectedTutorForBooking.hourlyRate * hours;
+      const type = getSelectedBookingType();
+      let total = perSession;
+      let sessions = 1;
+      if (type === 'weekly') {
+        sessions = parseInt(document.getElementById('weeklySessionCount')?.value || '4', 10);
+        total = perSession * sessions;
+      }
+
+      const totalDisplay = `¥${total.toFixed(2)}`;
+      const costEl = document.getElementById('finalBookingCost');
+      const confirmLockEl = document.getElementById('confirmLockAmount');
+
+      if (costEl) costEl.innerText = totalDisplay;
+      if (confirmLockEl) confirmLockEl.innerText = totalDisplay;
+      const unitHint = document.querySelector('#bookingTutorRate')?.parentElement?.querySelector('span');
+      if (unitHint) unitHint.innerText = type === 'weekly' ? ('包 ' + sessions + ' 次冻结') : '单次约';
+    }
+
+    let pendingBookingMeta = null;
+    let iotCountdownTimer = null;
+
+    function collectBookingMeta() {
+      const durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
+      const hours = parseInt(durationVal, 10);
+      const rate = selectedTutorForBooking ? selectedTutorForBooking.hourlyRate : 0;
+      const perSession = rate * hours;
+      const type = getSelectedBookingType();
+      const spaceName = document.getElementById('bookingSpaceSelect')?.value || '青羊金沙文化微网点';
+      let dateChoice = '';
+      let timeLabel = '';
+      let weekday = null;
+      let timeStart = '';
+      let sessionCount = 1;
+      let sessions = [];
+      let total = perSession;
+      if (type === 'weekly') {
+        weekday = parseInt(document.getElementById('weeklyWeekday')?.value || '3', 10);
+        timeStart = document.getElementById('weeklyTime')?.value || '19:00';
+        sessionCount = parseInt(document.getElementById('weeklySessionCount')?.value || '4', 10);
+        total = perSession * sessionCount;
+        if (window.StorageService && StorageService.buildWeeklySessions) {
+          sessions = StorageService.buildWeeklySessions(weekday, timeStart, hours, sessionCount);
+        }
+        const wdLabels = ['周日','周一','周二','周三','周四','周五','周六'];
+        dateChoice = '每周' + (wdLabels[weekday] || '') + ' ' + timeStart + ' · 共' + sessionCount + '次';
+        timeLabel = timeStart;
+      } else {
+        const dateRadio = document.querySelector('input[name="bookingDate"]:checked');
+        dateChoice = dateRadio?.value || '';
+        timeLabel = dateRadio?.getAttribute('data-time-label') || '';
+      }
+      return {
+        hours, total, perSession, spaceName, dateChoice, timeLabel, tutor: selectedTutorForBooking,
+        type, weekday, timeStart, sessionCount, sessions
+      };
+    }
+
+    function showEscrowSummaryBeforeLock() {
+      if (!selectedTutorForBooking) {
+        showToast('请先选择导师', 'warning');
+        return;
+      }
+      const type = getSelectedBookingType();
+      if (type === 'one_off') {
+        const dateRadio = document.querySelector('input[name="bookingDate"]:checked');
+        if (!dateRadio) {
+          showToast('请选择预约日期与时段', 'warning');
+          return;
+        }
+      }
+      const meta = collectBookingMeta();
+      if (meta.type === 'weekly' && (!meta.sessions || !meta.sessions.length)) {
+        showToast('未能生成每周课次，请重选档期', 'warning');
+        return;
+      }
+      pendingBookingMeta = meta;
+      document.getElementById('escrowSumDuration').innerText = meta.type === 'weekly'
+        ? (meta.hours + ' 小时 × ' + meta.sessionCount + ' 次')
+        : (meta.hours + ' 小时');
+      document.getElementById('escrowSumDate').innerText = meta.dateChoice;
+      document.getElementById('escrowSumSpace').innerText = meta.spaceName;
+      document.getElementById('escrowSumAmount').innerText = '¥' + meta.total.toFixed(2);
+      const box = document.getElementById('escrowLockSummary');
+      if (box) box.classList.remove('hidden');
+      box?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideEscrowSummary() {
+      const box = document.getElementById('escrowLockSummary');
+      if (box) box.classList.add('hidden');
+    }
+
+    function proceedAfterEscrowSummary() {
+      hideEscrowSummary();
+      // 若尚未签署则打开协议；已有会话内签署标记则直接锁定
+      if (window.__eContractSignedForSession) {
+        confirmBookingSubmit();
+      } else {
+        openEContractModal();
+      }
+    }
+
+    function openEContractModal() {
+      if (!selectedTutorForBooking) {
+        showToast('请先选择导师', 'warning');
+        return;
+      }
+      closeAllStackedModals('eContractModal');
+      // 保持约课抽屉信息，但隐藏以免遮挡；协议确认后继续锁定
+      const bookingModal = document.getElementById('bookingDrawerModal');
+      if (bookingModal) {
+        bookingModal.classList.add('opacity-0');
+        bookingModal.classList.add('hidden');
+      }
+
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      const parentName = (parent && (parent.parentName || parent.studentNickname)) || '家长用户';
+      document.getElementById('contractParentName').innerText = parentName;
+      document.getElementById('contractTutorName').innerText = selectedTutorForBooking.maskedName;
+      const signInput = document.getElementById('eContractSignName');
+      if (signInput && parent && parent.parentName) signInput.value = parent.parentName;
+      const agree = document.getElementById('eContractAgreeCheck');
+      if (agree) agree.checked = false;
+
+      pendingBookingMeta = collectBookingMeta();
+
+      const modal = document.getElementById('eContractModal');
+      const content = document.getElementById('eContractContent');
+      modal?.classList.remove('hidden');
+      setTimeout(() => {
+        modal?.classList.remove('opacity-0');
+        content?.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeEContractModal() {
+      const modal = document.getElementById('eContractModal');
+      const content = document.getElementById('eContractContent');
+      modal?.classList.add('opacity-0');
+      content?.classList.add('scale-95');
+      setTimeout(() => {
+        modal?.classList.add('hidden');
+        // 若尚未完成锁定，恢复约课抽屉以便关闭/继续控件可见
+        if (!window.__eContractSignedForSession && selectedTutorForBooking) {
+          const bookingModal = document.getElementById('bookingDrawerModal');
+          const bookingContent = document.getElementById('bookingDrawerContent');
+          if (bookingModal) {
+            bookingModal.classList.remove('hidden');
+            setTimeout(() => {
+              bookingModal.classList.remove('opacity-0');
+              bookingContent?.classList.remove('scale-95');
+            }, 10);
+          }
+        }
+      }, 260);
+    }
+
+    function confirmEContractAndBook() {
+      const agreed = document.getElementById('eContractAgreeCheck')?.checked;
+      const signName = document.getElementById('eContractSignName')?.value.trim();
+      if (!agreed) {
+        showToast('请勾选同意《三方托管服务居间协议》', 'warning');
+        return;
+      }
+      if (!signName || signName.length < 2) {
+        showToast('请输入电子签名姓名', 'warning');
+        return;
+      }
+      if (window.StorageService && pendingBookingMeta) {
+        StorageService.saveContract({
+          title: '三方托管服务居间协议',
+          signer: signName,
+          tutorId: pendingBookingMeta.tutor.mentorId || pendingBookingMeta.tutor.id,
+          tutorName: pendingBookingMeta.tutor.maskedName,
+          amount: pendingBookingMeta.total,
+          space: pendingBookingMeta.spaceName
+        });
+      }
+      window.__eContractSignedForSession = true;
+      closeEContractModal();
+      confirmBookingSubmit();
+    }
+
+    function confirmBookingSubmit() {
+      const btn = document.getElementById('btnConfirmBooking');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>银行智能合约冻结中...</span>';
+      }
+
+      setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
+        }
+
+        closeBookingDrawer();
+
+        const meta = pendingBookingMeta || {};
+        const spaceName = meta.spaceName || document.getElementById('bookingSpaceSelect')?.value || '青羊金沙文化微网点';
+        const dateChoice = meta.dateChoice || document.querySelector('input[name="bookingDate"]:checked')?.value || '';
+        const total = meta.total || 270;
+        const tutor = meta.tutor || selectedTutorForBooking;
+
+        document.getElementById('passcodeSpaceName').innerText = `${spaceName}-01智能仓`;
+        const scheduleText = dateChoice || ((meta.timeLabel) ? meta.timeLabel : '待定时段');
+        document.getElementById('passcodeScheduleTime').innerText = scheduleText;
+        document.getElementById('passcodeDisplay').innerText = Math.floor(100000 + Math.random() * 900000);
+
+        // 重置 IoT 面板
+        const iotPanel = document.getElementById('iotStatusPanel');
+        if (iotPanel) iotPanel.classList.add('hidden');
+        if (iotCountdownTimer) { clearInterval(iotCountdownTimer); iotCountdownTimer = null; }
+
+        if (window.StorageService && tutor) {
+          const mentorId = tutor.mentorId || tutor.id;
+          const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+          const bookingType = meta.type || 'one_off';
+          StorageService.addBooking({
+            mentorId: mentorId,
+            tutorId: mentorId,
+            tutorName: tutor.maskedName,
+            space: spaceName,
+            schedule: dateChoice || scheduleText,
+            timeSlot: dateChoice || scheduleText,
+            amount: total,
+            hours: meta.hours || 2,
+            subject: (tutor.subjects && tutor.subjects[0]) || '学科辅导',
+            parentId: parent && parent.id,
+            parentName: parent && (parent.parentName || parent.name),
+            parentPhone: parent && parent.phone,
+            studentNickname: parent && parent.studentNickname,
+            studentGrade: parent && parent.studentGrade,
+            status: 'pending_accept',
+            type: bookingType,
+            weekday: bookingType === 'weekly' ? meta.weekday : undefined,
+            time: bookingType === 'weekly' ? meta.timeStart : undefined,
+            sessionCount: bookingType === 'weekly' ? meta.sessionCount : 1,
+            sessions: bookingType === 'weekly' ? (meta.sessions || []) : [],
+            escrowStatus: 'frozen',
+            perSessionAmount: meta.perSession || total,
+            sourceBookingId: window.__renewalSourceBookingId || undefined
+          });
+          window.__renewalSourceBookingId = null;
+          try { renderParentBookings(); } catch (_) {}
+        }
+
+        const headerBal = document.getElementById('headerEscrowBalance');
+        if (headerBal) {
+          const cur = parseFloat(headerBal.innerText) || 315;
+          const next = Math.max(0, cur - total);
+          headerBal.innerText = next.toFixed(2);
+        }
+
+        setTimeout(() => {
+          openPodPasscodeModal();
+          showToast('协议已签 · 托管已锁定，等待导师接单；通过后可扫码开仓');
+        }, 300);
+
+      }, 900);
+    }
+
+    function setIoTScanButtonState(state) {
+      const btn = document.getElementById('btnIoTScan');
+      if (!btn) return;
+      if (state === 'opened') {
+        btn.disabled = true;
+        btn.className = 'w-full bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl text-xs cursor-not-allowed flex items-center justify-center gap-1.5 border border-slate-300';
+        btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i><span>已开门 · 灯光已通</span>';
+      } else if (state === 'poweredOff') {
+        btn.disabled = true;
+        btn.className = 'w-full bg-rose-50 text-rose-700 font-bold py-2.5 rounded-xl text-xs cursor-not-allowed flex items-center justify-center gap-1.5 border border-rose-200';
+        btn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>已收课断电</span>';
+      } else {
+        btn.disabled = false;
+        btn.className = 'w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-teal-600/20';
+        btn.innerHTML = '<i class="fa-solid fa-qrcode"></i><span>模拟扫码开门 · 通电照明</span>';
+      }
+    }
+
+    function simulateIoTScanOpen() {
+      const panel = document.getElementById('iotStatusPanel');
+      if (panel) panel.classList.remove('hidden');
+      const badge = document.getElementById('iotStatusBadge');
+      if (badge) {
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200';
+        badge.innerText = 'DOOR-OPEN';
+      }
+      const doorIcon = document.getElementById('iotDoorIcon');
+      const doorText = document.getElementById('iotDoorText');
+      if (doorIcon) doorIcon.className = 'fa-solid fa-door-open text-emerald-600 text-sm';
+      if (doorText) { doorText.innerText = '门禁已开'; doorText.className = 'mt-1 text-emerald-700 font-medium'; }
+      const lightIcon = document.getElementById('iotLightIcon');
+      const lightText = document.getElementById('iotLightText');
+      if (lightIcon) lightIcon.className = 'fa-solid fa-lightbulb text-amber-400 text-sm';
+      if (lightText) { lightText.innerText = '灯光已通'; lightText.className = 'mt-1 text-amber-600 font-medium'; }
+
+      setIoTScanButtonState('opened');
+      showToast('扫码成功：门禁开启 · 通风照明已接通');
+
+      // 倒计时至今日/次日 20:30 强制断电
+      if (iotCountdownTimer) clearInterval(iotCountdownTimer);
+      function tick() {
+        const now = new Date();
+        let target = new Date(now);
+        target.setHours(20, 30, 0, 0);
+        if (now >= target) {
+          // 演示：若已过 20:30，用 15 秒后模拟断电
+          target = new Date(now.getTime() + 15000);
+        }
+        const diff = target - now;
+        if (diff <= 0) {
+          clearInterval(iotCountdownTimer);
+          iotCountdownTimer = null;
+          if (badge) {
+            badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200';
+            badge.innerText = 'FORCE-OFF';
+          }
+          if (doorIcon) doorIcon.className = 'fa-solid fa-door-closed text-rose-500 text-sm';
+          if (doorText) { doorText.innerText = '门禁锁定'; doorText.className = 'mt-1 text-rose-600 font-medium'; }
+          if (lightIcon) lightIcon.className = 'fa-solid fa-lightbulb text-slate-400 text-sm';
+          if (lightText) { lightText.innerText = '已强制断电'; lightText.className = 'mt-1 text-rose-600 font-medium'; }
+          const cd = document.getElementById('iotCountdownText');
+          if (cd) cd.innerText = '00:00:00';
+          setIoTScanButtonState('poweredOff');
+          showToast('已到 20:30，系统强制断电收课', 'warning');
+          return;
+        }
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        const pad = (n) => String(n).padStart(2, '0');
+        const cd = document.getElementById('iotCountdownText');
+        if (cd) cd.innerText = `${pad(h)}:${pad(m)}:${pad(s)}`;
+      }
+      tick();
+      iotCountdownTimer = setInterval(tick, 1000);
+    }
+
+
+    function initBudgetFilterFromParent() {
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      if (!parent) return;
+      currentMinRate = Number(parent.budgetMin) || 80;
+      currentMaxRate = Number(parent.budgetMax) || 180;
+      if (currentMinRate > currentMaxRate - 10) currentMinRate = Math.max(70, currentMaxRate - 10);
+      const rateMin = document.getElementById('rateMinFilter');
+      if (rateMin) rateMin.value = currentMinRate;
+      const rateRange = document.getElementById('rateRangeFilter');
+      if (rateRange) rateRange.value = currentMaxRate;
+      const minLabel = document.getElementById('minRateLabel');
+      if (minLabel) minLabel.innerText = String(currentMinRate);
+      const maxLabel = document.getElementById('maxRateLabel');
+      if (maxLabel) maxLabel.innerText = String(currentMaxRate);
+    }
+
+    function applyParentHeaderAndPassport() {
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      if (!parent) return;
+      const nameEl = document.getElementById('headerStudentName');
+      const gradeEl = document.getElementById('headerGradeBadge');
+      if (nameEl) nameEl.innerText = parent.studentNickname || '学员';
+      if (gradeEl) {
+        const g = parent.studentGrade || '';
+        gradeEl.innerText = g.includes('初三') ? '初三 · 中考冲刺' : (g || '学情档案');
+      }
+      const passportCard = document.querySelector('#passportDrawerContent .bg-gradient-to-br');
+      if (passportCard) {
+        const title = passportCard.querySelector('.font-bold.text-teal-800') || passportCard.querySelector('.font-bold.text-teal-300');
+        if (title) {
+          const gradeShort = (parent.studentGrade || '').split(' ')[0] || '在读';
+          title.innerText = (parent.studentNickname || '学员') + ' (' + gradeShort + ')';
+        }
+        const block = passportCard.querySelector('.text-slate-600') || passportCard.querySelector('.text-slate-300');
+        if (block) {
+          const subjects = (parent.subjects && parent.subjects.length) ? parent.subjects.join(' / ') : '综合辅导';
+          let pacing = parent.pacingMode || '随堂查缺补漏';
+          if (parent.subjectPlans) {
+            const firstPlan = parent.subjectPlans[parent.subjects && parent.subjects[0]];
+            if (firstPlan && firstPlan.pacing) pacing = firstPlan.pacing;
+          }
+          const bMin = parent.budgetMin != null ? parent.budgetMin : (parent.budgetRate || 130) - 30;
+          const bMax = parent.budgetMax != null ? parent.budgetMax : (parent.budgetRate || 130) + 30;
+          block.innerHTML =
+            '<div>目标科目：<span class="text-slate-900 font-bold">' + subjects + '</span></div>' +
+            '<div>推进模式：<span class="text-teal-700 font-medium">' + pacing + '</span></div>' +
+            '<div>期望课酬：<span class="text-amber-600 font-bold font-mono">¥' + bMin + '–' + bMax + '/小时</span></div>';
+        }
+      }
+    }
+
+    /* ==========================================================================
+       7. 智能仓门禁通行码 Modal
+       ========================================================================== */
+    function openPodPasscodeModal() {
+      closeAllStackedModals('podPasscodeModal');
+      setIoTScanButtonState('idle');
+      const iotPanel = document.getElementById('iotStatusPanel');
+      if (iotPanel) iotPanel.classList.add('hidden');
+      const modal = document.getElementById('podPasscodeModal');
+      const content = document.getElementById('podPasscodeContent');
+      modal?.classList.remove('hidden');
+      setTimeout(() => {
+        modal?.classList.remove('opacity-0');
+        content?.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closePodPasscodeModal() {
+      const modal = document.getElementById('podPasscodeModal');
+      const content = document.getElementById('podPasscodeContent');
+      modal?.classList.add('opacity-0');
+      content?.classList.add('scale-95');
+      setTimeout(() => {
+        modal?.classList.add('hidden');
+      }, 260);
+    }
+
+    /* ==========================================================================
+       8. 学情护照 Drawer
+       ========================================================================== */
+    function openPassportDrawer() {
+      closeAllStackedModals('passportDrawerModal');
+      applyParentHeaderAndPassport();
+      // 刷新薄弱考点胶囊（兼容 subjectPlans）
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      const topicWrap = document.getElementById('passportSyllabusChips');
+      if (parent && topicWrap) {
+        let topics = parent.syllabusTopics || [];
+        if ((!topics || !topics.length) && parent.subjectPlans) {
+          topics = [];
+          Object.keys(parent.subjectPlans).forEach(function (s) {
+            (parent.subjectPlans[s].weakPoints || []).forEach(function (t) {
+              if (topics.indexOf(t) < 0) topics.push(t);
+            });
+          });
+        }
+        if (topics.length) {
+          topicWrap.innerHTML = topics.slice(0, 8).map(function (t) {
+            return '<span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">' + t + '</span>';
+          }).join('');
+        }
+      }
+      const modal = document.getElementById('passportDrawerModal');
+      const content = document.getElementById('passportDrawerContent');
+      modal?.classList.remove('hidden');
+      setTimeout(() => {
+        modal?.classList.remove('opacity-0');
+        content?.classList.remove('translate-x-full');
+      }, 10);
+    }
+
+    function closePassportDrawer() {
+      const modal = document.getElementById('passportDrawerModal');
+      const content = document.getElementById('passportDrawerContent');
+      modal?.classList.add('opacity-0');
+      content?.classList.add('translate-x-full');
+      setTimeout(() => {
+        modal?.classList.add('hidden');
+      }, 280);
+    }
+
+    /* ==========================================================================
+       9. 路由跳转与轻量 Toast 提示组件
+       ========================================================================== */
+    function safeNavigate(targetUrl, targetTitle) {
+      showToast(`正在跳转至【${targetTitle || targetUrl}】...`);
+      setTimeout(() => {
+        try {
+          if (targetUrl && typeof targetUrl === 'string' && targetUrl.trim() !== '') {
+            window.location.assign(targetUrl);
+          }
+        } catch (e) {
+          console.warn('Sandbox navigation fallback:', e);
+          showToast(`已成功切换至【${targetTitle || targetUrl}】演示态`);
+        }
+      }, 600);
+    }
+
+    let toastTimer = null;
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const toastText = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      if (!toast || !toastText || !toastIcon) return;
+
+      toastText.innerText = message;
+      if (type === 'error') {
+        toastIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-sm";
+      } else if (type === 'warning') {
+        toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-teal-400 text-sm";
+      }
+
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2500);
+    }
+
+    function sessionStatusBadge(st) {
+      const map = {
+        scheduled: { text: '已排课', cls: 'bg-slate-50 text-slate-600 border-slate-200' },
+        completed: { text: '已结课', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        leave_pending: { text: '请假待确认', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+        leave_approved: { text: '已批准请假', cls: 'bg-sky-50 text-sky-800 border-sky-200' },
+        leave_too_late: { text: '请假过晚', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
+        cancelled: { text: '已取消', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
+      };
+      return map[st] || { text: st || '—', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+    }
+
+    let summaryModalBookingId = null;
+
+    function openClassSummaryModal(bookingId, sessionId) {
+      summaryModalBookingId = bookingId;
+      const summary = StorageService.getClassSummary(bookingId, sessionId);
+      const booking = StorageService.getBookingById(bookingId);
+      const b = booking ? (StorageService.normalizeBookingRecord(booking)) : null;
+      const session = b && (b.sessions || []).find((s) => s.id === sessionId);
+      document.getElementById('classSummaryMeta').innerText =
+        ((b && b.tutorName) || '导师') + ' · ' + ((session && ((session.date || '') + ' ' + (session.timeLabel || ''))) || '');
+      document.getElementById('classSummaryTitle').innerText = (summary && summary.title) || '课后小结';
+      const tags = (summary && summary.tags) || [];
+      document.getElementById('classSummaryTags').innerHTML = tags.map(function(t) {
+        return '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">' + t + '</span>';
+      }).join('');
+      document.getElementById('classSummaryBody').innerText = (summary && summary.content) || '（暂无内容）';
+      document.getElementById('classSummaryTime').innerText = (summary && summary.createdAt) ? ('填写于 ' + summary.createdAt) : '';
+      const modal = document.getElementById('classSummaryModal');
+      const content = document.getElementById('classSummaryModalContent');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(function() {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+    }
+
+    function closeClassSummaryModal() {
+      const modal = document.getElementById('classSummaryModal');
+      const content = document.getElementById('classSummaryModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(function() { modal.classList.add('hidden'); }, 200);
+    }
+
+    function renewFromSummaryModal() {
+      if (!summaryModalBookingId) return;
+      closeClassSummaryModal();
+      openRenewalBooking(summaryModalBookingId);
+    }
+
+    function openRenewalBooking(bookingId) {
+      const res = StorageService.buildRenewalBooking(bookingId);
+      if (!res || !res.ok) {
+        showToast((res && res.error) || '无法续课', 'warning');
+        return;
+      }
+      const draft = res.draft;
+      const mentorId = draft.mentorId;
+      // find tutor card
+      let tutor = TUTOR_DATABASE.find(function(t) { return t.mentorId === mentorId || t.id === 'TUTOR-' + mentorId || t.id === mentorId; });
+      if (!tutor && mentorId) {
+        const mentor = StorageService.getMentorById(mentorId);
+        if (mentor) tutor = StorageService.mentorToTutorCard(mentor, CURRENT_PARENT || StorageService.getCurrentParent());
+      }
+      if (!tutor) {
+        showToast('未找到对应导师，请从匹配列表预约', 'warning');
+        return;
+      }
+      // ensure in TUTOR_DATABASE for drawer
+      if (!TUTOR_DATABASE.find(function(t) { return t.id === tutor.id; })) {
+        TUTOR_DATABASE.unshift(tutor);
+      }
+      openBookingDrawer(tutor.id);
+      // apply prefill
+      const pf = draft.prefill || {};
+      if (pf.type === 'weekly') {
+        const weeklyRadio = document.querySelector('input[name="bookingType"][value="weekly"]');
+        if (weeklyRadio) weeklyRadio.checked = true;
+        onBookingTypeChange();
+        const wd = document.getElementById('weeklyWeekday');
+        const tm = document.getElementById('weeklyTime');
+        const sc = document.getElementById('weeklySessionCount');
+        if (wd && pf.weekday != null) wd.value = String(pf.weekday);
+        if (tm && pf.timeStart) {
+          // ensure option exists
+          let has = false;
+          Array.prototype.forEach.call(tm.options, function(o) { if (o.value === pf.timeStart) has = true; });
+          if (!has) {
+            const opt = document.createElement('option');
+            opt.value = pf.timeStart;
+            opt.textContent = pf.timeStart;
+            tm.appendChild(opt);
+          }
+          tm.value = pf.timeStart;
+        }
+        if (sc && pf.sessionCount) sc.value = String(pf.sessionCount);
+      } else {
+        const oneRadio = document.querySelector('input[name="bookingType"][value="one_off"]');
+        if (oneRadio) oneRadio.checked = true;
+        onBookingTypeChange();
+      }
+      if (pf.hours) {
+        const dur = document.querySelector('input[name="bookingDuration"][value="' + pf.hours + '"]');
+        if (dur) dur.checked = true;
+      }
+      if (pf.space) {
+        const spaceSelect = document.getElementById('bookingSpaceSelect');
+        if (spaceSelect) spaceSelect.value = pf.space;
+      }
+      // stash source for booking create
+      window.__renewalSourceBookingId = bookingId;
+      updateBookingCost();
+      renderMentorAvailabilityHints(mentorId);
+      showToast('已预填续课信息，请确认托管金额后提交');
+    }
+
+    function renderMentorAvailabilityHints(mentorId) {
+      const box = document.getElementById('mentorAvailabilityHints');
+      if (!box) return;
+      if (!mentorId || !StorageService.availabilityHintsForWeekly) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+      }
+      const hints = StorageService.availabilityHintsForWeekly(mentorId);
+      if (!hints.length) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+      }
+      box.classList.remove('hidden');
+      box.innerHTML = '<div class="font-bold text-teal-900 mb-1"><i class="fa-regular fa-calendar-check mr-1"></i>导师可约提示（点击填入）</div>' +
+        '<div class="flex flex-wrap gap-1.5">' +
+        hints.map(function(h) {
+          return '<button type="button" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 cursor-pointer" onclick="applyAvailabilityHint(' + h.weekday + ',\'' + h.timeStart + '\')">' +
+            h.label + '</button>';
+        }).join('') + '</div>';
+    }
+
+    function applyAvailabilityHint(weekday, timeStart) {
+      const weeklyRadio = document.querySelector('input[name="bookingType"][value="weekly"]');
+      if (weeklyRadio) { weeklyRadio.checked = true; onBookingTypeChange(); }
+      const wd = document.getElementById('weeklyWeekday');
+      const tm = document.getElementById('weeklyTime');
+      if (wd) wd.value = String(weekday);
+      if (tm) {
+        let has = false;
+        Array.prototype.forEach.call(tm.options, function(o) { if (o.value === timeStart) has = true; });
+        if (!has) {
+          const opt = document.createElement('option');
+          opt.value = timeStart;
+          opt.textContent = timeStart;
+          tm.appendChild(opt);
+        }
+        tm.value = timeStart;
+      }
+      updateBookingCost();
+      showToast('已填入导师可约时段');
+    }
+
+    function requestLeaveForSession(bookingId, sessionId) {
+      if (!window.StorageService) return;
+      const res = StorageService.requestSessionLeave(bookingId, sessionId, 'parent');
+      if (res && res.ok) {
+        showToast('已提交请假，等待确认（须提前一日）');
+      } else if (res && res.tooLate) {
+        showToast(res.error || '请假过晚：须提前一日确认', 'warning');
+      } else {
+        showToast((res && res.error) || '请假失败', 'error');
+      }
+      renderParentBookings();
+    }
+
+    let parentBookingFilter = 'all';
+
+    function setParentBookingFilter(key, btn) {
+      parentBookingFilter = key || 'all';
+      Array.prototype.forEach.call(document.querySelectorAll('.parent-bk-filter'), function (el) {
+        const on = el.getAttribute('data-filter') === parentBookingFilter;
+        el.className = 'parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
+          (on ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50');
+      });
+      renderParentBookings();
+    }
+
+    function collectParentCompletedSessions(list) {
+      if (window.StorageService && StorageService.collectCompletedSessions) {
+        return StorageService.collectCompletedSessions(list);
+      }
+      const rows = [];
+      (list || []).forEach(function (raw) {
+        const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
+        (b.sessions || []).forEach(function (s) {
+          if (s && s.status === 'completed') rows.push({ booking: b, session: s });
+        });
+      });
+      rows.sort(function (a, b) {
+        return String(b.session.completedAt || b.session.date || '').localeCompare(String(a.session.completedAt || a.session.date || ''));
+      });
+      return rows;
+    }
+
+    function escapeParentHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderParentCompletedPanel(list) {
+      const panel = document.getElementById('parentCompletedPanel');
+      const box = document.getElementById('parentCompletedList');
+      const countEl = document.getElementById('parentCompletedCount');
+      if (!panel || !box) return;
+      const rows = collectParentCompletedSessions(list);
+      if (countEl) countEl.innerText = String(rows.length);
+      if (!rows.length) {
+        if (parentBookingFilter === 'completed') {
+          panel.classList.remove('hidden');
+          box.innerHTML = '<div class="text-center py-4 text-slate-400">暂无已完课记录</div>';
+        } else {
+          panel.classList.add('hidden');
+          box.innerHTML = '';
+        }
+        return;
+      }
+      if (parentBookingFilter === 'all' || parentBookingFilter === 'completed') panel.classList.remove('hidden');
+      else panel.classList.add('hidden');
+      box.innerHTML = rows.map(function (row) {
+        const b = row.booking;
+        const s = row.session;
+        const escrow = s.escrowStatus === 'released'
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
+        const sumBtn = s.classSummary
+          ? '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
+          : '<span class="text-[10px] text-slate-400">暂无小结</span>';
+        const typePill = b.type === 'weekly'
+          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+          : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>';
+        return '<div class="rounded-xl border border-emerald-100 bg-white p-3 flex flex-col gap-1">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div class="min-w-0 space-y-0.5">' +
+              '<div class="flex items-center gap-1.5 flex-wrap">' +
+                '<span class="font-bold text-slate-900">' + escapeParentHtml(b.tutorName || '导师') + '</span>' +
+                typePill +
+                '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
+              '</div>' +
+              '<div class="text-[11px] text-slate-500">' + escapeParentHtml(b.subject || '') + ' · ' + escapeParentHtml(b.studentNickname || '') + '</div>' +
+              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
+                escapeParentHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</div>' +
+            '</div>' +
+            '<div class="flex flex-col items-end gap-1.5 shrink-0">' + escrow + sumBtn + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderParentBookings() {
+      const box = document.getElementById('parentBookingsList');
+      if (!box || !window.StorageService) return;
+      try { StorageService.processEscrowReleases && StorageService.processEscrowReleases(); } catch (_) {}
+      const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+      if (!parent) {
+        box.innerHTML = '<div class="text-slate-400 text-center py-3">暂无家长档案</div>';
+        return;
+      }
+      const list = StorageService.getBookingsForParent(parent.id || parent.phone);
+      renderParentCompletedPanel(list);
+      if (!list.length) {
+        box.innerHTML = '<div class="text-slate-400 text-center py-3">暂无约课记录。匹配导师并预约后将显示接单状态。</div>';
+        return;
+      }
+      if (parentBookingFilter === 'completed') {
+        box.innerHTML = '<div class="text-[11px] text-slate-400 text-center py-2">下方「已完课」面板展示结课明细</div>';
+        return;
+      }
+      let filtered = list.slice();
+      if (parentBookingFilter === 'pending') {
+        filtered = list.filter(function(b) { return b.status === 'pending_accept' || b.status === 'escrow_locked'; });
+      } else if (parentBookingFilter === 'accepted') {
+        filtered = list.filter(function(b) { return b.status === 'accepted'; });
+      } else if (parentBookingFilter === 'declined') {
+        filtered = list.filter(function(b) { return b.status === 'declined'; });
+      }
+      if (!filtered.length) {
+        box.innerHTML = '<div class="text-slate-400 text-center py-3">该状态下暂无约课</div>';
+        return;
+      }
+      const statusMap = {
+        pending_accept: { text: '待导师接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+        escrow_locked: { text: '待导师接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+        accepted: { text: '导师已接单', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        declined: { text: '导师已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+      };
+      box.innerHTML = filtered.map(function(raw) {
+        const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
+        const st = statusMap[b.status] || { text: b.status || '未知', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+        const isWeekly = b.type === 'weekly';
+        const typePill = isWeekly
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>';
+        const hasCompleted = (b.sessions || []).some(function(s) { return s.status === 'completed'; });
+        const canRenew = b.status === 'accepted' || hasCompleted;
+        const reason = (b.status === 'declined' && b.declineReason)
+          ? '<div class="mt-1.5 text-[11px] text-rose-700">婉拒原因：' + String(b.declineReason).replace(/</g,'&lt;') + '</div>'
+          : (b.status === 'accepted'
+            ? '<div class="mt-1.5 text-[11px] text-emerald-700">可使用 IoT 通行凭证履约开仓 · 结课后 48h 无投诉划拨</div>'
+            : '<div class="mt-1.5 text-[11px] text-slate-400">资金已托管冻结，等待导师确认档期</div>');
+        let sessionsHtml = '';
+        if (Array.isArray(b.sessions) && b.sessions.length) {
+          sessionsHtml = '<div class="mt-2 space-y-1.5 border-t border-slate-100 pt-2">' +
+            (isWeekly ? '<div class="text-[10px] font-bold text-teal-800 mb-1">每周系列课次</div>' : '') +
+            b.sessions.map(function(s) {
+              const sb = sessionStatusBadge(s.status);
+              const canLeave = (b.status === 'accepted' || b.status === 'pending_accept') &&
+                (s.status === 'scheduled' || s.status === 'leave_too_late');
+              let acts = '';
+              if (canLeave) {
+                acts += '<button type="button" onclick="requestLeaveForSession(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">申请请假</button>';
+              }
+              if (s.classSummary) {
+                acts += '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>';
+              }
+              const escrow = s.escrowStatus === 'released'
+                ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
+                : (s.status === 'completed' ? '<span class="text-[10px] text-amber-700">48h观察中</span>' : '<span class="text-[10px] text-slate-400">费用已冻结</span>');
+              return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
+                '<div class="flex items-center gap-1.5 flex-wrap">' +
+                  '<span class="font-medium text-slate-800">' + (s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '') + '</span>' +
+                  '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border ' + sb.cls + '">' + sb.text + '</span>' +
+                '</div>' +
+                '<div class="flex items-center gap-1.5">' + escrow + acts + '</div>' +
+              '</div>';
+            }).join('') + '</div>';
+        }
+        const renewBtn = canRenew
+          ? '<div class="mt-2"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button></div>'
+          : '';
+        return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div class="min-w-0 space-y-0.5">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="font-bold text-slate-900">' + (b.tutorName || '导师') + '</span>' +
+                typePill +
+                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+                (b.sourceBookingId ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-800 border-violet-200">续课</span>' : '') +
+              '</div>' +
+              '<div class="text-[11px] text-slate-500">' + (b.subject || '') + ' · ' + (b.studentGrade || '') + '</div>' +
+              '<div class="text-[11px] text-slate-600"><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + (b.space || '—') +
+                ' · <i class="fa-regular fa-clock text-teal-600 mx-1"></i>' + (b.schedule || b.timeSlot || '—') + '</div>' +
+              reason +
+            '</div>' +
+            '<div class="text-right shrink-0">' +
+              '<div class="font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
+              '<div class="text-[10px] text-slate-400">' + (isWeekly ? '系列包提前冻结' : '单次冻结') + '</div>' +
+              '<div class="text-[10px] text-slate-400">' + (b.createdAt || '') + '</div>' +
+            '</div>' +
+          '</div>' +
+          sessionsHtml +
+          renewBtn +
+        '</div>';
+      }).join('');
+    }
+
+    // 初始化运行
+    window.onload = function() {
+      reloadTutorDatabase();
+      initBudgetFilterFromParent();
+      applyParentHeaderAndPassport();
+      renderTopMatchedTutors();
+      applyFilterAndSearch();
+      renderParentBookings();
+    };
+  </script>
+</body>
+</html>
