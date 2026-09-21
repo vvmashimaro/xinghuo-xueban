@@ -765,9 +765,11 @@
         const sumBtn = s.classSummary
           ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
           : '<span class="text-[10px] text-slate-400">暂无小结</span>';
-        const typePill = b.type === 'weekly'
-          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
-          : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>';
+        const typePill = b.type === 'trial'
+          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
+          : (b.type === 'weekly'
+            ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+            : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>');
         return '<div class="rounded-xl border border-emerald-100 bg-white p-3 space-y-1.5">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
@@ -825,9 +827,12 @@
         const st = BOOKING_STATUS_LABEL[b.status] || { text: b.status, cls: 'bg-slate-50 text-slate-600 border-slate-200' };
         const canAct = b.status === 'pending_accept' || b.status === 'escrow_locked';
         const isWeekly = b.type === 'weekly';
-        const typePill = isWeekly
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
-          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>';
+        const isTrial = b.type === 'trial';
+        const typePill = isTrial
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
+          : (isWeekly
+            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+            : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>');
         const actions = canAct
           ? '<div class="flex flex-wrap gap-2 mt-3">' +
               '<button type="button" onclick="acceptBooking(\'' + b.id + '\')" class="text-[11px] font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-check"></i>接单</button>' +
@@ -889,7 +894,7 @@
             '</div>' +
             '<div class="text-right shrink-0">' +
               '<div class="text-sm font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
-              '<div class="text-[10px] text-slate-400">' + (isWeekly ? '系列包冻结' : '托管锁定') + ' · ' + (b.hours || 2) + 'h' + (isWeekly && b.sessionCount ? ' ×' + b.sessionCount : '') + '</div>' +
+              '<div class="text-[10px] text-slate-400">' + (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包冻结' : '托管锁定')) + ' · ' + (isTrial ? 1 : (b.hours || 2)) + 'h' + (isWeekly && b.sessionCount ? ' ×' + b.sessionCount : '') + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="mt-2.5 grid sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600">' +

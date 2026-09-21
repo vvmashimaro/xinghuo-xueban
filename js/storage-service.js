@@ -15,8 +15,40 @@
     bookings: 'xh_bookings_v1',
     session: 'xh_session_v1',
     contracts: 'xh_contracts_v1',
+    assessments: 'xh_assessments_v1',
     seeded: 'xh_seeded_v1'
   };
+
+  const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
+
+  function normalizeAssessmentSubject(raw) {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    for (let i = 0; i < ASSESSMENT_SUBJECTS.length; i++) {
+      const b = ASSESSMENT_SUBJECTS[i];
+      if (s === b || s.indexOf(b) >= 0) return b;
+    }
+    return s;
+  }
+
+  function scoreToLevel(score) {
+    const n = Number(score) || 0;
+    if (n >= 85) return '优秀';
+    if (n >= 70) return '良好';
+    if (n >= 50) return '基础';
+    return '待提升';
+  }
+
+  function resolveParentKey(parentIdOrPhone) {
+    const key = String(parentIdOrPhone || '').trim();
+    if (!key) return { id: '', phone: '' };
+    const parents = _read(KEYS.parents, []) || [];
+    const parent = parents.find((p) => p.id === key || String(p.phone || '') === key) || null;
+    return {
+      id: parent ? parent.id : key,
+      phone: parent ? String(parent.phone || '') : (/^1\d{10}$/.test(key) ? key : '')
+    };
+  }
 
   let _readyResolve;
   const _readyPromise = new Promise((resolve) => {
@@ -361,6 +393,7 @@
     if (Array.isArray(snap.parents)) _write(KEYS.parents, snap.parents);
     if (Array.isArray(snap.bookings)) _write(KEYS.bookings, snap.bookings);
     if (Array.isArray(snap.contracts)) _write(KEYS.contracts, snap.contracts);
+    if (Array.isArray(snap.assessments)) _write(KEYS.assessments, snap.assessments);
     if (snap.session !== undefined) {
       if (snap.session) _write(KEYS.session, snap.session);
     }
@@ -473,6 +506,10 @@
       if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
         _write(KEYS.bookings, getSeedBookings());
       }
+      const assessments = _read(KEYS.assessments, null);
+      if (!assessments || !Array.isArray(assessments)) {
+        _write(KEYS.assessments, []);
+      }
       if (!_read(KEYS.seeded, false)) _write(KEYS.seeded, true);
       return true;
     },
@@ -498,6 +535,7 @@
       _write(KEYS.parents, [getSeedParent()]);
       _write(KEYS.bookings, getSeedBookings());
       _write(KEYS.contracts, []);
+      _write(KEYS.assessments, []);
       return true;
     },
 
@@ -757,6 +795,16 @@
     addBooking: function (booking) {
       const list = this.getBookings();
       const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
+      const bookingType = (booking && booking.type) || 'one_off';
+      if (bookingType === 'trial') {
+        const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
+        const subject = (booking && booking.subject) || '';
+        if (parentKey && this.hasUsedFreeTrial(parentKey, mentorId, subject)) {
+          const err = { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
+          console.warn('[StorageService] trial blocked', err);
+          return err;
+        }
+      }
       const record = Object.assign(
         {
           id: _uid('BK'),
@@ -765,7 +813,7 @@
           declineReason: '',
           mentorId: mentorId,
           tutorId: mentorId,
-          type: (booking && booking.type) || 'one_off',
+          type: bookingType,
           sessions: (booking && booking.sessions) || [],
           escrowStatus: (booking && booking.escrowStatus) || 'frozen'
         },
@@ -775,6 +823,14 @@
           tutorId: mentorId || (booking && (booking.tutorId || booking.mentorId)) || ''
         }
       );
+      if (record.type === 'trial') {
+        record.hours = 1;
+        record.amount = 0;
+        record.perSessionAmount = 0;
+        record.escrowStatus = 'waived';
+        record.trialLabel = '首次试课 · 1小时免费';
+        record.sessionCount = 1;
+      }
       list.unshift(record);
       this.saveBookings(list);
       _apiSafe('POST', '/api/bookings', booking || record).then((remote) => {
@@ -1390,6 +1446,112 @@
         availableSlots: mentor.availableSlots || [],
         availability: mentor.availability || []
       };
+    },
+
+    /* ---------- Assessments（学生测评） ---------- */
+    ASSESSMENT_SUBJECTS: ASSESSMENT_SUBJECTS,
+
+    normalizeAssessmentSubject: normalizeAssessmentSubject,
+
+    scoreToLevel: scoreToLevel,
+
+    getAssessments: function () {
+      this.seedIfEmptyLocal();
+      return _read(KEYS.assessments, []) || [];
+    },
+
+    saveAssessments: function (list) {
+      return _write(KEYS.assessments, list || []);
+    },
+
+    getAssessment: function (parentIdOrPhone, subject) {
+      const sub = normalizeAssessmentSubject(subject);
+      if (!parentIdOrPhone || !sub) return null;
+      const keys = resolveParentKey(parentIdOrPhone);
+      const list = this.getAssessments();
+      const matches = list.filter((a) => {
+        if (normalizeAssessmentSubject(a.subject) !== sub) return false;
+        if (a.parentId && (a.parentId === keys.id || a.parentId === parentIdOrPhone)) return true;
+        if (keys.phone && a.parentPhone && String(a.parentPhone) === keys.phone) return true;
+        if (a.studentId && (a.studentId === keys.id || a.studentId === parentIdOrPhone)) return true;
+        return false;
+      });
+      if (!matches.length) return null;
+      matches.sort((a, b) => String(b.completedAt || '').localeCompare(String(a.completedAt || '')));
+      return matches[0];
+    },
+
+    hasAssessment: function (parentIdOrPhone, subject) {
+      return !!this.getAssessment(parentIdOrPhone, subject);
+    },
+
+    saveAssessment: function (payload) {
+      const sub = normalizeAssessmentSubject(payload && payload.subject);
+      if (!sub) return null;
+      const keys = resolveParentKey((payload && (payload.parentId || payload.parentPhone || payload.studentId)) || '');
+      const score = Math.max(0, Math.min(100, Math.round(Number(payload && payload.score) || 0)));
+      const record = Object.assign(
+        {
+          id: _uid('AS'),
+          createdAt: _now()
+        },
+        payload || {},
+        {
+          subject: sub,
+          score: score,
+          level: (payload && payload.level) || scoreToLevel(score),
+          completedAt: (payload && payload.completedAt) || _now(),
+          parentId: (payload && payload.parentId) || keys.id || '',
+          parentPhone: (payload && payload.parentPhone) || keys.phone || '',
+          studentId: (payload && payload.studentId) || keys.id || ''
+        }
+      );
+      const list = this.getAssessments().filter((a) => {
+        // keep one latest per parent+subject (replace older same key)
+        const sameSub = normalizeAssessmentSubject(a.subject) === sub;
+        const sameParent =
+          (record.parentId && a.parentId === record.parentId) ||
+          (record.parentPhone && a.parentPhone && String(a.parentPhone) === String(record.parentPhone));
+        return !(sameSub && sameParent);
+      });
+      list.unshift(record);
+      this.saveAssessments(list);
+      _apiSafe('POST', '/api/assessments', record).then((remote) => {
+        if (remote && remote.id) {
+          const all = this.getAssessments().filter((a) => a.id !== record.id && !(
+            normalizeAssessmentSubject(a.subject) === sub &&
+            ((remote.parentId && a.parentId === remote.parentId) ||
+              (remote.parentPhone && a.parentPhone && String(a.parentPhone) === String(remote.parentPhone)))
+          ));
+          all.unshift(remote);
+          this.saveAssessments(all);
+        }
+      });
+      return record;
+    },
+
+    listAssessmentsForParent: function (parentIdOrPhone) {
+      if (!parentIdOrPhone) return [];
+      const keys = resolveParentKey(parentIdOrPhone);
+      return this.getAssessments().filter((a) => {
+        if (a.parentId && (a.parentId === keys.id || a.parentId === parentIdOrPhone)) return true;
+        if (keys.phone && a.parentPhone && String(a.parentPhone) === keys.phone) return true;
+        if (a.studentId && (a.studentId === keys.id || a.studentId === parentIdOrPhone)) return true;
+        return false;
+      });
+    },
+
+    /* ---------- Trial class（试课） ---------- */
+    hasUsedFreeTrial: function (parentIdOrPhone, mentorId, subject) {
+      const sub = normalizeAssessmentSubject(subject);
+      const bookings = this.getBookingsForParent(parentIdOrPhone);
+      return bookings.some((b) => {
+        if (!b || b.type !== 'trial') return false;
+        if (b.status === 'declined' || b.status === 'cancelled') return false;
+        const sameMentor = !mentorId || b.mentorId === mentorId || b.tutorId === mentorId;
+        const sameSubject = !sub || normalizeAssessmentSubject(b.subject) === sub;
+        return sameMentor && sameSubject;
+      });
     },
 
     getTutorListForParent: function (parentProfile) {

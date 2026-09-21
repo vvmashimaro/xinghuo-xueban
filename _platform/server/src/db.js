@@ -681,6 +681,7 @@ function emptySnapshot() {
     parents: [getSeedParent()],
     bookings: getSeedBookings(),
     contracts: [],
+    assessments: [],
     session: null,
     seeded: true
   };
@@ -713,6 +714,7 @@ function load() {
     if (!state.parents) state.parents = [];
     if (!state.bookings) state.bookings = [];
     if (!state.contracts) state.contracts = [];
+    if (!state.assessments) state.assessments = [];
     if (state.seeded == null) state.seeded = true;
     // patch mentor defaults
     let need = false;
@@ -744,6 +746,7 @@ function snapshot() {
     parents: s.parents.slice(),
     bookings: s.bookings.slice(),
     contracts: (s.contracts || []).slice(),
+    assessments: (s.assessments || []).slice(),
     session: s.session ? Object.assign({}, s.session) : null,
     seeded: !!s.seeded
   };
@@ -754,6 +757,7 @@ function replaceSnapshot(body) {
   if (body.mentors) s.mentors = body.mentors.map(withMentorDefaults);
   if (body.parents) s.parents = body.parents;
   if (body.bookings) s.bookings = body.bookings;
+  if (body.assessments) s.assessments = body.assessments;
   if (body.contracts) s.contracts = body.contracts;
   if (body.session !== undefined) s.session = body.session;
   if (body.seeded !== undefined) s.seeded = !!body.seeded;
@@ -786,6 +790,9 @@ function seedIfEmpty() {
   if (!s.parents || !s.parents.length) {
     s.parents = [getSeedParent()];
     changed = true;
+  }
+  if (!s.assessments) {
+    s.assessments = [];
   }
   if (!s.bookings || !s.bookings.length) {
     s.bookings = getSeedBookings();
@@ -969,6 +976,24 @@ function getBookings() {
 function addBooking(booking) {
   const s = getState();
   const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
+  const bookingType = (booking && booking.type) || 'one_off';
+  if (bookingType === 'trial') {
+    const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
+    const subject = normalizeAssessmentSubject((booking && booking.subject) || '');
+    const used = (s.bookings || []).some((b) => {
+      if (!b || b.type !== 'trial') return false;
+      if (b.status === 'declined' || b.status === 'cancelled') return false;
+      const sameMentor = !mentorId || b.mentorId === mentorId || b.tutorId === mentorId;
+      const sameParent =
+        (booking.parentId && b.parentId === booking.parentId) ||
+        (booking.parentPhone && b.parentPhone && String(b.parentPhone) === String(booking.parentPhone));
+      const sameSubject = !subject || normalizeAssessmentSubject(b.subject) === subject;
+      return sameMentor && sameParent && sameSubject;
+    });
+    if (parentKey && used) {
+      return { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
+    }
+  }
   const record = Object.assign(
     {
       id: _uid('BK'),
@@ -977,7 +1002,7 @@ function addBooking(booking) {
       declineReason: '',
       mentorId: mentorId,
       tutorId: mentorId,
-      type: (booking && booking.type) || 'one_off',
+      type: bookingType,
       sessions: (booking && booking.sessions) || [],
       escrowStatus: (booking && booking.escrowStatus) || 'frozen'
     },
@@ -987,6 +1012,14 @@ function addBooking(booking) {
       tutorId: mentorId || (booking && (booking.tutorId || booking.mentorId)) || ''
     }
   );
+  if (record.type === 'trial') {
+    record.hours = 1;
+    record.amount = 0;
+    record.perSessionAmount = 0;
+    record.escrowStatus = 'waived';
+    record.trialLabel = '首次试课 · 1小时免费';
+    record.sessionCount = 1;
+  }
   s.bookings.unshift(record);
   persist();
   return record;
@@ -1392,6 +1425,65 @@ function matchTutors(parentProfile) {
   return tutors;
 }
 
+
+/* ---------- Assessments ---------- */
+const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
+
+function normalizeAssessmentSubject(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  for (const b of ASSESSMENT_SUBJECTS) {
+    if (s === b || s.indexOf(b) >= 0) return b;
+  }
+  return s;
+}
+
+function scoreToLevel(score) {
+  const n = Number(score) || 0;
+  if (n >= 85) return '优秀';
+  if (n >= 70) return '良好';
+  if (n >= 50) return '基础';
+  return '待提升';
+}
+
+function getAssessments() {
+  return (getState().assessments || []).slice();
+}
+
+function saveAssessment(payload) {
+  const s = getState();
+  if (!s.assessments) s.assessments = [];
+  const sub = normalizeAssessmentSubject(payload && payload.subject);
+  if (!sub) return null;
+  const score = Math.max(0, Math.min(100, Math.round(Number(payload && payload.score) || 0)));
+  const record = Object.assign(
+    {
+      id: _uid('AS'),
+      createdAt: _now()
+    },
+    payload || {},
+    {
+      subject: sub,
+      score: score,
+      level: (payload && payload.level) || scoreToLevel(score),
+      completedAt: (payload && payload.completedAt) || _now(),
+      parentId: (payload && payload.parentId) || '',
+      parentPhone: (payload && payload.parentPhone) || '',
+      studentId: (payload && payload.studentId) || (payload && payload.parentId) || ''
+    }
+  );
+  s.assessments = s.assessments.filter((a) => {
+    const sameSub = normalizeAssessmentSubject(a.subject) === sub;
+    const sameParent =
+      (record.parentId && a.parentId === record.parentId) ||
+      (record.parentPhone && a.parentPhone && String(a.parentPhone) === String(record.parentPhone));
+    return !(sameSub && sameParent);
+  });
+  s.assessments.unshift(record);
+  persist();
+  return record;
+}
+
 // init on require
 load();
 
@@ -1429,6 +1521,11 @@ module.exports = {
   getSession,
   setSession,
   matchTutors,
+  getAssessments,
+  saveAssessment,
+  normalizeAssessmentSubject,
+  scoreToLevel,
+  ASSESSMENT_SUBJECTS,
   withMentorDefaults,
   availabilityToSlotLabels,
   parseSlotLabelToAvailability

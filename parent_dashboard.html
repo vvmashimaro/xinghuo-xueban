@@ -121,6 +121,12 @@
         </div>
 
         <!-- 页面跳转工具 -->
+        <button type="button" onclick="safeNavigate('assessment.html', '学生学科测评')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-clipboard-check text-teal-600 text-xs"></i>
+          <span class="hidden sm:inline">学科测评</span>
+          <span class="sm:hidden">测评</span>
+        </button>
+
         <button type="button" onclick="safeNavigate('parent_register.html', '学情重构档案')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
           <i class="fa-solid fa-sliders text-teal-600 text-xs"></i>
           <span class="hidden sm:inline">重配学情与考纲</span>
@@ -484,20 +490,29 @@
         </div>
 
 
-        <!-- 约课模式：单次 / 每周固定 -->
+        <!-- 约课模式：试课 / 单次 / 每周固定 -->
         <div class="space-y-1.5">
           <label class="block font-bold text-slate-700">0. 约课模式</label>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-3 gap-2">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+              <input type="radio" name="bookingType" value="trial" class="hidden" onchange="onBookingTypeChange()">
+              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-gift text-teal-600"></i>试课</span>
+              <span class="text-[9px] text-emerald-700 font-medium leading-tight">首次试课 · 1小时免费</span>
+            </label>
             <label class="border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="one_off" checked class="hidden" onchange="onBookingTypeChange()">
               <i class="fa-solid fa-calendar-day text-teal-600"></i>
-              <span class="font-bold">单次约课</span>
+              <span class="font-bold text-[12px]">单次约课</span>
             </label>
             <label class="border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="weekly" class="hidden" onchange="onBookingTypeChange()">
               <i class="fa-solid fa-calendar-week text-teal-600"></i>
-              <span class="font-bold">每周固定时间</span>
+              <span class="font-bold text-[12px]">每周固定</span>
             </label>
+          </div>
+          <div id="trialBookingHint" class="hidden text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed">
+            <i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>
+            <strong>首次试课 · 1小时免费</strong>：时长固定 1 小时，金额 ¥0，每位导师同一学科仅可预约一次；试课后建议完成对应学科测评以便老师了解真实水平。
           </div>
         </div>
 
@@ -559,15 +574,15 @@
         </div>
 
         <!-- 课时时长单选 -->
-        <div class="space-y-1.5">
+        <div class="space-y-1.5" id="bookingDurationPanel">
           <label class="block font-bold text-slate-700">2. 单次辅导时长</label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label id="durLabel2h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingDuration" value="2" checked class="hidden" onchange="updateBookingCost()">
               <span class="font-bold">2 小时 (推荐·专题突破)</span>
               <span class="text-teal-700 font-mono font-bold" id="labelCost2h">¥270</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label id="durLabel1h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingDuration" value="1" class="hidden" onchange="updateBookingCost()">
               <span class="font-bold">1 小时 (体验试听/答疑)</span>
               <span class="text-teal-700 font-mono font-bold" id="labelCost1h">¥135</span>
@@ -817,7 +832,31 @@
   </div>
 
   <!-- 轻量全局 Toast 通知条 -->
-  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
+  
+  <!-- 试课测评引导弹窗 -->
+  <div id="assessmentGateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3 transform transition-all duration-300 scale-95" id="assessmentGateContent">
+      <div class="flex items-start gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-lg shrink-0">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-slate-900">试课前请完成学科测评</h3>
+          <p class="text-[13px] text-slate-600 mt-1.5 leading-relaxed" id="assessmentGateMessage">
+            请在试课前自行完成测评，以便老师了解真实水平。
+          </p>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="dismissAssessmentGate()" class="flex-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">稍后前往</button>
+        <button type="button" onclick="goAssessmentFromGate()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-2 rounded-xl text-xs cursor-pointer inline-flex items-center justify-center gap-1">
+          <i class="fa-solid fa-arrow-right"></i>立即测评
+        </button>
+      </div>
+    </div>
+  </div>
+
+<div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
     <i class="fa-solid fa-circle-check text-teal-400 text-sm" id="toastIcon"></i>
     <span id="toastMessage">已完成操作</span>
   </div>
@@ -1462,17 +1501,43 @@
       const type = getSelectedBookingType();
       const weekly = document.getElementById('weeklyBookingPanel');
       const oneOff = document.getElementById('oneOffDatePanel');
+      const trialHint = document.getElementById('trialBookingHint');
+      const durPanel = document.getElementById('bookingDurationPanel');
       if (weekly) weekly.classList.toggle('hidden', type !== 'weekly');
       if (oneOff) oneOff.classList.toggle('hidden', type === 'weekly');
+      if (trialHint) trialHint.classList.toggle('hidden', type !== 'trial');
+      // 试课：强制 1 小时，隐藏/锁定 2 小时选项
+      if (type === 'trial') {
+        const d1 = document.querySelector('input[name="bookingDuration"][value="1"]');
+        if (d1) d1.checked = true;
+        const lab2 = document.getElementById('durLabel2h') || document.querySelector('#bookingDurationPanel label:first-child');
+        if (lab2) {
+          lab2.classList.add('opacity-40', 'pointer-events-none');
+        }
+        const btn = document.getElementById('btnConfirmBooking');
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-gift text-xs"></i><span>确认试课 · 免费预约</span>';
+        }
+        const lockLabel = document.querySelector('#confirmLockAmount')?.previousElementSibling
+          || document.querySelector('#finalBookingCost')?.parentElement?.querySelector('span');
+      } else {
+        const lab2 = document.getElementById('durLabel2h') || document.querySelector('#bookingDurationPanel label:first-child');
+        if (lab2) lab2.classList.remove('opacity-40', 'pointer-events-none');
+        const btn = document.getElementById('btnConfirmBooking');
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
+        }
+      }
       updateBookingCost();
     }
 
     function updateBookingCost() {
       if (!selectedTutorForBooking) return;
-      const durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
-      const hours = parseInt(durationVal, 10);
-      const perSession = selectedTutorForBooking.hourlyRate * hours;
       const type = getSelectedBookingType();
+      let durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
+      if (type === 'trial') durationVal = '1';
+      const hours = parseInt(durationVal, 10);
+      const perSession = type === 'trial' ? 0 : (selectedTutorForBooking.hourlyRate * hours);
       let total = perSession;
       let sessions = 1;
       if (type === 'weekly') {
@@ -1480,24 +1545,32 @@
         total = perSession * sessions;
       }
 
-      const totalDisplay = `¥${total.toFixed(2)}`;
+      const totalDisplay = type === 'trial' ? '免费 ¥0' : (`¥${total.toFixed(2)}`);
       const costEl = document.getElementById('finalBookingCost');
       const confirmLockEl = document.getElementById('confirmLockAmount');
 
       if (costEl) costEl.innerText = totalDisplay;
       if (confirmLockEl) confirmLockEl.innerText = totalDisplay;
       const unitHint = document.querySelector('#bookingTutorRate')?.parentElement?.querySelector('span');
-      if (unitHint) unitHint.innerText = type === 'weekly' ? ('包 ' + sessions + ' 次冻结') : '单次约';
+      if (unitHint) {
+        if (type === 'trial') unitHint.innerText = '首次试课 · 1小时免费';
+        else if (type === 'weekly') unitHint.innerText = ('包 ' + sessions + ' 次冻结');
+        else unitHint.innerText = '单次约';
+      }
+      const costCaption = document.querySelector('#finalBookingCost')?.previousElementSibling;
+      if (costCaption && costCaption.tagName === 'SPAN') {
+        costCaption.innerText = type === 'trial' ? '试课费用' : '合约托管总额';
+      }
     }
 
     let pendingBookingMeta = null;
     let iotCountdownTimer = null;
 
     function collectBookingMeta() {
-      const durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
-      const hours = parseInt(durationVal, 10);
+      let durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
+      let hours = parseInt(durationVal, 10);
       const rate = selectedTutorForBooking ? selectedTutorForBooking.hourlyRate : 0;
-      const perSession = rate * hours;
+      let perSession = rate * hours;
       const type = getSelectedBookingType();
       const spaceName = document.getElementById('bookingSpaceSelect')?.value || '青羊金沙文化微网点';
       let dateChoice = '';
@@ -1523,6 +1596,13 @@
         dateChoice = dateRadio?.value || '';
         timeLabel = dateRadio?.getAttribute('data-time-label') || '';
       }
+      if (type === 'trial') {
+        hours = 1;
+        total = 0;
+        perSession = 0;
+        sessionCount = 1;
+        sessions = [];
+      }
       return {
         hours, total, perSession, spaceName, dateChoice, timeLabel, tutor: selectedTutorForBooking,
         type, weekday, timeStart, sessionCount, sessions
@@ -1535,7 +1615,7 @@
         return;
       }
       const type = getSelectedBookingType();
-      if (type === 'one_off') {
+      if (type === 'one_off' || type === 'trial') {
         const dateRadio = document.querySelector('input[name="bookingDate"]:checked');
         if (!dateRadio) {
           showToast('请选择预约日期与时段', 'warning');
@@ -1547,13 +1627,25 @@
         showToast('未能生成每周课次，请重选档期', 'warning');
         return;
       }
+      // 试课：每位导师同一学科仅一次
+      if (meta.type === 'trial' && window.StorageService) {
+        const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+        const mentorId = selectedTutorForBooking.mentorId || selectedTutorForBooking.id;
+        const subject = (selectedTutorForBooking.subjects && selectedTutorForBooking.subjects[0]) || '';
+        if (parent && StorageService.hasUsedFreeTrial(parent.id || parent.phone, mentorId, subject)) {
+          showToast('该导师此学科的免费试课已使用过', 'warning');
+          return;
+        }
+      }
       pendingBookingMeta = meta;
       document.getElementById('escrowSumDuration').innerText = meta.type === 'weekly'
         ? (meta.hours + ' 小时 × ' + meta.sessionCount + ' 次')
-        : (meta.hours + ' 小时');
+        : (meta.type === 'trial' ? '1 小时（试课免费）' : (meta.hours + ' 小时'));
       document.getElementById('escrowSumDate').innerText = meta.dateChoice;
       document.getElementById('escrowSumSpace').innerText = meta.spaceName;
-      document.getElementById('escrowSumAmount').innerText = '¥' + meta.total.toFixed(2);
+      document.getElementById('escrowSumAmount').innerText = meta.type === 'trial'
+        ? '免费 ¥0（托管豁免）'
+        : ('¥' + meta.total.toFixed(2));
       const box = document.getElementById('escrowLockSummary');
       if (box) box.classList.remove('hidden');
       box?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1657,15 +1749,20 @@
 
     function confirmBookingSubmit() {
       const btn = document.getElementById('btnConfirmBooking');
+      const isTrial = (pendingBookingMeta && pendingBookingMeta.type === 'trial') || getSelectedBookingType() === 'trial';
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>银行智能合约冻结中...</span>';
+        btn.innerHTML = isTrial
+          ? '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>正在预约免费试课...</span>'
+          : '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>银行智能合约冻结中...</span>';
       }
 
       setTimeout(() => {
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
+          btn.innerHTML = isTrial
+            ? '<i class="fa-solid fa-gift text-xs"></i><span>确认试课 · 免费预约</span>'
+            : '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
         }
 
         closeBookingDrawer();
@@ -1673,7 +1770,7 @@
         const meta = pendingBookingMeta || {};
         const spaceName = meta.spaceName || document.getElementById('bookingSpaceSelect')?.value || '青羊金沙文化微网点';
         const dateChoice = meta.dateChoice || document.querySelector('input[name="bookingDate"]:checked')?.value || '';
-        const total = meta.total || 270;
+        const total = (meta.total != null) ? Number(meta.total) : 270;
         const tutor = meta.tutor || selectedTutorForBooking;
 
         document.getElementById('passcodeSpaceName').innerText = `${spaceName}-01智能仓`;
@@ -1681,16 +1778,18 @@
         document.getElementById('passcodeScheduleTime').innerText = scheduleText;
         document.getElementById('passcodeDisplay').innerText = Math.floor(100000 + Math.random() * 900000);
 
-        // 重置 IoT 面板
         const iotPanel = document.getElementById('iotStatusPanel');
         if (iotPanel) iotPanel.classList.add('hidden');
-        if (iotCountdownTimer) { clearInterval(iotCountdownTimer); iotCountdownTimer = null; }
+        if (window.iotCountdownTimer) { clearInterval(window.iotCountdownTimer); window.iotCountdownTimer = null; }
 
+        let createdBooking = null;
+        let assessmentSubject = '';
         if (window.StorageService && tutor) {
           const mentorId = tutor.mentorId || tutor.id;
           const parent = CURRENT_PARENT || StorageService.getCurrentParent();
           const bookingType = meta.type || 'one_off';
-          StorageService.addBooking({
+          assessmentSubject = (tutor.subjects && tutor.subjects[0]) || '学科辅导';
+          createdBooking = StorageService.addBooking({
             mentorId: mentorId,
             tutorId: mentorId,
             tutorName: tutor.maskedName,
@@ -1698,8 +1797,8 @@
             schedule: dateChoice || scheduleText,
             timeSlot: dateChoice || scheduleText,
             amount: total,
-            hours: meta.hours || 2,
-            subject: (tutor.subjects && tutor.subjects[0]) || '学科辅导',
+            hours: bookingType === 'trial' ? 1 : (meta.hours || 2),
+            subject: assessmentSubject,
             parentId: parent && parent.id,
             parentName: parent && (parent.parentName || parent.name),
             parentPhone: parent && parent.phone,
@@ -1711,16 +1810,20 @@
             time: bookingType === 'weekly' ? meta.timeStart : undefined,
             sessionCount: bookingType === 'weekly' ? meta.sessionCount : 1,
             sessions: bookingType === 'weekly' ? (meta.sessions || []) : [],
-            escrowStatus: 'frozen',
-            perSessionAmount: meta.perSession || total,
+            escrowStatus: bookingType === 'trial' ? 'waived' : 'frozen',
+            perSessionAmount: bookingType === 'trial' ? 0 : (meta.perSession || total),
             sourceBookingId: window.__renewalSourceBookingId || undefined
           });
           window.__renewalSourceBookingId = null;
+          if (createdBooking && createdBooking.ok === false) {
+            showToast(createdBooking.error || '试课预约失败', 'warning');
+            return;
+          }
           try { renderParentBookings(); } catch (_) {}
         }
 
         const headerBal = document.getElementById('headerEscrowBalance');
-        if (headerBal) {
+        if (headerBal && total > 0) {
           const cur = parseFloat(headerBal.innerText) || 315;
           const next = Math.max(0, cur - total);
           headerBal.innerText = next.toFixed(2);
@@ -1728,11 +1831,61 @@
 
         setTimeout(() => {
           openPodPasscodeModal();
-          showToast('协议已签 · 托管已锁定，等待导师接单；通过后可扫码开仓');
+          if (isTrial) {
+            showToast('试课已预约（免费）· 等待导师接单');
+            maybeOpenAssessmentGate(assessmentSubject);
+          } else {
+            showToast('协议已签 · 托管已锁定，等待导师接单；通过后可扫码开仓');
+          }
         }, 300);
 
       }, 900);
     }
+
+    let __assessmentGateSubject = '';
+
+    function maybeOpenAssessmentGate(subject) {
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      if (!parent || !window.StorageService) return;
+      const sub = StorageService.normalizeAssessmentSubject(subject) || subject || '数学';
+      __assessmentGateSubject = sub;
+      if (StorageService.hasAssessment(parent.id || parent.phone, sub)) {
+        const a = StorageService.getAssessment(parent.id || parent.phone, sub);
+        const tip = a ? ('已有「' + sub + '」测评：' + a.score + '分 · ' + a.level) : ('已有「' + sub + '」测评记录');
+        showToast(tip + '，可直接等待试课');
+        return;
+      }
+      const msg = document.getElementById('assessmentGateMessage');
+      if (msg) {
+        msg.innerHTML = '请在试课前自行完成「<strong class="text-teal-800">' + sub + '</strong>」测评，以便老师了解真实水平。';
+      }
+      const modal = document.getElementById('assessmentGateModal');
+      const content = document.getElementById('assessmentGateContent');
+      if (!modal) {
+        location.href = 'assessment.html?from=trial&subject=' + encodeURIComponent(sub);
+        return;
+      }
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content?.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function dismissAssessmentGate() {
+      const modal = document.getElementById('assessmentGateModal');
+      const content = document.getElementById('assessmentGateContent');
+      modal?.classList.add('opacity-0');
+      content?.classList.add('scale-95');
+      setTimeout(() => modal?.classList.add('hidden'), 260);
+    }
+
+    function goAssessmentFromGate() {
+      const sub = __assessmentGateSubject || '数学';
+      dismissAssessmentGate();
+      location.href = 'assessment.html?from=trial&subject=' + encodeURIComponent(sub);
+    }
+
 
     function setIoTScanButtonState(state) {
       const btn = document.getElementById('btnIoTScan');
@@ -2217,9 +2370,11 @@
         const sumBtn = s.classSummary
           ? '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
           : '<span class="text-[10px] text-slate-400">暂无小结</span>';
-        const typePill = b.type === 'weekly'
-          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
-          : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>';
+        const typePill = b.type === 'trial'
+          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课</span>'
+          : (b.type === 'weekly'
+            ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+            : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         return '<div class="rounded-xl border border-emerald-100 bg-white p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
@@ -2279,9 +2434,12 @@
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
         const st = statusMap[b.status] || { text: b.status || '未知', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
         const isWeekly = b.type === 'weekly';
-        const typePill = isWeekly
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
-          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>';
+        const isTrial = b.type === 'trial';
+        const typePill = isTrial
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
+          : (isWeekly
+            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+            : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         const hasCompleted = (b.sessions || []).some(function(s) { return s.status === 'completed'; });
         const canRenew = b.status === 'accepted' || hasCompleted;
         const reason = (b.status === 'declined' && b.declineReason)
@@ -2335,7 +2493,7 @@
             '</div>' +
             '<div class="text-right shrink-0">' +
               '<div class="font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
-              '<div class="text-[10px] text-slate-400">' + (isWeekly ? '系列包提前冻结' : '单次冻结') + '</div>' +
+              '<div class="text-[10px] text-slate-400">' + (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包提前冻结' : '单次冻结')) + '</div>' +
               '<div class="text-[10px] text-slate-400">' + (b.createdAt || '') + '</div>' +
             '</div>' +
           '</div>' +

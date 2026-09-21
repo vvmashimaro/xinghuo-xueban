@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火学伴 · 学生学科测评</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0fdfa', 100:'#ccfbf1', 500:'#14b8a6', 600:'#0d9488', 700:'#0f766e', 800:'#115e59', 900:'#134e4a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-nav { background: rgba(255,255,255,0.86); backdrop-filter: blur(14px); }
+    .q-opt:has(input:checked) { border-color: #0d9488; background: #f0fdfa; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
+    <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <div>
+          <div class="font-black text-slate-900 text-sm leading-none">学生学科测评</div>
+          <div class="text-[10px] text-slate-500 mt-0.5">约 8–12 题 · 体现真实水平 · 结果仅导师可见</div>
+        </div>
+      </div>
+      <button type="button" onclick="goDashboard()" class="text-xs text-slate-600 hover:text-teal-800 bg-white border border-slate-200 px-3 py-1.5 rounded-xl font-medium cursor-pointer">
+        <i class="fa-solid fa-arrow-left mr-1 text-teal-600"></i>返回主控台
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-5 space-y-4">
+    <div id="trialGateBanner" class="hidden rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+      <div class="flex items-start gap-2">
+        <i class="fa-solid fa-bell text-amber-600 mt-0.5"></i>
+        <div>
+          <div class="font-black">试课前请完成测评 · 体现真实水平</div>
+          <p class="text-[12px] text-amber-900/80 mt-0.5 leading-relaxed">您已预约试课。请认真作答，帮助导师在首次见面时准确把握学情。</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <h1 class="text-base font-black text-slate-900">选择测评学科</h1>
+        <span id="studentHint" class="text-[11px] text-slate-500">学员：—</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="subjectTabs"></div>
+      <div id="priorResult" class="hidden text-[12px] rounded-xl border border-teal-100 bg-teal-50/70 px-3 py-2 text-teal-900"></div>
+    </section>
+
+    <section id="quizPanel" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-black text-slate-900"><span id="quizSubjectTitle">数学</span> · 水平自测</h2>
+        <span class="text-[11px] text-slate-400" id="quizProgress">0 / 0</span>
+      </div>
+      <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div id="quizBar" class="h-full bg-teal-600 w-0 transition-all"></div>
+      </div>
+      <div id="questionsBox" class="space-y-4"></div>
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+        <p class="text-[11px] text-slate-400">请独立完成；结果将写入学情档案供试课/正式课参考。</p>
+        <button type="button" id="btnSubmitQuiz" onclick="submitQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-teal-600/20 cursor-pointer inline-flex items-center gap-1.5">
+          <i class="fa-solid fa-paper-plane"></i>提交测评
+        </button>
+      </div>
+    </section>
+
+    <section id="resultPanel" class="hidden bg-white rounded-2xl border border-teal-200 shadow-sm p-5 space-y-3 text-center">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-award"></i>
+      </div>
+      <h2 class="text-lg font-black text-slate-900">测评完成</h2>
+      <p class="text-sm text-slate-600"><span id="resultSubject"></span> · 得分 <strong id="resultScore" class="text-teal-700 font-mono text-xl">0</strong> · 等级 <strong id="resultLevel" class="text-teal-800"></strong></p>
+      <p class="text-[12px] text-slate-400" id="resultTime"></p>
+      <div class="flex gap-2 justify-center pt-1">
+        <button type="button" onclick="restartQuiz()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">再测一次</button>
+        <button type="button" onclick="goDashboard()" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">返回主控台约课</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
+    <i class="fa-solid fa-circle-info text-teal-400" id="toastIcon"></i>
+    <span id="toastMessage">ok</span>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage-service.js"></script>
+  <script>
+    const QUIZ_BANK = {
+      '数学': [
+        { q: '下列哪个是一元二次方程？', options: ['x+3=0', 'x²-5x+6=0', '2x-1=3', '√x=4'], a: 1 },
+        { q: '直角三角形两直角边为 3、4，斜边是？', options: ['5', '6', '7', '√12'], a: 0 },
+        { q: '一次函数 y=2x+1 的斜率是？', options: ['1', '2', '-2', '0'], a: 1 },
+        { q: '√16 的值是？', options: ['2', '4', '8', '16'], a: 1 },
+        { q: '不等式 2x-4>0 的解集是？', options: ['x>2', 'x<2', 'x>4', 'x<-2'], a: 0 },
+        { q: '圆的面积公式是？', options: ['2πr', 'πr²', 'πd', '4πr²'], a: 1 },
+        { q: '等比数列 2,4,8,16 的公比是？', options: ['2', '4', '8', '1'], a: 0 },
+        { q: 'sin30° 等于？', options: ['1', '1/2', '√2/2', '√3/2'], a: 1 },
+        { q: '平行四边形对角？', options: ['互补', '相等', '互余', '无关'], a: 1 },
+        { q: '函数 f(x)=x² 在 x=0 处？', options: ['无定义', '有极小值', '有极大值', '间断'], a: 1 }
+      ],
+      '英语': [
+        { q: 'She ____ to school every day.', options: ['go', 'goes', 'going', 'gone'], a: 1 },
+        { q: '“图书馆”英文是？', options: ['museum', 'library', 'bookstore', 'cinema'], a: 1 },
+        { q: 'Which is a past tense?', options: ['eat', 'eats', 'ate', 'eating'], a: 2 },
+        { q: 'I have ____ apple.', options: ['a', 'an', 'the', '—'], a: 1 },
+        { q: '比较级：good → ?', options: ['gooder', 'better', 'best', 'well'], a: 1 },
+        { q: '“谢谢你”更礼貌的说法？', options: ['Thanks you', 'Thank you', 'Thank', 'You thank'], a: 1 },
+        { q: 'There ____ a book on the desk.', options: ['is', 'are', 'be', 'am'], a: 0 },
+        { q: 'He is interested ____ music.', options: ['on', 'in', 'at', 'for'], a: 1 },
+        { q: '复数：child → ?', options: ['childs', 'children', 'childes', 'childrens'], a: 1 },
+        { q: 'Choose the correct: I ____ finished my homework.', options: ['have', 'has', 'having', 'had been'], a: 0 }
+      ],
+      '物理': [
+        { q: '牛顿第一定律描述的是？', options: ['惯性', '万有引力', '浮力', '压强'], a: 0 },
+        { q: '光在真空中的速度约为？', options: ['340 m/s', '3×10⁸ m/s', '3×10⁶ m/s', '1500 m/s'], a: 1 },
+        { q: '单位“牛顿(N)”对应？', options: ['质量', '力', '能量', '功率'], a: 1 },
+        { q: '并联电路两端电压？', options: ['相加', '相等', '成反比', '为零'], a: 1 },
+        { q: '物体做匀速直线运动时合力？', options: ['增大', '减小', '为零', '等于重力'], a: 2 },
+        { q: '声音传播需要？', options: ['真空', '介质', '光线', '磁场'], a: 1 },
+        { q: '功率 P = ?', options: ['F·s', 'W/t', 'm·v', 'I·R'], a: 1 },
+        { q: '凸透镜对光线？', options: ['发散', '会聚', '反射', '阻挡'], a: 1 },
+        { q: '电流的单位是？', options: ['伏特', '安培', '欧姆', '瓦特'], a: 1 },
+        { q: '动能与什么有关？', options: ['仅质量', '仅高度', '质量与速度', '仅体积'], a: 2 }
+      ],
+      '化学': [
+        { q: '水的化学式是？', options: ['H2O', 'CO2', 'O2', 'NaCl'], a: 0 },
+        { q: '元素周期表中第一号元素是？', options: ['氦', '氢', '氧', '碳'], a: 1 },
+        { q: '酸碱中和生成？', options: ['盐和水', '只有盐', '只有水', '氢气'], a: 0 },
+        { q: '氧气助燃，本身？', options: ['可燃', '不可燃', '爆炸', '有毒必燃'], a: 1 },
+        { q: 'NaCl 俗称？', options: ['纯碱', '食盐', '石灰', '酒精'], a: 1 },
+        { q: '原子由什么构成？', options: ['分子', '质子中子电子', '仅电子', '仅质子'], a: 1 },
+        { q: '燃烧需要？', options: ['可燃物+氧气+着火点', '仅氧气', '仅温度', '仅燃料'], a: 0 },
+        { q: 'CO2 通入澄清石灰水现象？', options: ['变蓝', '变浑浊', '燃烧', '无变化'], a: 1 },
+        { q: '相对分子质量单位？', options: ['g', '无单位（相对）', 'mol', 'L'], a: 1 },
+        { q: '金属活动性：Fe 与 Cu？', options: ['Fe 更活泼', 'Cu 更活泼', '一样', '无法比较'], a: 0 }
+      ]
+    };
+
+    let currentSubject = '数学';
+    let fromTrial = false;
+    let CURRENT_PARENT = null;
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toastNotification');
+      const icon = document.getElementById('toastIcon');
+      const msg = document.getElementById('toastMessage');
+      if (!toast) return;
+      msg.textContent = message;
+      if (type === 'warning') icon.className = 'fa-solid fa-triangle-exclamation text-amber-400';
+      else if (type === 'error') icon.className = 'fa-solid fa-circle-xmark text-rose-400';
+      else icon.className = 'fa-solid fa-circle-check text-teal-400';
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+      }, 2800);
+    }
+
+    function goDashboard() {
+      location.href = 'parent_dashboard.html';
+    }
+
+    function parseQuery() {
+      const q = new URLSearchParams(location.search);
+      fromTrial = q.get('from') === 'trial';
+      const sub = (window.StorageService && StorageService.normalizeAssessmentSubject)
+        ? StorageService.normalizeAssessmentSubject(q.get('subject') || '')
+        : (q.get('subject') || '');
+      if (sub && QUIZ_BANK[sub]) currentSubject = sub;
+    }
+
+    function renderTabs() {
+      const box = document.getElementById('subjectTabs');
+      const subjects = (StorageService && StorageService.ASSESSMENT_SUBJECTS) || Object.keys(QUIZ_BANK);
+      box.innerHTML = subjects.map((s) => {
+        const active = s === currentSubject;
+        const done = CURRENT_PARENT && StorageService.hasAssessment(CURRENT_PARENT.id || CURRENT_PARENT.phone, s);
+        return '<button type="button" onclick="selectSubject(\'' + s + '\')" class="rounded-xl border px-3 py-2.5 text-sm font-bold transition cursor-pointer ' +
+          (active ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-600/20' : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400') + '">' +
+          s + (done ? ' <span class="text-[10px] opacity-80">✓</span>' : '') + '</button>';
+      }).join('');
+    }
+
+    function selectSubject(s) {
+      currentSubject = s;
+      document.getElementById('resultPanel').classList.add('hidden');
+      renderTabs();
+      renderPrior();
+      renderQuiz();
+    }
+
+    function renderPrior() {
+      const el = document.getElementById('priorResult');
+      if (!CURRENT_PARENT || !StorageService) { el.classList.add('hidden'); return; }
+      const a = StorageService.getAssessment(CURRENT_PARENT.id || CURRENT_PARENT.phone, currentSubject);
+      if (!a) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      el.innerHTML = '已有「' + currentSubject + '」测评：<strong>' + a.score + ' 分 · ' + a.level + '</strong>（' + (a.completedAt || '') + '）。可重新作答覆盖。';
+    }
+
+    function renderQuiz() {
+      const qs = QUIZ_BANK[currentSubject] || [];
+      document.getElementById('quizPanel').classList.remove('hidden');
+      document.getElementById('quizSubjectTitle').textContent = currentSubject;
+      document.getElementById('quizProgress').textContent = '共 ' + qs.length + ' 题';
+      document.getElementById('quizBar').style.width = '0%';
+      const box = document.getElementById('questionsBox');
+      box.innerHTML = qs.map((item, i) => {
+        const opts = item.options.map((opt, j) =>
+          '<label class="q-opt flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2 text-[13px] cursor-pointer hover:border-teal-400 transition">' +
+            '<input type="radio" name="q' + i + '" value="' + j + '" class="accent-teal-600" onchange="updateProgress()">' +
+            '<span>' + opt + '</span></label>'
+        ).join('');
+        return '<div class="space-y-2" data-qi="' + i + '">' +
+          '<div class="text-[13px] font-bold text-slate-800"><span class="text-teal-700 mr-1">' + (i + 1) + '.</span>' + item.q + '</div>' +
+          '<div class="grid sm:grid-cols-2 gap-1.5">' + opts + '</div></div>';
+      }).join('');
+    }
+
+    function updateProgress() {
+      const qs = QUIZ_BANK[currentSubject] || [];
+      let answered = 0;
+      qs.forEach((_, i) => {
+        if (document.querySelector('input[name="q' + i + '"]:checked')) answered++;
+      });
+      document.getElementById('quizProgress').textContent = answered + ' / ' + qs.length;
+      document.getElementById('quizBar').style.width = (qs.length ? (answered / qs.length * 100) : 0) + '%';
+    }
+
+    function submitQuiz() {
+      const qs = QUIZ_BANK[currentSubject] || [];
+      let correct = 0;
+      let answered = 0;
+      qs.forEach((item, i) => {
+        const sel = document.querySelector('input[name="q' + i + '"]:checked');
+        if (sel) {
+          answered++;
+          if (parseInt(sel.value, 10) === item.a) correct++;
+        }
+      });
+      if (answered < qs.length) {
+        showToast('还有 ' + (qs.length - answered) + ' 题未作答', 'warning');
+        return;
+      }
+      const score = Math.round((correct / qs.length) * 100);
+      const level = StorageService.scoreToLevel(score);
+      const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+      const record = StorageService.saveAssessment({
+        subject: currentSubject,
+        score: score,
+        level: level,
+        parentId: parent && parent.id,
+        parentPhone: parent && parent.phone,
+        studentId: parent && parent.id,
+        studentNickname: parent && parent.studentNickname,
+        totalQuestions: qs.length,
+        correctCount: correct
+      });
+      document.getElementById('quizPanel').classList.add('hidden');
+      document.getElementById('resultPanel').classList.remove('hidden');
+      document.getElementById('resultSubject').textContent = currentSubject;
+      document.getElementById('resultScore').textContent = String(score);
+      document.getElementById('resultLevel').textContent = level;
+      document.getElementById('resultTime').textContent = '完成于 ' + (record && record.completedAt ? record.completedAt : '');
+      renderTabs();
+      renderPrior();
+      showToast('「' + currentSubject + '」测评已保存 · ' + score + '分 · ' + level);
+    }
+
+    function restartQuiz() {
+      document.getElementById('resultPanel').classList.add('hidden');
+      renderQuiz();
+    }
+
+    async function boot() {
+      parseQuery();
+      if (window.StorageService && StorageService.ready) {
+        try { await StorageService.ready(); } catch (_) {}
+      }
+      CURRENT_PARENT = StorageService.getCurrentParent();
+      const hint = document.getElementById('studentHint');
+      if (hint && CURRENT_PARENT) {
+        hint.textContent = '学员：' + (CURRENT_PARENT.studentNickname || CURRENT_PARENT.parentName || '家长用户');
+      }
+      if (fromTrial) {
+        document.getElementById('trialGateBanner').classList.remove('hidden');
+      }
+      renderTabs();
+      renderPrior();
+      renderQuiz();
+    }
+
+    boot();
+  </script>
+</body>
+</html>

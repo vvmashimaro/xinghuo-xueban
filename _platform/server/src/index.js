@@ -171,6 +171,19 @@ app.post('/api/bookings/process-escrow', (req, res) => {
   ok(res, db.processEscrowReleases());
 });
 
+
+/* Assessments */
+app.get('/api/assessments', (req, res) => {
+  db.seedIfEmpty();
+  ok(res, db.getAssessments());
+});
+
+app.post('/api/assessments', (req, res) => {
+  const record = db.saveAssessment(req.body || {});
+  if (!record) return fail(res, 400, 'invalid assessment');
+  ok(res, record);
+});
+
 /* Contracts */
 app.get('/api/contracts', (req, res) => {
   ok(res, db.getContracts());
