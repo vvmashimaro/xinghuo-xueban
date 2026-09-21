@@ -499,15 +499,15 @@
               <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-gift text-teal-600"></i>试课</span>
               <span class="text-[9px] text-emerald-700 font-medium leading-tight">首次试课 · 1小时免费</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="one_off" checked class="hidden" onchange="onBookingTypeChange()">
-              <i class="fa-solid fa-calendar-day text-teal-600"></i>
-              <span class="font-bold text-[12px]">单次约课</span>
+              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-day text-teal-600"></i>单次约课</span>
+              <span class="text-[9px] text-slate-500 font-medium leading-tight">适合特定知识点巩固答疑</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="weekly" class="hidden" onchange="onBookingTypeChange()">
-              <i class="fa-solid fa-calendar-week text-teal-600"></i>
-              <span class="font-bold text-[12px]">每周固定</span>
+              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-week text-teal-600"></i>每周固定</span>
+              <span class="text-[9px] text-slate-500 font-medium leading-tight">适合系统学习、强化</span>
             </label>
           </div>
           <div id="trialBookingHint" class="hidden text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed">
@@ -578,12 +578,12 @@
           <label class="block font-bold text-slate-700">2. 单次辅导时长</label>
           <div class="grid grid-cols-2 gap-2">
             <label id="durLabel2h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-              <input type="radio" name="bookingDuration" value="2" checked class="hidden" onchange="updateBookingCost()">
+              <input type="radio" name="bookingDuration" value="2" checked class="hidden" onchange="onBookingDurationChange()">
               <span class="font-bold">2 小时 (推荐·专题突破)</span>
               <span class="text-teal-700 font-mono font-bold" id="labelCost2h">¥270</span>
             </label>
             <label id="durLabel1h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-              <input type="radio" name="bookingDuration" value="1" class="hidden" onchange="updateBookingCost()">
+              <input type="radio" name="bookingDuration" value="1" class="hidden" onchange="onBookingDurationChange()">
               <span class="font-bold">1 小时 (体验试听/答疑)</span>
               <span class="text-teal-700 font-mono font-bold" id="labelCost1h">¥135</span>
             </label>
@@ -1396,24 +1396,54 @@
       return weekNames[d.getDay()] + ' (' + md + ')';
     }
 
+    function getSelectedBookingHours() {
+      const type = getSelectedBookingType();
+      if (type === 'trial') return 1;
+      const v = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
+      return Math.max(1, parseInt(v, 10) || 2);
+    }
+
+    function addHoursToTimeLabel(timeStart, hours) {
+      const parts = String(timeStart || '18:30').split(':');
+      const h0 = parseInt(parts[0], 10) || 0;
+      const m0 = parseInt(parts[1], 10) || 0;
+      const total = h0 * 60 + m0 + (Math.max(1, hours) * 60);
+      const eh = Math.floor(total / 60) % 24;
+      const em = total % 60;
+      return pad2(eh) + ':' + pad2(em);
+    }
+
+    function onBookingDurationChange() {
+      generateBookingDateSlots();
+      updateBookingCost();
+    }
+
     function generateBookingDateSlots() {
       const container = document.getElementById('bookingDateSlots');
       if (!container) return;
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      // 候选模板：周末上午、周末下午、工作日晚
+      const hours = getSelectedBookingHours();
+      // 保留原选中的「日期标签 + 开始时刻」，时长变化时只重算结束时间
+      const prev = document.querySelector('input[name="bookingDate"]:checked');
+      const prevDay = prev ? (prev.getAttribute('data-day-label') || '') : '';
+      const prevStart = prev ? (prev.getAttribute('data-time-start') || '') : '';
+
+      // 候选开始时刻模板（来自导师常见可约窗口）；结束时刻随所选时长自动伸缩
       const candidates = [];
       for (let i = 0; i < 14; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
         const dow = d.getDay();
-        if (dow === 6) {
-          candidates.push({ date: d, timeLabel: '10:00 - 12:00', timeStart: '10:00', timeEnd: '12:00', kind: 'weekend-am' });
-        } else if (dow === 0) {
-          candidates.push({ date: d, timeLabel: '14:30 - 16:30', timeStart: '14:30', timeEnd: '16:30', kind: 'weekend-pm' });
-        } else if (dow === 3 || dow === 5) {
-          candidates.push({ date: d, timeLabel: '18:30 - 20:30', timeStart: '18:30', timeEnd: '20:30', kind: 'weekday-eve' });
-        }
+        let timeStart = null;
+        let kind = '';
+        if (dow === 6) { timeStart = '10:00'; kind = 'weekend-am'; }
+        else if (dow === 0) { timeStart = '14:30'; kind = 'weekend-pm'; }
+        else if (dow === 3 || dow === 5) { timeStart = '18:30'; kind = 'weekday-eve'; }
+        if (!timeStart) continue;
+        const timeEnd = addHoursToTimeLabel(timeStart, hours);
+        const timeLabel = timeStart + ' – ' + timeEnd;
+        candidates.push({ date: d, timeLabel: timeLabel, timeStart: timeStart, timeEnd: timeEnd, kind: kind });
       }
       // 过滤已过去的时段（同日且结束时间已过）
       const usable = candidates.filter(c => {
@@ -1428,13 +1458,16 @@
         return;
       }
 
+      let matchedIdx = usable.findIndex(c => formatSlotLabel(c.date) === prevDay && c.timeStart === prevStart);
+      if (matchedIdx < 0) matchedIdx = 0;
+
       container.innerHTML = usable.map((c, idx) => {
         const label = formatSlotLabel(c.date);
         const value = label + ' ' + c.timeLabel;
-        const checked = idx === 0 ? 'checked' : '';
+        const checked = idx === matchedIdx ? 'checked' : '';
         return (
           '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
-            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-time-label="' + c.timeLabel + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
+            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-time-label="' + c.timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
             '<div class="font-bold">' + label + '</div>' +
             '<div class="text-[10px] text-slate-400">' + c.timeLabel + '</div>' +
           '</label>'
@@ -1528,6 +1561,7 @@
           btn.innerHTML = '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
         }
       }
+      generateBookingDateSlots();
       updateBookingCost();
     }
 
@@ -1595,6 +1629,18 @@
         const dateRadio = document.querySelector('input[name="bookingDate"]:checked');
         dateChoice = dateRadio?.value || '';
         timeLabel = dateRadio?.getAttribute('data-time-label') || '';
+        timeStart = dateRadio?.getAttribute('data-time-start') || '';
+        // endTime 随所选时长重算，保证与展示窗口一致
+        const endAttr = dateRadio?.getAttribute('data-time-end') || '';
+        if (timeStart) {
+          const recomputedEnd = addHoursToTimeLabel(timeStart, hours);
+          timeLabel = timeStart + ' – ' + (endAttr || recomputedEnd);
+          if (dateChoice && timeLabel && dateChoice.indexOf(timeStart) >= 0) {
+            // keep day label, refresh window portion
+            const dayPart = dateRadio?.getAttribute('data-day-label') || dateChoice.split(' ')[0];
+            dateChoice = dayPart + ' ' + timeLabel;
+          }
+        }
       }
       if (type === 'trial') {
         hours = 1;
@@ -1603,9 +1649,10 @@
         sessionCount = 1;
         sessions = [];
       }
+      const timeEnd = timeStart ? addHoursToTimeLabel(timeStart, hours) : '';
       return {
         hours, total, perSession, spaceName, dateChoice, timeLabel, tutor: selectedTutorForBooking,
-        type, weekday, timeStart, sessionCount, sessions
+        type, weekday, timeStart, timeEnd, sessionCount, sessions
       };
     }
 

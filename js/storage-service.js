@@ -20,6 +20,7 @@
   };
 
   const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
+  const GRADE_BANDS = ['小学', '初中', '高中'];
 
   function normalizeAssessmentSubject(raw) {
     const s = String(raw || '').trim();
@@ -29,6 +30,41 @@
       if (s === b || s.indexOf(b) >= 0) return b;
     }
     return s;
+  }
+
+  /** 从注册年级字符串推导学段：小学 / 初中 / 高中 */
+  function gradeBandFromGrade(gradeStr) {
+    const g = String(gradeStr || '').trim();
+    if (!g) return '初中';
+    // 高中优先（含艺考文化课等）
+    if (/高[一二三]|高中|艺考/.test(g)) return '高中';
+    // 初中：初一–初三 / 七年级–九年级 / 中考
+    if (/初[一二三]|[七八九]年级|初中|中考/.test(g)) return '初中';
+    // 小学：一年级…六年级 / 小一…小六 / 小四及以下
+    if (/小[一二三四五六]|[一二三四五六]年级|小学|小四及以下|小升初/.test(g)) return '小学';
+    // 竞赛自招等含「初高中」时默认按初中题库，避免过难
+    if (/竞赛|自招|强基/.test(g)) return '高中';
+    return '初中';
+  }
+
+  /** 展示用短年级名，如「初三 (中考冲刺)」→「初三」 */
+  function shortGradeLabel(gradeStr) {
+    const g = String(gradeStr || '').trim();
+    if (!g) return '学员';
+    const m = g.match(/小四及以下|小[一二三四五六]|初[一二三]|高[一二三]|[一二三四五六七八九]年级/);
+    if (m) return m[0];
+    return g.split(/[\s(（]/)[0] || g;
+  }
+
+  /** 学员已选学科 → 测评 tabs；空则回退全部 */
+  function resolveAssessmentSubjectsForParent(parent) {
+    const enrolled = (parent && Array.isArray(parent.subjects)) ? parent.subjects : [];
+    const out = [];
+    enrolled.forEach(function (s) {
+      const n = normalizeAssessmentSubject(s);
+      if (n && ASSESSMENT_SUBJECTS.indexOf(n) >= 0 && out.indexOf(n) < 0) out.push(n);
+    });
+    return out.length ? out : ASSESSMENT_SUBJECTS.slice();
   }
 
   function scoreToLevel(score) {
@@ -1450,8 +1486,12 @@
 
     /* ---------- Assessments（学生测评） ---------- */
     ASSESSMENT_SUBJECTS: ASSESSMENT_SUBJECTS,
+    GRADE_BANDS: GRADE_BANDS,
 
     normalizeAssessmentSubject: normalizeAssessmentSubject,
+    gradeBandFromGrade: gradeBandFromGrade,
+    shortGradeLabel: shortGradeLabel,
+    resolveAssessmentSubjectsForParent: resolveAssessmentSubjectsForParent,
 
     scoreToLevel: scoreToLevel,
 

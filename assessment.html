@@ -62,7 +62,7 @@
 
     <section id="quizPanel" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 hidden">
       <div class="flex items-center justify-between">
-        <h2 class="text-sm font-black text-slate-900"><span id="quizSubjectTitle">数学</span> · 水平自测</h2>
+        <h2 class="text-sm font-black text-slate-900"><span id="quizSubjectTitle">初三 · 数学</span> · 水平自测</h2>
         <span class="text-[11px] text-slate-400" id="quizProgress">0 / 0</span>
       </div>
       <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -99,60 +99,158 @@
   <script src="js/config.js"></script>
   <script src="js/storage-service.js"></script>
   <script>
+    /* 分学段题库：小学 / 初中 / 高中 × 学科 */
     const QUIZ_BANK = {
-      '数学': [
-        { q: '下列哪个是一元二次方程？', options: ['x+3=0', 'x²-5x+6=0', '2x-1=3', '√x=4'], a: 1 },
-        { q: '直角三角形两直角边为 3、4，斜边是？', options: ['5', '6', '7', '√12'], a: 0 },
-        { q: '一次函数 y=2x+1 的斜率是？', options: ['1', '2', '-2', '0'], a: 1 },
-        { q: '√16 的值是？', options: ['2', '4', '8', '16'], a: 1 },
-        { q: '不等式 2x-4>0 的解集是？', options: ['x>2', 'x<2', 'x>4', 'x<-2'], a: 0 },
-        { q: '圆的面积公式是？', options: ['2πr', 'πr²', 'πd', '4πr²'], a: 1 },
-        { q: '等比数列 2,4,8,16 的公比是？', options: ['2', '4', '8', '1'], a: 0 },
-        { q: 'sin30° 等于？', options: ['1', '1/2', '√2/2', '√3/2'], a: 1 },
-        { q: '平行四边形对角？', options: ['互补', '相等', '互余', '无关'], a: 1 },
-        { q: '函数 f(x)=x² 在 x=0 处？', options: ['无定义', '有极小值', '有极大值', '间断'], a: 1 }
-      ],
-      '英语': [
-        { q: 'She ____ to school every day.', options: ['go', 'goes', 'going', 'gone'], a: 1 },
-        { q: '“图书馆”英文是？', options: ['museum', 'library', 'bookstore', 'cinema'], a: 1 },
-        { q: 'Which is a past tense?', options: ['eat', 'eats', 'ate', 'eating'], a: 2 },
-        { q: 'I have ____ apple.', options: ['a', 'an', 'the', '—'], a: 1 },
-        { q: '比较级：good → ?', options: ['gooder', 'better', 'best', 'well'], a: 1 },
-        { q: '“谢谢你”更礼貌的说法？', options: ['Thanks you', 'Thank you', 'Thank', 'You thank'], a: 1 },
-        { q: 'There ____ a book on the desk.', options: ['is', 'are', 'be', 'am'], a: 0 },
-        { q: 'He is interested ____ music.', options: ['on', 'in', 'at', 'for'], a: 1 },
-        { q: '复数：child → ?', options: ['childs', 'children', 'childes', 'childrens'], a: 1 },
-        { q: 'Choose the correct: I ____ finished my homework.', options: ['have', 'has', 'having', 'had been'], a: 0 }
-      ],
-      '物理': [
-        { q: '牛顿第一定律描述的是？', options: ['惯性', '万有引力', '浮力', '压强'], a: 0 },
-        { q: '光在真空中的速度约为？', options: ['340 m/s', '3×10⁸ m/s', '3×10⁶ m/s', '1500 m/s'], a: 1 },
-        { q: '单位“牛顿(N)”对应？', options: ['质量', '力', '能量', '功率'], a: 1 },
-        { q: '并联电路两端电压？', options: ['相加', '相等', '成反比', '为零'], a: 1 },
-        { q: '物体做匀速直线运动时合力？', options: ['增大', '减小', '为零', '等于重力'], a: 2 },
-        { q: '声音传播需要？', options: ['真空', '介质', '光线', '磁场'], a: 1 },
-        { q: '功率 P = ?', options: ['F·s', 'W/t', 'm·v', 'I·R'], a: 1 },
-        { q: '凸透镜对光线？', options: ['发散', '会聚', '反射', '阻挡'], a: 1 },
-        { q: '电流的单位是？', options: ['伏特', '安培', '欧姆', '瓦特'], a: 1 },
-        { q: '动能与什么有关？', options: ['仅质量', '仅高度', '质量与速度', '仅体积'], a: 2 }
-      ],
-      '化学': [
-        { q: '水的化学式是？', options: ['H2O', 'CO2', 'O2', 'NaCl'], a: 0 },
-        { q: '元素周期表中第一号元素是？', options: ['氦', '氢', '氧', '碳'], a: 1 },
-        { q: '酸碱中和生成？', options: ['盐和水', '只有盐', '只有水', '氢气'], a: 0 },
-        { q: '氧气助燃，本身？', options: ['可燃', '不可燃', '爆炸', '有毒必燃'], a: 1 },
-        { q: 'NaCl 俗称？', options: ['纯碱', '食盐', '石灰', '酒精'], a: 1 },
-        { q: '原子由什么构成？', options: ['分子', '质子中子电子', '仅电子', '仅质子'], a: 1 },
-        { q: '燃烧需要？', options: ['可燃物+氧气+着火点', '仅氧气', '仅温度', '仅燃料'], a: 0 },
-        { q: 'CO2 通入澄清石灰水现象？', options: ['变蓝', '变浑浊', '燃烧', '无变化'], a: 1 },
-        { q: '相对分子质量单位？', options: ['g', '无单位（相对）', 'mol', 'L'], a: 1 },
-        { q: '金属活动性：Fe 与 Cu？', options: ['Fe 更活泼', 'Cu 更活泼', '一样', '无法比较'], a: 0 }
-      ]
+      '小学': {
+        '数学': [
+          { q: '15 + 27 = ?', options: ['32', '42', '52', '41'], a: 1 },
+          { q: '长方形长 8、宽 5，周长是？', options: ['13', '26', '40', '20'], a: 1 },
+          { q: '1 米等于多少厘米？', options: ['10', '100', '1000', '50'], a: 1 },
+          { q: '3/4 比 1/2 ？', options: ['小', '大', '相等', '无法比较'], a: 1 },
+          { q: '圆的半径是 3，直径是？', options: ['3', '6', '9', '12'], a: 1 },
+          { q: '24 ÷ 6 = ?', options: ['3', '4', '5', '6'], a: 1 },
+          { q: '直角是多少度？', options: ['45°', '90°', '180°', '60°'], a: 1 },
+          { q: '小数 0.5 等于？', options: ['1/5', '1/2', '5/10 再约分后不是 1/2', '2/5'], a: 1 }
+        ],
+        '英语': [
+          { q: '“苹果”英文是？', options: ['banana', 'apple', 'orange', 'grape'], a: 1 },
+          { q: 'How ____ you?', options: ['is', 'are', 'am', 'be'], a: 1 },
+          { q: 'I ____ a student.', options: ['is', 'am', 'are', 'be'], a: 1 },
+          { q: '“红色”英文是？', options: ['blue', 'red', 'green', 'yellow'], a: 1 },
+          { q: 'This is ____ book.', options: ['I', 'my', 'me', 'mine'], a: 1 },
+          { q: 'Cat 的复数是？', options: ['cates', 'cats', 'cat', 'caties'], a: 1 },
+          { q: '“谢谢”英文是？', options: ['Sorry', 'Thank you', 'Hello', 'Bye'], a: 1 },
+          { q: 'She ____ happy.', options: ['am', 'is', 'are', 'be'], a: 1 }
+        ],
+        '物理': [
+          { q: '冰融化成水，物态变化是？', options: ['凝固', '熔化', '蒸发', '凝华'], a: 1 },
+          { q: '声音主要通过什么传播到耳朵？', options: ['真空', '空气等介质', '光线', '磁力'], a: 1 },
+          { q: '磁铁可以吸引？', options: ['木头', '铁钉', '塑料', '玻璃'], a: 1 },
+          { q: '影子的产生是因为光的？', options: ['反射', '直线传播被遮挡', '折射', '色散'], a: 1 },
+          { q: '温度常用单位是？', options: ['米', '摄氏度', '千克', '牛顿'], a: 1 },
+          { q: '摩擦可以产生？', options: ['声音与热', '质量', '体积', '颜色'], a: 0 },
+          { q: '杠杆平衡与什么有关？', options: ['仅力大小', '力与力臂', '仅颜色', '仅温度'], a: 1 },
+          { q: '电池提供的是？', options: ['水源', '电能', '风力', '重力'], a: 1 }
+        ],
+        '化学': [
+          { q: '水结成冰后，水分子还在吗？', options: ['不在了', '还在，排列不同', '变成氧气', '消失'], a: 1 },
+          { q: '空气中含量最多的气体通常是？', options: ['氧气', '氮气', '二氧化碳', '氢气'], a: 1 },
+          { q: '铁生锈需要？', options: ['仅水', '水与氧气等条件', '仅黑暗', '仅震动'], a: 1 },
+          { q: '食盐主要成分接近？', options: ['糖', '氯化钠', '酒精', '醋'], a: 1 },
+          { q: '燃烧一般需要？', options: ['可燃物、助燃物、着火点', '仅风', '仅水', '仅声音'], a: 0 },
+          { q: '干冰是固态的？', options: ['水', '二氧化碳', '氧气', '氮气'], a: 1 },
+          { q: '醋显？', options: ['碱性', '酸性', '中性无味', '金属性'], a: 1 },
+          { q: '过滤可以分离？', options: ['溶质与溶剂完全', '不溶性固体与液体', '所有气体', '热量'], a: 1 }
+        ]
+      },
+      '初中': {
+        '数学': [
+          { q: '下列哪个是一元二次方程？', options: ['x+3=0', 'x²-5x+6=0', '2x-1=3', '√x=4'], a: 1 },
+          { q: '直角三角形两直角边为 3、4，斜边是？', options: ['5', '6', '7', '√12'], a: 0 },
+          { q: '一次函数 y=2x+1 的斜率是？', options: ['1', '2', '-2', '0'], a: 1 },
+          { q: '√16 的值是？', options: ['2', '4', '8', '16'], a: 1 },
+          { q: '不等式 2x-4>0 的解集是？', options: ['x>2', 'x<2', 'x>4', 'x<-2'], a: 0 },
+          { q: '圆的面积公式是？', options: ['2πr', 'πr²', 'πd', '4πr²'], a: 1 },
+          { q: '等比数列 2,4,8,16 的公比是？', options: ['2', '4', '8', '1'], a: 0 },
+          { q: 'sin30° 等于？', options: ['1', '1/2', '√2/2', '√3/2'], a: 1 },
+          { q: '平行四边形对角？', options: ['互补', '相等', '互余', '无关'], a: 1 },
+          { q: '函数 f(x)=x² 在 x=0 处？', options: ['无定义', '有极小值', '有极大值', '间断'], a: 1 }
+        ],
+        '英语': [
+          { q: 'She ____ to school every day.', options: ['go', 'goes', 'going', 'gone'], a: 1 },
+          { q: '“图书馆”英文是？', options: ['museum', 'library', 'bookstore', 'cinema'], a: 1 },
+          { q: 'Which is a past tense?', options: ['eat', 'eats', 'ate', 'eating'], a: 2 },
+          { q: 'I have ____ apple.', options: ['a', 'an', 'the', '—'], a: 1 },
+          { q: '比较级：good → ?', options: ['gooder', 'better', 'best', 'well'], a: 1 },
+          { q: '“谢谢你”更礼貌的说法？', options: ['Thanks you', 'Thank you', 'Thank', 'You thank'], a: 1 },
+          { q: 'There ____ a book on the desk.', options: ['is', 'are', 'be', 'am'], a: 0 },
+          { q: 'He is interested ____ music.', options: ['on', 'in', 'at', 'for'], a: 1 },
+          { q: '复数：child → ?', options: ['childs', 'children', 'childes', 'childrens'], a: 1 },
+          { q: 'Choose the correct: I ____ finished my homework.', options: ['have', 'has', 'having', 'had been'], a: 0 }
+        ],
+        '物理': [
+          { q: '牛顿第一定律描述的是？', options: ['惯性', '万有引力', '浮力', '压强'], a: 0 },
+          { q: '光在真空中的速度约为？', options: ['340 m/s', '3×10⁸ m/s', '3×10⁶ m/s', '1500 m/s'], a: 1 },
+          { q: '单位“牛顿(N)”对应？', options: ['质量', '力', '能量', '功率'], a: 1 },
+          { q: '并联电路两端电压？', options: ['相加', '相等', '成反比', '为零'], a: 1 },
+          { q: '物体做匀速直线运动时合力？', options: ['增大', '减小', '为零', '等于重力'], a: 2 },
+          { q: '声音传播需要？', options: ['真空', '介质', '光线', '磁场'], a: 1 },
+          { q: '功率 P = ?', options: ['F·s', 'W/t', 'm·v', 'I·R'], a: 1 },
+          { q: '凸透镜对光线？', options: ['发散', '会聚', '反射', '阻挡'], a: 1 },
+          { q: '电流的单位是？', options: ['伏特', '安培', '欧姆', '瓦特'], a: 1 },
+          { q: '动能与什么有关？', options: ['仅质量', '仅高度', '质量与速度', '仅体积'], a: 2 }
+        ],
+        '化学': [
+          { q: '水的化学式是？', options: ['H2O', 'CO2', 'O2', 'NaCl'], a: 0 },
+          { q: '元素周期表中第一号元素是？', options: ['氦', '氢', '氧', '碳'], a: 1 },
+          { q: '酸碱中和生成？', options: ['盐和水', '只有盐', '只有水', '氢气'], a: 0 },
+          { q: '氧气助燃，本身？', options: ['可燃', '不可燃', '爆炸', '有毒必燃'], a: 1 },
+          { q: 'NaCl 俗称？', options: ['纯碱', '食盐', '石灰', '酒精'], a: 1 },
+          { q: '原子由什么构成？', options: ['分子', '质子中子电子', '仅电子', '仅质子'], a: 1 },
+          { q: '燃烧需要？', options: ['可燃物+氧气+着火点', '仅氧气', '仅温度', '仅燃料'], a: 0 },
+          { q: 'CO2 通入澄清石灰水现象？', options: ['变蓝', '变浑浊', '燃烧', '无变化'], a: 1 },
+          { q: '相对分子质量单位？', options: ['g', '无单位（相对）', 'mol', 'L'], a: 1 },
+          { q: '金属活动性：Fe 与 Cu？', options: ['Fe 更活泼', 'Cu 更活泼', '一样', '无法比较'], a: 0 }
+        ]
+      },
+      '高中': {
+        '数学': [
+          { q: '函数 f(x)=e^x 的导数是？', options: ['e^x', 'xe^{x-1}', 'ln x', '1/x'], a: 0 },
+          { q: 'lim(x→0) sinx/x = ?', options: ['0', '1', '∞', '不存在'], a: 1 },
+          { q: '椭圆标准方程 x²/a² + y²/b² = 1 (a>b>0) 的离心率？', options: ['c/a', 'a/c', 'b/a', 'c/b'], a: 0 },
+          { q: '等差数列通项 a_n = a_1 + (n-1)d，前 n 项和？', options: ['n(a1+an)/2', 'n(a1+d)', 'na1', '(a1+an)/2'], a: 0 },
+          { q: '向量 a·b = |a||b|cosθ，当 θ=90° 时？', options: ['最大', '为 0', '为 |a||b|', '无定义'], a: 1 },
+          { q: '二项式 (a+b)^n 展开式项数？', options: ['n', 'n+1', '2n', 'n-1'], a: 1 },
+          { q: '复数 i² = ?', options: ['1', '-1', 'i', '0'], a: 1 },
+          { q: '定积分 ∫₀¹ 2x dx = ?', options: ['0', '1', '2', '1/2'], a: 1 },
+          { q: '空间向量共面的充要条件之一？', options: ['数量积为 0', '混合积为 0', '模相等', '夹角 45°'], a: 1 },
+          { q: '对数 log_a(a^x) = ?', options: ['a', 'x', '1', '0'], a: 1 }
+        ],
+        '英语': [
+          { q: 'Hardly ____ he arrived when it began to rain.', options: ['did', 'had', 'has', 'was'], a: 1 },
+          { q: 'The book ____ I borrowed is interesting.', options: ['who', 'which', 'where', 'when'], a: 1 },
+          { q: 'It is vital that he ____ on time.', options: ['arrives', 'arrive', 'arrived', 'arriving'], a: 1 },
+          { q: 'Not only ____ funny, but also instructive.', options: ['the story is', 'is the story', 'the story was', 'was'], a: 1 },
+          { q: 'She suggested that we ____ earlier.', options: ['left', 'leave', 'leaving', 'to leave'], a: 1 },
+          { q: 'By next year he ____ here for a decade.', options: ['will work', 'will have worked', 'works', 'worked'], a: 1 },
+          { q: '“尽管”更书面的表达？', options: ['because', 'despite / in spite of', 'so that', 'unless'], a: 1 },
+          { q: 'The more you practice, ____ you become.', options: ['the better', 'better', 'best', 'the best'], a: 0 },
+          { q: 'Neither of them ____ ready.', options: ['are', 'is', 'be', 'were always'], a: 1 },
+          { q: 'Choose: I wish I ____ taller.', options: ['am', 'were', 'was being', 'be'], a: 1 }
+        ],
+        '物理': [
+          { q: '万有引力定律中 F ∝ ?', options: ['r', '1/r²', 'r²', '1/r'], a: 1 },
+          { q: '动量守恒成立的条件？', options: ['系统合外力为零', '仅动能守恒', '必须有摩擦', '温度不变'], a: 0 },
+          { q: '电容器电容 C = Q/U，并联后总电容？', options: ['减小', '等于各电容之和', 'Harmonic only', '为零'], a: 1 },
+          { q: '简谐运动回复力 F = ?', options: ['kx', '-kx', 'mv', 'mg'], a: 1 },
+          { q: '光电效应说明光具有？', options: ['仅波动性', '粒子性', '仅磁性', '质量不变'], a: 1 },
+          { q: '理想气体状态方程？', options: ['pV=nRT', 'F=ma', 'E=mc²', 'V=IR'], a: 0 },
+          { q: '电磁感应中感应电动势与磁通量变化率？', options: ['无关', '成正比', '成反比', '平方关系'], a: 1 },
+          { q: '相对论质能关系？', options: ['E=1/2 mv²', 'E=mc²', 'E=Fd', 'E=pt'], a: 1 },
+          { q: '卢瑟福散射实验支持？', options: ['葡萄干模型', '原子核式结构', '云雾说', '连续物质说'], a: 1 },
+          { q: '波粒二象性中德布罗意波长 λ = ?', options: ['h/p', 'p/h', 'hf', 'mc'], a: 0 }
+        ],
+        '化学': [
+          { q: '氧化还原反应的本质是？', options: ['发光', '电子转移', '仅颜色变化', '体积缩小'], a: 1 },
+          { q: '元素周期表周期对应？', options: ['电子层数', '质子数随机', '中子数', '同位素数'], a: 0 },
+          { q: '化学平衡移动：增大压强对气体反应？', options: ['向气体分子数减少方向', '总不变', '向吸热', '随机'], a: 0 },
+          { q: '苯的分子式是？', options: ['C6H6', 'C6H12', 'C2H4', 'CH4'], a: 0 },
+          { q: '原电池负极发生？', options: ['还原', '氧化', '中和', '升华'], a: 1 },
+          { q: 'pH=3 的溶液中 c(H+)？', options: ['10^{-3} mol/L', '3 mol/L', '10^3', '0.3'], a: 0 },
+          { q: '杂化轨道 sp³ 空间构型？', options: ['直线', '正四面体', '平面三角', '八面体'], a: 1 },
+          { q: '勒夏特列原理描述？', options: ['平衡移动', '原子结构', '光谱线', '放射性'], a: 0 },
+          { q: '酯化反应一般生成酯和？', options: ['氢气', '水', '氧气', '氮气'], a: 1 },
+          { q: '阿伏加德罗常数约？', options: ['6.02×10^{23}', '3×10^8', '9.8', '1.6×10^{-19}'], a: 0 }
+        ]
+      }
     };
 
     let currentSubject = '数学';
+    let currentGradeBand = '初中';
+    let currentGradeLabel = '学员';
     let fromTrial = false;
     let CURRENT_PARENT = null;
+    let availableSubjects = null;
 
     function showToast(message, type) {
       const toast = document.getElementById('toastNotification');
@@ -174,18 +272,55 @@
       location.href = 'parent_dashboard.html';
     }
 
+    function resolveGradeContext(parent) {
+      const grade = (parent && parent.studentGrade) || '';
+      currentGradeBand = (StorageService && StorageService.gradeBandFromGrade)
+        ? StorageService.gradeBandFromGrade(grade)
+        : '初中';
+      currentGradeLabel = (StorageService && StorageService.shortGradeLabel)
+        ? StorageService.shortGradeLabel(grade)
+        : (grade.split(/[\s(（]/)[0] || '学员');
+    }
+
+    function getQuizQuestions(subject) {
+      const band = QUIZ_BANK[currentGradeBand] || QUIZ_BANK['初中'] || {};
+      let qs = band[subject];
+      if (!qs || !qs.length) {
+        // 回退：同学科其他学段 → 初中题库
+        qs = (QUIZ_BANK['初中'] && QUIZ_BANK['初中'][subject]) || [];
+      }
+      return qs || [];
+    }
+
+    function getSubjectTabs() {
+      let subjects = availableSubjects;
+      if (!subjects || !subjects.length) {
+        if (StorageService && StorageService.resolveAssessmentSubjectsForParent) {
+          subjects = StorageService.resolveAssessmentSubjectsForParent(CURRENT_PARENT);
+        } else {
+          subjects = (StorageService && StorageService.ASSESSMENT_SUBJECTS) || ['数学', '英语', '物理', '化学'];
+        }
+      }
+      return subjects;
+    }
+
     function parseQuery() {
       const q = new URLSearchParams(location.search);
       fromTrial = q.get('from') === 'trial';
       const sub = (window.StorageService && StorageService.normalizeAssessmentSubject)
         ? StorageService.normalizeAssessmentSubject(q.get('subject') || '')
         : (q.get('subject') || '');
-      if (sub && QUIZ_BANK[sub]) currentSubject = sub;
+      if (sub) currentSubject = sub;
     }
 
     function renderTabs() {
       const box = document.getElementById('subjectTabs');
-      const subjects = (StorageService && StorageService.ASSESSMENT_SUBJECTS) || Object.keys(QUIZ_BANK);
+      const subjects = getSubjectTabs();
+      // 试课传入学科若不在已选列表，仍并入 tabs，保证 gate 可测
+      if (currentSubject && subjects.indexOf(currentSubject) < 0) {
+        subjects.push(currentSubject);
+      }
+      if (subjects.indexOf(currentSubject) < 0) currentSubject = subjects[0] || '数学';
       box.innerHTML = subjects.map((s) => {
         const active = s === currentSubject;
         const done = CURRENT_PARENT && StorageService.hasAssessment(CURRENT_PARENT.id || CURRENT_PARENT.phone, s);
@@ -209,16 +344,25 @@
       const a = StorageService.getAssessment(CURRENT_PARENT.id || CURRENT_PARENT.phone, currentSubject);
       if (!a) { el.classList.add('hidden'); return; }
       el.classList.remove('hidden');
-      el.innerHTML = '已有「' + currentSubject + '」测评：<strong>' + a.score + ' 分 · ' + a.level + '</strong>（' + (a.completedAt || '') + '）。可重新作答覆盖。';
+      const title = currentGradeLabel + ' · ' + currentSubject;
+      el.innerHTML = '已有「' + title + '」测评：<strong>' + a.score + ' 分 · ' + a.level + '</strong>（' + (a.completedAt || '') + '）。可重新作答覆盖。';
+    }
+
+    function quizTitleText() {
+      return currentGradeLabel + ' · ' + currentSubject;
     }
 
     function renderQuiz() {
-      const qs = QUIZ_BANK[currentSubject] || [];
+      const qs = getQuizQuestions(currentSubject);
       document.getElementById('quizPanel').classList.remove('hidden');
-      document.getElementById('quizSubjectTitle').textContent = currentSubject;
-      document.getElementById('quizProgress').textContent = '共 ' + qs.length + ' 题';
+      document.getElementById('quizSubjectTitle').textContent = quizTitleText();
+      document.getElementById('quizProgress').textContent = '共 ' + qs.length + ' 题 · ' + currentGradeBand;
       document.getElementById('quizBar').style.width = '0%';
       const box = document.getElementById('questionsBox');
+      if (!qs.length) {
+        box.innerHTML = '<p class="text-sm text-slate-500">暂无该学段题库，请更换学科或完善年级资料。</p>';
+        return;
+      }
       box.innerHTML = qs.map((item, i) => {
         const opts = item.options.map((opt, j) =>
           '<label class="q-opt flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2 text-[13px] cursor-pointer hover:border-teal-400 transition">' +
@@ -232,17 +376,17 @@
     }
 
     function updateProgress() {
-      const qs = QUIZ_BANK[currentSubject] || [];
+      const qs = getQuizQuestions(currentSubject);
       let answered = 0;
       qs.forEach((_, i) => {
         if (document.querySelector('input[name="q' + i + '"]:checked')) answered++;
       });
-      document.getElementById('quizProgress').textContent = answered + ' / ' + qs.length;
+      document.getElementById('quizProgress').textContent = answered + ' / ' + qs.length + ' · ' + currentGradeBand;
       document.getElementById('quizBar').style.width = (qs.length ? (answered / qs.length * 100) : 0) + '%';
     }
 
     function submitQuiz() {
-      const qs = QUIZ_BANK[currentSubject] || [];
+      const qs = getQuizQuestions(currentSubject);
       let correct = 0;
       let answered = 0;
       qs.forEach((item, i) => {
@@ -263,6 +407,8 @@
         subject: currentSubject,
         score: score,
         level: level,
+        gradeBand: currentGradeBand,
+        studentGrade: parent && parent.studentGrade,
         parentId: parent && parent.id,
         parentPhone: parent && parent.phone,
         studentId: parent && parent.id,
@@ -272,13 +418,13 @@
       });
       document.getElementById('quizPanel').classList.add('hidden');
       document.getElementById('resultPanel').classList.remove('hidden');
-      document.getElementById('resultSubject').textContent = currentSubject;
+      document.getElementById('resultSubject').textContent = quizTitleText();
       document.getElementById('resultScore').textContent = String(score);
       document.getElementById('resultLevel').textContent = level;
-      document.getElementById('resultTime').textContent = '完成于 ' + (record && record.completedAt ? record.completedAt : '');
+      document.getElementById('resultTime').textContent = '完成于 ' + (record && record.completedAt ? record.completedAt : '') + ' · ' + currentGradeBand + '题库';
       renderTabs();
       renderPrior();
-      showToast('「' + currentSubject + '」测评已保存 · ' + score + '分 · ' + level);
+      showToast('「' + quizTitleText() + '」测评已保存 · ' + score + '分 · ' + level);
     }
 
     function restartQuiz() {
@@ -292,9 +438,14 @@
         try { await StorageService.ready(); } catch (_) {}
       }
       CURRENT_PARENT = StorageService.getCurrentParent();
+      resolveGradeContext(CURRENT_PARENT);
+      availableSubjects = (StorageService && StorageService.resolveAssessmentSubjectsForParent)
+        ? StorageService.resolveAssessmentSubjectsForParent(CURRENT_PARENT)
+        : null;
       const hint = document.getElementById('studentHint');
       if (hint && CURRENT_PARENT) {
-        hint.textContent = '学员：' + (CURRENT_PARENT.studentNickname || CURRENT_PARENT.parentName || '家长用户');
+        const nick = CURRENT_PARENT.studentNickname || CURRENT_PARENT.parentName || '家长用户';
+        hint.textContent = '学员：' + nick + ' · ' + currentGradeLabel + '（' + currentGradeBand + '）';
       }
       if (fromTrial) {
         document.getElementById('trialGateBanner').classList.remove('hidden');
@@ -305,6 +456,7 @@
     }
 
     boot();
+  </script>
   </script>
 </body>
 </html>
