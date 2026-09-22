@@ -16,7 +16,9 @@
     session: 'xh_session_v1',
     contracts: 'xh_contracts_v1',
     assessments: 'xh_assessments_v1',
-    seeded: 'xh_seeded_v1'
+    seeded: 'xh_seeded_v1',
+    parentRegisterDraft: 'xh_parent_register_draft_v1',
+    mentorRegisterDraft: 'xh_mentor_register_draft_v1'
   };
 
   const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
@@ -1592,6 +1594,32 @@
         const sameSubject = !sub || normalizeAssessmentSubject(b.subject) === sub;
         return sameMentor && sameSubject;
       });
+    },
+
+    /* ---------- Registration drafts (resume-safe) ---------- */
+    saveParentRegisterDraft: function (draft) {
+      const payload = Object.assign({}, draft || {}, { updatedAt: Date.now() });
+      _write(KEYS.parentRegisterDraft, payload);
+      return payload;
+    },
+    getParentRegisterDraft: function () {
+      return _read(KEYS.parentRegisterDraft, null);
+    },
+    clearParentRegisterDraft: function () {
+      try { localStorage.removeItem(KEYS.parentRegisterDraft); } catch (e) {}
+      return true;
+    },
+    saveMentorRegisterDraft: function (draft) {
+      const payload = Object.assign({}, draft || {}, { updatedAt: Date.now() });
+      _write(KEYS.mentorRegisterDraft, payload);
+      return payload;
+    },
+    getMentorRegisterDraft: function () {
+      return _read(KEYS.mentorRegisterDraft, null);
+    },
+    clearMentorRegisterDraft: function () {
+      try { localStorage.removeItem(KEYS.mentorRegisterDraft); } catch (e) {}
+      return true;
     },
 
     getTutorListForParent: function (parentProfile) {

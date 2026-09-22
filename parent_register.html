@@ -292,7 +292,7 @@
                 </label>
                 <div class="relative">
                   <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                  <input type="text" id="parentName" oninput="updateLivePreview()" placeholder="例：刘女士 / 陈先生" required class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium">
+                  <input type="text" id="parentName" oninput="onParentStepFieldChange()" placeholder="例：刘女士 / 陈先生" required class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium">
                 </div>
               </div>
 
@@ -302,19 +302,19 @@
                 </label>
                 <div class="grid grid-cols-4 gap-1.5 text-xs">
                   <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="妈妈" onchange="updateLivePreview()" checked class="hidden">
+                    <input type="radio" name="parentRole" value="妈妈" onchange="onParentStepFieldChange()" checked class="hidden">
                     <span>妈妈</span>
                   </label>
                   <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="爸爸" onchange="updateLivePreview()" class="hidden">
+                    <input type="radio" name="parentRole" value="爸爸" onchange="onParentStepFieldChange()" class="hidden">
                     <span>爸爸</span>
                   </label>
                   <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="学员本人" onchange="updateLivePreview()" class="hidden">
+                    <input type="radio" name="parentRole" value="学员本人" onchange="onParentStepFieldChange()" class="hidden">
                     <span>学员本人</span>
                   </label>
                   <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="其他亲属" onchange="updateLivePreview()" class="hidden">
+                    <input type="radio" name="parentRole" value="其他亲属" onchange="onParentStepFieldChange()" class="hidden">
                     <span>其他</span>
                   </label>
                 </div>
@@ -329,7 +329,7 @@
                 </label>
                 <div class="relative">
                   <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold pr-2 border-r border-slate-200">+86</span>
-                  <input type="tel" id="parentPhone" maxlength="11" placeholder="例：138****8000" required class="w-full pl-15 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono font-medium">
+                  <input type="tel" id="parentPhone" maxlength="11" placeholder="例：138****8000" required oninput="onParentStepFieldChange()" class="w-full pl-15 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono font-medium">
                 </div>
               </div>
 
@@ -340,7 +340,7 @@
                 <div class="flex gap-2">
                   <div class="relative flex-1">
                     <i class="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="parentSmsCode" maxlength="6" placeholder="例：888888（演示验证码）" class="w-full pl-8 pr-2 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono tracking-wider">
+                    <input type="text" id="parentSmsCode" maxlength="6" placeholder="例：888888（演示验证码）" oninput="onParentStepFieldChange()" class="w-full pl-8 pr-2 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono tracking-wider">
                   </div>
                   <button type="button" id="btnSendParentSms" onclick="sendParentSmsCode()" class="shrink-0 bg-slate-100 hover:bg-slate-200 text-teal-800 text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">
                     获取验证码
@@ -357,7 +357,7 @@
                 </label>
                 <div class="relative">
                   <i class="fa-solid fa-child absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                  <input type="text" id="studentNickname" oninput="updateLivePreview()" placeholder="例：乐乐同学 / 张同学" required class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
+                  <input type="text" id="studentNickname" oninput="onParentStepFieldChange()" placeholder="例：乐乐同学 / 张同学" required class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
                 </div>
               </div>
 
@@ -398,27 +398,27 @@
               </label>
               <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-xs">
                 <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="青羊区" onchange="updateLivePreview()" checked class="hidden">
+                  <input type="radio" name="cityDistrict" value="青羊区" onchange="onParentStepFieldChange()" checked class="hidden">
                   <span>青羊区</span>
                 </label>
                 <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="锦江区" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="cityDistrict" value="锦江区" onchange="onParentStepFieldChange()" class="hidden">
                   <span>锦江区</span>
                 </label>
                 <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="高新区" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="cityDistrict" value="高新区" onchange="onParentStepFieldChange()" class="hidden">
                   <span>高新区</span>
                 </label>
                 <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="武侯区" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="cityDistrict" value="武侯区" onchange="onParentStepFieldChange()" class="hidden">
                   <span>武侯区</span>
                 </label>
                 <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="金牛区" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="cityDistrict" value="金牛区" onchange="onParentStepFieldChange()" class="hidden">
                   <span>金牛区</span>
                 </label>
                 <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="温江/其他" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="cityDistrict" value="温江/其他" onchange="onParentStepFieldChange()" class="hidden">
                   <span>温江/其他</span>
                 </label>
               </div>
@@ -558,7 +558,7 @@
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <label class="border border-slate-200 rounded-xl p-3 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50/90 has-[:checked]:border-teal-600 has-[:checked]:ring-1 has-[:checked]:ring-teal-500/20">
-                  <input type="radio" name="selectedSpace" value="青羊金沙文化微网点" onchange="updateLivePreview()" checked class="hidden">
+                  <input type="radio" name="selectedSpace" value="青羊金沙文化微网点" onchange="onParentPrefFieldChange()" checked class="hidden">
                   <div class="font-bold text-slate-800 flex items-center justify-between">
                     <span>青羊金沙微网点</span>
                     <span class="text-[9px] bg-teal-100 text-teal-800 px-1 py-0.2 rounded font-bold">空闲仓位</span>
@@ -567,7 +567,7 @@
                 </label>
 
                 <label class="border border-slate-200 rounded-xl p-3 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50/90 has-[:checked]:border-teal-600 has-[:checked]:ring-1 has-[:checked]:ring-teal-500/20">
-                  <input type="radio" name="selectedSpace" value="高新大源中央微网点" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="selectedSpace" value="高新大源中央微网点" onchange="onParentPrefFieldChange()" class="hidden">
                   <div class="font-bold text-slate-800 flex items-center justify-between">
                     <span>高新大源微网点</span>
                     <span class="text-[9px] bg-slate-100 text-slate-600 px-1 py-0.2 rounded font-bold">空闲仓位</span>
@@ -576,7 +576,7 @@
                 </label>
 
                 <label class="border border-slate-200 rounded-xl p-3 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50/90 has-[:checked]:border-teal-600 has-[:checked]:ring-1 has-[:checked]:ring-teal-500/20">
-                  <input type="radio" name="selectedSpace" value="武侯川大望江微网点" onchange="updateLivePreview()" class="hidden">
+                  <input type="radio" name="selectedSpace" value="武侯川大望江微网点" onchange="onParentPrefFieldChange()" class="hidden">
                   <div class="font-bold text-slate-800 flex items-center justify-between">
                     <span>武侯川大微网点</span>
                     <span class="text-[9px] bg-teal-100 text-teal-800 px-1 py-0.2 rounded font-bold">学霸集中</span>
@@ -1200,6 +1200,8 @@
         } else {
           renderSubjectPlanChips();
           updateLivePreview();
+          scheduleParentDraftSave(false);
+          maybeAutoAdvanceParentSteps();
         }
       } else {
         // 取消勾选：清除该科配置
@@ -1209,6 +1211,8 @@
         }
         renderSubjectPlanChips();
         updateLivePreview();
+        scheduleParentDraftSave(false);
+        maybeAutoAdvanceParentSteps();
       }
     }
 
@@ -1225,6 +1229,10 @@
     function openSubjectWizard(subjectName) {
       wizardSubject = subjectName;
       wizardStep = 1;
+      __wizStep1WasValid = false;
+      __wizStep2WasValid = false;
+      __wizStep3WasValid = false;
+      setTimeout(bindWizardAutoAdvanceHooks, 0);
       const title = document.getElementById('wizardSubjectTitle');
       if (title) title.innerText = subjectName;
 
@@ -1313,6 +1321,7 @@
       if (!el) return;
       const on = !el.classList.contains('bg-teal-100');
       setPainChipActive(el, on);
+      maybeAutoAdvanceWizard();
     }
 
     function showWizardStep(step) {
@@ -1355,6 +1364,11 @@
       renderSubjectPlanChips();
       updateLivePreview();
       closeSubjectWizard(true);
+      __wizStep1WasValid = false;
+      __wizStep2WasValid = false;
+      __wizStep3WasValid = false;
+      persistParentDraft(false);
+      maybeAutoAdvanceParentSteps();
     }
 
     /* ---------- 双柄预算 ---------- */
@@ -1387,6 +1401,7 @@
       }
       syncBudgetFill();
       updateLivePreview();
+      scheduleParentDraftSave(false);
     }
 
     function onBudgetMaxChange(val) {
@@ -1400,6 +1415,7 @@
       }
       syncBudgetFill();
       updateLivePreview();
+      scheduleParentDraftSave(false);
     }
 
     /* ---------- 协议弹窗 ---------- */
@@ -1520,6 +1536,9 @@
 
       window.scrollTo({ top: 120, behavior: 'smooth' });
       updateLivePreview();
+      if (!__restoringDraft) persistParentDraft(false);
+      if (step === 1) __step1WasValid = isParentStep1ReadyForAdvance();
+      if (step === 2) __step2WasValid = isParentStep2Valid();
     }
 
     /* ==========================================================================
@@ -1751,6 +1770,10 @@
 
         openMatchModal();
         showToast('学情档案已保存，正在召回优选导师…');
+        try {
+          if (window.StorageService && StorageService.clearParentRegisterDraft) StorageService.clearParentRegisterDraft();
+          else localStorage.removeItem('xh_parent_register_draft_v1');
+        } catch (e) {}
       }, 900);
     }
 
@@ -1831,17 +1854,279 @@
     }
 
     // 初始化运行
+
+    /* ==========================================================================
+       自动保存草稿 + 分步自动推进
+       ========================================================================== */
+    let __parentDraftTimer = null;
+    let __parentAutoTimer = null;
+    let __parentAutoLock = false;
+    let __step1WasValid = false;
+    let __step2WasValid = false;
+    let __wizAutoTimer = null;
+    let __wizStep1WasValid = false;
+    let __wizStep2WasValid = false;
+    let __wizStep3WasValid = false;
+    let __restoringDraft = false;
+
+    function collectParentDraft() {
+      const plansCopy = {};
+      Object.keys(subjectPlans || {}).forEach((k) => {
+        plansCopy[k] = {
+          weakPoints: (subjectPlans[k].weakPoints || []).slice(),
+          pacing: subjectPlans[k].pacing || '',
+          pains: (subjectPlans[k].pains || []).slice()
+        };
+      });
+      return {
+        currentStep: currentStep,
+        parentName: document.getElementById('parentName')?.value || '',
+        parentRole: document.querySelector('input[name="parentRole"]:checked')?.value || '妈妈',
+        parentPhone: document.getElementById('parentPhone')?.value || '',
+        parentSmsCode: document.getElementById('parentSmsCode')?.value || '',
+        studentNickname: document.getElementById('studentNickname')?.value || '',
+        studentGrade: document.getElementById('studentGrade')?.value || '',
+        cityDistrict: document.querySelector('input[name="cityDistrict"]:checked')?.value || '',
+        selectedSpace: document.querySelector('input[name="selectedSpace"]:checked')?.value || '',
+        budgetMin: document.getElementById('budgetMinRange')?.value || '80',
+        budgetMax: document.getElementById('budgetMaxRange')?.value || '180',
+        targetGoal: document.getElementById('targetGoal')?.value || '',
+        agreement: !!document.getElementById('parentAgreementCheck')?.checked,
+        subjectPlans: plansCopy,
+        checkedSubjects: Array.from(document.querySelectorAll('input[name="targetSubject"]:checked')).map((c) => c.value)
+      };
+    }
+
+    function persistParentDraft(showTip) {
+      if (__restoringDraft) return;
+      const draft = collectParentDraft();
+      try {
+        if (window.StorageService && StorageService.saveParentRegisterDraft) {
+          StorageService.saveParentRegisterDraft(draft);
+        } else {
+          localStorage.setItem('xh_parent_register_draft_v1', JSON.stringify(Object.assign({}, draft, { updatedAt: Date.now() })));
+        }
+      } catch (e) {
+        console.warn('parent draft save fail', e);
+      }
+      if (showTip) showToast('本步已自动保存');
+    }
+
+    function scheduleParentDraftSave(showTip) {
+      if (__parentDraftTimer) clearTimeout(__parentDraftTimer);
+      __parentDraftTimer = setTimeout(() => persistParentDraft(!!showTip), 280);
+    }
+
+    function isParentStep1ReadyForAdvance() {
+      const parentName = (document.getElementById('parentName')?.value || '').trim();
+      const parentPhone = (document.getElementById('parentPhone')?.value || '').trim();
+      const studentNick = (document.getElementById('studentNickname')?.value || '').trim();
+      const sms = (document.getElementById('parentSmsCode')?.value || '').trim();
+      return !!(parentName && parentPhone.length === 11 && studentNick && sms.length === 6);
+    }
+
+    function isParentStep2Valid() {
+      const checked = Array.from(document.querySelectorAll('input[name="targetSubject"]:checked')).map((c) => c.value);
+      if (!checked.length) return false;
+      return checked.every((s) => !!subjectPlans[s]);
+    }
+
+    function maybeAutoAdvanceParentSteps() {
+      if (__restoringDraft || __parentAutoLock) return;
+      if (__parentAutoTimer) clearTimeout(__parentAutoTimer);
+      __parentAutoTimer = setTimeout(() => {
+        if (__parentAutoLock || __restoringDraft) return;
+        if (currentStep === 1) {
+          const ok = isParentStep1ReadyForAdvance();
+          if (ok && !__step1WasValid) {
+            __step1WasValid = true;
+            __parentAutoLock = true;
+            persistParentDraft(false);
+            showToast('基本信息已保存，进入考点配置');
+            setTimeout(() => { goToStep(2); __parentAutoLock = false; }, 350);
+          } else if (!ok) {
+            __step1WasValid = false;
+          }
+        } else if (currentStep === 2) {
+          const ok = isParentStep2Valid();
+          if (ok && !__step2WasValid) {
+            __step2WasValid = true;
+            __parentAutoLock = true;
+            persistParentDraft(false);
+            showToast('学科配置已保存，进入空间与偏好');
+            setTimeout(() => { goToStep(3); __parentAutoLock = false; }, 350);
+          } else if (!ok) {
+            __step2WasValid = false;
+          }
+        }
+      }, 420);
+    }
+
+    function onParentStepFieldChange() {
+      updateLivePreview();
+      scheduleParentDraftSave(false);
+      maybeAutoAdvanceParentSteps();
+    }
+
+    function onParentPrefFieldChange() {
+      updateLivePreview();
+      scheduleParentDraftSave(false);
+    }
+
+    function isWizardPane1Valid() {
+      const topics = document.querySelectorAll('.wizard-topic-cb');
+      if (!topics.length) return true;
+      return Array.from(topics).some((el) => el.checked);
+    }
+    function isWizardPane2Valid() {
+      return !!document.querySelector('input[name="wizardPacing"]:checked');
+    }
+    function isWizardPane3Valid() {
+      return document.querySelectorAll('#wizardPainContainer > span.bg-teal-100').length > 0;
+    }
+
+    function maybeAutoAdvanceWizard() {
+      if (!wizardSubject || __restoringDraft) return;
+      if (__wizAutoTimer) clearTimeout(__wizAutoTimer);
+      __wizAutoTimer = setTimeout(() => {
+        if (!wizardSubject) return;
+        if (wizardStep === 1) {
+          const ok = isWizardPane1Valid();
+          if (ok && !__wizStep1WasValid) {
+            __wizStep1WasValid = true;
+            showToast('考点已保存');
+            scheduleParentDraftSave(false);
+            wizardNextStep();
+          } else if (!ok) __wizStep1WasValid = false;
+        } else if (wizardStep === 2) {
+          const ok = isWizardPane2Valid();
+          if (ok && !__wizStep2WasValid) {
+            __wizStep2WasValid = true;
+            showToast('推进策略已保存');
+            scheduleParentDraftSave(false);
+            wizardNextStep();
+          } else if (!ok) __wizStep2WasValid = false;
+        } else if (wizardStep === 3) {
+          const ok = isWizardPane3Valid();
+          if (ok && !__wizStep3WasValid) {
+            __wizStep3WasValid = true;
+            finishSubjectWizard();
+          } else if (!ok) __wizStep3WasValid = false;
+        }
+      }, 380);
+    }
+
+    function bindWizardAutoAdvanceHooks() {
+      const topicBox = document.getElementById('wizardTopicsContainer');
+      if (topicBox && !topicBox.getAttribute('data-auto-bound')) {
+        topicBox.addEventListener('change', (e) => {
+          if (e.target && e.target.classList.contains('wizard-topic-cb')) maybeAutoAdvanceWizard();
+        });
+        topicBox.setAttribute('data-auto-bound', '1');
+      }
+      document.querySelectorAll('input[name="wizardPacing"]').forEach((r) => {
+        if (r.getAttribute('data-auto-bound')) return;
+        r.addEventListener('change', () => maybeAutoAdvanceWizard());
+        r.setAttribute('data-auto-bound', '1');
+      });
+    }
+
+    function applyParentDraft(draft) {
+      if (!draft || typeof draft !== 'object') return false;
+      __restoringDraft = true;
+      try {
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+        setVal('parentName', draft.parentName || '');
+        setVal('parentPhone', draft.parentPhone || '');
+        setVal('parentSmsCode', draft.parentSmsCode || '');
+        setVal('studentNickname', draft.studentNickname || '');
+        if (draft.studentGrade) setVal('studentGrade', draft.studentGrade);
+        if (draft.targetGoal != null) setVal('targetGoal', draft.targetGoal);
+        if (draft.parentRole) {
+          const r = document.querySelector('input[name="parentRole"][value="' + draft.parentRole + '"]');
+          if (r) r.checked = true;
+        }
+        if (draft.cityDistrict) {
+          const r = document.querySelector('input[name="cityDistrict"][value="' + draft.cityDistrict + '"]');
+          if (r) r.checked = true;
+        }
+        if (draft.selectedSpace) {
+          const r = document.querySelector('input[name="selectedSpace"][value="' + draft.selectedSpace + '"]');
+          if (r) r.checked = true;
+        }
+        if (draft.budgetMin != null) {
+          const el = document.getElementById('budgetMinRange');
+          if (el) el.value = String(draft.budgetMin);
+        }
+        if (draft.budgetMax != null) {
+          const el = document.getElementById('budgetMaxRange');
+          if (el) el.value = String(draft.budgetMax);
+        }
+        if (draft.agreement) {
+          const c = document.getElementById('parentAgreementCheck');
+          if (c) c.checked = true;
+        }
+        subjectPlans = draft.subjectPlans && typeof draft.subjectPlans === 'object' ? draft.subjectPlans : {};
+        const subjects = draft.checkedSubjects || Object.keys(subjectPlans);
+        document.querySelectorAll('input[name="targetSubject"]').forEach((cb) => {
+          cb.checked = subjects.indexOf(cb.value) >= 0;
+        });
+        syncBudgetFill();
+        updateGradeLabel();
+        renderSubjectPlanChips();
+        const step = Math.min(3, Math.max(1, parseInt(draft.currentStep, 10) || 1));
+        __step1WasValid = isParentStep1ReadyForAdvance();
+        __step2WasValid = isParentStep2Valid();
+        goToStep(step);
+        updateLivePreview();
+        showToast('已恢复未完成的注册草稿');
+        return true;
+      } finally {
+        __restoringDraft = false;
+      }
+    }
+
+    function loadParentDraftOnBoot() {
+      let draft = null;
+      try {
+        if (window.StorageService && StorageService.getParentRegisterDraft) {
+          draft = StorageService.getParentRegisterDraft();
+        }
+        if (!draft) {
+          const raw = localStorage.getItem('xh_parent_register_draft_v1');
+          if (raw) draft = JSON.parse(raw);
+        }
+      } catch (e) {}
+      if (draft && (draft.parentName || draft.parentPhone || (draft.subjectPlans && Object.keys(draft.subjectPlans).length))) {
+        applyParentDraft(draft);
+      }
+    }
+
     window.onload = function() {
       updateGradeLabel();
       syncBudgetFill();
       renderSubjectPlanChips();
       updateLivePreview();
-      // 绑定年级变更（若 select 有 onchange）
+      bindWizardAutoAdvanceHooks();
       const gradeSelect = document.getElementById('studentGrade');
       if (gradeSelect && !gradeSelect.getAttribute('data-bound')) {
-        gradeSelect.addEventListener('change', onGradeChange);
+        gradeSelect.addEventListener('change', function() {
+          onGradeChange();
+          scheduleParentDraftSave(false);
+        });
         gradeSelect.setAttribute('data-bound', '1');
       }
+      const goal = document.getElementById('targetGoal');
+      if (goal && !goal.getAttribute('data-auto-bound')) {
+        goal.addEventListener('input', function() { scheduleParentDraftSave(false); });
+        goal.setAttribute('data-auto-bound', '1');
+      }
+      const agree = document.getElementById('parentAgreementCheck');
+      if (agree && !agree.getAttribute('data-auto-bound')) {
+        agree.addEventListener('change', function() { scheduleParentDraftSave(false); });
+        agree.setAttribute('data-auto-bound', '1');
+      }
+      loadParentDraftOnBoot();
     };
   </script>
 </body>

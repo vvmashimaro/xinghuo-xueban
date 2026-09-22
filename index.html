@@ -981,15 +981,25 @@
           <div class="flex items-center justify-between text-xs font-bold text-slate-700 px-1">
             <span class="flex items-center gap-1.5">
               <i class="fa-solid fa-eye text-teal-600"></i>
-              家长端展示卡片预览
+              导师电子档案预览
             </span>
-            <span class="text-[10px] text-teal-700 font-normal bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
-              即时联动
+            <span id="livePreviewStatusBadge" class="text-[10px] text-slate-500 font-normal bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+              待完善
             </span>
           </div>
 
-          <!-- 模拟名片卡 -->
-          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md">
+          <!-- 未完成时的占位 -->
+          <div id="liveCardPlaceholder" class="bg-slate-50 rounded-2xl p-5 border border-dashed border-slate-300 text-center space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-300">
+              <i class="fa-solid fa-id-card text-lg"></i>
+            </div>
+            <div class="text-xs font-bold text-slate-600">电子档案预览尚未生成</div>
+            <p class="text-[11px] text-slate-400 leading-relaxed px-2">请完成 L1 资质核验与 L2 能力画像全部必填项后，系统将自动生成家长端展示卡片。</p>
+            <div id="livePreviewMissingHint" class="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-1.5 inline-block">仍有必填项未完成</div>
+          </div>
+
+          <!-- 模拟名片卡（全部完成后展示） -->
+          <div id="liveCardPanel" class="hidden bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md">
             <!-- 顶部装饰背景 -->
             <div class="h-16 -mx-5 -mt-5 bg-gradient-to-r from-teal-100 via-cyan-50 to-slate-100 p-3 flex justify-between items-start border-b border-teal-100">
               <span class="text-[10px] text-teal-800 bg-white/80 px-2 py-0.5 rounded border border-teal-100">
@@ -1817,6 +1827,7 @@
           });
         }
       }
+      refreshMentorPreviewGate();
     }
 
     function toggleStyleTag(elem) {
@@ -1894,6 +1905,10 @@
           li.classList.toggle('font-semibold', ok);
         });
       }
+    
+      scheduleMentorDraftSave(false);
+      refreshMentorPreviewGate();
+      maybeAutoAdvanceMentorL1(pct === 100);
     }
 
     function goToStep(step) {
@@ -1972,7 +1987,10 @@
 
         window.scrollTo({ top: 380, behavior: 'smooth' });
         showToast('L1 身份、学信网与清算账户签约通过！');
+        __l1WasComplete = true;
+        persistMentorDraft(false);
         ensureOnboardAvailabilityPicker();
+        refreshMentorPreviewGate();
       } else if (step === 1) {
         document.getElementById('step2-card').classList.add('hidden');
         document.getElementById('step1-card').classList.remove('hidden');
@@ -2093,6 +2111,10 @@
 
       window.scrollTo({ top: 350, behavior: 'smooth' });
       showToast('入库申请已提交！可进入导师工作台查看待审状态');
+      try {
+        if (window.StorageService && StorageService.clearMentorRegisterDraft) StorageService.clearMentorRegisterDraft();
+        else localStorage.removeItem('xh_mentor_register_draft_v1');
+      } catch (e) {}
     }
 
     /* ==========================================================================
@@ -2138,17 +2160,245 @@
     }
 
     // 页面加载启动
+
+    /* ==========================================================================
+       导师注册：草稿自动保存 + L1 自动推进 + 电子档案预览门禁
+       ========================================================================== */
+    let __mentorDraftTimer = null;
+    let __mentorAutoLock = false;
+    let __l1WasComplete = false;
+    let __restoringMentorDraft = false;
+
+    function isL1Complete() {
+      const state = getL1FieldState();
+      return ['realName','phone','idCard','university','chsiCode','bankCard','nonPublic','privacy'].every((k) => !!state[k]);
+    }
+
+    function isL2Complete() {
+      const checkedSubjects = document.querySelectorAll('input[name="subject"]:checked');
+      const hasSubject = checkedSubjects.length > 0 || (typeof customSubjectList !== 'undefined' && customSubjectList.length > 0);
+      const hourlyRate = (document.getElementById('hourlyRate')?.value || '').trim();
+      const lectureUrl = (document.getElementById('lectureUrl')?.value || '').trim();
+      return !!(hasSubject && hourlyRate && Number(hourlyRate) > 0 && lectureUrl);
+    }
+
+    function isMentorProfileComplete() {
+      return isL1Complete() && isL2Complete();
+    }
+
+    function refreshMentorPreviewGate() {
+      const complete = isMentorProfileComplete();
+      const panel = document.getElementById('liveCardPanel');
+      const placeholder = document.getElementById('liveCardPlaceholder');
+      const badge = document.getElementById('livePreviewStatusBadge');
+      const hint = document.getElementById('livePreviewMissingHint');
+      if (panel) panel.classList.toggle('hidden', !complete);
+      if (placeholder) placeholder.classList.toggle('hidden', complete);
+      if (badge) {
+        badge.textContent = complete ? '已生成' : '待完善';
+        badge.className = complete
+          ? 'text-[10px] text-teal-700 font-normal bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200'
+          : 'text-[10px] text-slate-500 font-normal bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200';
+      }
+      if (hint) {
+        if (complete) {
+          hint.classList.add('hidden');
+        } else {
+          hint.classList.remove('hidden');
+          const missing = [];
+          if (!isL1Complete()) missing.push('L1 资质');
+          if (!isL2Complete()) missing.push('L2 学科/时薪/试讲链接');
+          hint.textContent = '待完成：' + missing.join('、');
+        }
+      }
+    }
+
+    function collectMentorDraft() {
+      const checkedSubjects = Array.from(document.querySelectorAll('input[name="subject"]:checked')).map((c) => c.value);
+      const styleTags = Array.from(document.querySelectorAll('#styleTagContainer > span'))
+        .filter((span) => span.classList.contains('bg-teal-100'))
+        .map((span) => (span.querySelector('span') ? span.querySelector('span').innerText.trim() : span.innerText.trim()));
+      return {
+        step: document.getElementById('step2-card') && !document.getElementById('step2-card').classList.contains('hidden') ? 2 : 1,
+        realName: document.getElementById('realName')?.value || '',
+        phone: document.getElementById('phone')?.value || '',
+        idCard: document.getElementById('idCard')?.value || '',
+        university: document.getElementById('finalUniversityValue')?.value || '',
+        province: document.getElementById('provinceSelect')?.value || '',
+        universitySelect: document.getElementById('universitySelect')?.value || '',
+        manualUniversity: document.getElementById('manualUniversityInput')?.value || '',
+        educationLevel: document.getElementById('educationLevel')?.value || '',
+        chsiCode: document.getElementById('chsiCode')?.value || '',
+        bankCardNumber: document.getElementById('bankCardNumber')?.value || '',
+        bankName: document.getElementById('bankName')?.value || '',
+        nonPublicTeacherAgree: !!document.getElementById('nonPublicTeacherAgree')?.checked,
+        privacyAuthAgree: !!document.getElementById('privacyAuthAgree')?.checked,
+        subjects: checkedSubjects,
+        customSubjects: (typeof customSubjectList !== 'undefined' ? customSubjectList.slice() : []),
+        hourlyRate: document.getElementById('hourlyRate')?.value || '',
+        lectureUrl: document.getElementById('lectureUrl')?.value || '',
+        scoreHighlight: document.getElementById('scoreHighlight')?.value || '',
+        styles: styleTags
+      };
+    }
+
+    function persistMentorDraft(showTip) {
+      if (__restoringMentorDraft) return;
+      const draft = collectMentorDraft();
+      try {
+        if (window.StorageService && StorageService.saveMentorRegisterDraft) {
+          StorageService.saveMentorRegisterDraft(draft);
+        } else {
+          localStorage.setItem('xh_mentor_register_draft_v1', JSON.stringify(Object.assign({}, draft, { updatedAt: Date.now() })));
+        }
+      } catch (e) {
+        console.warn('mentor draft save fail', e);
+      }
+      if (showTip) showToast('本步已自动保存');
+    }
+
+    function scheduleMentorDraftSave(showTip) {
+      if (__mentorDraftTimer) clearTimeout(__mentorDraftTimer);
+      __mentorDraftTimer = setTimeout(() => persistMentorDraft(!!showTip), 300);
+    }
+
+    function maybeAutoAdvanceMentorL1(isComplete) {
+      if (__restoringMentorDraft || __mentorAutoLock) return;
+      const onStep1 = document.getElementById('step1-card') && !document.getElementById('step1-card').classList.contains('hidden');
+      if (!onStep1) {
+        __l1WasComplete = isComplete;
+        return;
+      }
+      if (isComplete && !__l1WasComplete) {
+        __l1WasComplete = true;
+        __mentorAutoLock = true;
+        persistMentorDraft(false);
+        showToast('L1 已保存，自动进入 L2 能力画像');
+        setTimeout(() => {
+          goToStep(2);
+          __mentorAutoLock = false;
+        }, 380);
+      } else if (!isComplete) {
+        __l1WasComplete = false;
+      }
+    }
+
+    function applyMentorDraft(draft) {
+      if (!draft || typeof draft !== 'object') return false;
+      __restoringMentorDraft = true;
+      try {
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+        setVal('realName', draft.realName || '');
+        setVal('phone', draft.phone || '');
+        setVal('idCard', draft.idCard || '');
+        setVal('chsiCode', draft.chsiCode || '');
+        setVal('bankCardNumber', draft.bankCardNumber || '');
+        setVal('bankName', draft.bankName || '');
+        setVal('hourlyRate', draft.hourlyRate || '');
+        setVal('lectureUrl', draft.lectureUrl || '');
+        setVal('scoreHighlight', draft.scoreHighlight || '');
+        if (draft.educationLevel) setVal('educationLevel', draft.educationLevel);
+        if (draft.province) setVal('provinceSelect', draft.province);
+        if (draft.universitySelect) setVal('universitySelect', draft.universitySelect);
+        if (draft.manualUniversity) setVal('manualUniversityInput', draft.manualUniversity);
+        if (draft.university) setVal('finalUniversityValue', draft.university);
+        const nonPublic = document.getElementById('nonPublicTeacherAgree');
+        if (nonPublic) nonPublic.checked = !!draft.nonPublicTeacherAgree;
+        const privacy = document.getElementById('privacyAuthAgree');
+        if (privacy) privacy.checked = !!draft.privacyAuthAgree;
+        if (Array.isArray(draft.customSubjects)) {
+          customSubjectList = draft.customSubjects.slice();
+          if (typeof renderCustomSubjects === 'function') renderCustomSubjects();
+        }
+        const subjects = draft.subjects || [];
+        document.querySelectorAll('input[name="subject"]').forEach((cb) => {
+          cb.checked = subjects.indexOf(cb.value) >= 0;
+        });
+        if (Array.isArray(draft.styles) && draft.styles.length) {
+          document.querySelectorAll('#styleTagContainer > span').forEach((span) => {
+            const label = span.querySelector('span') ? span.querySelector('span').innerText.trim() : span.innerText.trim();
+            const on = draft.styles.indexOf(label) >= 0;
+            if (on) {
+              span.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-200');
+              span.classList.add('bg-teal-100', 'text-teal-800', 'border-teal-300');
+            }
+          });
+        }
+        updateL1Progress();
+        updateLiveCard();
+        if (draft.step === 2 && isL1Complete()) {
+          // soft switch without re-toast spam
+          document.getElementById('step1-card')?.classList.add('hidden');
+          document.getElementById('step2-card')?.classList.remove('hidden');
+          const b1 = document.getElementById('step1-badge');
+          if (b1) { b1.className = 'w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all'; b1.innerHTML = '<i class="fa-solid fa-check text-xs"></i>'; }
+          const b2 = document.getElementById('step2-badge');
+          if (b2) b2.className = 'w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-active transition-all';
+          const t2 = document.getElementById('step2-text');
+          if (t2) t2.className = 'text-teal-700 font-bold';
+          const p1 = document.getElementById('progress-bar-1');
+          if (p1) p1.style.width = '100%';
+          __l1WasComplete = true;
+          try { ensureOnboardAvailabilityPicker(); } catch (e) {}
+        }
+        refreshMentorPreviewGate();
+        showToast('已恢复未完成的导师注册草稿');
+        return true;
+      } finally {
+        __restoringMentorDraft = false;
+      }
+    }
+
+    function loadMentorDraftOnBoot() {
+      let draft = null;
+      try {
+        if (window.StorageService && StorageService.getMentorRegisterDraft) draft = StorageService.getMentorRegisterDraft();
+        if (!draft) {
+          const raw = localStorage.getItem('xh_mentor_register_draft_v1');
+          if (raw) draft = JSON.parse(raw);
+        }
+      } catch (e) {}
+      if (draft && (draft.realName || draft.phone || draft.chsiCode || (draft.subjects && draft.subjects.length))) {
+        applyMentorDraft(draft);
+      } else {
+        refreshMentorPreviewGate();
+      }
+    }
+
+    function bindMentorL2DraftHooks() {
+      ['hourlyRate', 'lectureUrl', 'scoreHighlight'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el || el.getAttribute('data-draft-bound')) return;
+        el.addEventListener('input', () => {
+          scheduleMentorDraftSave(false);
+          updateLiveCard();
+        });
+        el.setAttribute('data-draft-bound', '1');
+      });
+      document.querySelectorAll('input[name="subject"]').forEach((cb) => {
+        if (cb.getAttribute('data-draft-bound')) return;
+        cb.addEventListener('change', () => {
+          scheduleMentorDraftSave(false);
+          refreshMentorPreviewGate();
+        });
+        cb.setAttribute('data-draft-bound', '1');
+      });
+    }
+
     window.onload = function() {
       initUniversitySelectors();
       renderUploadedFiles();
       updateLiveCard();
       updateL1Progress();
+      bindMentorL2DraftHooks();
       // picker mounts when L2 opens; pre-create container if already on step2
       try { if (!document.getElementById('step2-card').classList.contains('hidden')) ensureOnboardAvailabilityPicker(); } catch(e) {}
       const uniSel = document.getElementById('universitySelect');
       if (uniSel) uniSel.addEventListener('change', updateL1Progress);
       const provSel = document.getElementById('provinceSelect');
       if (provSel) provSel.addEventListener('change', updateL1Progress);
+      loadMentorDraftOnBoot();
+      refreshMentorPreviewGate();
     };
   </script>
 </body>
