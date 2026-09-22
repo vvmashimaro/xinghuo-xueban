@@ -239,7 +239,7 @@
       <div class="lg:col-span-8">
         <form id="mentorForm" onsubmit="event.preventDefault();" class="space-y-6">
 
-          <!-- ================= 阶段 1: L1 准入资质与红线排查 ================= -->
+          <!-- ================= 阶段 1: L1 准入资质与红线排查 (多步骤向导) ================= -->
           <div id="step1-card" class="bg-white rounded-2xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-5 transition-all">
             <div class="border-b border-slate-100 pb-4">
               <div class="flex items-center justify-between">
@@ -252,32 +252,82 @@
               <p class="text-xs text-slate-500 mt-1.5">严格遵守国家校外辅导监管红线，平台直接对接学信网与公安实名系统核验入驻资质。</p>
             </div>
 
-            <!-- 姓名与电话 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">真实姓名 <span class="text-red-500">*</span></label>
-                <div class="relative">
-                  <i class="fa-regular fa-user absolute left-3 top-3 text-slate-400 text-sm"></i>
-                  <input type="text" id="realName" oninput="updateLiveCard(); updateL1Progress();" required placeholder="例：张若愚（须与身份证一致）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+            <!-- L1 子步骤进度指示器 -->
+            <div class="flex items-center justify-between text-xs">
+              <button type="button" onclick="goToL1SubStep(1)" id="l1SubTab1" class="flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer">
+                <span id="l1SubIcon1" class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                <span class="hidden sm:inline">身份信息</span>
+              </button>
+              <div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l1SubProgress1" class="h-full bg-teal-600 transition-all w-0"></div></div>
+              
+              <button type="button" onclick="goToL1SubStep(2)" id="l1SubTab2" class="flex items-center gap-1.5 font-bold text-slate-400 cursor-pointer">
+                <span id="l1SubIcon2" class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">2</span>
+                <span class="hidden sm:inline">院校学历</span>
+              </button>
+              <div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l1SubProgress2" class="h-full bg-teal-600 transition-all w-0"></div></div>
+              
+              <button type="button" onclick="goToL1SubStep(3)" id="l1SubTab3" class="flex items-center gap-1.5 font-bold text-slate-400 cursor-pointer">
+                <span id="l1SubIcon3" class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">3</span>
+                <span class="hidden sm:inline">结算账户</span>
+              </button>
+              <div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l1SubProgress3" class="h-full bg-teal-600 transition-all w-0"></div></div>
+              
+              <button type="button" onclick="goToL1SubStep(4)" id="l1SubTab4" class="flex items-center gap-1.5 font-bold text-slate-400 cursor-pointer">
+                <span id="l1SubIcon4" class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">4</span>
+                <span class="hidden sm:inline">合规确认</span>
+              </button>
+            </div>
+
+            <!-- L1 子步骤 1: 身份信息 -->
+            <div id="l1-substep-1" class="space-y-4">
+
+              <!-- 姓名与电话 -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">真实姓名 <span class="text-red-500">*</span></label>
+                  <div class="relative">
+                    <i class="fa-regular fa-user absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="realName" oninput="updateLiveCard(); onL1FieldChange();" required placeholder="例：张若愚（须与身份证一致）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">手机号码 <span class="text-red-500">*</span></label>
+                  <div class="relative">
+                    <i class="fa-solid fa-mobile-screen absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="tel" id="phone" required oninput="onL1FieldChange()" placeholder="例：138****8000（用于接收开锁码）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                  </div>
                 </div>
               </div>
+
+              <!-- 身份证号 -->
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">手机号码 <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">身份证号码 <span class="text-red-500">*</span></label>
                 <div class="relative">
-                  <i class="fa-solid fa-mobile-screen absolute left-3 top-3 text-slate-400 text-sm"></i>
-                  <input type="tel" id="phone" required oninput="updateL1Progress()" placeholder="例：138****8000（用于接收开锁码）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                  <i class="fa-regular fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
+                  <input type="text" id="idCard" required oninput="onL1FieldChange()" placeholder="例：510107********1234（18位，加密直联公安）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
                 </div>
+              </div>
+
+              <!-- SMS验证（演示用） -->
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs">
+                <div class="flex items-center gap-2 text-blue-800 font-bold mb-2">
+                  <i class="fa-solid fa-shield-halved"></i>
+                  <span>短信验证码（演示：888888）</span>
+                </div>
+                <p class="text-blue-700 text-[11px]">真实场景将发送验证码至上述手机。演示模式下请填写 888888。</p>
+              </div>
+
+              <!-- 导航按钮 -->
+              <div class="pt-2">
+                <button type="button" onclick="goToL1SubStep(2)" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>下一步：院校与学历核验</span>
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
               </div>
             </div>
 
-            <!-- 身份证号 -->
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1.5">身份证号码 <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <i class="fa-regular fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
-                <input type="text" id="idCard" required oninput="updateL1Progress()" placeholder="例：510107********1234（18位，加密直联公安）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
-              </div>
-            </div>
+            <!-- L1 子步骤 2: 院校与学历核验 -->
+            <div id="l1-substep-2" class="space-y-4 hidden">
 
             <!-- 核心升级项：就读/毕业高校（按省级区域下拉联动 + 全量本科高校 + 手动输入） -->
             <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3">
@@ -1124,6 +1174,7 @@
     <script src="js/config.js"></script>
     <script src="js/storage-service.js"></script>
     <script src="js/availability-picker.js"></script>
+    <script src="js/mentor-wizard.js"></script>
 
     <script>
     // 统一库 hydrate：页面脚本可 await StorageService.ready()
@@ -2112,8 +2163,16 @@
       window.scrollTo({ top: 350, behavior: 'smooth' });
       showToast('入库申请已提交！可进入导师工作台查看待审状态');
       try {
-        if (window.StorageService && StorageService.clearMentorRegisterDraft) StorageService.clearMentorRegisterDraft();
-        else localStorage.removeItem('xh_mentor_register_draft_v1');
+        // Clear both v1 and v2 drafts
+        if (window.StorageService && StorageService.clearMentorRegisterDraftV2) {
+          StorageService.clearMentorRegisterDraftV2();
+        }
+        if (window.StorageService && StorageService.clearMentorRegisterDraft) {
+          StorageService.clearMentorRegisterDraft();
+        }
+        localStorage.removeItem('xh_mentor_register_draft_v1');
+        localStorage.removeItem('xh_mentor_register_draft_v2');
+        localStorage.removeItem('xh_mentor_wizard_state_v1');
       } catch (e) {}
     }
 
@@ -2220,6 +2279,8 @@
         .map((span) => (span.querySelector('span') ? span.querySelector('span').innerText.trim() : span.innerText.trim()));
       return {
         step: document.getElementById('step2-card') && !document.getElementById('step2-card').classList.contains('hidden') ? 2 : 1,
+        l1SubStep: typeof window.currentL1SubStep !== 'undefined' ? window.currentL1SubStep : 1,
+        l2SubStep: typeof window.currentL2SubStep !== 'undefined' ? window.currentL2SubStep : 1,
         realName: document.getElementById('realName')?.value || '',
         phone: document.getElementById('phone')?.value || '',
         idCard: document.getElementById('idCard')?.value || '',
@@ -2246,10 +2307,13 @@
       if (__restoringMentorDraft) return;
       const draft = collectMentorDraft();
       try {
-        if (window.StorageService && StorageService.saveMentorRegisterDraft) {
+        // Use v2 draft storage for wizard state
+        if (window.StorageService && StorageService.saveMentorRegisterDraftV2) {
+          StorageService.saveMentorRegisterDraftV2(draft);
+        } else if (window.StorageService && StorageService.saveMentorRegisterDraft) {
           StorageService.saveMentorRegisterDraft(draft);
         } else {
-          localStorage.setItem('xh_mentor_register_draft_v1', JSON.stringify(Object.assign({}, draft, { updatedAt: Date.now() })));
+          localStorage.setItem('xh_mentor_register_draft_v2', JSON.stringify(Object.assign({}, draft, { updatedAt: Date.now() })));
         }
       } catch (e) {
         console.warn('mentor draft save fail', e);
@@ -2326,6 +2390,15 @@
         }
         updateL1Progress();
         updateLiveCard();
+        
+        // Restore wizard sub-step state
+        if (draft.l1SubStep && typeof window.goToL1SubStep === 'function') {
+          window.currentL1SubStep = Math.min(4, Math.max(1, draft.l1SubStep));
+        }
+        if (draft.l2SubStep && typeof window.goToL2SubStep === 'function') {
+          window.currentL2SubStep = Math.min(3, Math.max(1, draft.l2SubStep));
+        }
+        
         if (draft.step === 2 && isL1Complete()) {
           // soft switch without re-toast spam
           document.getElementById('step1-card')?.classList.add('hidden');
@@ -2340,7 +2413,18 @@
           if (p1) p1.style.width = '100%';
           __l1WasComplete = true;
           try { ensureOnboardAvailabilityPicker(); } catch (e) {}
+          
+          // Restore L2 sub-step after step switch
+          if (draft.l2SubStep && typeof window.goToL2SubStep === 'function') {
+            setTimeout(() => window.goToL2SubStep(draft.l2SubStep), 100);
+          }
+        } else if (draft.step === 1) {
+          // Restore L1 sub-step
+          if (draft.l1SubStep && typeof window.goToL1SubStep === 'function') {
+            setTimeout(() => window.goToL1SubStep(draft.l1SubStep), 100);
+          }
         }
+        
         refreshMentorPreviewGate();
         showToast('已恢复未完成的导师注册草稿');
         return true;
@@ -2352,10 +2436,22 @@
     function loadMentorDraftOnBoot() {
       let draft = null;
       try {
-        if (window.StorageService && StorageService.getMentorRegisterDraft) draft = StorageService.getMentorRegisterDraft();
+        // Try v2 first (with wizard state)
+        if (window.StorageService && StorageService.getMentorRegisterDraftV2) {
+          draft = StorageService.getMentorRegisterDraftV2();
+        }
+        // Fall back to v1 if v2 not available
+        if (!draft && window.StorageService && StorageService.getMentorRegisterDraft) {
+          draft = StorageService.getMentorRegisterDraft();
+        }
+        // Fall back to localStorage
         if (!draft) {
-          const raw = localStorage.getItem('xh_mentor_register_draft_v1');
-          if (raw) draft = JSON.parse(raw);
+          const rawV2 = localStorage.getItem('xh_mentor_register_draft_v2');
+          if (rawV2) draft = JSON.parse(rawV2);
+          else {
+            const rawV1 = localStorage.getItem('xh_mentor_register_draft_v1');
+            if (rawV1) draft = JSON.parse(rawV1);
+          }
         }
       } catch (e) {}
       if (draft && (draft.realName || draft.phone || draft.chsiCode || (draft.subjects && draft.subjects.length))) {

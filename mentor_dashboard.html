@@ -266,12 +266,83 @@
         </div>
       </section>
 
+      <!-- 4. 反馈与投诉 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
+          <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-message-lines text-teal-600"></i>
+            反馈与投诉
+          </h2>
+          <button type="button" onclick="openFeedbackModal()" class="text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            <span>提交反馈</span>
+          </button>
+        </div>
+        <div id="feedbackTicketsList" class="p-4 sm:p-5 space-y-3">
+          <!-- 动态注入 -->
+          <div class="text-center text-xs text-slate-400 py-6">
+            暂无反馈记录
+          </div>
+        </div>
+      </section>
+
     </div>
   </main>
 
   <footer class="w-full py-4 text-center text-[11px] text-slate-400 border-t border-slate-200 bg-white/60">
     <p>© 2026 星火学伴 · 导师工作台 · 阳光合规课辅</p>
   </footer>
+
+  <!-- 反馈与投诉提交模态 -->
+  <div id="feedbackModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="feedbackModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-900">提交反馈与投诉</h3>
+        <button type="button" onclick="closeFeedbackModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">反馈类型 <span class="text-red-500">*</span></label>
+          <select id="feedbackType" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
+            <option value="功能问题">功能问题</option>
+            <option value="订单纠纷">订单纠纷</option>
+            <option value="投诉">投诉</option>
+            <option value="建议">建议</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">相关约课（选填）</label>
+          <input id="feedbackBookingId" type="text" placeholder="例：BK-SEED-001（选填关联订单号）" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">问题标题 <span class="text-red-500">*</span></label>
+          <input id="feedbackTitle" type="text" placeholder="简要描述问题" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">详细说明 <span class="text-red-500">*</span></label>
+          <textarea id="feedbackDetail" rows="4" placeholder="请详细描述问题或建议..." class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">联系方式（选填）</label>
+          <input id="feedbackContact" type="text" placeholder="手机号或邮箱，便于后续沟通" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeFeedbackModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl cursor-pointer">
+            取消
+          </button>
+          <button type="button" onclick="submitFeedback()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl cursor-pointer">
+            提交反馈
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 敏感变更确认模态 -->
   <div id="sensitiveModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
@@ -1092,6 +1163,106 @@
       renderAudit(CURRENT_MENTOR);
       renderProfileForm(CURRENT_MENTOR);
       renderInbox(CURRENT_MENTOR);
+      renderFeedbackTickets(CURRENT_MENTOR);
+    }
+
+    function openFeedbackModal() {
+      document.getElementById('feedbackType').value = '功能问题';
+      document.getElementById('feedbackBookingId').value = '';
+      document.getElementById('feedbackTitle').value = '';
+      document.getElementById('feedbackDetail').value = '';
+      document.getElementById('feedbackContact').value = CURRENT_MENTOR ? (CURRENT_MENTOR.phone || '') : '';
+      const modal = document.getElementById('feedbackModal');
+      const content = document.getElementById('feedbackModalContent');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+    }
+
+    function closeFeedbackModal() {
+      const modal = document.getElementById('feedbackModal');
+      const content = document.getElementById('feedbackModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function submitFeedback() {
+      if (!CURRENT_MENTOR) {
+        showToast('请先建立导师档案', 'error');
+        return;
+      }
+      const type = document.getElementById('feedbackType').value;
+      const bookingId = document.getElementById('feedbackBookingId').value.trim();
+      const title = document.getElementById('feedbackTitle').value.trim();
+      const detail = document.getElementById('feedbackDetail').value.trim();
+      const contact = document.getElementById('feedbackContact').value.trim();
+
+      if (!title || !detail) {
+        showToast('请填写标题和详细说明', 'warning');
+        return;
+      }
+
+      const ticket = StorageService.addFeedbackTicket({
+        mentorId: CURRENT_MENTOR.id,
+        mentorName: CURRENT_MENTOR.realName || '导师',
+        type: type,
+        bookingId: bookingId || null,
+        title: title,
+        detail: detail,
+        contact: contact || CURRENT_MENTOR.phone || ''
+      });
+
+      closeFeedbackModal();
+      showToast('反馈已提交，工作人员将尽快处理');
+      renderFeedbackTickets(CURRENT_MENTOR);
+    }
+
+    function renderFeedbackTickets(mentor) {
+      if (!mentor) return;
+      const list = StorageService.getTicketsForMentor(mentor.id);
+      const box = document.getElementById('feedbackTicketsList');
+      if (!list || !list.length) {
+        box.innerHTML = '<div class="text-center text-xs text-slate-400 py-6">暂无反馈记录</div>';
+        return;
+      }
+
+      const STATUS_MAP = {
+        '待处理': { text: '待处理', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+        '处理中': { text: '处理中', cls: 'bg-blue-50 text-blue-800 border-blue-200' },
+        '已解决': { text: '已解决', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        '已驳回': { text: '已驳回', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+      };
+
+      box.innerHTML = list.map((t) => {
+        const st = STATUS_MAP[t.status] || STATUS_MAP['待处理'];
+        const handlerNote = t.handlerNote && t.handlerNote.trim()
+          ? '<div class="mt-2 text-[11px] bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 text-blue-900"><strong>处理备注：</strong>' + escapeHtml(t.handlerNote) + '</div>'
+          : '';
+        const handledInfo = t.handledAt
+          ? '<div class="text-[10px] text-slate-400 mt-1">处理时间：' + escapeHtml(t.handledAt) + (t.handledBy ? ' · ' + escapeHtml(t.handledBy) : '') + '</div>'
+          : '';
+
+        return '<div class="rounded-2xl border border-slate-200 bg-white p-3.5">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2 mb-2">' +
+            '<div class="space-y-1 min-w-0 flex-1">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="text-sm font-bold text-slate-900">' + escapeHtml(t.title) + '</span>' +
+                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+              '</div>' +
+              '<div class="text-[11px] text-slate-500">' +
+                escapeHtml(t.type) + (t.bookingId ? ' · 关联订单 ' + escapeHtml(t.bookingId) : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="text-[10px] text-slate-400">' + escapeHtml(t.createdAt || '') + '</div>' +
+          '</div>' +
+          '<div class="text-xs text-slate-700 leading-relaxed">' + escapeHtml(t.detail) + '</div>' +
+          handlerNote +
+          handledInfo +
+        '</div>';
+      }).join('');
     }
 
     window.onload = initDashboard;

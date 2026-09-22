@@ -741,6 +741,83 @@
     </div>
   </div>
 
+  <!-- 支付方式选择 -->
+  <div id="paymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="paymentMethodContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-teal-600 text-white">
+        <div>
+          <h3 class="font-black text-sm">选择支付方式</h3>
+          <p class="text-[10px] text-blue-100/90 mt-0.5">托管资金将冻结至课程完成</p>
+        </div>
+        <button type="button" onclick="closePaymentMethodModal()" class="text-white/80 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="px-5 py-4 space-y-3">
+        <!-- 金额摘要 -->
+        <div class="rounded-xl border border-teal-100 bg-teal-50/50 p-3 text-center">
+          <div class="text-[10px] text-slate-500 mb-1">托管金额</div>
+          <div class="text-2xl font-black text-teal-700 font-mono" id="paymentAmountDisplay">¥0.00</div>
+        </div>
+
+        <!-- 支付方式选项 -->
+        <div class="space-y-2">
+          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-emerald-300 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50">
+            <input type="radio" name="paymentMethod" value="微信支付" checked class="w-4 h-4 text-emerald-600">
+            <div class="flex items-center gap-2.5 flex-1">
+              <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <i class="fa-brands fa-weixin text-xl"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-900">微信支付</div>
+                <div class="text-[10px] text-slate-500">快捷安全 · 即时到账</div>
+              </div>
+            </div>
+          </label>
+
+          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-blue-300 transition has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50">
+            <input type="radio" name="paymentMethod" value="支付宝" class="w-4 h-4 text-blue-600">
+            <div class="flex items-center gap-2.5 flex-1">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <i class="fa-brands fa-alipay text-xl"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-900">支付宝</div>
+                <div class="text-[10px] text-slate-500">便捷支付 · 实时冻结</div>
+              </div>
+            </div>
+          </label>
+
+          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-indigo-300 transition has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/50">
+            <input type="radio" name="paymentMethod" value="银行卡" class="w-4 h-4 text-indigo-600">
+            <div class="flex items-center gap-2.5 flex-1">
+              <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <i class="fa-solid fa-credit-card text-lg"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-900">银行卡 / 网银</div>
+                <div class="text-[10px] text-slate-500">银联直连 · 更多银行</div>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <p class="text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
+          <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>
+          托管资金由合作银行专户锁定，导师下课确认后48小时内自动划拨。
+        </p>
+      </div>
+
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closePaymentMethodModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">
+          取消
+        </button>
+        <button type="button" onclick="confirmPaymentMethod()" class="text-xs font-bold px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">
+          <i class="fa-solid fa-check mr-1"></i>确认支付方式
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 三方托管服务居间协议 E-Contract -->
   <div id="eContractModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="eContractContent">
@@ -870,21 +947,50 @@
   </footer>
 
   
-  <!-- 查看课后小结 -->
+  <!-- 查看课后小结 + 家长留言 -->
   <div id="classSummaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="classSummaryModalContent">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>课后小结</h3>
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform max-h-[90vh] overflow-y-auto" id="classSummaryModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>课后互动</h3>
         <button type="button" onclick="closeClassSummaryModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="px-5 py-4 space-y-3 text-xs text-slate-600">
+      
+      <!-- 导师课后小结 -->
+      <div class="px-5 py-4 space-y-3 text-xs text-slate-600 border-b border-slate-100">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fa-solid fa-chalkboard-user text-teal-600"></i>
+          <span class="font-bold text-slate-800">导师课后小结</span>
+        </div>
         <div id="classSummaryMeta" class="text-[11px] text-slate-400"></div>
         <h4 id="classSummaryTitle" class="text-sm font-bold text-slate-900"></h4>
         <div id="classSummaryTags" class="flex flex-wrap gap-1.5"></div>
         <div id="classSummaryBody" class="rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap"></div>
         <p id="classSummaryTime" class="text-[10px] text-slate-400"></p>
       </div>
-      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+
+      <!-- 家长/学员留言 -->
+      <div class="px-5 py-4 space-y-3 text-xs">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fa-solid fa-message text-blue-600"></i>
+          <span class="font-bold text-slate-800">家长/学员留言</span>
+        </div>
+        
+        <!-- 显示已有留言 -->
+        <div id="parentMessageDisplay" class="hidden">
+          <div class="rounded-xl border border-blue-100 bg-blue-50/40 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap" id="parentMessageContent"></div>
+          <p id="parentMessageTime" class="text-[10px] text-slate-400 mt-1.5"></p>
+        </div>
+
+        <!-- 留言表单 -->
+        <div id="parentMessageForm" class="space-y-2">
+          <textarea id="parentMessageInput" rows="3" placeholder="分享您或孩子对本次课程的感受、收获或建议..." class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+          <button type="button" onclick="submitParentMessage()" class="w-full text-xs font-bold px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
+            <i class="fa-solid fa-paper-plane mr-1"></i>提交留言
+          </button>
+        </div>
+      </div>
+
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2 sticky bottom-0 bg-white z-10">
         <button type="button" onclick="closeClassSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">关闭</button>
         <button type="button" id="classSummaryRenewBtn" onclick="renewFromSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">一键续课</button>
       </div>
@@ -1656,6 +1762,8 @@
       };
     }
 
+    let selectedPaymentMethod = '微信支付';
+
     function showEscrowSummaryBeforeLock() {
       if (!selectedTutorForBooking) {
         showToast('请先选择导师', 'warning');
@@ -1685,6 +1793,64 @@
         }
       }
       pendingBookingMeta = meta;
+      
+      // For trial bookings, skip payment method selection
+      if (meta.type === 'trial') {
+        showEscrowSummaryAfterPayment();
+        return;
+      }
+      
+      // Show payment method selection first
+      openPaymentMethodModal(meta);
+    }
+
+    function openPaymentMethodModal(meta) {
+      const modal = document.getElementById('paymentMethodModal');
+      const content = document.getElementById('paymentMethodContent');
+      const amountEl = document.getElementById('paymentAmountDisplay');
+      if (amountEl) {
+        amountEl.innerText = '¥' + (meta.total || 0).toFixed(2);
+      }
+      // Reset to WeChat by default
+      const wechatRadio = document.querySelector('input[name="paymentMethod"][value="微信支付"]');
+      if (wechatRadio) wechatRadio.checked = true;
+      
+      modal.classList.remove('hidden');
+      requestAnimationFrame(function() {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      });
+    }
+
+    function closePaymentMethodModal() {
+      const modal = document.getElementById('paymentMethodModal');
+      const content = document.getElementById('paymentMethodContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(function() { modal.classList.add('hidden'); }, 200);
+    }
+
+    function confirmPaymentMethod() {
+      const selected = document.querySelector('input[name="paymentMethod"]:checked');
+      if (!selected) {
+        showToast('请选择支付方式', 'warning');
+        return;
+      }
+      selectedPaymentMethod = selected.value;
+      closePaymentMethodModal();
+      // Store payment method in pending booking metadata
+      if (pendingBookingMeta) {
+        pendingBookingMeta.paymentMethod = selectedPaymentMethod;
+      }
+      showToast('已选择：' + selectedPaymentMethod);
+      // Continue to escrow summary
+      showEscrowSummaryAfterPayment();
+    }
+
+    function showEscrowSummaryAfterPayment() {
+      const meta = pendingBookingMeta;
+      if (!meta) return;
+      
       document.getElementById('escrowSumDuration').innerText = meta.type === 'weekly'
         ? (meta.hours + ' 小时 × ' + meta.sessionCount + ' 次')
         : (meta.type === 'trial' ? '1 小时（试课免费）' : (meta.hours + ' 小时'));
@@ -1846,6 +2012,7 @@
             amount: total,
             hours: bookingType === 'trial' ? 1 : (meta.hours || 2),
             subject: assessmentSubject,
+            paymentMethod: meta.paymentMethod || selectedPaymentMethod || (bookingType === 'trial' ? '免费' : '微信支付'),
             parentId: parent && parent.id,
             parentName: parent && (parent.parentName || parent.name),
             parentPhone: parent && parent.phone,
@@ -2190,13 +2357,17 @@
     }
 
     let summaryModalBookingId = null;
+    let summaryModalSessionId = null;
 
     function openClassSummaryModal(bookingId, sessionId) {
       summaryModalBookingId = bookingId;
+      summaryModalSessionId = sessionId;
       const summary = StorageService.getClassSummary(bookingId, sessionId);
       const booking = StorageService.getBookingById(bookingId);
       const b = booking ? (StorageService.normalizeBookingRecord(booking)) : null;
       const session = b && (b.sessions || []).find((s) => s.id === sessionId);
+      
+      // Display mentor summary
       document.getElementById('classSummaryMeta').innerText =
         ((b && b.tutorName) || '导师') + ' · ' + ((session && ((session.date || '') + ' ' + (session.timeLabel || ''))) || '');
       document.getElementById('classSummaryTitle').innerText = (summary && summary.title) || '课后小结';
@@ -2206,6 +2377,23 @@
       }).join('');
       document.getElementById('classSummaryBody').innerText = (summary && summary.content) || '（暂无内容）';
       document.getElementById('classSummaryTime').innerText = (summary && summary.createdAt) ? ('填写于 ' + summary.createdAt) : '';
+      
+      // Display parent message or form
+      const parentMsg = session && session.parentMessage;
+      const displayDiv = document.getElementById('parentMessageDisplay');
+      const formDiv = document.getElementById('parentMessageForm');
+      
+      if (parentMsg && parentMsg.content) {
+        displayDiv.classList.remove('hidden');
+        formDiv.classList.add('hidden');
+        document.getElementById('parentMessageContent').innerText = parentMsg.content;
+        document.getElementById('parentMessageTime').innerText = parentMsg.createdAt ? ('留言于 ' + parentMsg.createdAt) : '';
+      } else {
+        displayDiv.classList.add('hidden');
+        formDiv.classList.remove('hidden');
+        document.getElementById('parentMessageInput').value = '';
+      }
+      
       const modal = document.getElementById('classSummaryModal');
       const content = document.getElementById('classSummaryModalContent');
       modal.classList.remove('hidden');
@@ -2221,6 +2409,32 @@
       modal.classList.add('opacity-0');
       content.classList.add('scale-95');
       setTimeout(function() { modal.classList.add('hidden'); }, 200);
+    }
+
+    function submitParentMessage() {
+      const message = document.getElementById('parentMessageInput').value.trim();
+      if (!message) {
+        showToast('请填写留言内容', 'warning');
+        return;
+      }
+      if (!summaryModalBookingId || !summaryModalSessionId) {
+        showToast('系统错误：无法确定课次', 'error');
+        return;
+      }
+      const parent = CURRENT_PARENT;
+      const result = StorageService.saveParentMessage(
+        summaryModalBookingId,
+        summaryModalSessionId,
+        message,
+        parent ? parent.id : null
+      );
+      if (!result || !result.ok) {
+        showToast(result.error || '留言失败', 'error');
+        return;
+      }
+      showToast('留言已提交');
+      closeClassSummaryModal();
+      renderParentBookings(parent);
     }
 
     function renewFromSummaryModal() {

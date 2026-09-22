@@ -18,7 +18,9 @@
     assessments: 'xh_assessments_v1',
     seeded: 'xh_seeded_v1',
     parentRegisterDraft: 'xh_parent_register_draft_v1',
-    mentorRegisterDraft: 'xh_mentor_register_draft_v1'
+    mentorRegisterDraft: 'xh_mentor_register_draft_v1',
+    mentorRegisterDraftV2: 'xh_mentor_register_draft_v2',
+    feedbackTickets: 'xh_feedback_tickets_v1'
   };
 
   const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
@@ -1255,6 +1257,33 @@
       return { ok: true, booking: list[idx], session: session };
     },
 
+    saveParentMessage: function (bookingId, sessionId, message, parentId) {
+      const list = this.getBookings();
+      const idx = list.findIndex((b) => b.id === bookingId);
+      if (idx < 0) return { ok: false, error: '约课不存在' };
+      let booking = this.normalizeBookingRecord(Object.assign({}, list[idx]));
+      const sIdx = (booking.sessions || []).findIndex((s) => s.id === sessionId);
+      if (sIdx < 0) return { ok: false, error: '课次不存在' };
+      const session = Object.assign({}, booking.sessions[sIdx]);
+      if (!message || !String(message).trim()) {
+        return { ok: false, error: '请填写留言内容' };
+      }
+      session.parentMessage = {
+        content: String(message).trim(),
+        createdAt: _now(),
+        parentId: parentId || booking.parentId || ''
+      };
+      booking.sessions[sIdx] = session;
+      list[idx] = Object.assign({}, booking, { updatedAt: _now() });
+      this.saveBookings(list);
+      this.updateBooking(bookingId, { sessions: booking.sessions });
+      _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/parent-message', {
+        sessionId: sessionId,
+        parentMessage: session.parentMessage
+      });
+      return { ok: true, booking: list[idx], session: session };
+    },
+
     getClassSummary: function (bookingId, sessionId) {
       const booking = this.getBookingById(bookingId);
       if (!booking) return null;
@@ -1639,6 +1668,69 @@
         }
       });
       return tutors;
+    },
+
+    /* ---------- Feedback & Complaints (反馈与投诉) ---------- */
+    getFeedbackTickets: function () {
+      return _read(KEYS.feedbackTickets, []) || [];
+    },
+
+    saveFeedbackTickets: function (list) {
+      return _write(KEYS.feedbackTickets, list || []);
+    },
+
+    addFeedbackTicket: function (ticket) {
+      const list = this.getFeedbackTickets();
+      const record = Object.assign(
+        {
+          id: _uid('TK'),
+          createdAt: _now(),
+          status: '待处理',
+          handlerNote: '',
+          handledAt: '',
+          handledBy: ''
+        },
+        ticket
+      );
+      list.unshift(record);
+      this.saveFeedbackTickets(list);
+      _apiSafe('POST', '/api/feedback', record);
+      return record;
+    },
+
+    getFeedbackTicketById: function (id) {
+      return this.getFeedbackTickets().find((t) => t.id === id) || null;
+    },
+
+    getTicketsForMentor: function (mentorId) {
+      if (!mentorId) return [];
+      return this.getFeedbackTickets().filter((t) => t.mentorId === mentorId);
+    },
+
+    updateFeedbackTicket: function (id, patch) {
+      const list = this.getFeedbackTickets();
+      const idx = list.findIndex((t) => t.id === id);
+      if (idx < 0) return null;
+      list[idx] = Object.assign({}, list[idx], patch, { updatedAt: _now() });
+      this.saveFeedbackTickets(list);
+      _apiSafe('PATCH', '/api/feedback/' + encodeURIComponent(id), patch || {});
+      return list[idx];
+    },
+
+    /* ---------- Multi-step mentor registration draft V2 ---------- */
+    saveMentorRegisterDraftV2: function (draft) {
+      const payload = Object.assign({}, draft || {}, { updatedAt: Date.now() });
+      _write(KEYS.mentorRegisterDraftV2, payload);
+      return payload;
+    },
+
+    getMentorRegisterDraftV2: function () {
+      return _read(KEYS.mentorRegisterDraftV2, null);
+    },
+
+    clearMentorRegisterDraftV2: function () {
+      try { localStorage.removeItem(KEYS.mentorRegisterDraftV2); } catch (e) {}
+      return true;
     }
   };
 
