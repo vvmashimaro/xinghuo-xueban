@@ -162,13 +162,14 @@
     </div>
   </section>
 
-  <!-- 工作台视图切换：导师审核 / 已完课监管 -->
+  <!-- 工作台视图切换：导师审核 / 已完课监管 / 反馈与投诉 -->
   <section class="bg-slate-50 border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-2">
       <span class="text-[10px] font-bold text-slate-500 mr-1">工作台</span>
       <button type="button" id="adminViewAuditBtn" onclick="setAdminWorkbenchView('audit')" class="admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-slate-900 text-white border-slate-900 cursor-pointer">导师审核</button>
       <button type="button" id="adminViewCompletedBtn" onclick="setAdminWorkbenchView('completed')" class="admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课监管</button>
-      <span id="adminCompletedStatHint" class="text-[10px] text-slate-400 ml-auto">平台级已完课只读视图 · 与家长/导师共用种子</span>
+      <button type="button" id="adminViewFeedbackBtn" onclick="setAdminWorkbenchView('feedback')" class="admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">反馈与投诉</button>
+      <span id="adminViewHint" class="text-[10px] text-slate-400 ml-auto">平台级只读视图 · 与家长/导师共用种子</span>
     </div>
   </section>
 
@@ -189,6 +190,38 @@
         </div>
       </div>
       <div id="adminCompletedList" class="p-4 sm:p-5 space-y-2.5 max-h-[calc(100vh-260px)] overflow-y-auto">
+        <div class="text-center py-8 text-xs text-slate-400">加载中…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 反馈与投诉管理面板 -->
+  <section id="adminFeedbackSection" class="hidden max-w-7xl mx-auto px-4 sm:px-6 py-5 flex-1 w-full">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-4 sm:px-5 py-3.5 border-b border-blue-100 bg-blue-50/40 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm font-black text-blue-900 flex items-center gap-2">
+            <i class="fa-solid fa-message-lines text-blue-600"></i>
+            反馈与投诉管理
+          </h2>
+          <p class="text-[10px] text-slate-500 mt-0.5">处理导师提交的功能问题、订单纠纷、投诉及建议</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="adminFeedbackCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">0</span>
+          <button type="button" onclick="renderAdminFeedbackTickets()" class="text-[11px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg cursor-pointer">刷新</button>
+        </div>
+      </div>
+
+      <!-- 状态筛选 -->
+      <div class="px-4 sm:px-5 pt-3 flex flex-wrap gap-1.5 border-b border-slate-100 pb-3">
+        <button type="button" data-filter="all" onclick="setFeedbackFilter('all', this)" class="feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-slate-900 text-white border-slate-900 cursor-pointer">全部</button>
+        <button type="button" data-filter="待处理" onclick="setFeedbackFilter('待处理', this)" class="feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待处理</button>
+        <button type="button" data-filter="处理中" onclick="setFeedbackFilter('处理中', this)" class="feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">处理中</button>
+        <button type="button" data-filter="已解决" onclick="setFeedbackFilter('已解决', this)" class="feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已解决</button>
+        <button type="button" data-filter="已驳回" onclick="setFeedbackFilter('已驳回', this)" class="feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已驳回</button>
+      </div>
+
+      <div id="adminFeedbackList" class="p-4 sm:p-5 space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
         <div class="text-center py-8 text-xs text-slate-400">加载中…</div>
       </div>
     </div>
@@ -968,25 +1001,168 @@
     }
 
     function setAdminWorkbenchView(view) {
-      adminWorkbenchView = view === 'completed' ? 'completed' : 'audit';
+      adminWorkbenchView = view || 'audit';
       const auditMain = document.getElementById('adminAuditMain');
       const completedSec = document.getElementById('adminCompletedSection');
+      const feedbackSec = document.getElementById('adminFeedbackSection');
       const btnAudit = document.getElementById('adminViewAuditBtn');
       const btnDone = document.getElementById('adminViewCompletedBtn');
+      const btnFeedback = document.getElementById('adminViewFeedbackBtn');
+      const hintText = document.getElementById('adminViewHint');
       const onCls = 'admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-slate-900 text-white border-slate-900 cursor-pointer';
       const offCls = 'admin-view-tab text-[11px] font-bold px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer';
+
+      // Hide all sections
+      if (auditMain) auditMain.classList.add('hidden');
+      if (completedSec) completedSec.classList.add('hidden');
+      if (feedbackSec) feedbackSec.classList.add('hidden');
+      if (btnAudit) btnAudit.className = offCls;
+      if (btnDone) btnDone.className = offCls;
+      if (btnFeedback) btnFeedback.className = offCls;
+
       if (adminWorkbenchView === 'completed') {
-        if (auditMain) auditMain.classList.add('hidden');
         if (completedSec) completedSec.classList.remove('hidden');
-        if (btnAudit) btnAudit.className = offCls;
         if (btnDone) btnDone.className = onCls;
+        if (hintText) hintText.innerText = '平台级已完课只读视图 · 与家长/导师共用种子';
         renderAdminCompletedSessions();
+      } else if (adminWorkbenchView === 'feedback') {
+        if (feedbackSec) feedbackSec.classList.remove('hidden');
+        if (btnFeedback) btnFeedback.className = onCls;
+        if (hintText) hintText.innerText = '导师反馈与投诉处理视图';
+        renderAdminFeedbackTickets();
       } else {
         if (auditMain) auditMain.classList.remove('hidden');
-        if (completedSec) completedSec.classList.add('hidden');
         if (btnAudit) btnAudit.className = onCls;
-        if (btnDone) btnDone.className = offCls;
+        if (hintText) hintText.innerText = '平台级只读视图 · 与家长/导师共用种子';
       }
+    }
+
+    /* ==========================================================================
+       反馈与投诉管理
+       ========================================================================== */
+    let feedbackFilter = 'all';
+    let currentFeedbackTicket = null;
+
+    function setFeedbackFilter(filter, btnElement) {
+      feedbackFilter = filter;
+      document.querySelectorAll('.feedback-filter').forEach(btn => {
+        btn.className = 'feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer';
+      });
+      if (btnElement) {
+        btnElement.className = 'feedback-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-slate-900 text-white border-slate-900 cursor-pointer';
+      }
+      renderAdminFeedbackTickets();
+    }
+
+    function renderAdminFeedbackTickets() {
+      const box = document.getElementById('adminFeedbackList');
+      const countEl = document.getElementById('adminFeedbackCount');
+      if (!box) return;
+
+      let tickets = [];
+      if (window.StorageService && StorageService.getFeedbackTickets) {
+        tickets = StorageService.getFeedbackTickets();
+      }
+
+      const filtered = feedbackFilter === 'all'
+        ? tickets
+        : tickets.filter(t => t.status === feedbackFilter);
+
+      if (countEl) countEl.innerText = String(filtered.length);
+
+      if (!filtered.length) {
+        box.innerHTML = '<div class="text-center py-10 text-xs text-slate-400">当前筛选条件下暂无反馈记录</div>';
+        return;
+      }
+
+      const STATUS_MAP = {
+        '待处理': { text: '待处理', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+        '处理中': { text: '处理中', cls: 'bg-blue-50 text-blue-800 border-blue-200' },
+        '已解决': { text: '已解决', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        '已驳回': { text: '已驳回', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+      };
+
+      box.innerHTML = filtered.map(t => {
+        const st = STATUS_MAP[t.status] || STATUS_MAP['待处理'];
+        const handlerNote = t.handlerNote && t.handlerNote.trim()
+          ? '<div class="mt-2 text-[11px] bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 text-blue-900"><strong>处理备注：</strong>' + escapeAdminHtml(t.handlerNote) + '</div>'
+          : '';
+        const handledInfo = t.handledAt
+          ? '<div class="text-[10px] text-slate-400 mt-1">处理时间：' + escapeAdminHtml(t.handledAt) + (t.handledBy ? ' · ' + escapeAdminHtml(t.handledBy) : '') + '</div>'
+          : '';
+
+        return '<div class="rounded-2xl border border-slate-200 bg-white p-3.5 hover:border-blue-200 transition">' +
+          '<div class="flex flex-wrap items-start justify-between gap-2 mb-2">' +
+            '<div class="space-y-1 min-w-0 flex-1">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="text-sm font-bold text-slate-900">' + escapeAdminHtml(t.title) + '</span>' +
+                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+              '</div>' +
+              '<div class="text-[11px] text-slate-600">' +
+                '<strong>' + escapeAdminHtml(t.type) + '</strong>' +
+                ' · 导师 <span class="font-medium">' + escapeAdminHtml(t.mentorName || '—') + '</span>' +
+                (t.bookingId ? ' · 订单 <span class="font-mono text-[10px]">' + escapeAdminHtml(t.bookingId) + '</span>' : '') +
+              '</div>' +
+              '<div class="text-[10px] text-slate-400">' +
+                '提交于 ' + escapeAdminHtml(t.createdAt || '') +
+                (t.contact ? ' · 联系方式：' + escapeAdminHtml(t.contact) : '') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="text-xs text-slate-700 leading-relaxed mb-2">' + escapeAdminHtml(t.detail) + '</div>' +
+          handlerNote +
+          handledInfo +
+          '<div class="flex flex-wrap gap-2 mt-3">' +
+            '<button type="button" onclick="openHandleTicketModal(\'' + t.id + '\')" class="text-[11px] font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer">处理</button>' +
+            '<button type="button" onclick="quickHandleTicket(\'' + t.id + '\', \'处理中\')" class="text-[11px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1.5 rounded-lg cursor-pointer">标记处理中</button>' +
+            '<button type="button" onclick="quickHandleTicket(\'' + t.id + '\', \'已解决\')" class="text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-lg cursor-pointer">标记已解决</button>' +
+            '<button type="button" onclick="quickHandleTicket(\'' + t.id + '\', \'已驳回\')" class="text-[11px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 px-3 py-1.5 rounded-lg cursor-pointer">驳回</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function quickHandleTicket(id, newStatus) {
+      if (!window.StorageService || !StorageService.updateFeedbackTicket) return;
+      const ticket = StorageService.getFeedbackTicketById(id);
+      if (!ticket) {
+        showToast('未找到该反馈记录', 'error');
+        return;
+      }
+      const now = new Date();
+      const nowStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') +
+        ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      StorageService.updateFeedbackTicket(id, {
+        status: newStatus,
+        handledAt: nowStr,
+        handledBy: '教研风控组-04号'
+      });
+      showToast('已更新反馈状态为：' + newStatus);
+      renderAdminFeedbackTickets();
+    }
+
+    function openHandleTicketModal(id) {
+      // For now, just show a simple prompt
+      const note = prompt('请输入处理备注：');
+      if (note !== null) {
+        const status = confirm('是否标记为已解决？（取消则标记为处理中）') ? '已解决' : '处理中';
+        handleTicketWithNote(id, status, note);
+      }
+    }
+
+    function handleTicketWithNote(id, newStatus, note) {
+      if (!window.StorageService || !StorageService.updateFeedbackTicket) return;
+      const now = new Date();
+      const nowStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') +
+        ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      StorageService.updateFeedbackTicket(id, {
+        status: newStatus,
+        handlerNote: note || '',
+        handledAt: nowStr,
+        handledBy: '教研风控组-04号'
+      });
+      showToast('反馈已处理');
+      renderAdminFeedbackTickets();
     }
 
     function renderAdminCompletedSessions() {
