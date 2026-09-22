@@ -95,10 +95,25 @@ const L2_SUBSTEPS = {
  * Initialize wizard UI enhancements on page load
  */
 function initMentorWizard() {
-  injectL1SubStepUI();
-  injectL2SubStepUI();
-  bindFieldChangeListeners();
-  restoreWizardState();
+  // Safety check: ensure required elements exist
+  const step1Card = document.getElementById('step1-card');
+  const step2Card = document.getElementById('step2-card');
+  
+  if (!step1Card || !step2Card) {
+    console.warn('Mentor wizard: required cards not found, retrying in 200ms...');
+    setTimeout(initMentorWizard, 200);
+    return;
+  }
+
+  try {
+    injectL1SubStepUI();
+    injectL2SubStepUI();
+    bindFieldChangeListeners();
+    restoreWizardState();
+    console.log('Mentor wizard initialized successfully');
+  } catch (e) {
+    console.error('Mentor wizard initialization failed:', e);
+  }
 }
 
 /**
@@ -677,8 +692,19 @@ window.initMentorWizard = initMentorWizard;
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initMentorWizard);
-} else {
-  // DOM already loaded, init after a short delay to ensure other scripts are ready
-  setTimeout(initMentorWizard, 100);
+  document.addEventListener('DOMContentLoaded', function() {
+    // Wait for other init scripts to complete
+    setTimeout(initMentorWizard, 150);
+  });
+} else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  // DOM already loaded, wait for window.onload to complete
+  if (document.readyState === 'complete') {
+    // Already fully loaded, init immediately
+    setTimeout(initMentorWizard, 100);
+  } else {
+    // Still loading resources, wait for complete
+    window.addEventListener('load', function() {
+      setTimeout(initMentorWizard, 100);
+    });
+  }
 }
