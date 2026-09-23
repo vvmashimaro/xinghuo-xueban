@@ -774,28 +774,28 @@
             </div>
           </label>
 
-          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-blue-300 transition has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50">
-            <input type="radio" name="paymentMethod" value="支付宝" class="w-4 h-4 text-blue-600">
+          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 opacity-50 cursor-not-allowed">
+            <input type="radio" name="paymentMethod" value="支付宝" disabled class="w-4 h-4 text-slate-400">
             <div class="flex items-center gap-2.5 flex-1">
-              <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
                 <i class="fa-brands fa-alipay text-xl"></i>
               </div>
               <div>
-                <div class="text-sm font-bold text-slate-900">支付宝</div>
-                <div class="text-[10px] text-slate-500">便捷支付 · 实时冻结</div>
+                <div class="text-sm font-bold text-slate-500">支付宝</div>
+                <div class="text-[10px] text-slate-400">即将开放</div>
               </div>
             </div>
           </label>
 
-          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-indigo-300 transition has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/50">
-            <input type="radio" name="paymentMethod" value="银行卡" class="w-4 h-4 text-indigo-600">
+          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 opacity-50 cursor-not-allowed">
+            <input type="radio" name="paymentMethod" value="银行卡" disabled class="w-4 h-4 text-slate-400">
             <div class="flex items-center gap-2.5 flex-1">
-              <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
                 <i class="fa-solid fa-credit-card text-lg"></i>
               </div>
               <div>
-                <div class="text-sm font-bold text-slate-900">银行卡 / 网银</div>
-                <div class="text-[10px] text-slate-500">银联直连 · 更多银行</div>
+                <div class="text-sm font-bold text-slate-500">银行卡 / 网银</div>
+                <div class="text-[10px] text-slate-400">即将开放</div>
               </div>
             </div>
           </label>
@@ -2036,6 +2036,11 @@
           try { renderParentBookings(); } catch (_) {}
         }
 
+        // 微信支付流程（非免费课程）
+        if (total > 0 && !isTrial && createdBooking && createdBooking.id) {
+          await handleWeChatPayment(createdBooking.id, total, tutorName, assessmentSubject);
+        }
+
         const headerBal = document.getElementById('headerEscrowBalance');
         if (headerBal && total > 0) {
           const cur = parseFloat(headerBal.innerText) || 315;
@@ -2054,6 +2059,70 @@
         }, 300);
 
       }, 900);
+    }
+
+    // 微信支付处理
+    async function handleWeChatPayment(bookingId, amount, tutorName, subject) {
+      try {
+        const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
+        const payMode = window.XH_CONFIG?.PAY_MODE || 'demo';
+        
+        // 创建预支付订单
+        const prepayResponse = await fetch(`${apiBase}/api/pay/wechat/prepay`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId: bookingId,
+            amount: Math.round(amount * 100), // 转换为分
+            description: `星火学伴 · ${subject} · ${tutorName}`
+          })
+        });
+
+        const prepayResult = await prepayResponse.json();
+
+        if (!prepayResponse.ok || !prepayResult.prepayId) {
+          showToast('支付订单创建失败', 'error');
+          console.error('Prepay failed:', prepayResult);
+          return;
+        }
+
+        // Demo 模式：自动模拟支付成功
+        if (payMode === 'demo' && prepayResult.mock) {
+          showToast('支付订单创建成功（演示模式）');
+          
+          // 延迟模拟支付成功
+          setTimeout(async () => {
+            try {
+              const confirmResponse = await fetch(`${apiBase}/api/pay/wechat/mock-confirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ outTradeNo: prepayResult.outTradeNo })
+              });
+
+              const confirmResult = await confirmResponse.json();
+              
+              if (confirmResponse.ok && confirmResult.success) {
+                showToast('✓ 支付成功（演示模拟）', 'success');
+                try { renderParentBookings(); } catch (_) {}
+              } else {
+                showToast('模拟支付确认失败', 'error');
+              }
+            } catch (error) {
+              console.error('Mock confirm error:', error);
+              showToast('模拟支付处理异常', 'warning');
+            }
+          }, 1500);
+        } else {
+          // 生产模式：显示支付二维码或跳转支付页
+          showToast('请使用微信扫码支付');
+          // TODO: 在生产环境，这里应该显示支付二维码或调用微信 JSAPI 支付
+          console.log('Payment prepay ID:', prepayResult.prepayId);
+          console.log('Scan to pay or implement JSAPI payment here');
+        }
+      } catch (error) {
+        console.error('WeChat payment error:', error);
+        showToast('支付处理异常，请稍后重试', 'error');
+      }
     }
 
     let __assessmentGateSubject = '';

@@ -413,10 +413,106 @@ Page({
       escrowShow: false,
       iotLinkedBooking: (tutor.maskedName || '') + ' · ' + slot
     });
-    showToast('约课成功 · 托管已锁定，可关联 IoT 履约面板');
+
+    // 微信支付流程（非零金额）
+    if (amount > 0 && booking && booking.id) {
+      this.handleWeChatPayment(booking.id, amount, tutor.maskedName, (tutor.subjects && tutor.subjects[0]) || '辅导');
+    } else {
+      showToast('约课成功 · 托管已锁定，可关联 IoT 履约面板');
+    }
+
     this.reload();
     // 约课后重置 IoT 为可操作，便于演示开门
     this.setIoTState('idle');
+  },
+
+  async handleWeChatPayment(bookingId, amount, tutorName, subject) {
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const payMode = config.PAY_MODE || 'demo';
+
+      // 创建预支付订单
+      const prepayRes = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/pay/wechat/prepay`,
+          method: 'POST',
+          data: {
+            bookingId: bookingId,
+            amount: Math.round(amount * 100), // 转换为分
+            description: `星火学伴 · ${subject} · ${tutorName}`
+          },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const prepayResult = prepayRes.data;
+
+      if (prepayRes.statusCode !== 200 || !prepayResult.prepayId) {
+        showToast('支付订单创建失败', 'error');
+        console.error('Prepay failed:', prepayResult);
+        return;
+      }
+
+      // Demo 模式：自动模拟支付成功
+      if (payMode === 'demo' && prepayResult.mock) {
+        showToast('支付订单创建成功（演示模式）');
+
+        setTimeout(async () => {
+          try {
+            const confirmRes = await new Promise((resolve, reject) => {
+              wx.request({
+                url: `${apiBase}/api/pay/wechat/mock-confirm`,
+                method: 'POST',
+                data: { outTradeNo: prepayResult.outTradeNo },
+                success: resolve,
+                fail: reject
+              });
+            });
+
+            const confirmResult = confirmRes.data;
+
+            if (confirmRes.statusCode === 200 && confirmResult.success) {
+              showToast('✓ 支付成功（演示模拟）');
+              this.reload();
+            } else {
+              showToast('模拟支付确认失败', 'error');
+            }
+          } catch (error) {
+            console.error('Mock confirm error:', error);
+            showToast('模拟支付处理异常', 'warning');
+          }
+        }, 1500);
+      } else {
+        // 生产模式：调用微信支付
+        const payParams = {
+          timeStamp: String(Math.floor(Date.now() / 1000)),
+          nonceStr: prepayResult.prepayId,
+          package: `prepay_id=${prepayResult.prepayId}`,
+          signType: 'RSA',
+          paySign: prepayResult.paySign || 'PLACEHOLDER'
+        };
+
+        wx.requestPayment({
+          ...payParams,
+          success: () => {
+            showToast('✓ 支付成功');
+            this.reload();
+          },
+          fail: (err) => {
+            if (err.errMsg.includes('cancel')) {
+              showToast('支付已取消', 'warning');
+            } else {
+              showToast('支付失败，请重试', 'error');
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('WeChat payment error:', error);
+      showToast('支付处理异常，请稍后重试', 'error');
+    }
   },
 
   setIoTState(state) {

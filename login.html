@@ -400,8 +400,8 @@
       }
     }
 
-    // 发送验证码模拟
-    function sendSmsCode() {
+    // 发送验证码（调用 API）
+    async function sendSmsCode() {
       const mobile = document.getElementById('loginMobile').value.trim();
       if (!/^1[3-9]\d{9}$/.test(mobile)) {
         showToast('请输入有效的 11 位手机号码！', 'warning');
@@ -409,25 +409,68 @@
       }
       if (countdown > 0) return;
 
-      countdown = 60;
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true;
-      btn.innerText = `${countdown}s 重发`;
-      btn.className = "shrink-0 bg-white/10 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-not-allowed backdrop-blur-sm";
+      btn.innerText = '发送中...';
 
-      timerInterval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
+      try {
+        const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
+        const response = await fetch(`${apiBase}/api/auth/sms/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: mobile, scene: 'login' })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          countdown = 60;
           btn.innerText = `${countdown}s 重发`;
+          btn.className = "shrink-0 bg-white/10 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-not-allowed backdrop-blur-sm";
+
+          timerInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+              btn.innerText = `${countdown}s 重发`;
+            } else {
+              clearInterval(timerInterval);
+              btn.disabled = false;
+              btn.innerText = "获取验证码";
+              btn.className = "shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm";
+            }
+          }, 1000);
+
+          const msg = result.provider === 'mock' 
+            ? '短信验证码已发送（演示可用：888888）'
+            : '短信验证码已发送，请查收';
+          showToast(msg);
         } else {
-          clearInterval(timerInterval);
           btn.disabled = false;
           btn.innerText = "获取验证码";
-          btn.className = "shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm";
+          showToast(result.error || '发送失败，请稍后重试', 'error');
         }
-      }, 1000);
-
-      showToast('短信验证码已发送（演示可用：888888）');
+      } catch (error) {
+        console.error('SMS send error:', error);
+        btn.disabled = false;
+        btn.innerText = "获取验证码";
+        // 降级到本地 mock
+        countdown = 60;
+        btn.disabled = true;
+        btn.innerText = `${countdown}s 重发`;
+        btn.className = "shrink-0 bg-white/10 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-not-allowed backdrop-blur-sm";
+        timerInterval = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            btn.innerText = `${countdown}s 重发`;
+          } else {
+            clearInterval(timerInterval);
+            btn.disabled = false;
+            btn.innerText = "获取验证码";
+            btn.className = "shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm";
+          }
+        }, 1000);
+        showToast('API 连接失败，演示模式：验证码 888888', 'warning');
+      }
     }
 
     // 提交登录逻辑
@@ -500,16 +543,110 @@
         return;
       }
 
-      if (isCodeMode) {
-        const code = document.getElementById('smsCodeInput').value.trim();
-        if (code !== '888888' && code.length !== 6) {
-          showToast('请输入正确的 6 位短信验证码 (888888)！', 'error');
-          return;
-        }
-      }
-
       const submitBtn = document.getElementById('btnSubmitLogin');
       submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>验证中...</span>';
+
+      if (isCodeMode) {
+        const code = document.getElementById('smsCodeInput').value.trim();
+        if (!code || code.length !== 6) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+          showToast('请输入 6 位短信验证码！', 'error');
+          return;
+        }
+
+        // 验证 SMS 验证码（调用 API）
+        (async () => {
+          try {
+            const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
+            const response = await fetch(`${apiBase}/api/auth/sms/verify`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone: mobile, code, scene: 'login' })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+              // 验证成功，继续登录流程
+              submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>安全验证通过，正在进入...</span>';
+              const roleLabel = currentRole === 'mentor' ? '导师工作台' : (currentRole === 'admin' ? '管理审核台' : '预约中心');
+              showToast(`欢迎回来！正在进入${roleLabel}...`);
+
+              const mobileVal = mobile;
+              const target = resolvePostLoginTarget(mobileVal);
+              pendingNavUrl = target.url;
+
+              // 预填手动进入链接
+              const link = document.getElementById('manualEnterLink');
+              if (link) {
+                link.href = target.url;
+                link.onclick = function(e) {
+                  e.preventDefault();
+                  try { window.location.href = target.url; } catch (_) {}
+                  try { window.location.assign(target.url); } catch (_) {}
+                };
+              }
+
+              setTimeout(() => {
+                try {
+                  window.location.assign(target.url);
+                } catch (e1) {
+                  try { window.location.href = target.url; } catch (e2) {
+                    console.warn('explicit navigate failed', e2);
+                  }
+                }
+              }, 350);
+
+              // 若约 2.5s 后仍停留在登录页，展示「手动进入」并恢复按钮
+              if (pendingNavWatch) clearTimeout(pendingNavWatch);
+              pendingNavWatch = setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+                showManualEnterFallback(target.url);
+                showToast('自动跳转未完成，请点击「手动进入」', 'warning');
+              }, 2500);
+            } else {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              showToast(result.error || '验证码错误，请重试', 'error');
+            }
+          } catch (error) {
+            console.error('SMS verify error:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+            // 降级到本地验证
+            if (code === '888888') {
+              submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>安全验证通过，正在进入...</span>';
+              const roleLabel = currentRole === 'mentor' ? '导师工作台' : (currentRole === 'admin' ? '管理审核台' : '预约中心');
+              showToast(`演示模式验证通过！正在进入${roleLabel}...`);
+              const mobileVal = mobile;
+              const target = resolvePostLoginTarget(mobileVal);
+              pendingNavUrl = target.url;
+              const link = document.getElementById('manualEnterLink');
+              if (link) {
+                link.href = target.url;
+                link.onclick = function(e) {
+                  e.preventDefault();
+                  try { window.location.href = target.url; } catch (_) {}
+                  try { window.location.assign(target.url); } catch (_) {}
+                };
+              }
+              setTimeout(() => {
+                try { window.location.assign(target.url); } catch (e1) {
+                  try { window.location.href = target.url; } catch (e2) {}
+                }
+              }, 350);
+            } else {
+              showToast('API 连接失败，演示模式请使用验证码 888888', 'warning');
+            }
+          }
+        })();
+        return; // 异步处理，不继续执行下面的代码
+      }
+
+      // 密码模式或其他模式（保持原逻辑）
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>安全验证通过，正在进入...</span>';
 
       const roleLabel = currentRole === 'mentor' ? '导师工作台' : (currentRole === 'admin' ? '管理审核台' : '预约中心');

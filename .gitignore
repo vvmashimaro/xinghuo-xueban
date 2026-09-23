@@ -2,3 +2,8 @@ node_modules/
 .DS_Store
 *.log
 .ux-review/
+_platform/server/data/*.db
+_platform/server/.env
+_platform/server/keys/
+*.pem
+*.key

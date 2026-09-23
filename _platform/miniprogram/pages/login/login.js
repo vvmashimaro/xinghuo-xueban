@@ -60,24 +60,67 @@ Page({
   onShowProtocol() { showToast('已调阅《星火学伴综合服务协议》'); },
   onShowPrivacy() { showToast('已调阅《个人信息保护与反洗钱清算授权》'); },
 
-  onSendSms() {
+  async onSendSms() {
     const mobile = (this.data.mobile || '').trim();
     if (!/^1[3-9]\d{9}$/.test(mobile) && mobile.length !== 11) {
       showToast('请输入有效的 11 位手机号码！', 'warning');
       return;
     }
-    showToast('短信验证码已发送（演示可用：888888）');
-    this.setData({ smsCooldown: 60 });
-    if (this._smsTimer) clearInterval(this._smsTimer);
-    this._smsTimer = setInterval(() => {
-      const n = this.data.smsCooldown - 1;
-      if (n <= 0) {
-        clearInterval(this._smsTimer);
-        this.setData({ smsCooldown: 0 });
+
+    if (this.data.smsCooldown > 0) return;
+
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/sms/send`,
+          method: 'POST',
+          data: { phone: mobile, scene: 'login' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        const msg = result.provider === 'mock' 
+          ? '短信验证码已发送（演示可用：888888）'
+          : '短信验证码已发送，请查收';
+        showToast(msg);
+        
+        this.setData({ smsCooldown: 60 });
+        if (this._smsTimer) clearInterval(this._smsTimer);
+        this._smsTimer = setInterval(() => {
+          const n = this.data.smsCooldown - 1;
+          if (n <= 0) {
+            clearInterval(this._smsTimer);
+            this.setData({ smsCooldown: 0 });
+          } else {
+            this.setData({ smsCooldown: n });
+          }
+        }, 1000);
       } else {
-        this.setData({ smsCooldown: n });
+        showToast(result.error || '发送失败', 'error');
       }
-    }, 1000);
+    } catch (error) {
+      console.error('SMS send error:', error);
+      // 降级：演示模式
+      showToast('API 连接失败，演示模式：验证码 888888', 'warning');
+      this.setData({ smsCooldown: 60 });
+      if (this._smsTimer) clearInterval(this._smsTimer);
+      this._smsTimer = setInterval(() => {
+        const n = this.data.smsCooldown - 1;
+        if (n <= 0) {
+          clearInterval(this._smsTimer);
+          this.setData({ smsCooldown: 0 });
+        } else {
+          this.setData({ smsCooldown: n });
+        }
+      }, 1000);
+    }
   },
 
   resolveTarget(mobileVal) {
@@ -151,7 +194,7 @@ Page({
     });
   },
 
-  onSubmit() {
+  async onSubmit() {
     const role = this.data.role;
     if (role === 'admin') {
       Storage.setSession({ role: 'admin', loggedInAt: new Date().toISOString() });
@@ -172,29 +215,77 @@ Page({
       return;
     }
     const code = (this.data.smsCode || '').trim();
-    if (code !== '888888' && code.length !== 6) {
-      showToast('请输入正确的 6 位短信验证码 (888888)！', 'error');
+    if (!code || code.length !== 6) {
+      showToast('请输入 6 位短信验证码！', 'error');
       return;
     }
 
     this.setData({ submitting: true, showFallback: false });
 
-    const target = this.resolveTarget(mobile);
-    if (target.toast) {
-      showToast(target.toast);
+    // 验证 SMS 验证码
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/sms/verify`,
+          method: 'POST',
+          data: { phone: mobile, code, scene: 'login' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        // 验证成功，继续登录流程
+        const target = this.resolveTarget(mobile);
+        if (target.toast) {
+          showToast(target.toast);
+        }
+
+        this.setData({
+          fallbackUrl: target.url,
+          fallbackTitle: target.title
+        });
+
+        setTimeout(() => {
+          this.navigateReliably(target.url);
+          this._navWatch = setTimeout(() => {
+            this.setData({ submitting: false, showFallback: true });
+          }, 2500);
+        }, 350);
+      } else {
+        this.setData({ submitting: false });
+        showToast(result.error || '验证码错误', 'error');
+      }
+    } catch (error) {
+      console.error('SMS verify error:', error);
+      // 降级：演示模式验证
+      if (code === '888888') {
+        const target = this.resolveTarget(mobile);
+        if (target.toast) {
+          showToast(target.toast + '（演示模式）');
+        }
+
+        this.setData({
+          fallbackUrl: target.url,
+          fallbackTitle: target.title
+        });
+
+        setTimeout(() => {
+          this.navigateReliably(target.url);
+          this._navWatch = setTimeout(() => {
+            this.setData({ submitting: false, showFallback: true });
+          }, 2500);
+        }, 350);
+      } else {
+        this.setData({ submitting: false });
+        showToast('API 连接失败，演示模式请使用验证码 888888', 'warning');
+      }
     }
-
-    this.setData({
-      fallbackUrl: target.url,
-      fallbackTitle: target.title
-    });
-
-    setTimeout(() => {
-      this.navigateReliably(target.url);
-      this._navWatch = setTimeout(() => {
-        this.setData({ submitting: false, showFallback: true });
-      }, 2500);
-    }, 350);
   },
 
   onManualEnter() {
