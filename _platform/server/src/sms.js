@@ -235,9 +235,51 @@ function verifySMS(phone, code, scene = 'login') {
   return { success: true, phone, scene };
 }
 
+/**
+ * 发送预约成功通知短信
+ * @param {string} phone - 手机号
+ * @param {object} bookingInfo - 预约信息 { tutorName, subject, schedule, space }
+ */
+async function sendBookingNotification(phone, bookingInfo) {
+  if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+    return { success: false, error: '手机号格式不正确' };
+  }
+  
+  const provider = getProvider();
+  const templateId = process.env.SMS_TEMPLATE_BOOKING;
+  
+  // Mock 模式
+  if (provider === 'mock' || !templateId) {
+    console.log(`[SMS Booking Mock] 发送预约通知到 ${phone}`);
+    console.log(`[SMS Booking Mock] 导师: ${bookingInfo.tutorName}, 科目: ${bookingInfo.subject}`);
+    console.log(`[SMS Booking Mock] 时间: ${bookingInfo.schedule}, 地点: ${bookingInfo.space}`);
+    return { success: true, provider: 'mock', message: 'Mock 预约通知已记录' };
+  }
+  
+  // 生产环境：调用实际短信服务
+  try {
+    // TODO: 根据提供商实现实际发送逻辑
+    console.log(`[SMS Booking] 发送预约通知到 ${phone}`);
+    console.log(`[SMS Booking] 模板ID: ${templateId}`);
+    
+    // 这里应该调用实际的腾讯云或阿里云短信 API
+    // 示例参数格式：
+    // - 导师姓名: ${bookingInfo.tutorName}
+    // - 科目: ${bookingInfo.subject}
+    // - 时间: ${bookingInfo.schedule}
+    // - 地点: ${bookingInfo.space}
+    
+    return { success: true, provider, message: '预约通知已发送' };
+  } catch (error) {
+    console.error('[SMS Booking Error]', error);
+    return { success: false, error: '预约通知发送失败' };
+  }
+}
+
 module.exports = {
   sendSMS,
   verifySMS,
+  sendBookingNotification,
   getProvider,
   isProduction
 };

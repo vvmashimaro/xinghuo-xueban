@@ -12,6 +12,8 @@ const cors = require('cors');
 const db = require('./db');
 const sms = require('./sms');
 const wechatPay = require('./wechat-pay');
+const wechatPhone = require('./wechat-phone');
+const phoneCrypto = require('./phone-crypto');
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = '0.0.0.0';
@@ -158,6 +160,179 @@ app.post('/api/auth/sms/verify', (req, res) => {
   } catch (error) {
     console.error('[SMS Verify Error]', error);
     fail(res, 500, '验证失败');
+  }
+});
+
+/* ========== 微信手机号授权 ========== */
+app.post('/api/wx/phone', async (req, res) => {
+  try {
+    const { code, userId } = req.body || {};
+    
+    if (!code) {
+      return fail(res, 400, '缺少 code 参数');
+    }
+    
+    // 调用微信接口获取手机号
+    const phoneInfo = await wechatPhone.getUserPhone(code);
+    
+    ok(res, {
+      success: true,
+      phone: phoneInfo.purePhoneNumber,
+      countryCode: phoneInfo.countryCode,
+      masked: phoneCrypto.maskPhone(phoneInfo.purePhoneNumber)
+    });
+  } catch (error) {
+    console.error('[WeChat Phone Error]', error);
+    
+    // 记录拒绝授权的审计日志（如果有 userId）
+    if (req.body.userId) {
+      db.logPhoneAudit({
+        userId: req.body.userId,
+        action: 'authorize_deny',
+        source: 'wechat_auth',
+        phoneHash: '',
+        ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
+        ua: req.headers['user-agent'] || '',
+        success: false,
+        error: error.message
+      });
+    }
+    
+    fail(res, 400, error.message || '获取手机号失败');
+  }
+});
+
+/* ========== 手机号绑定管理 ========== */
+app.post('/api/auth/phone/bind', async (req, res) => {
+  try {
+    const { userId, phone, source } = req.body || {};
+    
+    if (!userId || !phone) {
+      return fail(res, 400, '缺少 userId 或 phone');
+    }
+    
+    if (!phoneCrypto.isValidPhone(phone)) {
+      return fail(res, 400, '手机号格式不正确');
+    }
+    
+    const phoneCipher = phoneCrypto.encryptPhone(phone);
+    const phoneHash = phoneCrypto.hashPhone(phone);
+    
+    const result = db.bindPhone(userId, phoneCipher, phoneHash, source || 'sms_verify', {
+      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
+      ua: req.headers['user-agent'] || ''
+    });
+    
+    if (!result.ok) {
+      return fail(res, 400, result.error);
+    }
+    
+    ok(res, {
+      success: true,
+      masked: phoneCrypto.maskPhone(phone)
+    });
+  } catch (error) {
+    console.error('[Phone Bind Error]', error);
+    fail(res, 500, '绑定失败');
+  }
+});
+
+app.post('/api/auth/phone/unbind', (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    
+    if (!userId) {
+      return fail(res, 400, '缺少 userId');
+    }
+    
+    const result = db.unbindPhone(userId, {
+      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
+      ua: req.headers['user-agent'] || ''
+    });
+    
+    if (!result.ok) {
+      return fail(res, 400, result.error);
+    }
+    
+    ok(res, { success: true });
+  } catch (error) {
+    console.error('[Phone Unbind Error]', error);
+    fail(res, 500, '解绑失败');
+  }
+});
+
+app.post('/api/auth/phone/cancel', (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    
+    if (!userId) {
+      return fail(res, 400, '缺少 userId');
+    }
+    
+    const result = db.cancelPhone(userId, {
+      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
+      ua: req.headers['user-agent'] || ''
+    });
+    
+    if (!result.ok) {
+      return fail(res, 400, result.error);
+    }
+    
+    ok(res, { success: true });
+  } catch (error) {
+    console.error('[Phone Cancel Error]', error);
+    fail(res, 500, '注销失败');
+  }
+});
+
+app.get('/api/auth/me', (req, res) => {
+  try {
+    const userId = req.query.userId || req.headers['x-user-id'];
+    
+    if (!userId) {
+      return fail(res, 400, '缺少 userId');
+    }
+    
+    const user = db.getUserById(userId);
+    
+    if (!user) {
+      return fail(res, 404, '用户不存在');
+    }
+    
+    // 解密手机号并脱敏返回
+    let maskedPhone = '';
+    if (user.phoneCipher) {
+      try {
+        const phone = phoneCrypto.decryptPhone(user.phoneCipher);
+        maskedPhone = phoneCrypto.maskPhone(phone);
+      } catch (error) {
+        console.error('[Phone Decrypt Error]', error);
+      }
+    }
+    
+    ok(res, {
+      userId: user.id,
+      phone: maskedPhone,
+      phoneBoundAt: user.phoneBoundAt || '',
+      phoneSource: user.phoneSource || ''
+    });
+  } catch (error) {
+    console.error('[Get User Error]', error);
+    fail(res, 500, '查询失败');
+  }
+});
+
+app.post('/api/auth/phone/audit', (req, res) => {
+  try {
+    const entry = req.body || {};
+    entry.ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+    entry.ua = req.headers['user-agent'] || '';
+    
+    db.logPhoneAudit(entry);
+    ok(res, { success: true });
+  } catch (error) {
+    console.error('[Audit Log Error]', error);
+    fail(res, 500, '记录失败');
   }
 });
 
@@ -327,8 +502,24 @@ app.get('/api/bookings', (req, res) => {
   ok(res, db.getBookings());
 });
 
-app.post('/api/bookings', (req, res) => {
+app.post('/api/bookings', async (req, res) => {
   const booking = db.addBooking(req.body || {});
+  
+  // 发送预约成功短信通知
+  if (booking && booking.id && booking.parentPhone) {
+    try {
+      await sms.sendBookingNotification(booking.parentPhone, {
+        tutorName: booking.tutorName || '导师',
+        subject: booking.subject || '课程',
+        schedule: booking.schedule || booking.timeSlot || '',
+        space: booking.space || ''
+      });
+    } catch (error) {
+      console.error('[Booking SMS Notification Error]', error);
+      // 短信发送失败不影响预约创建
+    }
+  }
+  
   ok(res, booking);
 });
 
