@@ -5,10 +5,11 @@
     <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#5eead4;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
   </view>
 
-  <!-- 快捷操作：画像更改 / 学情护照 / 退出 -->
+  <!-- 快捷操作：画像更改 / 学情护照 / 个人中心 / 退出 -->
   <view class="action-row">
     <button class="action-btn action-primary" bindtap="goEditProfile">学员画像更改</button>
     <button class="action-btn" bindtap="openPassport">查阅学情护照</button>
+    <button class="action-btn" bindtap="goProfile">个人中心</button>
     <button class="action-btn action-muted" bindtap="goLogin">退出登录</button>
   </view>
 
@@ -242,6 +243,74 @@
     <view class="modal-foot">
       <button class="btn-ghost" bindtap="closeContract">返回</button>
       <button class="btn-primary" bindtap="confirmBook">确认签署并完成约课</button>
+    </view>
+  </view>
+</view>
+
+<!-- Phone Authorization Modal (for Booking) -->
+<view class="modal-mask" wx:if="{{phoneAuthShow}}">
+  <view class="modal-panel">
+    <view class="modal-head">
+      <view style="font-weight:900;">预约前需要授权手机号</view>
+      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">用于课程预约确认和通知</view>
+    </view>
+    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
+      <view class="muted" style="margin-bottom:16rpx;">
+        手机号仅用于：预约1对1线下伴学、课程联系通知。不会用于营销推广或出售给第三方。
+      </view>
+
+      <!-- 隐私政策阅读与同意 -->
+      <view class="check-row" bindtap="onTogglePrivacyRead" style="margin-bottom:16rpx;padding:16rpx;background:#f1f5f9;border-radius:8rpx;">
+        <view class="check-box {{privacyRead?'on':''}}">{{privacyRead?'✓':''}}</view>
+        <text>我已阅读并同意
+          <text class="link" catchtap="goPrivacyPage">《个人信息保护政策》</text>
+        </text>
+      </view>
+
+      <!-- 授权区域（需先同意隐私政策） -->
+      <view wx:if="{{privacyRead}}">
+        <view class="muted" style="margin-bottom:12rpx;">请选择授权方式：</view>
+        
+        <!-- 微信一键授权 -->
+        <button class="btn-primary" style="width:100%;margin-bottom:12rpx;" 
+                open-type="getPhoneNumber" 
+                bindgetphonenumber="onWechatPhoneAuth">
+          微信授权手机号（推荐）
+        </button>
+        
+        <!-- SMS 手动绑定选项 -->
+        <view class="muted" style="text-align:center;margin:16rpx 0;">或</view>
+        <button class="btn-ghost" style="width:100%;" bindtap="onShowSmsBinding">
+          手动输入手机号验证
+        </button>
+        
+        <!-- SMS 手动绑定表单 -->
+        <view wx:if="{{showSmsBinding}}" style="margin-top:16rpx;padding:16rpx;background:#f1f5f9;border-radius:8rpx;">
+          <view class="field">
+            <text class="label">手机号</text>
+            <input class="input" type="number" maxlength="11" placeholder="请输入手机号" value="{{smsPhone}}" bindinput="onSmsPhone" />
+          </view>
+          <view class="field">
+            <text class="label">短信验证码</text>
+            <view class="flex-row gap-8">
+              <input class="input" style="flex:1;" type="number" maxlength="6" placeholder="6位验证码" value="{{smsCode}}" bindinput="onSmsCode" />
+              <button class="btn-ghost" style="white-space:nowrap;" bindtap="onSendSmsCode" disabled="{{smsCooldown>0}}">
+                {{smsCooldown>0 ? smsCooldown+'s' : '获取验证码'}}
+              </button>
+            </view>
+          </view>
+          <button class="btn-primary" style="width:100%;margin-top:12rpx;" bindtap="onVerifySmsCode">
+            验证并绑定
+          </button>
+        </view>
+      </view>
+
+      <view wx:if="{{!privacyRead}}" class="muted" style="text-align:center;padding:32rpx 0;color:#94a3b8;">
+        请先阅读并同意隐私政策
+      </view>
+    </scroll-view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closePhoneAuth">取消</button>
     </view>
   </view>
 </view>

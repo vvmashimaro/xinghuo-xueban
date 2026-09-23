@@ -47,6 +47,14 @@ Page({
     filterMax: 180,
     walletAvailable: '315.00',
     walletFrozen: '135.00',
+    phoneAuthorized: false,
+    phoneMasked: '',
+    phoneAuthShow: false,
+    privacyRead: false,
+    showSmsBinding: false,
+    smsPhone: '',
+    smsCode: '',
+    smsCooldown: 0,
     bookingShow: false,
     bookingTutor: {},
     slots: [],
@@ -80,6 +88,7 @@ Page({
 
   onUnload() {
     if (this._iotTimer) clearInterval(this._iotTimer);
+    if (this._smsTimer) clearInterval(this._smsTimer);
   },
 
   reload() {
@@ -91,6 +100,12 @@ Page({
       wx.reLaunch({ url: '/pages/parent-register/parent-register?mode=create' });
       return;
     }
+    
+    // Check phone authorization status
+    const phone = parent.phone || '';
+    const phoneAuthorized = !!phone;
+    const phoneMasked = phone ? (phone.slice(0, 3) + '****' + phone.slice(7)) : '';
+    
     const budgetMin = Number(parent.budgetMin) || 80;
     const budgetMax = Number(parent.budgetMax) || 180;
     let filterMin = this.data.filterMin || budgetMin;
@@ -205,6 +220,8 @@ Page({
       myBookings: bookings,
       parentId: parent.id,
       parentPhone: parent.phone,
+      phoneAuthorized,
+      phoneMasked,
       walletAvailable,
       walletFrozen,
       iotLinkedBooking
@@ -315,6 +332,17 @@ Page({
   },
 
   openBooking(e) {
+    // Check phone authorization first
+    if (!this.data.phoneAuthorized) {
+      showToast('预约前需要授权手机号', 'warning');
+      this.setData({ 
+        phoneAuthShow: true,
+        privacyRead: false,
+        showSmsBinding: false
+      });
+      return;
+    }
+    
     const id = e.currentTarget.dataset.id;
     const tutor = this.data.tutors.find((t) => t.mentorId === id)
       || this.data.topTutors.find((t) => t.mentorId === id);
@@ -371,7 +399,7 @@ Page({
     this.setData({ contractShow: false });
   },
 
-  confirmBook() {
+  async confirmBook() {
     const tutor = this.data.bookingTutor;
     const parent = this._parent || Storage.getCurrentParent();
     const hours = Number(this.data.hours) || 2;
@@ -379,6 +407,7 @@ Page({
     const space = this.data.spaces[this.data.spaceIndex];
     const slot = this.data.selectedSlot;
 
+    // Save contract locally
     Storage.saveContract({
       parentId: parent.id,
       mentorId: tutor.mentorId,
@@ -389,6 +418,7 @@ Page({
       rule: '课后48小时无异议自动解冻划拨（导师92%/平台8%）'
     });
 
+    // Create booking locally first
     const booking = Storage.addBooking({
       mentorId: tutor.mentorId,
       tutorId: tutor.mentorId,
@@ -414,7 +444,44 @@ Page({
       iotLinkedBooking: (tutor.maskedName || '') + ' · ' + slot
     });
 
-    // 微信支付流程（非零金额）
+    // Send booking to server API (triggers SMS notification)
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/bookings`,
+          method: 'POST',
+          data: {
+            mentorId: tutor.mentorId,
+            tutorId: tutor.mentorId,
+            tutorName: tutor.maskedName,
+            parentId: parent.id,
+            parentName: parent.parentName,
+            parentPhone: parent.phone,
+            studentNickname: parent.studentNickname,
+            studentGrade: parent.studentGrade,
+            subject: (tutor.subjects && tutor.subjects[0]) || '辅导',
+            space,
+            schedule: slot,
+            timeSlot: slot,
+            amount,
+            hours,
+            status: 'pending_accept'
+          },
+          success: resolve,
+          fail: reject
+        });
+      });
+      
+      console.log('[Booking Created on Server] SMS notification sent');
+    } catch (error) {
+      console.error('[Server Booking Error]', error);
+      // Don't fail the booking if server call fails
+    }
+
+    // WeChat payment flow (non-zero amount)
     if (amount > 0 && booking && booking.id) {
       this.handleWeChatPayment(booking.id, amount, tutor.maskedName, (tutor.subjects && tutor.subjects[0]) || '辅导');
     } else {
@@ -422,7 +489,7 @@ Page({
     }
 
     this.reload();
-    // 约课后重置 IoT 为可操作，便于演示开门
+    // Reset IoT state for demo
     this.setIoTState('idle');
   },
 
@@ -587,5 +654,273 @@ Page({
   goLogin() {
     Storage.clearSession();
     wx.reLaunch({ url: '/pages/login/login' });
+  },
+
+  goProfile() {
+    wx.navigateTo({ url: '/pages/profile/profile' });
+  },
+
+  /* ========== Phone Authorization for Booking ========== */
+  onTogglePrivacyRead() {
+    this.setData({ privacyRead: !this.data.privacyRead });
+  },
+
+  goPrivacyPage(e) {
+    e.stopPropagation();
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
+  closePhoneAuth() {
+    this.setData({ phoneAuthShow: false });
+  },
+
+  async onWechatPhoneAuth(e) {
+    console.log('[WeChat Phone Auth]', e);
+    
+    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+      showToast('已取消授权', 'warning');
+      
+      // Record audit log for denial
+      try {
+        const config = require('../../utils/config');
+        const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+        const session = Storage.getSession() || {};
+        
+        wx.request({
+          url: `${apiBase}/api/auth/phone/audit`,
+          method: 'POST',
+          data: {
+            userId: session.userId || this.data.parentId || 'anonymous',
+            action: 'authorize_deny',
+            source: 'wechat_auth_booking',
+            success: false
+          }
+        });
+      } catch (error) {
+        console.error('[Audit Log Error]', error);
+      }
+      
+      return;
+    }
+
+    const code = e.detail.code;
+    
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const session = Storage.getSession() || {};
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/wx/phone`,
+          method: 'POST',
+          data: { code, userId: session.userId || this.data.parentId || '' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        // Update parent profile with phone
+        const parent = this._parent || Storage.getCurrentParent();
+        if (parent) {
+          parent.phone = result.phone;
+          Storage.saveParent(parent);
+        }
+        
+        this.setData({
+          phoneAuthorized: true,
+          phoneMasked: result.masked,
+          phoneAuthShow: false,
+          parentPhone: result.phone
+        });
+        
+        showToast('手机号授权成功');
+        
+        // Bind phone to account
+        await this.bindPhoneToAccount(result.phone, 'wechat_auth_booking');
+      } else {
+        showToast(result.error || '获取手机号失败', 'error');
+      }
+    } catch (error) {
+      console.error('[WeChat Phone Auth Error]', error);
+      showToast('授权失败，请使用手动输入方式', 'warning');
+      this.setData({ showSmsBinding: true });
+    }
+  },
+
+  onShowSmsBinding() {
+    this.setData({ showSmsBinding: !this.data.showSmsBinding });
+  },
+
+  onSmsPhone(e) {
+    this.setData({ smsPhone: e.detail.value });
+  },
+
+  onSmsCode(e) {
+    this.setData({ smsCode: e.detail.value });
+  },
+
+  async onSendSmsCode() {
+    const phone = (this.data.smsPhone || '').trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      showToast('请输入有效的11位手机号', 'warning');
+      return;
+    }
+
+    if (this.data.smsCooldown > 0) return;
+
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/sms/send`,
+          method: 'POST',
+          data: { phone, scene: 'bind' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        const msg = result.provider === 'mock'
+          ? '验证码已发送（演示可用：888888）'
+          : '验证码已发送，请查收';
+        showToast(msg);
+
+        this.setData({ smsCooldown: 60 });
+        if (this._smsTimer) clearInterval(this._smsTimer);
+        this._smsTimer = setInterval(() => {
+          const n = this.data.smsCooldown - 1;
+          if (n <= 0) {
+            clearInterval(this._smsTimer);
+            this.setData({ smsCooldown: 0 });
+          } else {
+            this.setData({ smsCooldown: n });
+          }
+        }, 1000);
+      } else {
+        showToast(result.error || '发送失败', 'error');
+      }
+    } catch (error) {
+      console.error('[SMS Send Error]', error);
+      showToast('发送失败（演示可用：888888）', 'warning');
+    }
+  },
+
+  async onVerifySmsCode() {
+    const phone = (this.data.smsPhone || '').trim();
+    const code = (this.data.smsCode || '').trim();
+
+    if (!phone || !code) {
+      showToast('请输入手机号和验证码', 'warning');
+      return;
+    }
+
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/sms/verify`,
+          method: 'POST',
+          data: { phone, code, scene: 'bind' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        const masked = phone.slice(0, 3) + '****' + phone.slice(7);
+        
+        // Update parent profile with phone
+        const parent = this._parent || Storage.getCurrentParent();
+        if (parent) {
+          parent.phone = result.phone;
+          Storage.saveParent(parent);
+        }
+        
+        this.setData({
+          phoneAuthorized: true,
+          phoneMasked: masked,
+          phoneAuthShow: false,
+          showSmsBinding: false,
+          smsPhone: '',
+          smsCode: '',
+          parentPhone: result.phone
+        });
+
+        showToast('手机号验证成功');
+        await this.bindPhoneToAccount(result.phone, 'sms_verify_booking');
+      } else {
+        showToast(result.error || '验证失败', 'error');
+      }
+    } catch (error) {
+      console.error('[SMS Verify Error]', error);
+      
+      // Fallback for demo mode
+      if (code === '888888') {
+        const masked = phone.slice(0, 3) + '****' + phone.slice(7);
+        
+        const parent = this._parent || Storage.getCurrentParent();
+        if (parent) {
+          parent.phone = phone;
+          Storage.saveParent(parent);
+        }
+        
+        this.setData({
+          phoneAuthorized: true,
+          phoneMasked: masked,
+          phoneAuthShow: false,
+          showSmsBinding: false,
+          smsPhone: '',
+          smsCode: '',
+          parentPhone: phone
+        });
+        showToast('手机号验证成功（演示模式）');
+        await this.bindPhoneToAccount(phone, 'sms_verify_booking');
+      } else {
+        showToast('验证失败（演示可用：888888）', 'warning');
+      }
+    }
+  },
+
+  async bindPhoneToAccount(phone, source) {
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const session = Storage.getSession() || {};
+      const userId = session.userId || this.data.parentId || 'TEMP-' + Date.now();
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/phone/bind`,
+          method: 'POST',
+          data: { userId, phone, source },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        console.log('[Phone Bind Success]', result);
+        Storage.setSession(Object.assign({}, session, { userId, phone }));
+      } else {
+        console.error('[Phone Bind Failed]', result.error);
+      }
+    } catch (error) {
+      console.error('[Phone Bind Error]', error);
+    }
   }
 });
