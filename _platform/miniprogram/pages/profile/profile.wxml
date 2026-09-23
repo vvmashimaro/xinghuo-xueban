@@ -1,0 +1,107 @@
+<view class="container">
+  <view class="hero">
+    <view class="hero-title">个人中心</view>
+    <view class="hero-sub">{{parentName}} · {{studentNickname}}</view>
+  </view>
+
+  <!-- 手机号信息 -->
+  <view class="card">
+    <view class="card-title">联系手机号</view>
+    <view wx:if="{{phoneAuthorized}}" class="phone-info">
+      <view class="phone-display">
+        <text class="phone-number">{{phoneMasked}}</text>
+        <text class="badge badge-approved">已绑定</text>
+      </view>
+      <view class="muted" style="margin-top:8rpx;" wx:if="{{phoneBoundAt}}">
+        绑定时间：{{phoneBoundAt}}
+      </view>
+      <view class="muted" style="margin-top:12rpx;">
+        手机号用于：预约1对1线下伴学、课程联系通知
+      </view>
+    </view>
+    <view wx:if="{{!phoneAuthorized}}" class="phone-info">
+      <view class="muted">未绑定手机号</view>
+      <view class="muted" style="margin-top:8rpx;">
+        绑定手机号后可接收课程预约和通知
+      </view>
+    </view>
+  </view>
+
+  <!-- 隐私与安全 -->
+  <view class="card">
+    <view class="card-title">隐私与安全</view>
+    <view class="menu-item" bindtap="goPrivacyPage">
+      <text>个人信息保护政策</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item" wx:if="{{phoneAuthorized}}" bindtap="showUnbindConfirm">
+      <text style="color:#f59e0b;">解绑手机号</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item" wx:if="{{phoneAuthorized}}" bindtap="showCancelConfirm">
+      <text style="color:#dc2626;">注销手机号（删除账号）</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="card">
+    <view class="card-title">快捷操作</view>
+    <view class="menu-item" bindtap="goEditProfile">
+      <text>学员画像更改</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <button class="btn-ghost" style="width:100%;margin-top:32rpx;" bindtap="goBack">返回主控</button>
+</view>
+
+<!-- 解绑确认弹窗 -->
+<view class="modal-mask" wx:if="{{confirmUnbindShow}}">
+  <view class="modal-panel">
+    <view class="modal-head">
+      <view style="font-weight:900;">确认解绑手机号</view>
+    </view>
+    <view class="modal-body">
+      <view class="muted" style="margin-bottom:16rpx;">
+        解绑后您将无法接收课程通知，但账号信息不会被删除。
+      </view>
+      <view class="muted">
+        当前绑定手机号：<text style="font-family:monospace;color:#0f766e;">{{phoneMasked}}</text>
+      </view>
+    </view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="hideUnbindConfirm">取消</button>
+      <button class="btn-primary" style="background:#f59e0b;" bindtap="onUnbindPhone">确认解绑</button>
+    </view>
+  </view>
+</view>
+
+<!-- 注销确认弹窗 -->
+<view class="modal-mask" wx:if="{{confirmCancelShow}}">
+  <view class="modal-panel">
+    <view class="modal-head">
+      <view style="font-weight:900;color:#dc2626;">确认注销账号</view>
+    </view>
+    <view class="modal-body">
+      <view class="muted" style="margin-bottom:16rpx;">
+        <text style="font-weight:bold;color:#dc2626;">警告：</text>注销后您的手机号及所有相关信息将被永久删除，无法恢复。
+      </view>
+      <view class="muted" style="margin-bottom:16rpx;">
+        请确保：
+      </view>
+      <view class="muted" style="padding-left:16rpx;">
+        • 没有待完成的课程<br/>
+        • 没有待结算的款项<br/>
+        • 已导出重要数据
+      </view>
+      <view class="muted" style="margin-top:16rpx;">
+        当前手机号：<text style="font-family:monospace;color:#dc2626;">{{phoneMasked}}</text>
+      </view>
+    </view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="hideCancelConfirm">取消</button>
+      <button class="btn-primary" style="background:#dc2626;" bindtap="onCancelAccount">确认注销</button>
+    </view>
+  </view>
+</view>

@@ -6,7 +6,8 @@
     "pages/parent-register/parent-register",
     "pages/parent-dashboard/parent-dashboard",
     "pages/mentor-dashboard/mentor-dashboard",
-    "pages/privacy/privacy"
+    "pages/privacy/privacy",
+    "pages/profile/profile"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0f172a",
