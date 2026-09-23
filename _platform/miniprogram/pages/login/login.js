@@ -57,8 +57,15 @@ Page({
   onSms(e) { this.setData({ smsCode: e.detail.value }); },
   onToggleAgree() { this.setData({ agreed: !this.data.agreed }); },
 
-  onShowProtocol() { showToast('已调阅《星火学伴综合服务协议》'); },
-  onShowPrivacy() { showToast('已调阅《个人信息保护与反洗钱清算授权》'); },
+  onShowProtocol(e) { 
+    e.stopPropagation();
+    showToast('已调阅《星火学伴综合服务协议》'); 
+  },
+  
+  onShowPrivacy(e) { 
+    e.stopPropagation();
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
 
   async onSendSms() {
     const mobile = (this.data.mobile || '').trim();
