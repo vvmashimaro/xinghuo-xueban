@@ -384,4 +384,170 @@ A: 开发环境下：
 
 ---
 
+## 手机号收集与合规配置
+
+### 概述
+
+星火学伴严格遵循《个人信息保护法》和《微信小程序平台运营规范》，实现了隐私优先的手机号收集方案。
+
+### 功能特性
+
+✅ **隐私优先**：
+- 用户必须先阅读并同意隐私政策
+- 手机号仅用于预约伴学和课程通知
+- 前端展示全程脱敏（138****8000）
+- 后端加密存储（AES-256-GCM）
+
+✅ **合规授权**：
+- 仅通过用户主动点击的按钮触发（`<button open-type="getPhoneNumber">`）
+- 绝不在页面加载时自动弹出授权
+- 用户拒绝授权时提供SMS备用方案
+
+✅ **安全保障**：
+- 手机号加密存储
+- 手机号哈希用于唯一性查询
+- 审计日志记录所有操作
+- 无批量导出接口
+
+### 配置步骤
+
+#### 1. 后端环境变量配置
+
+在 API 后端（Render/Railway/Fly.io）添加以下环境变量：
+
+```env
+# 微信小程序配置（用于手机号授权）
+WECHAT_APP_ID=wxYOUR_APP_ID_HERE
+WECHAT_APP_SECRET=YOUR_APP_SECRET_HERE
+WX_PHONE_MODE=production
+
+# 手机号加密密钥（必填，至少32字符）
+# 生成方式：node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+PHONE_ENCRYPTION_KEY=your_64_character_hex_key_here
+
+# 预约成功通知短信模板ID
+SMS_TEMPLATE_BOOKING=your_booking_template_id
+```
+
+#### 2. 微信小程序配置
+
+**2.1 配置服务器域名**
+
+在微信小程序管理后台（mp.weixin.qq.com）：
+- 进入：开发 → 开发管理 → 开发设置 → 服务器域名
+- 添加 **request 合法域名**：`https://your-api.onrender.com`
+
+**2.2 配置用户隐私保护指引**
+
+在微信小程序管理后台：
+- 进入：设置 → 基本设置 → 用户隐私保护指引
+- 添加个人信息收集说明：
+
+```
+【个人信息收集使用清单】
+1. 信息类型：手机号码
+2. 收集场景：用户注册、预约1对1线下伴学服务
+3. 收集方式：用户主动授权（微信官方 getPhoneNumber 接口）或手动输入验证
+4. 使用目的：课程预约确认、变更通知、课前提醒
+5. 是否共享给第三方：否
+6. 隐私政策链接：https://your-domain.github.io/your-repo/privacy.html
+```
+
+**2.3 上传隐私政策页面**
+
+- 小程序内页面：`pages/privacy/privacy`（已实现）
+- 公网静态页面：将仓库中的 `privacy.html` 通过 GitHub Pages 发布
+  - 启用 GitHub Pages
+  - 访问地址示例：`https://username.github.io/repo-name/privacy.html`
+  - 将此URL填入微信小程序审核时的隐私政策链接
+
+#### 3. 部署验证
+
+**3.1 测试手机号授权**
+
+开发环境（Mock 模式）：
+
+```bash
+# 启动后端（Mock 模式）
+cd _platform/server
+WX_PHONE_MODE=mock npm start
+
+# Mock Code 映射：
+# MOCK_OK → 13980889211
+# MOCK_DENY → 用户拒绝授权
+```
+
+生产环境测试：
+1. 使用真机调试或体验版
+2. 进入注册页面
+3. 勾选隐私政策同意
+4. 点击"微信授权手机号"
+5. 验证授权成功后显示脱敏手机号
+
+**3.2 验证审计日志**
+
+检查后端日志是否记录了以下事件：
+- `action: authorize_ok` - 授权成功
+- `action: authorize_deny` - 用户拒绝
+- `action: bind` - 手机号绑定
+- `action: unbind` - 解绑
+- `action: cancel` - 注销
+
+#### 4. 微信审核提交
+
+提交小程序审核时，准备以下材料：
+
+1. **隐私政策公网链接**  
+   示例：`https://your-domain.github.io/xinghuo-xueban/privacy.html`
+
+2. **测试账号**  
+   提供可用于审核的测试账号（如需）
+
+3. **功能说明**  
+   简述手机号收集用途：
+   ```
+   手机号仅用于预约1对1线下伴学服务的课程通知，
+   用户主动授权后才会收集，支持随时解绑和注销。
+   ```
+
+4. **截图/视频**  
+   展示隐私政策页面、授权流程、拒绝授权后的备选方案
+
+### 常见问题
+
+**Q1: 如何生成 PHONE_ENCRYPTION_KEY？**
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Q2: Mock 模式和生产模式如何切换？**
+
+通过环境变量 `WX_PHONE_MODE`：
+- `mock` - 开发测试模式，无需真实微信配置
+- `production` - 生产模式，需配置 WECHAT_APP_ID 和 WECHAT_APP_SECRET
+
+**Q3: 审核被拒原因："未明确说明手机号用途"**
+
+确保：
+1. 隐私政策页面清晰说明手机号仅用于"预约伴学"和"课程通知"
+2. 在小程序"用户隐私保护指引"中详细填写收集场景
+3. 授权前展示隐私政策并要求用户同意
+
+**Q4: 审核被拒原因："自动弹出授权弹窗"**
+
+确保：
+1. 绝不在 `onLoad`/`onShow` 等生命周期自动调用授权接口
+2. 仅通过 `<button open-type="getPhoneNumber">` 用户点击触发
+3. 按钮必须在用户同意隐私政策后才展示
+
+### 详细文档
+
+完整测试指南和合规说明，请参阅：
+- **测试文档**: `MINIPROGRAM_PHONE.md`
+- **隐私政策页面**: `privacy.html`（需通过 GitHub Pages 发布）
+- **审计日志**: 后端数据库 `phoneAuditLogs` 表
+
+---
+
 **祝部署顺利！🚀**
