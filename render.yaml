@@ -1,12 +1,51 @@
+# Render.com 部署配置 - 星火学伴 API
 services:
   - type: web
     name: xinghuo-api
-    runtime: node
-    plan: free
-    rootDir: _platform/server
-    buildCommand: npm install
-    startCommand: node src/index.js
-    healthCheckPath: /api/health
+    env: node
+    region: singapore
+    plan: starter
+    buildCommand: cd _platform/server && npm install
+    startCommand: cd _platform/server && npm start
     envVars:
-      - key: NODE_VERSION
-        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8787
+      - key: DATABASE_PATH
+        value: ./data/db.json
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ADMIN_TOKEN
+        generateValue: true
+        sync: false
+      - key: SMS_PROVIDER
+        value: mock
+        sync: false
+      - key: ALIYUN_ACCESS_KEY_ID
+        sync: false
+      - key: ALIYUN_ACCESS_KEY_SECRET
+        sync: false
+      - key: ALIYUN_SMS_SIGN_NAME
+        value: 星火学伴
+        sync: false
+      - key: ALIYUN_SMS_TEMPLATE_CODE
+        sync: false
+      - key: WECHAT_MCH_ID
+        sync: false
+      - key: WECHAT_APP_ID
+        sync: false
+      - key: WECHAT_API_V3_KEY
+        sync: false
+      - key: WECHAT_MCH_SERIAL_NO
+        sync: false
+      - key: WECHAT_PRIVATE_KEY_PEM
+        sync: false
+      - key: WECHAT_NOTIFY_URL
+        sync: false
+      - key: API_PUBLIC_URL
+        sync: false
+    disk:
+      name: xinghuo-data
+      mountPath: /opt/render/project/src/_platform/server/data
+      sizeGB: 1
