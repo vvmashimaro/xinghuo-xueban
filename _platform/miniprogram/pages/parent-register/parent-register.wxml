@@ -11,10 +11,6 @@
       <input class="input" placeholder="例：刘女士" placeholder-class="input-placeholder" value="{{parentName}}" bindinput="onParentName" />
     </view>
     <view class="field">
-      <text class="label">手机号{{phoneReadonly?'（登录账号，不可更改）':''}}</text>
-      <input class="input {{phoneReadonly?'input-readonly':''}}" type="number" maxlength="11" placeholder="例：139****9211" placeholder-class="input-placeholder" value="{{phone}}" bindinput="onPhone" disabled="{{phoneReadonly}}" />
-    </view>
-    <view class="field">
       <text class="label">学员昵称</text>
       <input class="input" placeholder="例：乐乐同学" placeholder-class="input-placeholder" value="{{studentNickname}}" bindinput="onNickname" />
     </view>
@@ -35,6 +31,84 @@
       <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onSpace">
         <view class="input">{{spaces[spaceIndex]}}</view>
       </picker>
+    </view>
+  </view>
+
+  <!-- 隐私政策与手机号授权 -->
+  <view class="card" wx:if="{{!editMode}}">
+    <view class="card-title">手机号授权</view>
+    <view class="muted" style="margin-bottom:16rpx;">
+      手机号仅用于：预约1对1线下伴学、课程联系通知。不会用于营销推广或出售给第三方。
+    </view>
+
+    <!-- 隐私政策阅读与同意 -->
+    <view class="check-row" bindtap="onTogglePrivacyRead" style="margin-bottom:16rpx;padding:16rpx;background:#f1f5f9;border-radius:8rpx;">
+      <view class="check-box {{privacyRead?'on':''}}">{{privacyRead?'✓':''}}</view>
+      <text>我已阅读并同意
+        <text class="link" catchtap="goPrivacyPage">《个人信息保护政策》</text>
+      </text>
+    </view>
+
+    <!-- 手机号授权区域（需先同意隐私政策） -->
+    <view wx:if="{{privacyRead}}">
+      <view wx:if="{{!phoneAuthorized}}">
+        <view class="muted" style="margin-bottom:12rpx;">请选择授权方式：</view>
+        
+        <!-- 微信一键授权（用户主动点击） -->
+        <button class="btn-primary" style="width:100%;margin-bottom:12rpx;" 
+                open-type="getPhoneNumber" 
+                bindgetphonenumber="onWechatPhoneAuth">
+          微信授权手机号（推荐）
+        </button>
+        
+        <!-- SMS 手动绑定选项 -->
+        <view class="muted" style="text-align:center;margin:16rpx 0;">或</view>
+        <button class="btn-ghost" style="width:100%;" bindtap="onShowSmsBinding">
+          手动输入手机号验证
+        </button>
+        
+        <!-- SMS 手动绑定表单 -->
+        <view wx:if="{{showSmsBinding}}" style="margin-top:16rpx;padding:16rpx;background:#f1f5f9;border-radius:8rpx;">
+          <view class="field">
+            <text class="label">手机号</text>
+            <input class="input" type="number" maxlength="11" placeholder="请输入手机号" value="{{smsPhone}}" bindinput="onSmsPhone" />
+          </view>
+          <view class="field">
+            <text class="label">短信验证码</text>
+            <view class="flex-row gap-8">
+              <input class="input" style="flex:1;" type="number" maxlength="6" placeholder="6位验证码" value="{{smsCode}}" bindinput="onSmsCode" />
+              <button class="btn-ghost" style="white-space:nowrap;" bindtap="onSendSmsCode" disabled="{{smsCooldown>0}}">
+                {{smsCooldown>0 ? smsCooldown+'s' : '获取验证码'}}
+              </button>
+            </view>
+          </view>
+          <button class="btn-primary" style="width:100%;margin-top:12rpx;" bindtap="onVerifySmsCode">
+            验证并绑定
+          </button>
+        </view>
+      </view>
+      
+      <!-- 已授权状态 -->
+      <view wx:if="{{phoneAuthorized}}" class="phone-authorized">
+        <view class="success-icon">✓</view>
+        <view>
+          <text style="font-weight:600;">已授权手机号：</text>
+          <text style="color:#0d9488;font-family:monospace;">{{phoneMasked}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!privacyRead}}" class="muted" style="text-align:center;padding:32rpx 0;color:#94a3b8;">
+      请先阅读并同意隐私政策
+    </view>
+  </view>
+
+  <!-- 编辑模式：显示已绑定手机号（只读） -->
+  <view class="card" wx:if="{{editMode && phone}}">
+    <view class="card-title">联系手机号</view>
+    <view class="phone-display">
+      <text style="color:#0d9488;font-family:monospace;font-size:32rpx;">{{phone}}</text>
+      <text class="muted" style="margin-left:12rpx;">（登录账号，不可更改）</text>
     </view>
   </view>
 

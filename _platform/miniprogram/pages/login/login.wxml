@@ -33,7 +33,7 @@
       <text>我已阅读并同意
         <text class="link" catchtap="onShowProtocol">《服务协议》</text>
         与
-        <text class="link" catchtap="onShowPrivacy">《个人信息保护政策》</text>
+        <text class="link" catchtap="onShowPrivacy">《隐私政策》</text>
       </text>
     </view>
 

@@ -1,0 +1,34 @@
+.phone-info {
+  padding: 16rpx 0;
+}
+
+.phone-display {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.phone-number {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #0f766e;
+  font-family: monospace;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #e2e8f0;
+  font-size: 28rpx;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item .arrow {
+  font-size: 32rpx;
+  color: #94a3b8;
+}

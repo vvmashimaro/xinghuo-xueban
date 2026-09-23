@@ -683,6 +683,8 @@ function emptySnapshot() {
     contracts: [],
     assessments: [],
     session: null,
+    users: [],
+    phoneAuditLogs: [],
     seeded: true
   };
 }
@@ -715,6 +717,8 @@ function load() {
     if (!state.bookings) state.bookings = [];
     if (!state.contracts) state.contracts = [];
     if (!state.assessments) state.assessments = [];
+    if (!state.users) state.users = [];
+    if (!state.phoneAuditLogs) state.phoneAuditLogs = [];
     if (state.seeded == null) state.seeded = true;
     // patch mentor defaults
     let need = false;
@@ -1484,6 +1488,197 @@ function saveAssessment(payload) {
   return record;
 }
 
+/* ---------- Phone Management ---------- */
+/**
+ * 查找用户（通过手机号哈希）
+ */
+function getUserByPhoneHash(phoneHash) {
+  if (!phoneHash) return null;
+  return getState().users.find((u) => u.phoneHash === phoneHash) || null;
+}
+
+/**
+ * 查找用户（通过 userId）
+ */
+function getUserById(userId) {
+  if (!userId) return null;
+  return getState().users.find((u) => u.id === userId) || null;
+}
+
+/**
+ * 绑定手机号
+ * @param {string} userId - 用户 ID
+ * @param {string} phoneCipher - 加密后的手机号
+ * @param {string} phoneHash - 手机号哈希
+ * @param {string} source - 绑定来源 (wechat_auth | sms_verify)
+ * @param {object} meta - 额外元数据 (ip, ua, etc.)
+ */
+function bindPhone(userId, phoneCipher, phoneHash, source, meta) {
+  const s = getState();
+  
+  // 检查手机号是否已被其他用户绑定
+  const existing = s.users.find((u) => u.phoneHash === phoneHash && u.id !== userId);
+  if (existing) {
+    return { ok: false, error: '该手机号已被其他账号绑定' };
+  }
+  
+  // 查找或创建用户记录
+  let userIdx = s.users.findIndex((u) => u.id === userId);
+  
+  if (userIdx < 0) {
+    // 创建新用户
+    const user = {
+      id: userId,
+      phoneCipher,
+      phoneHash,
+      phoneBoundAt: _now(),
+      phoneSource: source,
+      createdAt: _now(),
+      updatedAt: _now()
+    };
+    s.users.push(user);
+  } else {
+    // 更新现有用户
+    s.users[userIdx] = Object.assign({}, s.users[userIdx], {
+      phoneCipher,
+      phoneHash,
+      phoneBoundAt: _now(),
+      phoneSource: source,
+      updatedAt: _now()
+    });
+  }
+  
+  // 记录审计日志
+  logPhoneAudit({
+    userId,
+    action: 'bind',
+    source,
+    phoneHash,
+    ip: (meta && meta.ip) || '',
+    ua: (meta && meta.ua) || '',
+    success: true
+  });
+  
+  persist();
+  return { ok: true };
+}
+
+/**
+ * 解绑手机号
+ */
+function unbindPhone(userId, meta) {
+  const s = getState();
+  const userIdx = s.users.findIndex((u) => u.id === userId);
+  
+  if (userIdx < 0) {
+    return { ok: false, error: '用户不存在' };
+  }
+  
+  const user = s.users[userIdx];
+  if (!user.phoneCipher) {
+    return { ok: false, error: '未绑定手机号' };
+  }
+  
+  const phoneHash = user.phoneHash;
+  
+  // 清除手机号信息
+  s.users[userIdx] = Object.assign({}, user, {
+    phoneCipher: '',
+    phoneHash: '',
+    phoneUnboundAt: _now(),
+    updatedAt: _now()
+  });
+  
+  // 记录审计日志
+  logPhoneAudit({
+    userId,
+    action: 'unbind',
+    source: 'user_request',
+    phoneHash,
+    ip: (meta && meta.ip) || '',
+    ua: (meta && meta.ua) || '',
+    success: true
+  });
+  
+  persist();
+  return { ok: true };
+}
+
+/**
+ * 注销手机号（彻底删除用户账号）
+ */
+function cancelPhone(userId, meta) {
+  const s = getState();
+  const userIdx = s.users.findIndex((u) => u.id === userId);
+  
+  if (userIdx < 0) {
+    return { ok: false, error: '用户不存在' };
+  }
+  
+  const user = s.users[userIdx];
+  const phoneHash = user.phoneHash;
+  
+  // 删除用户记录
+  s.users.splice(userIdx, 1);
+  
+  // 记录审计日志
+  logPhoneAudit({
+    userId,
+    action: 'cancel',
+    source: 'user_request',
+    phoneHash,
+    ip: (meta && meta.ip) || '',
+    ua: (meta && meta.ua) || '',
+    success: true
+  });
+  
+  persist();
+  return { ok: true };
+}
+
+/**
+ * 记录手机号操作审计日志
+ */
+function logPhoneAudit(entry) {
+  const s = getState();
+  if (!s.phoneAuditLogs) s.phoneAuditLogs = [];
+  
+  const log = Object.assign({
+    id: _uid('AUDIT'),
+    timestamp: _now(),
+    userId: '',
+    action: '',
+    source: '',
+    phoneHash: '',
+    ip: '',
+    ua: '',
+    success: false,
+    error: ''
+  }, entry || {});
+  
+  s.phoneAuditLogs.unshift(log);
+  
+  // 保留最近 10000 条日志
+  if (s.phoneAuditLogs.length > 10000) {
+    s.phoneAuditLogs = s.phoneAuditLogs.slice(0, 10000);
+  }
+  
+  // 审计日志立即持久化
+  persist();
+}
+
+/**
+ * 获取用户的审计日志
+ */
+function getPhoneAuditLogs(userId, limit = 50) {
+  const s = getState();
+  if (!s.phoneAuditLogs) return [];
+  
+  return s.phoneAuditLogs
+    .filter((log) => log.userId === userId)
+    .slice(0, limit);
+}
+
 // init on require
 load();
 
@@ -1528,5 +1723,12 @@ module.exports = {
   ASSESSMENT_SUBJECTS,
   withMentorDefaults,
   availabilityToSlotLabels,
-  parseSlotLabelToAvailability
+  parseSlotLabelToAvailability,
+  getUserByPhoneHash,
+  getUserById,
+  bindPhone,
+  unbindPhone,
+  cancelPhone,
+  logPhoneAudit,
+  getPhoneAuditLogs
 };

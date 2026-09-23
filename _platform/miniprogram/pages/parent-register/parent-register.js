@@ -38,6 +38,13 @@ Page({
     budgetMax: 180,
     targetGoal: '',
     consent: false,
+    privacyRead: false,
+    phoneAuthorized: false,
+    phoneMasked: '',
+    showSmsBinding: false,
+    smsPhone: '',
+    smsCode: '',
+    smsCooldown: 0,
     wizardShow: false,
     wizardSubject: '',
     wizardStep: 1,
@@ -70,7 +77,16 @@ Page({
       this.applyEditMode(parent);
     } else {
       // 创建模式：consent 默认未勾选；可带入会话手机号
-      if (session.phone) this.setData({ phone: session.phone });
+      if (session.phone) {
+        // 已登录用户：自动标记手机号已授权
+        const masked = session.phone.slice(0, 3) + '****' + session.phone.slice(7);
+        this.setData({ 
+          phone: session.phone,
+          phoneMasked: masked,
+          phoneAuthorized: true,
+          privacyRead: true
+        });
+      }
       this.setData({
         editMode: false,
         pageTitle: '学情建档与注册',
@@ -83,6 +99,10 @@ Page({
       wx.setNavigationBarTitle({ title: '学情建档与注册' });
       this.refreshSubjectOptionChips();
     }
+  },
+
+  onUnload() {
+    if (this._smsTimer) clearInterval(this._smsTimer);
   },
 
   applyEditMode(parent) {
@@ -144,6 +164,254 @@ Page({
     this.setData({ phone: e.detail.value });
   },
   onNickname(e) { this.setData({ studentNickname: e.detail.value }); },
+
+  /* ========== 隐私政策与手机号授权 ========== */
+  onTogglePrivacyRead() {
+    this.setData({ privacyRead: !this.data.privacyRead });
+  },
+
+  goPrivacyPage(e) {
+    e.stopPropagation();
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
+  async onWechatPhoneAuth(e) {
+    console.log('[WeChat Phone Auth]', e);
+    
+    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+      // 用户拒绝授权
+      showToast('已取消授权', 'warning');
+      
+      // 记录拒绝授权的审计日志
+      try {
+        const config = require('../../utils/config');
+        const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+        const session = Storage.getSession() || {};
+        
+        wx.request({
+          url: `${apiBase}/api/auth/phone/audit`,
+          method: 'POST',
+          data: {
+            userId: session.userId || 'anonymous',
+            action: 'authorize_deny',
+            source: 'wechat_auth',
+            success: false
+          }
+        });
+      } catch (error) {
+        console.error('[Audit Log Error]', error);
+      }
+      
+      return;
+    }
+
+    // 获取手机号 code
+    const code = e.detail.code;
+    
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const session = Storage.getSession() || {};
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/wx/phone`,
+          method: 'POST',
+          data: { code, userId: session.userId || '' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        this.setData({
+          phone: result.phone,
+          phoneMasked: result.masked,
+          phoneAuthorized: true
+        });
+        
+        showToast('手机号授权成功');
+        
+        // 绑定手机号到用户账号
+        await this.bindPhoneToAccount(result.phone, 'wechat_auth');
+      } else {
+        showToast(result.error || '获取手机号失败', 'error');
+      }
+    } catch (error) {
+      console.error('[WeChat Phone Auth Error]', error);
+      showToast('授权失败，请使用手动输入方式', 'warning');
+      this.setData({ showSmsBinding: true });
+    }
+  },
+
+  onShowSmsBinding() {
+    this.setData({ showSmsBinding: !this.data.showSmsBinding });
+  },
+
+  onSmsPhone(e) {
+    this.setData({ smsPhone: e.detail.value });
+  },
+
+  onSmsCode(e) {
+    this.setData({ smsCode: e.detail.value });
+  },
+
+  async onSendSmsCode() {
+    const phone = (this.data.smsPhone || '').trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      showToast('请输入有效的11位手机号', 'warning');
+      return;
+    }
+
+    if (this.data.smsCooldown > 0) return;
+
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/sms/send`,
+          method: 'POST',
+          data: { phone, scene: 'bind' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        const msg = result.provider === 'mock'
+          ? '验证码已发送（演示可用：888888）'
+          : '验证码已发送，请查收';
+        showToast(msg);
+
+        this.setData({ smsCooldown: 60 });
+        if (this._smsTimer) clearInterval(this._smsTimer);
+        this._smsTimer = setInterval(() => {
+          const n = this.data.smsCooldown - 1;
+          if (n <= 0) {
+            clearInterval(this._smsTimer);
+            this.setData({ smsCooldown: 0 });
+          } else {
+            this.setData({ smsCooldown: n });
+          }
+        }, 1000);
+      } else {
+        showToast(result.error || '发送失败', 'error');
+      }
+    } catch (error) {
+      console.error('[SMS Send Error]', error);
+      showToast('发送失败（演示可用：888888）', 'warning');
+    }
+  },
+
+  async onVerifySmsCode() {
+    const phone = (this.data.smsPhone || '').trim();
+    const code = (this.data.smsCode || '').trim();
+
+    if (!phone || !code) {
+      showToast('请输入手机号和验证码', 'warning');
+      return;
+    }
+
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/sms/verify`,
+          method: 'POST',
+          data: { phone, code, scene: 'bind' },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        // 脱敏显示
+        const masked = phone.slice(0, 3) + '****' + phone.slice(7);
+        
+        this.setData({
+          phone: result.phone,
+          phoneMasked: masked,
+          phoneAuthorized: true,
+          showSmsBinding: false,
+          smsPhone: '',
+          smsCode: ''
+        });
+
+        showToast('手机号验证成功');
+
+        // 绑定手机号到用户账号
+        await this.bindPhoneToAccount(result.phone, 'sms_verify');
+      } else {
+        showToast(result.error || '验证失败', 'error');
+      }
+    } catch (error) {
+      console.error('[SMS Verify Error]', error);
+      
+      // 降级：演示模式验证
+      if (code === '888888') {
+        const masked = phone.slice(0, 3) + '****' + phone.slice(7);
+        this.setData({
+          phone: phone,
+          phoneMasked: masked,
+          phoneAuthorized: true,
+          showSmsBinding: false,
+          smsPhone: '',
+          smsCode: ''
+        });
+        showToast('手机号验证成功（演示模式）');
+        await this.bindPhoneToAccount(phone, 'sms_verify');
+      } else {
+        showToast('验证失败（演示可用：888888）', 'warning');
+      }
+    }
+  },
+
+  async bindPhoneToAccount(phone, source) {
+    try {
+      const config = require('../../utils/config');
+      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const session = Storage.getSession() || {};
+
+      // 如果没有 userId，生成一个临时 ID
+      const userId = session.userId || 'TEMP-' + Date.now();
+
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${apiBase}/api/auth/phone/bind`,
+          method: 'POST',
+          data: { userId, phone, source },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const result = res.data;
+
+      if (res.statusCode === 200 && result.success) {
+        console.log('[Phone Bind Success]', result);
+        
+        // 更新 session
+        Storage.setSession(Object.assign({}, session, { userId, phone }));
+      } else {
+        console.error('[Phone Bind Failed]', result.error);
+        showToast(result.error || '绑定失败', 'error');
+      }
+    } catch (error) {
+      console.error('[Phone Bind Error]', error);
+    }
+  },
+  
+  /* ========== 原有功能 ========== */
   onGoal(e) { this.setData({ targetGoal: e.detail.value }); },
   onGrade(e) { this.setData({ gradeIndex: Number(e.detail.value) }); },
   onDistrict(e) { this.setData({ districtIndex: Number(e.detail.value) }); },
@@ -300,6 +568,13 @@ Page({
       showToast('请填写家长称呼、手机号与学员昵称', 'warning');
       return;
     }
+    
+    // 非编辑模式需要验证手机号授权
+    if (!this.data.editMode && !this.data.phoneAuthorized) {
+      showToast('请先完成手机号授权', 'warning');
+      return;
+    }
+    
     if (Object.keys(this.data.subjectPlans).length === 0) {
       showToast('请至少配置一门目标学科', 'warning');
       return;

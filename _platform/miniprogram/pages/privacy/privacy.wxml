@@ -1,0 +1,20 @@
+<view class="privacy-container">
+  <view class="privacy-header">
+    <text class="privacy-title">{{productName}} 隐私政策</text>
+    <text class="privacy-subtitle">个人信息保护政策</text>
+    <text class="privacy-operator">运营主体：{{operatorName}}</text>
+  </view>
+
+  <view class="privacy-body">
+    <view class="section" wx:for="{{sections}}" wx:key="title">
+      <view class="section-title">{{item.title}}</view>
+      <view class="section-content">
+        <text class="content-line" wx:for="{{item.content}}" wx:key="*this">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="privacy-footer">
+    <button class="btn-back" bindtap="goBack">返回</button>
+  </view>
+</view>
