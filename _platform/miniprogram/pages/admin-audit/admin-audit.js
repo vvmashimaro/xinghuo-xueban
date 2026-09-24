@@ -27,7 +27,7 @@ Page({
     this.reload();
   },
 
-  reload() {
+  async reload() {
     if (Storage.ready) await Storage.ready();
     Storage.seedIfEmpty();
     const all = Storage.getMentors();
