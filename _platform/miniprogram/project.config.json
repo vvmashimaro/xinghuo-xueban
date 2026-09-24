@@ -1,5 +1,5 @@
 {
-  "description": "星火学伴 · 微信小程序演示版",
+  "description": "星火伴学o2o · 微信小程序",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -41,7 +41,7 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.5.5",
-  "appid": "touristappid",
+  "appid": "wx5a978366a03285cb",
   "projectname": "xinghuo-xueban-miniprogram",
   "condition": {},
   "editorSetting": {

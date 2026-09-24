@@ -163,7 +163,7 @@ module.exports = {
 3. 已配置环境变量：
 
 ```env
-WECHAT_APP_ID=wxYOUR_APP_ID
+WECHAT_APP_ID=wx5a978366a03285cb
 WECHAT_APP_SECRET=YOUR_APP_SECRET
 WX_PHONE_MODE=production
 PHONE_ENCRYPTION_KEY=YOUR_64_CHAR_HEX_KEY
@@ -399,7 +399,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### 7.1 后端配置
 
-- [ ] 设置 `WECHAT_APP_ID`
+- [ ] 设置 `WECHAT_APP_ID=wx5a978366a03285cb`（星火伴学o2o）
 - [ ] 设置 `WECHAT_APP_SECRET`
 - [ ] 设置 `PHONE_ENCRYPTION_KEY`（至少32字符）
 - [ ] 设置 `WX_PHONE_MODE=production`
