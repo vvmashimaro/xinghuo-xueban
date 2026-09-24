@@ -18,3 +18,8 @@
   border: 1px solid #e2e8f0; padding: 4rpx 12rpx; border-radius: 8rpx; color: #64748b;
 }
 .detail-line { font-size: 24rpx; color: #475569; margin-bottom: 8rpx; word-break: break-all; }
+
+picker {
+  position: relative;
+  z-index: 10;
+}
