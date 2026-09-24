@@ -64,10 +64,56 @@ const SPACE_OPTIONS = [
   '青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'
 ];
 
+function _availabilityToSlotLabels(availability) {
+  const labels = [];
+  const wdNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  (availability || []).forEach((item) => {
+    const wd = parseInt(item.weekday, 10);
+    const name = wdNames[wd] || ('周' + wd);
+    (item.ranges || []).forEach((r) => {
+      if (r && r.start && r.end) labels.push(name + ' ' + r.start + '-' + r.end);
+    });
+  });
+  return labels;
+}
+
+function _parseSlotLabelToAvailability(slots) {
+  const wdMap = { '周日': 0, '周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6 };
+  const byDay = {};
+  (slots || []).forEach((raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return;
+    let wd = null;
+    let rest = s;
+    Object.keys(wdMap).forEach((name) => {
+      if (s.indexOf(name) === 0) {
+        wd = wdMap[name];
+        rest = s.slice(name.length).trim();
+      }
+    });
+    if (wd == null) return;
+    const m = rest.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+    if (!m) return;
+    if (!byDay[wd]) byDay[wd] = [];
+    byDay[wd].push({ start: m[1].padStart(5, '0'), end: m[2].padStart(5, '0') });
+  });
+  return Object.keys(byDay).map((k) => ({
+    weekday: parseInt(k, 10),
+    ranges: byDay[k]
+  }));
+}
+
 function _withMentorDefaults(m) {
   const copy = Object.assign({}, m);
-  if (!copy.availableSlots || !copy.availableSlots.length) {
+  if (!Array.isArray(copy.availability)) copy.availability = [];
+  if ((!copy.availableSlots || !copy.availableSlots.length) && copy.availability.length) {
+    copy.availableSlots = _availabilityToSlotLabels(copy.availability);
+  }
+  if (copy.availableSlots == null) {
     copy.availableSlots = DEFAULT_SLOTS.slice();
+  }
+  if ((!copy.availability || !copy.availability.length) && copy.availableSlots && copy.availableSlots.length) {
+    copy.availability = _parseSlotLabelToAvailability(copy.availableSlots);
   }
   if (!copy.preferredSpaces) {
     copy.preferredSpaces = copy.spacePreference
@@ -613,6 +659,25 @@ const StorageService = {
       tutors.sort((a, b) => b.matchScore - a.matchScore);
     }
     return tutors;
+  },
+
+  setMentorAvailability(mentorId, availability) {
+    const normalized = (availability || []).map((item) => ({
+      weekday: parseInt(item.weekday, 10),
+      ranges: (item.ranges || []).map((r) => ({ start: r.start, end: r.end })).filter((r) => r.start && r.end)
+    })).filter((item) => !isNaN(item.weekday) && item.ranges.length);
+    const slots = _availabilityToSlotLabels(normalized);
+    return this.updateMentorProfile(mentorId, {
+      availability: normalized,
+      availableSlots: slots
+    }, { sensitiveChange: false });
+  },
+
+  getMentorAvailability(mentorId) {
+    const m = this.getMentorById(mentorId);
+    if (!m) return [];
+    if (Array.isArray(m.availability) && m.availability.length) return m.availability;
+    return _parseSlotLabelToAvailability(m.availableSlots || []);
   }
 };
 
