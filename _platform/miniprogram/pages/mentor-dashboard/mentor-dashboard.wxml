@@ -54,7 +54,7 @@
           <view 
             wx:for="{{timeSlots}}" 
             wx:key="*this" 
-            class="avail-slot {{availability[selectedWeekday] && availability[selectedWeekday][item] ? 'avail-slot-on' : ''}}" 
+            class="avail-slot {{activeSlotOn[item] ? 'avail-slot-on' : ''}}" 
             data-slot="{{item}}" 
             bindtap="toggleSlot">
             {{item}}

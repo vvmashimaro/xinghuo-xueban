@@ -71,6 +71,7 @@ Page({
     selectedWeekdayLabel: '周一',
     timeSlots: TIME_SLOTS,
     availability: {},
+    activeSlotOn: {},
     availabilitySummary: ''
   },
 
@@ -78,7 +79,7 @@ Page({
     this.reload();
   },
 
-  async   reload() {
+  async reload() {
     if (Storage.ready) await Storage.ready();
     Storage.seedIfEmpty();
     let mentor = Storage.getCurrentMentor();
@@ -191,12 +192,21 @@ Page({
         firstLabel = wd.label;
       }
     });
+    const selectedWeekday = firstSelected != null ? firstSelected : 1;
+    const activeSlotOn = availability[selectedWeekday] || {};
     this.setData({
       availability,
-      selectedWeekday: firstSelected != null ? firstSelected : 1,
-      selectedWeekdayLabel: firstLabel
+      selectedWeekday,
+      selectedWeekdayLabel: firstLabel,
+      activeSlotOn
     });
     this.updateAvailabilitySummary();
+  },
+
+  rebuildActiveSlots() {
+    const wd = this.data.selectedWeekday;
+    const activeSlotOn = Object.assign({}, this.data.availability[wd] || {});
+    this.setData({ activeSlotOn });
   },
 
   timeToMinutes(timeStr) {
@@ -217,27 +227,32 @@ Page({
       selectedWeekday: weekday.value,
       selectedWeekdayLabel: weekday.label
     });
+    this.rebuildActiveSlots();
   },
 
   clearDay() {
     const wd = this.data.selectedWeekday;
-    const availability = this.data.availability;
+    const availability = Object.assign({}, this.data.availability);
     availability[wd] = {};
-    this.setData({ availability });
+    this.setData({ availability, activeSlotOn: {} });
     this.updateAvailabilitySummary();
   },
 
   toggleSlot(e) {
     const slot = e.currentTarget.dataset.slot;
     const wd = this.data.selectedWeekday;
-    const availability = this.data.availability;
+    const availability = Object.assign({}, this.data.availability);
     if (!availability[wd]) availability[wd] = {};
+    else availability[wd] = Object.assign({}, availability[wd]);
+    
     if (availability[wd][slot]) {
       delete availability[wd][slot];
     } else {
       availability[wd][slot] = true;
     }
-    this.setData({ availability });
+    
+    const activeSlotOn = Object.assign({}, availability[wd]);
+    this.setData({ availability, activeSlotOn });
     this.updateAvailabilitySummary();
   },
 
