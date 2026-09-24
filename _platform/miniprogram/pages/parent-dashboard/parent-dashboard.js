@@ -91,7 +91,7 @@ Page({
     if (this._smsTimer) clearInterval(this._smsTimer);
   },
 
-  reload() {
+  async reload() {
     if (Storage.ready) await Storage.ready();
     Storage.seedIfEmpty();
     const parent = Storage.getCurrentParent();
