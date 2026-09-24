@@ -38,8 +38,30 @@
       </picker>
     </view>
     <view class="field">
-      <text class="label">可约时段（逗号分隔）</text>
-      <input class="input" value="{{edit.slotsText}}" data-k="slotsText" bindinput="onEdit" />
+      <text class="label">可约时段（下拉选周几 + 点选半点）</text>
+      <view class="avail-picker">
+        <view class="avail-picker-head">
+          <text class="avail-step">① 选择周几</text>
+          <picker mode="selector" range-key="label" range="{{weekdayRange}}" bindchange="onWeekdayChange">
+            <view class="avail-weekday-btn">{{selectedWeekdayLabel}}</view>
+          </picker>
+        </view>
+        <view class="avail-picker-head">
+          <text class="avail-step">② 点选当日半点时段（08:00–22:00）</text>
+          <text class="avail-clear" bindtap="clearDay">清空当日</text>
+        </view>
+        <view class="avail-grid">
+          <view 
+            wx:for="{{timeSlots}}" 
+            wx:key="*this" 
+            class="avail-slot {{availability[selectedWeekday] && availability[selectedWeekday][item] ? 'avail-slot-on' : ''}}" 
+            data-slot="{{item}}" 
+            bindtap="toggleSlot">
+            {{item}}
+          </view>
+        </view>
+        <view class="avail-summary">已设：{{availabilitySummary}}</view>
+      </view>
     </view>
     <button class="btn-primary" style="width:100%;" bindtap="saveProfile">保存画像（不触发复审）</button>
   </view>
