@@ -17,4 +17,9 @@
 .checklist { display: flex; flex-wrap: wrap; gap: 8rpx 20rpx; }
 .cli { font-size: 20rpx; color: #94a3b8; }
 .cli.ok { color: #047857; font-weight: 700; }
-.chip-wrap { display: flex; flex-wrap: wrap; }
+.chip-wrap { 
+  display: flex; 
+  flex-wrap: wrap; 
+  position: relative;
+  z-index: auto;
+}

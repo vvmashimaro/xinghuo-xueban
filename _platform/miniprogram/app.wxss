@@ -15,6 +15,8 @@ page {
   font-size: 28rpx;
   line-height: 1.5;
   box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
 }
 
 view, text, button, input, textarea, picker, label, scroll-view {
@@ -99,11 +101,19 @@ view, text, button, input, textarea, picker, label, scroll-view {
   color: var(--color-slate-800);
   overflow: visible;
   box-sizing: border-box;
+  position: relative;
+  z-index: auto;
 }
 /* picker 等用 view.input 时垂直居中 */
 view.input {
   display: flex;
   align-items: center;
+}
+picker {
+  display: block;
+  width: 100%;
+  position: relative;
+  z-index: 10;
 }
 textarea.input,
 textarea {
@@ -201,19 +211,23 @@ textarea {
   border-radius: 28rpx;
   width: 100%;
   max-height: 88vh;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1001;
 }
 .modal-head {
   padding: 28rpx 32rpx;
   background: linear-gradient(90deg, #0f172a, #134e4a);
   color: #fff;
+  flex-shrink: 0;
 }
 .modal-body {
   padding: 28rpx 32rpx;
   overflow-y: auto;
   flex: 1;
+  position: relative;
 }
 .modal-foot {
   padding: 20rpx 32rpx;
@@ -222,6 +236,7 @@ textarea {
   display: flex;
   justify-content: flex-end;
   gap: 16rpx;
+  flex-shrink: 0;
 }
 
 .check-row {
@@ -231,23 +246,35 @@ textarea {
   font-size: 22rpx;
   color: #475569;
   line-height: 1.5;
+  padding: 8rpx;
+  min-height: 56rpx;
+  cursor: pointer;
 }
 .check-box {
-  width: 40rpx;
-  height: 40rpx;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 8rpx;
   border: 2rpx solid #94a3b8;
   flex-shrink: 0;
-  margin-top: 4rpx;
+  margin-top: 2rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff;
+  position: relative;
+}
+.check-box::after {
+  content: '';
+  position: absolute;
+  top: -8rpx;
+  left: -8rpx;
+  right: -8rpx;
+  bottom: -8rpx;
 }
 .check-box.on {
   background: #0d9488;
   border-color: #0d9488;
   color: #fff;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 800;
 }
