@@ -127,7 +127,7 @@
    
    # 微信支付配置
    WECHAT_MCH_ID=your-mch-id
-   WECHAT_APP_ID=your-appid
+   WECHAT_APP_ID=wx5a978366a03285cb
    WECHAT_API_V3_KEY=your-api-v3-key
    WECHAT_MCH_SERIAL_NO=your-serial-no
    WECHAT_PRIVATE_KEY_PEM=your-private-key-content-with-\n
@@ -259,7 +259,7 @@ module.exports = {
 ### 3. 上传代码
 
 1. 使用微信开发者工具打开 `_platform/miniprogram` 目录
-2. 填入 AppID（从小程序管理后台获取）
+2. AppID 已配置为 `wx5a978366a03285cb`（星火伴学o2o）
 3. 点击「上传」按钮
 4. 填写版本号和备注
 5. 在管理后台提交审核
@@ -417,7 +417,8 @@ A: 开发环境下：
 
 ```env
 # 微信小程序配置（用于手机号授权）
-WECHAT_APP_ID=wxYOUR_APP_ID_HERE
+# AppID: wx5a978366a03285cb (星火伴学o2o)
+WECHAT_APP_ID=wx5a978366a03285cb
 WECHAT_APP_SECRET=YOUR_APP_SECRET_HERE
 WX_PHONE_MODE=production
 

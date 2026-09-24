@@ -1,4 +1,7 @@
-# 星火学伴 · 微信小程序演示版
+# 星火伴学o2o · 微信小程序
+
+**小程序 AppID**: `wx5a978366a03285cb`  
+**注册名称**: 星火伴学o2o
 
 将静态站 `xinghuo-xueban/` 的前端闭环移植为原生微信小程序（wxml / wxss / js / json），数据层使用 `wx.setStorageSync`，键名与种子数据与 Web 版 `js/storage-service.js` 对齐。
 
@@ -7,7 +10,7 @@
 ```
 xinghuo-xueban-miniprogram/
 ├── app.js / app.json / app.wxss
-├── project.config.json          # compileType: miniprogram，appid: touristappid
+├── project.config.json          # compileType: miniprogram，appid: wx5a978366a03285cb
 ├── sitemap.json
 ├── utils/
 │   ├── storage.js               # StorageService 移植
@@ -28,13 +31,11 @@ xinghuo-xueban-miniprogram/
 1. 安装并打开 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 2. 选择 **导入项目** / **打开项目**
 3. 目录指向本文件夹 `xinghuo-xueban-miniprogram/`
-4. AppID：
-   - 可直接使用 **测试号 / 游客模式**：`project.config.json` 已填写 `touristappid`
-   - 或替换为你自己的 AppID（把 `touristappid` 改成 `wxXXXXXXXXXXXXXXXX`，并在本 README 备注为 replace-me）
+4. AppID：已配置为 `wx5a978366a03285cb`（星火伴学o2o 正式小程序）
 5. 后端服务 / 云开发：**不需要**。本演示纯前端本地存储。
 6. 在模拟器中从「登录」页开始走完整闭环。
 
-> 若提示「未开通相关能力」：游客 AppID 即可预览界面与本地存储逻辑；真机支付 / 真实短信 / 真实 IoT 不在演示范围。
+> **注**：真机支付、真实短信、真实 IoT 需配置生产环境后端 API。
 
 ## 演示账号
 
