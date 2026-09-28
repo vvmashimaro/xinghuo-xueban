@@ -13,7 +13,7 @@ const sendCooldown = new Map(); // { phone: lastSendTime }
 const dailyCount = new Map(); // { phone: { count, date } }
 
 const CODE_EXPIRY_MS = 5 * 60 * 1000; // 5分钟
-const SEND_COOLDOWN_MS = 60 * 1000; // 60秒发送间隔
+const SEND_COOLDOWN_MS = parseInt(process.env.SMS_COOLDOWN_MS || '60000', 10); // 60秒发送间隔（测试可设为 0）
 const MAX_VERIFY_ATTEMPTS = 3; // 最多验证3次
 const MAX_DAILY_SENDS = 10; // 每天最多发送10次
 

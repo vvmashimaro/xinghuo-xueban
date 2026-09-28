@@ -123,10 +123,12 @@ app.post('/api/auth/sms/send', async (req, res) => {
       });
     }
     
+    const requiresRealCode = auth.isAdminPhone(phone);
     ok(res, {
       success: true,
       message: result.message,
       provider: result.provider,
+      requiresRealCode,
       phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') // 脱敏
     });
   } catch (error) {
@@ -378,10 +380,11 @@ app.post('/api/auth/phone/bind', requireAuth, async (req, res) => {
     }
     
     // 验证并消费票据
-    const phone = auth.verifyAndConsumeTicket(ticket);
-    if (!phone) {
+    const ticketData = auth.verifyAndConsumeTicket(ticket);
+    if (!ticketData) {
       return fail(res, 400, '验证票据无效或已过期');
     }
+    const phone = ticketData.phone;
     
     if (!phoneCrypto.isValidPhone(phone)) {
       return fail(res, 400, '手机号格式不正确');
