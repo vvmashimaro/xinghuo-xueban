@@ -63,10 +63,6 @@
         <input class="input" type="number" placeholder="例：621483********8000" placeholder-class="input-placeholder" value="{{form.bankCardNumber}}" data-k="bankCardNumber" bindinput="onField" />
       </view>
 
-      <view class="check-row field" bindtap="onToggleNonPublic">
-        <view class="check-box {{form.nonPublic?'on':''}}">{{form.nonPublic?'✓':''}}</view>
-        <text>本人承诺非公立学校在编/合同聘任教师，不违反「双减」合规红线</text>
-      </view>
       <view class="check-row field" bindtap="onTogglePrivacy">
         <view class="check-box {{form.privacy?'on':''}}">{{form.privacy?'✓':''}}</view>
         <text>同意《个人信息保护与法定核查授权条款》，授权学信网/公安三要素核验</text>
@@ -85,7 +81,6 @@
           <view class="cli {{l1State.university?'ok':''}}">{{l1State.university?'✓':'○'}} 高校</view>
           <view class="cli {{l1State.chsiCode?'ok':''}}">{{l1State.chsiCode?'✓':'○'}} 学信网码</view>
           <view class="cli {{l1State.bankCard?'ok':''}}">{{l1State.bankCard?'✓':'○'}} 借记卡</view>
-          <view class="cli {{l1State.nonPublic?'ok':''}}">{{l1State.nonPublic?'✓':'○'}} 非在编承诺</view>
           <view class="cli {{l1State.privacy?'ok':''}}">{{l1State.privacy?'✓':'○'}} 隐私授权</view>
         </view>
       </view>

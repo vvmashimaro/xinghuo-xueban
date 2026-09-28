@@ -52,13 +52,12 @@ const L1_SUBSTEPS = {
     }
   },
   4: {  // 合规确认
-    fields: ['nonPublicTeacherAgree', 'privacyAuthAgree'],
+    fields: ['privacyAuthAgree'],
     title: '合规确认',
     icon: 'fa-shield-halved',
     validator: function() {
-      const nonPublic = document.getElementById('nonPublicTeacherAgree')?.checked;
       const privacy = document.getElementById('privacyAuthAgree')?.checked;
-      return !!(nonPublic && privacy);
+      return !!privacy;
     }
   }
 };
@@ -197,8 +196,8 @@ function organizeL1Fields() {
       targetSubstep = 3;
     }
     // Substep 4: Compliance checkboxes
-    else if (html.includes('id="nonPublicTeacherAgree"') || html.includes('id="privacyAuthAgree"') ||
-             text.includes('公立在职教师') || text.includes('隐私授权') || text.includes('合规')) {
+    else if (html.includes('id="privacyAuthAgree"') ||
+             text.includes('隐私授权') || text.includes('合规')) {
       targetSubstep = 4;
     }
     
@@ -597,7 +596,7 @@ function bindFieldChangeListeners() {
   });
 
   // L1 checkboxes
-  ['nonPublicTeacherAgree', 'privacyAuthAgree'].forEach(id => {
+  ['privacyAuthAgree'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.getAttribute('data-wizard-bound')) {
       el.addEventListener('change', onL1FieldChange);

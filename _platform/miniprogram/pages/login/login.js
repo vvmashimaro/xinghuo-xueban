@@ -9,10 +9,6 @@ const ROLE_META = {
   parent: {
     title: '家长 / 学员登录',
     subtitle: '单次约课零预付 · 优选双一流学霸与合规微空间'
-  },
-  admin: {
-    title: '管理端入口',
-    subtitle: '学信网核验 · 试讲量规 · 电子工牌发放'
   }
 };
 
@@ -132,9 +128,6 @@ Page({
 
   resolveTarget(mobileVal) {
     const role = this.data.role;
-    if (role === 'admin') {
-      return { url: '/pages/admin-audit/admin-audit', title: '管理端质审台', toast: '' };
-    }
     if (role === 'mentor') {
       const mentor = Storage.getMentorByPhone(mobileVal);
       if (mentor) {
@@ -203,15 +196,6 @@ Page({
 
   async onSubmit() {
     const role = this.data.role;
-    if (role === 'admin') {
-      Storage.setSession({ role: 'admin', loggedInAt: new Date().toISOString() });
-      this.setData({
-        fallbackUrl: '/pages/admin-audit/admin-audit',
-        fallbackTitle: '管理端质审台'
-      });
-      this.navigateReliably('/pages/admin-audit/admin-audit');
-      return;
-    }
     const mobile = (this.data.mobile || '').trim();
     if (!mobile) {
       showToast('请先输入手机号！', 'warning');
@@ -303,5 +287,9 @@ Page({
 
   goOnboard() {
     wx.navigateTo({ url: '/pages/mentor-onboard/mentor-onboard' });
+  },
+
+  goRegister() {
+    wx.navigateTo({ url: '/pages/parent-register/parent-register?mode=create' });
   }
 });
