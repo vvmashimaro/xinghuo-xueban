@@ -20,7 +20,7 @@ export PORT=8787
 
 # Start API server in background
 echo "Starting API server on port 8787..."
-node src/index.js &
+node src/index.js > /tmp/api-server.log 2>&1 &
 API_PID=$!
 echo "✓ API server started (PID: $API_PID)"
 

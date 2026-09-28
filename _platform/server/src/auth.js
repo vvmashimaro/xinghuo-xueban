@@ -65,15 +65,17 @@ function hashToken(token) {
 /**
  * 创建验证票据（SMS 验证成功后签发）
  * @param {string} phone - 手机号
+ * @param {boolean} mock - 是否为 mock 票据（888888 验证码）
  * @returns {string} ticket - 票据（5分钟有效）
  */
-function createVerificationTicket(phone) {
+function createVerificationTicket(phone, mock = false) {
   const ticket = generateToken();
   const ticketHash = hashToken(ticket);
   const now = Date.now();
   
   verificationTickets.set(ticketHash, {
     phone,
+    mock: !!mock,
     issuedAt: now,
     expiresAt: now + TICKET_EXPIRY_MS
   });
@@ -84,7 +86,7 @@ function createVerificationTicket(phone) {
 /**
  * 验证并消费票据（一次性使用）
  * @param {string} ticket - 票据
- * @returns {string|null} phone - 手机号或 null
+ * @returns {object|null} { phone, mock } or null
  */
 function verifyAndConsumeTicket(ticket) {
   if (!ticket) return null;
@@ -103,7 +105,10 @@ function verifyAndConsumeTicket(ticket) {
   // 消费票据（一次性）
   verificationTickets.delete(ticketHash);
   
-  return ticketData.phone;
+  return {
+    phone: ticketData.phone,
+    mock: ticketData.mock || false
+  };
 }
 
 /**

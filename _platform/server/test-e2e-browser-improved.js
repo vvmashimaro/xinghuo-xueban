@@ -775,6 +775,80 @@ async function testUIChanges(browser) {
   }
 }
 
+async function testAdminLogin(browser) {
+  console.log('\n[Test 7] Admin login with real code lands on admin_audit.html');
+  const page = await browser.newPage();
+  const fs = require('fs');
+  
+  try {
+    const ADMIN_PHONE = '13540012341';
+    
+    // Navigate to login
+    await page.goto(`${BASE_URL}/login.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    
+    // Enter admin phone
+    await page.type('#loginMobile', ADMIN_PHONE);
+    
+    // Send SMS
+    await page.click('#btnSendSms');
+    await delay(2000);
+    
+    // Extract real code from server log
+    const logPath = '/tmp/api-server.log';
+    if (!fs.existsSync(logPath)) {
+      throw new Error('Server log not found at /tmp/api-server.log');
+    }
+    
+    const logContent = fs.readFileSync(logPath, 'utf8');
+    const codeMatch = logContent.match(/\[mock-sms\] 135\*\*\*\*2341 code=(\d+)/);
+    
+    if (!codeMatch) {
+      throw new Error('Could not extract admin code from server log');
+    }
+    
+    const adminCode = codeMatch[1];
+    console.log(`  提取到管理员验证码: ${adminCode}`);
+    
+    // Verify 888888 is NOT accepted
+    const hint888 = await page.evaluate(() => {
+      const bodyText = document.body.innerText;
+      return bodyText.includes('演示可用：888888') || bodyText.includes('请使用 888888');
+    });
+    
+    if (hint888) {
+      console.log('  ⚠ Warning: UI hints about 888888 for admin phone');
+    }
+    
+    // Enter real code
+    await page.type('#smsCodeInput', adminCode);
+    
+    // Submit login
+    await page.click('#btnSubmitLogin');
+    await delay(3000);
+    
+    // Check landed on admin_audit.html
+    const finalUrl = page.url();
+    
+    if (finalUrl.includes('admin_audit.html')) {
+      console.log('  ✓ Admin logged in and landed on admin_audit.html');
+    } else {
+      throw new Error(`Admin did not land on admin_audit.html, instead: ${finalUrl}`);
+    }
+    
+    // Verify not redirected to registration or other pages
+    if (finalUrl.includes('parent_register') || finalUrl.includes('index.html')) {
+      throw new Error('Admin was incorrectly redirected to registration');
+    }
+    
+    console.log('  ✅ PASSED');
+  } catch (error) {
+    console.error(`  ✗ FAILED: ${error.message}`);
+    throw error;
+  } finally {
+    await page.close();
+  }
+}
+
 async function main() {
   console.log('=== 星火学伴 E2E Browser Tests (Improved) ===\n');
   console.log(`BASE_URL: ${BASE_URL}`);
@@ -832,11 +906,18 @@ async function main() {
     failed++;
   }
   
+  try {
+    await testAdminLogin(browser);
+    passed++;
+  } catch (e) {
+    failed++;
+  }
+  
   await browser.close();
   
   console.log(`\n=== Summary ===`);
-  console.log(`Passed: ${passed}/6`);
-  console.log(`Failed: ${failed}/6`);
+  console.log(`Passed: ${passed}/7`);
+  console.log(`Failed: ${failed}/7`);
   
   process.exit(failed === 0 ? 0 : 1);
 }

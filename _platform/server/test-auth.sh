@@ -270,18 +270,57 @@ node --check src/db.js
 echo "✓ 所有 JS 文件语法正确"
 echo ""
 
-# 测试管理员登录（第一个管理员）
-echo "[17] 测试第一个管理员 13540012341 登录..."
-ADMIN1_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
+# 测试管理员手机号拒绝 888888
+echo "[17] 测试管理员手机号拒绝 888888 验证码..."
+ADMIN_MOCK_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
   -H "Content-Type: application/json" \
   -d '{"phone":"13540012341","code":"888888","scene":"login"}')
-ADMIN1_TICKET=$(echo "$ADMIN1_VERIFY" | jq -r '.ticket')
+ADMIN_MOCK_ERROR=$(echo "$ADMIN_MOCK_VERIFY" | jq -r '.error // ""')
 
-if [ -z "$ADMIN1_TICKET" ] || [ "$ADMIN1_TICKET" = "null" ]; then
-  echo "✗ 管理员1 SMS 验证失败"
+if [[ "$ADMIN_MOCK_ERROR" =~ "管理员请使用短信验证码登录" ]]; then
+  echo "✓ 管理员手机号正确拒绝 888888 验证码"
+else
+  echo "✗ 错误：管理员手机号接受了 888888: $ADMIN_MOCK_VERIFY"
+  exit 1
+fi
+echo ""
+
+# 测试第一个管理员用真实验证码登录
+echo "[18] 测试第一个管理员 13540012341 用真实验证码登录..."
+
+# 发送SMS
+curl -s -X POST "$API_BASE/api/auth/sms/send" \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"13540012341","scene":"login"}' > /dev/null
+
+# 从服务器日志提取真实验证码
+sleep 1
+if [ -f "/tmp/api-server.log" ]; then
+  ADMIN1_CODE=$(grep -oP '\[mock-sms\] 135\*\*\*\*2341 code=\K\d+' /tmp/api-server.log | tail -1)
+else
+  echo "✗ 无法读取服务器日志"
   exit 1
 fi
 
+if [ -z "$ADMIN1_CODE" ]; then
+  echo "✗ 无法从日志提取管理员验证码"
+  exit 1
+fi
+
+echo "  提取到验证码: $ADMIN1_CODE"
+
+# 验证真实验证码
+ADMIN1_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
+  -H "Content-Type: application/json" \
+  -d "{\"phone\":\"13540012341\",\"code\":\"$ADMIN1_CODE\",\"scene\":\"login\"}")
+ADMIN1_TICKET=$(echo "$ADMIN1_VERIFY" | jq -r '.ticket')
+
+if [ -z "$ADMIN1_TICKET" ] || [ "$ADMIN1_TICKET" = "null" ]; then
+  echo "✗ 管理员1真实验证码验证失败: $ADMIN1_VERIFY"
+  exit 1
+fi
+
+# 登录
 ADMIN1_LOGIN=$(curl -s -X POST "$API_BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"ticket\":\"$ADMIN1_TICKET\",\"role\":\"admin\"}")
@@ -289,7 +328,7 @@ ADMIN1_TOKEN=$(echo "$ADMIN1_LOGIN" | jq -r '.token')
 ADMIN1_ROLE=$(echo "$ADMIN1_LOGIN" | jq -r '.user.role')
 
 if [ "$ADMIN1_ROLE" = "admin" ] && [ ! -z "$ADMIN1_TOKEN" ] && [ "$ADMIN1_TOKEN" != "null" ]; then
-  echo "✓ 管理员1登录成功，role=admin"
+  echo "✓ 管理员1用真实验证码登录成功，role=admin"
 else
   echo "✗ 管理员1未获得admin角色: $ADMIN1_LOGIN"
   exit 1
@@ -306,53 +345,67 @@ else
 fi
 echo ""
 
-# 测试第二个管理员
-echo "[18] 测试第二个管理员 18080141668 登录..."
-ADMIN2_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
-  -H "Content-Type: application/json" \
-  -d '{"phone":"18080141668","code":"888888","scene":"login"}')
-ADMIN2_TICKET=$(echo "$ADMIN2_VERIFY" | jq -r '.ticket')
+# 测试第二个管理员用真实验证码登录
+echo "[19] 测试第二个管理员 18080141668 用真实验证码登录..."
 
-if [ -z "$ADMIN2_TICKET" ] || [ "$ADMIN2_TICKET" = "null" ]; then
-  echo "✗ 管理员2 SMS 验证失败"
+# 发送SMS
+curl -s -X POST "$API_BASE/api/auth/sms/send" \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"18080141668","scene":"login"}' > /dev/null
+
+# 从服务器日志提取真实验证码
+sleep 1
+ADMIN2_CODE=$(grep -oP '\[mock-sms\] 180\*\*\*\*1668 code=\K\d+' /tmp/api-server.log | tail -1)
+
+if [ -z "$ADMIN2_CODE" ]; then
+  echo "✗ 无法从日志提取管理员2验证码"
   exit 1
 fi
 
+echo "  提取到验证码: $ADMIN2_CODE"
+
+# 验证真实验证码
+ADMIN2_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
+  -H "Content-Type: application/json" \
+  -d "{\"phone\":\"18080141668\",\"code\":\"$ADMIN2_CODE\",\"scene\":\"login\"}")
+ADMIN2_TICKET=$(echo "$ADMIN2_VERIFY" | jq -r '.ticket')
+
+if [ -z "$ADMIN2_TICKET" ] || [ "$ADMIN2_TICKET" = "null" ]; then
+  echo "✗ 管理员2真实验证码验证失败"
+  exit 1
+fi
+
+# 登录
 ADMIN2_LOGIN=$(curl -s -X POST "$API_BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"ticket\":\"$ADMIN2_TICKET\",\"role\":\"admin\"}")
 ADMIN2_ROLE=$(echo "$ADMIN2_LOGIN" | jq -r '.user.role')
 
 if [ "$ADMIN2_ROLE" = "admin" ]; then
-  echo "✓ 管理员2登录成功，role=admin"
+  echo "✓ 管理员2用真实验证码登录成功，role=admin"
 else
   echo "✗ 管理员2未获得admin角色"
   exit 1
 fi
 echo ""
 
-# 测试888888不能授予admin权限（使用家长手机号）
-echo "[19] 测试 888888 验证码不能授予 admin 权限..."
-MOCK_ADMIN_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
+# 测试非管理员手机号不能获得admin权限
+echo "[20] 测试非管理员手机号不能获得 admin 权限..."
+NONADIN_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
   -H "Content-Type: application/json" \
   -d "{\"phone\":\"$PARENT_PHONE\",\"code\":\"888888\",\"scene\":\"login\"}")
-MOCK_ADMIN_TICKET=$(echo "$MOCK_ADMIN_VERIFY" | jq -r '.ticket')
+NONADMIN_TICKET=$(echo "$NONADIN_VERIFY" | jq -r '.ticket')
 
-MOCK_ADMIN_LOGIN=$(curl -s -X POST "$API_BASE/api/auth/login" \
+NONADMIN_LOGIN=$(curl -s -X POST "$API_BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d "{\"ticket\":\"$MOCK_ADMIN_TICKET\",\"role\":\"admin\"}")
-MOCK_ADMIN_ERROR=$(echo "$MOCK_ADMIN_LOGIN" | jq -r '.error // ""')
+  -d "{\"ticket\":\"$NONADMIN_TICKET\",\"role\":\"admin\"}")
+NONADMIN_ERROR=$(echo "$NONADMIN_LOGIN" | jq -r '.error // ""')
 
-if [[ "$MOCK_ADMIN_ERROR" =~ "无管理员权限" ]] || [[ "$MOCK_ADMIN_ERROR" =~ "无法登录" ]]; then
-  echo "✓ 非管理员手机号使用 888888 无法获得 admin 权限"
+if [[ "$NONADMIN_ERROR" =~ "无管理员权限" ]]; then
+  echo "✓ 非管理员手机号无法获得 admin 权限"
 else
-  MOCK_ADMIN_ROLE=$(echo "$MOCK_ADMIN_LOGIN" | jq -r '.user.role // ""')
-  if [ "$MOCK_ADMIN_ROLE" != "admin" ]; then
-    echo "✓ 非管理员手机号使用 888888 无法获得 admin 权限"
-  else
-    echo "✗ 错误：非管理员使用888888获得了admin权限: $MOCK_ADMIN_LOGIN"
-    exit 1
-  fi
+  echo "✗ 错误：非管理员获得了admin权限: $NONADMIN_LOGIN"
+  exit 1
 fi
 echo ""
 

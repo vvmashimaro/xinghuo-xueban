@@ -114,7 +114,7 @@ app.post('/api/auth/sms/send', async (req, res) => {
       return fail(res, 400, '缺少手机号');
     }
     
-    const result = await sms.sendSMS(phone, scene || 'login');
+    const result = await sms.sendSMS(phone, scene || 'login', auth);
     
     if (!result.success) {
       return res.status(429).json({
@@ -180,13 +180,20 @@ app.post('/api/auth/login', (req, res) => {
     }
     
     // 验证并消费票据（一次性）
-    const phone = auth.verifyAndConsumeTicket(ticket);
-    if (!phone) {
+    const ticketData = auth.verifyAndConsumeTicket(ticket);
+    if (!ticketData) {
       return fail(res, 400, '验证票据无效或已过期');
     }
     
+    const { phone, mock } = ticketData;
+    
     // 检查是否为管理员手机号
     const isAdmin = auth.isAdminPhone(phone);
+    
+    // Mock 票据（888888验证码）不能用于管理员登录
+    if (isAdmin && mock) {
+      return fail(res, 403, '管理员请使用短信验证码登录');
+    }
     
     // 如果用户请求 admin 角色但不在管理员白名单中，拒绝登录
     if (role === 'admin' && !isAdmin) {
@@ -243,10 +250,12 @@ app.post('/api/auth/register', (req, res) => {
     }
     
     // 验证并消费票据（一次性）
-    const phone = auth.verifyAndConsumeTicket(ticket);
-    if (!phone) {
+    const ticketData = auth.verifyAndConsumeTicket(ticket);
+    if (!ticketData) {
       return fail(res, 400, '验证票据无效或已过期');
     }
+    
+    const { phone } = ticketData;
     
     // 检查手机号是否已注册
     let existing;

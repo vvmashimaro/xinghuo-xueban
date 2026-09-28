@@ -99,16 +99,24 @@ function hashCode(code) {
 
 /**
  * Mock 短信发送（开发/演示模式）
+ * @param {string} phone - 手机号
+ * @param {string} code - 验证码
+ * @param {string} scene - 场景
+ * @param {object} auth - auth 模块（用于检查管理员手机）
  */
-async function sendMockSMS(phone, code, scene) {
+async function sendMockSMS(phone, code, scene, auth = null) {
   const maskedPhone = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
   console.log(`[SMS Mock] 发送验证码到 ${phone}`);
   console.log(`[SMS Mock] 场景: ${scene}, 验证码: ${code}`);
   
-  // 对于管理员手机号，记录真实验证码到日志（用于 pm2 logs 查看）
-  const ADMIN_PHONES = ['13540012341', '18080141668'];
-  if (ADMIN_PHONES.includes(phone)) {
+  // 检查是否为管理员手机号
+  const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
+  
+  if (isAdmin) {
+    // 对于管理员手机号，记录真实验证码到日志（用于 pm2 logs 查看）
     console.log(`[mock-sms] ${maskedPhone} code=${code}`);
+    // 管理员不能使用 888888
+    return { success: true, provider: 'mock', message: '验证码已发送（管理员需使用真实验证码）' };
   }
   
   console.log(`[SMS Mock] 开发提示：任何手机号都可使用验证码 888888 进行验证`);
@@ -251,8 +259,11 @@ async function sendTencentSMS(phone, code, scene) {
 
 /**
  * 发送短信验证码
+ * @param {string} phone - 手机号
+ * @param {string} scene - 场景
+ * @param {object} auth - auth 模块（用于检查管理员手机）
  */
-async function sendSMS(phone, scene = 'login') {
+async function sendSMS(phone, scene = 'login', auth = null) {
   // 参数校验
   if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
     return { success: false, error: '手机号格式不正确' };
@@ -289,7 +300,7 @@ async function sendSMS(phone, scene = 'login') {
         break;
       case 'mock':
       default:
-        result = await sendMockSMS(phone, code, scene);
+        result = await sendMockSMS(phone, code, scene, auth);
         break;
     }
     
@@ -327,13 +338,18 @@ function verifySMS(phone, code, scene = 'login', auth = null) {
     return { success: false, error: '手机号和验证码不能为空' };
   }
   
-  // Mock 万能验证码（仅在非生产环境）
-  // 注意：mock 验证码永远不能用于获取管理员权限
-  if (!isProduction() && code === '888888') {
+  // 管理员手机号必须使用真实验证码，永远禁止 mock 验证码
+  const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
+  if (isAdmin && code === '888888') {
+    return { success: false, error: '管理员请使用短信验证码登录' };
+  }
+  
+  // Mock 万能验证码（仅在非生产环境，且非管理员手机）
+  if (!isProduction() && code === '888888' && !isAdmin) {
     console.log(`[SMS Verify] Mock 验证通过：${phone}`);
     
-    // 生成验证票据
-    const ticket = auth ? auth.createVerificationTicket(phone) : null;
+    // 生成验证票据（标记为 mock）
+    const ticket = auth ? auth.createVerificationTicket(phone, true) : null;
     
     return { success: true, phone, scene, mock: true, ticket };
   }
