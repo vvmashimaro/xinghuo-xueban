@@ -2113,8 +2113,16 @@
       }
 
       const checkedSubjects = document.querySelectorAll('input[name="subject"]:checked');
-      const hourlyRate = document.getElementById('hourlyRate').value.trim();
-      const lectureUrl = document.getElementById('lectureUrl').value.trim();
+      const hourlyRateEl = document.getElementById('hourlyRate');
+      const lectureUrlEl = document.getElementById('lectureUrl');
+      
+      if (!hourlyRateEl || !lectureUrlEl) {
+        showToast('表单元素加载异常，请刷新页面重试', 'error');
+        return;
+      }
+      
+      const hourlyRate = hourlyRateEl.value.trim();
+      const lectureUrl = lectureUrlEl.value.trim();
 
       if (checkedSubjects.length === 0 && customSubjectList.length === 0) {
         showToast('请至少选择或自填一门擅长主讲的学科！', 'warning');
@@ -2172,14 +2180,24 @@
             })()
           : [];
 
+        const realNameEl = document.getElementById('realName');
+        const idCardEl = document.getElementById('idCard');
+        const finalUniversityEl = document.getElementById('finalUniversityValue');
+        const chsiCodeEl = document.getElementById('chsiCode');
+        
+        if (!realNameEl || !idCardEl || !finalUniversityEl || !chsiCodeEl) {
+          showToast('表单元素加载异常，请刷新页面重试', 'error');
+          return;
+        }
+        
         const profile = {
-          realName: document.getElementById('realName').value.trim(),
+          realName: realNameEl.value.trim(),
           phone: phone,
-          idCard: document.getElementById('idCard').value.trim(),
-          university: document.getElementById('finalUniversityValue').value.trim(),
+          idCard: idCardEl.value.trim(),
+          university: finalUniversityEl.value.trim(),
           province: (document.getElementById('provinceSelect') && document.getElementById('provinceSelect').value) || '四川',
           degree: (document.getElementById('educationLevel') && document.getElementById('educationLevel').value) || '',
-          chsiCode: document.getElementById('chsiCode').value.trim(),
+          chsiCode: chsiCodeEl.value.trim(),
           chsiStatus: (chsiVerifiedResult && chsiVerifiedResult.status) || '有效 (在籍)',
           chsiMajor: (chsiVerifiedResult && chsiVerifiedResult.university) ? (chsiVerifiedResult.university + ' · 在籍核验') : '学信网核验通过',
           publicTeacherCompliance: true,

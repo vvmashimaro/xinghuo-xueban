@@ -1682,17 +1682,34 @@
         return;
       }
 
-      const phone = document.getElementById('parentPhone')?.value.trim();
-      const code = document.getElementById('parentSmsCode')?.value.trim();
+      const phoneEl = document.getElementById('parentPhone');
+      const codeEl = document.getElementById('parentSmsCode');
+      
+      if (!phoneEl) {
+        showToast('表单元素加载异常：找不到手机号输入框', 'error');
+        console.error('Element not found: parentPhone');
+        return;
+      }
+      
+      if (!codeEl) {
+        showToast('表单元素加载异常：找不到验证码输入框', 'error');
+        console.error('Element not found: parentSmsCode');
+        return;
+      }
+      
+      const phone = phoneEl.value.trim();
+      const code = codeEl.value.trim();
       
       if (!phone || phone.length !== 11) {
         showToast('请输入有效的 11 位手机号码！', 'warning');
+        console.warn('Phone validation failed:', phone);
         goToStep(1);
         return;
       }
 
       if (!code || code.length !== 6) {
         showToast('请输入 6 位短信验证码！', 'warning');
+        console.warn('Code validation failed:', code);
         goToStep(1);
         return;
       }
@@ -1790,7 +1807,13 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
           }
-          showToast(registerResult.error || '注册失败，请重试', 'error');
+          const errorMsg = registerResult.error || '注册失败，请重试';
+          showToast(errorMsg, 'error');
+          
+          // Also display error prominently for duplicate registration
+          if (errorMsg.includes('已注册')) {
+            alert(errorMsg);
+          }
           return;
         }
 
