@@ -407,19 +407,7 @@ Page({
     const space = this.data.spaces[this.data.spaceIndex];
     const slot = this.data.selectedSlot;
 
-    // Save contract locally
-    Storage.saveContract({
-      parentId: parent.id,
-      mentorId: tutor.mentorId,
-      amount,
-      hours,
-      space,
-      schedule: slot,
-      rule: '课后48小时无异议自动解冻划拨（导师92%/平台8%）'
-    });
-
-    // Create booking locally first
-    const booking = Storage.addBooking({
+    const booking = await Storage.addBooking({
       mentorId: tutor.mentorId,
       tutorId: tutor.mentorId,
       tutorName: tutor.maskedName,
@@ -434,8 +422,45 @@ Page({
       timeSlot: slot,
       amount,
       hours,
-      status: 'pending_accept'
+      status: 'pending_accept',
+      escrowStatus: amount > 0 ? 'pending_payment' : 'waived'
     });
+
+    if (!booking || !booking.id) {
+      showToast('预约创建失败', 'error');
+      return;
+    }
+
+    try {
+      await Storage.saveContract({
+        bookingId: booking.id,
+        title: '三方托管服务居间协议',
+        signer: parent.parentName,
+        tutorName: tutor.maskedName,
+        amount,
+        space,
+        rule: '课后48小时无异议自动解冻划拨（导师92%/平台8%）'
+      });
+    } catch (error) {
+      console.error('[Contract Error]', error);
+      showToast('合约保存失败', 'error');
+      return;
+    }
+
+    let paymentOk = amount <= 0;
+    if (amount > 0) {
+      paymentOk = await this.handleWeChatPayment(
+        booking.id,
+        amount,
+        tutor.maskedName,
+        (tutor.subjects && tutor.subjects[0]) || '辅导'
+      );
+    }
+
+    if (!paymentOk) {
+      showToast('支付失败，托管未冻结', 'error');
+      return;
+    }
 
     this.setData({
       bookingShow: false,
@@ -444,45 +469,8 @@ Page({
       iotLinkedBooking: (tutor.maskedName || '') + ' · ' + slot
     });
 
-    // Send booking to server API (triggers SMS notification)
-    try {
-      const result = await Storage.createBooking({
-        mentorId: tutor.mentorId,
-        tutorId: tutor.mentorId,
-        tutorName: tutor.maskedName,
-        parentId: parent.id,
-        parentName: parent.parentName,
-        parentPhone: parent.phone,
-        studentNickname: parent.studentNickname,
-        studentGrade: parent.studentGrade,
-        subject: (tutor.subjects && tutor.subjects[0]) || '辅导',
-        space,
-        schedule: slot,
-        timeSlot: slot,
-        amount,
-        hours,
-        status: 'pending_accept'
-      });
-      
-      if (result.success) {
-        console.log('[Booking Created on Server] SMS notification sent');
-      } else {
-        console.error('[Server Booking Error]', result.error);
-      }
-    } catch (error) {
-      console.error('[Server Booking Error]', error);
-      // Don't fail the booking if server call fails
-    }
-
-    // WeChat payment flow (non-zero amount)
-    if (amount > 0 && booking && booking.id) {
-      this.handleWeChatPayment(booking.id, amount, tutor.maskedName, (tutor.subjects && tutor.subjects[0]) || '辅导');
-    } else {
-      showToast('约课成功 · 托管已锁定，可关联 IoT 履约面板');
-    }
-
+    showToast('约课成功 · 托管已锁定，可关联 IoT 履约面板');
     this.reload();
-    // Reset IoT state for demo
     this.setIoTState('idle');
   },
 
@@ -502,28 +490,13 @@ Page({
       if (!prepayResult.success || !prepayResult.prepayId) {
         showToast(prepayResult.error || '支付订单创建失败', 'error');
         console.error('Prepay failed:', prepayResult);
-        return;
+        return false;
       }
 
       // Demo 模式：自动模拟支付成功
       if (payMode === 'demo' && prepayResult.mock) {
-        showToast('支付订单创建成功（演示模式）');
-
-        setTimeout(async () => {
-          try {
-            const confirmResult = await Storage.mockConfirmPayment(prepayResult.outTradeNo);
-
-            if (confirmResult.success) {
-              showToast('✓ 支付成功（演示模拟）');
-              this.reload();
-            } else {
-              showToast('模拟支付确认失败', 'error');
-            }
-          } catch (error) {
-            console.error('Mock confirm error:', error);
-            showToast('模拟支付处理异常', 'warning');
-          }
-        }, 1500);
+        const confirmResult = await Storage.mockConfirmPayment(prepayResult.outTradeNo);
+        return !!(confirmResult && confirmResult.success);
       } else {
         // 生产模式：调用微信支付
         const payParams = {
@@ -548,10 +521,12 @@ Page({
             }
           }
         });
+        return false;
       }
     } catch (error) {
       console.error('WeChat payment error:', error);
       showToast('支付处理异常，请稍后重试', 'error');
+      return false;
     }
   },
 

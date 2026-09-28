@@ -494,6 +494,20 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
       openid,
       payType: payType || 'JSAPI'
     });
+
+    if (result && result.outTradeNo) {
+      const payOrder = db.savePayOrder({
+        outTradeNo: result.outTradeNo,
+        prepayId: result.prepayId,
+        bookingId,
+        amount,
+        description: description || '星火学伴 · 课程预约',
+        status: 'NOTPAY',
+        mock: !!result.mock,
+        createTime: new Date().toISOString()
+      });
+      wechatPay.registerMockOrder(payOrder);
+    }
     
     ok(res, result);
   } catch (error) {
@@ -548,11 +562,23 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
       return fail(res, 400, '缺少 outTradeNo');
     }
     
+    const storedOrder = db.getPayOrder(outTradeNo);
+    if (storedOrder) {
+      wechatPay.registerMockOrder(storedOrder);
+    }
+
     const result = wechatPay.mockConfirmPayment(outTradeNo);
     
     if (!result.success) {
-      return fail(res, 400, result.error);
+      return fail(res, 400, result.error || '确认失败');
     }
+
+    db.savePayOrder({
+      outTradeNo,
+      status: 'SUCCESS',
+      transactionId: result.transactionId,
+      successTime: result.successTime || new Date().toISOString()
+    });
     
     // 验证用户只能确认自己的订单
     const booking = db.getBookings().find(b => b.id === result.bookingId);
@@ -995,21 +1021,86 @@ app.post('/api/assessments', requireAuth, (req, res) => {
 
 /* Contracts */
 app.get('/api/contracts', requireAuth, (req, res) => {
-  // 只有管理员可以看所有合约
-  if (req.user.role !== 'admin') {
-    return fail(res, 403, '需要管理员权限');
+  db.seedIfEmpty();
+  const all = db.getContracts();
+
+  if (req.user.role === 'admin') {
+    return ok(res, all);
   }
-  
-  ok(res, db.getContracts());
+
+  if (req.user.role === 'parent') {
+    const parentId = req.user.userId;
+    const parent = db.getParents().find((p) => p.id === parentId);
+    const filtered = all.filter(
+      (c) => c.parentId === parentId || (parent && c.parentPhone && c.parentPhone === parent.phone)
+    );
+    return ok(res, filtered);
+  }
+
+  if (req.user.role === 'mentor') {
+    const mentorId = req.user.userId;
+    const bookingIds = new Set(
+      db.getBookings()
+        .filter((b) => b.mentorId === mentorId || b.tutorId === mentorId)
+        .map((b) => b.id)
+    );
+    const filtered = all.filter(
+      (c) =>
+        c.mentorId === mentorId ||
+        c.tutorId === mentorId ||
+        (c.bookingId && bookingIds.has(c.bookingId))
+    );
+    return ok(res, filtered);
+  }
+
+  return fail(res, 403, '无权限');
 });
 
 app.post('/api/contracts', requireAuth, (req, res) => {
-  // 只有管理员可以创建合约
-  if (req.user.role !== 'admin') {
-    return fail(res, 403, '需要管理员权限');
+  db.seedIfEmpty();
+  const body = req.body || {};
+
+  if (req.user.role === 'admin') {
+    return ok(res, db.saveContract(body));
   }
-  
-  ok(res, db.saveContract(req.body || {}));
+
+  if (req.user.role === 'parent') {
+    const parentId = req.user.userId;
+    const parent = db.getParents().find((p) => p.id === parentId);
+    if (!parent) {
+      return fail(res, 404, '用户不存在');
+    }
+
+    const bookingId = body.bookingId;
+    if (!bookingId) {
+      return fail(res, 400, '缺少 bookingId');
+    }
+
+    const booking = db.getBookings().find((b) => b.id === bookingId);
+    if (!booking) {
+      return fail(res, 404, '预约不存在');
+    }
+
+    if (booking.parentId !== parent.id && booking.parentPhone !== parent.phone) {
+      return fail(res, 403, '只能为自己的预约签署合约');
+    }
+
+    const record = db.saveContract({
+      title: body.title || '三方托管服务居间协议',
+      signer: body.signer,
+      tutorName: body.tutorName || booking.tutorName,
+      amount: body.amount != null ? body.amount : booking.amount,
+      space: body.space || booking.space,
+      bookingId,
+      parentId: parent.id,
+      parentPhone: parent.phone,
+      mentorId: booking.mentorId || booking.tutorId,
+      tutorId: booking.tutorId || booking.mentorId
+    });
+    return ok(res, record);
+  }
+
+  return fail(res, 403, '无权限');
 });
 
 /* Session - 已废弃，保留兼容 */
@@ -1037,6 +1128,9 @@ app.post('/api/tutors/match', requireAuth, (req, res) => {
 app.use((req, res) => {
   fail(res, 404, 'not found: ' + req.method + ' ' + req.path);
 });
+
+db.seedIfEmpty();
+wechatPay.hydrateMockOrders(db.getPayOrders());
 
 app.listen(PORT, HOST, () => {
   console.log('='.repeat(60));
