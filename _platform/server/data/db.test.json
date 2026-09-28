@@ -1,0 +1,1734 @@
+{
+  "mentors": [
+    {
+      "id": "AP-8801",
+      "code": "CD-2026-8809",
+      "realName": "张若愚",
+      "phone": "18628009821",
+      "idCard": "510107200208153412",
+      "university": "四川大学",
+      "province": "四川",
+      "degree": "硕士研究生在读",
+      "chsiCode": "A98F72KL50198821",
+      "chsiStatus": "有效 (在籍)",
+      "chsiMajor": "应用数学专业 · 硕士 (2027年毕业)",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "初中数学",
+        "高中数学",
+        "美术艺考文化课冲刺"
+      ],
+      "customSubjects": [
+        "美术艺考文化课冲刺"
+      ],
+      "hourlyRate": 135,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合高中/艺考建议区间 (¥120-200/h)",
+      "scoreHighlight": "高考数学145分 · 全国数学竞赛二等奖",
+      "styles": [
+        "引导启发解题",
+        "大题压轴模型归纳",
+        "思维导图教学"
+      ],
+      "proofFiles": [
+        {
+          "name": "全国高中数学联赛一等奖证书.pdf",
+          "size": "2.1MB",
+          "verified": true
+        },
+        {
+          "name": "川大数学学院推免保研成绩单(前3%).jpg",
+          "size": "3.2MB",
+          "verified": true
+        },
+        {
+          "name": "全国大学生数学建模竞赛二等奖.pdf",
+          "size": "1.4MB",
+          "verified": true
+        }
+      ],
+      "lectureUrl": "https://pan.baidu.com/s/1demoSparkLecture2026",
+      "status": "pending",
+      "submitTime": "2026-09-09 18:24",
+      "evalGrade": "V2 级金牌导师",
+      "reviewComment": "试讲讲解清晰，重点突出压轴函数解法模型，资质齐备，予以准入入库。",
+      "bankName": "招商银行",
+      "bankCardNumber": "6214830188901122",
+      "spacePreference": "青羊金沙文化微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "青羊金沙文化微网点"
+      ],
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8802",
+      "code": "CD-2026-8810",
+      "realName": "李思源",
+      "phone": "13880123456",
+      "idCard": "510104200305128910",
+      "university": "电子科技大学",
+      "province": "四川",
+      "degree": "本科在读 (大三)",
+      "chsiCode": "B12E8890MN340112",
+      "chsiStatus": "有效 (在籍)",
+      "chsiMajor": "信息与软件工程专业 · 本科 (2027年毕业)",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "初中物理",
+        "初中数学",
+        "初中全科答疑"
+      ],
+      "customSubjects": [],
+      "hourlyRate": 110,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合初中阶段建议区间 (¥100-180/h)",
+      "scoreHighlight": "高考理综278分 · 物理满分110",
+      "styles": [
+        "基础漏洞重构",
+        "错题本高效提分法"
+      ],
+      "proofFiles": [
+        {
+          "name": "大学物理全满绩截图证明.jpg",
+          "size": "1.9MB",
+          "verified": true
+        },
+        {
+          "name": "国家奖学金荣誉证书.pdf",
+          "size": "1.1MB",
+          "verified": true
+        }
+      ],
+      "lectureUrl": "https://pan.quark.cn/s/demoQuarkPhysics882",
+      "status": "approved",
+      "submitTime": "2026-09-09 19:40",
+      "evalGrade": "V1 级标准导师",
+      "reviewComment": "物理力学受力分析拆解细致，适合初中提优补弱学员。",
+      "spacePreference": "高新大源中央微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "高新大源中央微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8803",
+      "code": "CD-2026-8811",
+      "realName": "王艺霖",
+      "phone": "15928114422",
+      "idCard": "510105200409201144",
+      "university": "西南交通大学",
+      "province": "四川",
+      "degree": "本科在读 (大二)",
+      "chsiCode": "C33K9911OP231908",
+      "chsiStatus": "有效 (在籍)",
+      "chsiMajor": "外国语学院英语专业 · 英语专业四级优秀",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "小学英语",
+        "初中英语",
+        "考研英语(一/二)"
+      ],
+      "customSubjects": [
+        "雅思托福口语备考"
+      ],
+      "hourlyRate": 120,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合初中/考研英语建议区间 (¥100-180/h)",
+      "scoreHighlight": "高考英语146分 · 全国大学生英语竞赛特等奖",
+      "styles": [
+        "引导启发解题",
+        "耐心督学陪读"
+      ],
+      "proofFiles": [
+        {
+          "name": "全国大学生英语竞赛NECCS特等奖.pdf",
+          "size": "2.8MB",
+          "verified": true
+        },
+        {
+          "name": "专四TEM4优秀证书.jpg",
+          "size": "1.6MB",
+          "verified": true
+        }
+      ],
+      "lectureUrl": "https://www.bilibili.com/video/BV1demoEnglishLecture",
+      "status": "approved",
+      "submitTime": "2026-09-09 20:15",
+      "evalGrade": "V2 级金牌导师",
+      "reviewComment": "发音地道，中考阅读长难句结构归纳能力优秀。",
+      "spacePreference": "青羊金沙文化微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "青羊金沙文化微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8804",
+      "code": "CD-2026-8812",
+      "realName": "赵文博",
+      "phone": "17780556633",
+      "idCard": "510108200111037722",
+      "university": "西南财经大学",
+      "province": "四川",
+      "degree": "全日制本科毕业生",
+      "chsiCode": "D77Y5500QR998811",
+      "chsiStatus": "有效 (已毕业)",
+      "chsiMajor": "金融学专业 · 经济学学士",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "考研数学(一/二/三)",
+        "高中数学"
+      ],
+      "customSubjects": [],
+      "hourlyRate": 190,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合考研数学建议区间 (¥150-280/h)",
+      "scoreHighlight": "考研数学三142分",
+      "styles": [
+        "大题压轴模型归纳",
+        "解题技巧与大题模型"
+      ],
+      "proofFiles": [
+        {
+          "name": "研究生初试成绩单与数学单科证明.jpg",
+          "size": "2.3MB",
+          "verified": true
+        }
+      ],
+      "lectureUrl": "https://pan.baidu.com/s/1mathLectureZwb",
+      "status": "approved",
+      "submitTime": "2026-09-09 21:05",
+      "evalGrade": "V2 级金牌导师",
+      "reviewComment": "高等数学微积分极限证明思路开阔，建议重点对接考研数学需求。",
+      "spacePreference": "武侯川大望江微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "武侯川大望江微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8805",
+      "code": "CD-2026-8798",
+      "realName": "陈梓涵",
+      "phone": "13540001199",
+      "idCard": "510106200204185566",
+      "university": "四川师范大学",
+      "province": "四川",
+      "degree": "本科在读 (大四)",
+      "chsiCode": "E88U1122AA443322",
+      "chsiStatus": "有效 (在籍)",
+      "chsiMajor": "汉语言文学 (师范方向)",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "初中语文",
+        "高中语文"
+      ],
+      "customSubjects": [],
+      "hourlyRate": 130,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合初高中语文区间",
+      "scoreHighlight": "语文高考133分 · 作文特等奖",
+      "styles": [
+        "引导启发解题",
+        "错题本高效提分法"
+      ],
+      "proofFiles": [
+        {
+          "name": "初中高级中学教师资格考试合格证明.pdf",
+          "size": "1.5MB",
+          "verified": true
+        }
+      ],
+      "lectureUrl": "https://pan.quark.cn/s/chineseDemoCzh",
+      "status": "approved",
+      "submitTime": "2026-09-08 14:10",
+      "evalGrade": "V2 级金牌导师",
+      "reviewComment": "古文阅读断句及主旨升华讲练得当，已授予工牌。",
+      "spacePreference": "武侯川大望江微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "武侯川大望江微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8806",
+      "code": "CD-2026-8772",
+      "realName": "孙浩然",
+      "phone": "18980889922",
+      "idCard": "510109200301298811",
+      "university": "成都理工大学",
+      "province": "四川",
+      "degree": "本科在读 (大二)",
+      "chsiCode": "F99P4433BB776655",
+      "chsiStatus": "待复核 (查询超时)",
+      "chsiMajor": "地质工程专业",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "小学数学",
+        "小学奥数思维"
+      ],
+      "customSubjects": [],
+      "hourlyRate": 90,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合小学阶段 (¥70-100/h)",
+      "scoreHighlight": "高考数学128分",
+      "styles": [
+        "耐心督学陪读"
+      ],
+      "proofFiles": [],
+      "lectureUrl": "https://pan.baidu.com/s/demoBlank",
+      "status": "supplement",
+      "submitTime": "2026-09-08 16:30",
+      "evalGrade": "待复评",
+      "reviewComment": "未上传在校成绩单或高考分数佐证截图，试讲网盘链接失效，需补交。",
+      "spacePreference": "高新大源中央微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "高新大源中央微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8807",
+      "code": "CD-2026-8750",
+      "realName": "周敏",
+      "phone": "13980005544",
+      "idCard": "510103199807124433",
+      "university": "成都大学",
+      "province": "四川",
+      "degree": "全日制本科毕业生",
+      "chsiCode": "G11T7788CC990011",
+      "chsiStatus": "有效",
+      "chsiMajor": "教育学",
+      "publicTeacherCompliance": false,
+      "subjects": [
+        "初中化学",
+        "高中化学"
+      ],
+      "customSubjects": [],
+      "hourlyRate": 260,
+      "rateDifficulty": "成交较难",
+      "rateTierNote": "严重溢价且存在公办校在编任教记录",
+      "scoreHighlight": "十年中考化学教龄 (存在红线嫌疑)",
+      "styles": [
+        "大题压轴模型归纳"
+      ],
+      "proofFiles": [
+        {
+          "name": "某区重点中学聘书截图.jpg",
+          "size": "1.2MB",
+          "verified": false
+        }
+      ],
+      "lectureUrl": "https://pan.baidu.com/s/demoTeacherSchool",
+      "status": "rejected",
+      "submitTime": "2026-09-07 10:12",
+      "evalGrade": "不予评级",
+      "reviewComment": "排查发现系公立在职合同聘任教师，违反教育部双减合规红线，一票否决拉黑。",
+      "spacePreference": "青羊金沙文化微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "青羊金沙文化微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    },
+    {
+      "id": "AP-8808",
+      "code": "CD-2026-8820",
+      "realName": "周晓梦",
+      "phone": "13688006655",
+      "idCard": "510107200112088866",
+      "university": "四川音乐学院 / 四川大学",
+      "province": "四川",
+      "degree": "音乐学与通识辅修",
+      "chsiCode": "H22M3344DD556677",
+      "chsiStatus": "有效 (在籍)",
+      "chsiMajor": "音乐学 · 艺考文化课辅修",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "美术/音乐艺考文化课",
+        "语文",
+        "英语"
+      ],
+      "customSubjects": [
+        "艺考文化课冲刺"
+      ],
+      "hourlyRate": 140,
+      "rateDifficulty": "容易成交",
+      "rateTierNote": "符合艺考文化课建议区间",
+      "scoreHighlight": "艺考文化课百日提分120分实战经验",
+      "styles": [
+        "考前心态疏导",
+        "高频基础分扫盲",
+        "碎片时间提分法"
+      ],
+      "proofFiles": [
+        {
+          "name": "艺考文化课提分案例集.pdf",
+          "size": "2.0MB",
+          "verified": true
+        }
+      ],
+      "lectureUrl": "https://pan.baidu.com/s/demoArtExamCulture",
+      "status": "approved",
+      "submitTime": "2026-09-08 11:20",
+      "evalGrade": "V2 级金牌导师",
+      "reviewComment": "艺考文化课提分路径清晰，适合冲刺学员。",
+      "spacePreference": "武侯川大望江微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "武侯川大望江微网点"
+      ],
+      "bankName": "招商银行",
+      "bankCardNumber": "",
+      "sensitiveChangePending": false
+    }
+  ],
+  "parents": [
+    {
+      "id": "PAR-MUKW2AO3-709",
+      "createdAt": "2026-09-28 06:50",
+      "phone": "13900000794",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:50"
+    },
+    {
+      "id": "PAR-MUKVSQQH-637",
+      "createdAt": "2026-09-28 06:43",
+      "phone": "13900000028",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "PAR-MUKVS8LR-180",
+      "createdAt": "2026-09-28 06:43",
+      "phone": "13900000142",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "PAR-MUKVQHGR-766",
+      "createdAt": "2026-09-28 06:41",
+      "phone": "13900000061",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:41"
+    },
+    {
+      "id": "PAR-MUKVQ2MZ-383",
+      "createdAt": "2026-09-28 06:41",
+      "phone": "13900000166",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:41"
+    },
+    {
+      "id": "PAR-MUKVO8QS-447",
+      "createdAt": "2026-09-28 06:40",
+      "phone": "13900000500",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:40"
+    },
+    {
+      "id": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentRole": "妈妈",
+      "phone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "subjectPlans": {
+        "数学": {
+          "weakPoints": [
+            "二次函数图象性质与最值求法",
+            "圆的切线性质与辅助线综合证明"
+          ],
+          "pacing": "查缺补漏 · 阶段单元复盘",
+          "pains": [
+            "畏难情绪遇压轴就慌",
+            "粗心漏题做题慢"
+          ]
+        },
+        "物理": {
+          "weakPoints": [
+            "动态电路欧姆定律综合计算",
+            "电功率比值与电热极值分析"
+          ],
+          "pacing": "紧贴校内进度 · 随堂查漏补缺",
+          "pains": [
+            "概念模糊公式乱用"
+          ]
+        }
+      },
+      "syllabusTopics": [
+        "二次函数图象性质与最值求法",
+        "圆的切线性质与辅助线综合证明",
+        "动态电路欧姆定律综合计算",
+        "电功率比值与电热极值分析"
+      ],
+      "pacingMode": "查缺补漏 · 阶段单元复盘",
+      "budgetMin": 100,
+      "budgetMax": 160,
+      "budgetRate": 130,
+      "selectedSpace": "青羊金沙文化微网点",
+      "targetGoal": "希望在中考前加强几何综合证明与函数动点题型，每周在青羊金沙仓系统巩固。",
+      "painTags": [
+        "畏难情绪遇压轴就慌",
+        "粗心漏题做题慢",
+        "概念模糊公式乱用"
+      ],
+      "createdAt": "2026-09-10 09:00",
+      "updatedAt": "2026-09-10 09:00"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "BK-MUKWCZW2-362",
+      "createdAt": "2026-09-28 06:59",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:59:17.817Z",
+      "transactionId": "MOCK-WX-1790578757817",
+      "updatedAt": "2026-09-28 06:59"
+    },
+    {
+      "id": "BK-MUKWBB0Y-547",
+      "createdAt": "2026-09-28 06:57",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:57:58.937Z",
+      "transactionId": "MOCK-WX-1790578678937",
+      "updatedAt": "2026-09-28 06:57"
+    },
+    {
+      "id": "BK-MUKW9CLF-680",
+      "createdAt": "2026-09-28 06:56",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:56:27.657Z",
+      "transactionId": "MOCK-WX-1790578587657",
+      "updatedAt": "2026-09-28 06:56"
+    },
+    {
+      "id": "BK-MUKW6S86-553",
+      "createdAt": "2026-09-28 06:54",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:54:27.949Z",
+      "transactionId": "MOCK-WX-1790578467949",
+      "updatedAt": "2026-09-28 06:54"
+    },
+    {
+      "id": "BK-MUKW3FAY-836",
+      "createdAt": "2026-09-28 06:51",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:51:51.235Z",
+      "transactionId": "MOCK-WX-1790578311235",
+      "updatedAt": "2026-09-28 06:51"
+    },
+    {
+      "id": "BK-MUKW2AO7-205",
+      "createdAt": "2026-09-28 06:50",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-MUKW2AO3-709",
+      "parentPhone": "13900000794",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:50:58.571Z",
+      "transactionId": "MOCK-WX-1790578258571",
+      "updatedAt": "2026-09-28 06:50"
+    },
+    {
+      "id": "BK-MUKVSQQM-534",
+      "createdAt": "2026-09-28 06:43",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-MUKVSQQH-637",
+      "parentPhone": "13900000028",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:43:32.833Z",
+      "transactionId": "MOCK-WX-1790577812833",
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "BK-MUKVS8LV-334",
+      "createdAt": "2026-09-28 06:43",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-MUKVS8LR-180",
+      "parentPhone": "13900000142",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:43:09.335Z",
+      "transactionId": "MOCK-WX-1790577789335",
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "BK-SEED-001",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李老师",
+      "parentId": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "初中物理",
+      "space": "高新大源中央微网点",
+      "schedule": "2026-09-20 周六 14:00-16:00",
+      "timeSlot": "周六 14:00-16:00",
+      "amount": 220,
+      "hours": 2,
+      "status": "pending_accept",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "createdAt": "2026-09-14 16:20",
+      "declineReason": ""
+    },
+    {
+      "id": "BK-SEED-002",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李老师",
+      "parentId": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "初中数学",
+      "space": "高新大源中央微网点",
+      "schedule": "2026-09-21 周日 09:00-11:00",
+      "timeSlot": "周日 09:00-11:00",
+      "amount": 220,
+      "hours": 2,
+      "status": "pending_accept",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "createdAt": "2026-09-14 18:05",
+      "declineReason": ""
+    },
+    {
+      "id": "BK-SEED-003",
+      "mentorId": "AP-8803",
+      "tutorId": "AP-8803",
+      "tutorName": "王老师",
+      "parentId": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "初中英语",
+      "space": "青羊金沙文化微网点",
+      "schedule": "2026-09-22 周一 19:00-21:00",
+      "timeSlot": "周一 19:00-21:00",
+      "amount": 240,
+      "hours": 2,
+      "status": "pending_accept",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "createdAt": "2026-09-14 20:40",
+      "declineReason": ""
+    },
+    {
+      "id": "BK-SEED-004",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李老师",
+      "parentId": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "初中物理",
+      "space": "高新大源中央微网点",
+      "schedule": "2026-09-06 周六 14:00-16:00",
+      "timeSlot": "周六 14:00-16:00",
+      "amount": 220,
+      "hours": 2,
+      "status": "accepted",
+      "type": "one_off",
+      "escrowStatus": "released",
+      "completedAt": "2026-09-06 16:08",
+      "createdAt": "2026-09-04 10:15",
+      "declineReason": "",
+      "sessions": [
+        {
+          "id": "SES-SEED-004",
+          "date": "2026-09-06",
+          "weekday": 6,
+          "weekdayLabel": "周六",
+          "timeStart": "14:00",
+          "timeEnd": "16:00",
+          "timeLabel": "14:00-16:00",
+          "status": "completed",
+          "escrowStatus": "released",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-09-05 23:59",
+          "completedAt": "2026-09-06 16:08",
+          "completedBy": "mentor",
+          "releaseAt": "2026-09-08 16:08",
+          "classSummary": {
+            "title": "力学受力分析专题",
+            "content": "本课梳理重力/弹力/摩擦力三力合成，完成课本例题 3 道。作业：错题本 P12-15。下次建议带上单元卷复盘。",
+            "tags": [
+              "掌握情况",
+              "作业",
+              "下次建议"
+            ],
+            "createdAt": "2026-09-06 16:12",
+            "mentorId": "AP-8802"
+          }
+        }
+      ]
+    },
+    {
+      "id": "BK-SEED-005",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李老师",
+      "parentId": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "初中数学",
+      "space": "高新大源中央微网点",
+      "schedule": "2026-09-14 周日 09:00-11:00",
+      "timeSlot": "周日 09:00-11:00",
+      "amount": 220,
+      "hours": 2,
+      "status": "accepted",
+      "type": "one_off",
+      "escrowStatus": "frozen",
+      "completedAt": "2026-09-15 20:10",
+      "createdAt": "2026-09-12 14:30",
+      "declineReason": "",
+      "sessions": [
+        {
+          "id": "SES-SEED-005",
+          "date": "2026-09-14",
+          "weekday": 0,
+          "weekdayLabel": "周日",
+          "timeStart": "09:00",
+          "timeEnd": "11:00",
+          "timeLabel": "09:00-11:00",
+          "status": "completed",
+          "escrowStatus": "frozen",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-09-13 23:59",
+          "completedAt": "2026-09-15 20:10",
+          "completedBy": "mentor",
+          "releaseAt": "2026-09-17 20:10",
+          "classSummary": {
+            "title": "二次函数最值专题复盘",
+            "content": "掌握顶点式求最值与对称轴讨论。作业：教材习题 5.3 选做。下次建议巩固动点综合题。",
+            "tags": [
+              "掌握情况",
+              "作业"
+            ],
+            "createdAt": "2026-09-15 20:15",
+            "mentorId": "AP-8802"
+          }
+        }
+      ]
+    },
+    {
+      "id": "BK-SEED-006",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李老师",
+      "parentId": "PAR-DEMO-001",
+      "parentName": "刘女士",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "subject": "初中物理",
+      "space": "高新大源中央微网点",
+      "schedule": "每周周六 14:00 · 共4次",
+      "timeSlot": "周六 14:00-16:00",
+      "amount": 880,
+      "hours": 2,
+      "status": "accepted",
+      "type": "weekly",
+      "weekday": 6,
+      "time": "14:00",
+      "sessionCount": 4,
+      "escrowStatus": "frozen",
+      "createdAt": "2026-08-28 11:00",
+      "declineReason": "",
+      "sessions": [
+        {
+          "id": "SES-SEED-006-0",
+          "date": "2026-08-30",
+          "weekday": 6,
+          "weekdayLabel": "周六",
+          "timeStart": "14:00",
+          "timeEnd": "16:00",
+          "timeLabel": "14:00-16:00",
+          "status": "completed",
+          "escrowStatus": "released",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-08-29 23:59",
+          "completedAt": "2026-08-30 16:05",
+          "completedBy": "mentor",
+          "releaseAt": "2026-09-01 16:05",
+          "classSummary": {
+            "title": "电学入门 · 串并联电路",
+            "content": "厘清电流电压电阻基本关系，完成串并联对比实验题。作业：练习册第 8 课。",
+            "tags": [
+              "掌握情况",
+              "作业"
+            ],
+            "createdAt": "2026-08-30 16:20",
+            "mentorId": "AP-8802"
+          }
+        },
+        {
+          "id": "SES-SEED-006-1",
+          "date": "2026-09-06",
+          "weekday": 6,
+          "weekdayLabel": "周六",
+          "timeStart": "14:00",
+          "timeEnd": "16:00",
+          "timeLabel": "14:00-16:00",
+          "status": "completed",
+          "escrowStatus": "released",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-09-05 23:59",
+          "completedAt": "2026-09-06 16:00",
+          "completedBy": "mentor",
+          "releaseAt": "2026-09-08 16:00",
+          "classSummary": {
+            "title": "动态电路综合计算",
+            "content": "滑动变阻器变化对功率影响已掌握大半；仍需加强极值讨论。",
+            "tags": [
+              "掌握情况",
+              "下次建议"
+            ],
+            "createdAt": "2026-09-06 16:18",
+            "mentorId": "AP-8802"
+          }
+        },
+        {
+          "id": "SES-SEED-006-2",
+          "date": "2026-09-13",
+          "weekday": 6,
+          "weekdayLabel": "周六",
+          "timeStart": "14:00",
+          "timeEnd": "16:00",
+          "timeLabel": "14:00-16:00",
+          "status": "completed",
+          "escrowStatus": "frozen",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-09-12 23:59",
+          "completedAt": "2026-09-15 19:40",
+          "completedBy": "mentor",
+          "releaseAt": "2026-09-17 19:40",
+          "classSummary": null
+        },
+        {
+          "id": "SES-SEED-006-3",
+          "date": "2026-09-20",
+          "weekday": 6,
+          "weekdayLabel": "周六",
+          "timeStart": "14:00",
+          "timeEnd": "16:00",
+          "timeLabel": "14:00-16:00",
+          "status": "scheduled",
+          "escrowStatus": "frozen",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-09-19 23:59",
+          "completedAt": "",
+          "releaseAt": ""
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "seeded": true,
+  "assessments": [],
+  "users": [],
+  "phoneAuditLogs": [
+    {
+      "id": "AUDIT-MUKW2AOC-957",
+      "timestamp": "2026-09-28 06:50",
+      "userId": "PAR-MUKW2AO3-709",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    },
+    {
+      "id": "AUDIT-MUKVSQQS-603",
+      "timestamp": "2026-09-28 06:43",
+      "userId": "PAR-MUKVSQQH-637",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    },
+    {
+      "id": "AUDIT-MUKVS8M3-357",
+      "timestamp": "2026-09-28 06:43",
+      "userId": "PAR-MUKVS8LR-180",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    },
+    {
+      "id": "AUDIT-MUKVQHGY-858",
+      "timestamp": "2026-09-28 06:41",
+      "userId": "PAR-MUKVQHGR-766",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    }
+  ],
+  "authTokens": [
+    {
+      "tokenHash": "f32b8cbec402d6d6fbf7ab2f64fad395720fa9d76a17ac057e147ac32add9225",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790575556807,
+      "expiresAt": 1793167556807
+    },
+    {
+      "tokenHash": "751d03aea45d31b80cda314cb93495d247a8ff2cc0a6e3fd4b721b790ccaa84a",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575556830,
+      "expiresAt": 1793167556830
+    },
+    {
+      "tokenHash": "428e66ec3f7c4dd5057f8e37d252862278546a57838e512f7e7447fb531ff00f",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575578171,
+      "expiresAt": 1793167578171
+    },
+    {
+      "tokenHash": "1c82e59970a7c390471ad04656f2b3223fb9e48eb1374a62256925df78d0097b",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790575578260,
+      "expiresAt": 1793167578260
+    },
+    {
+      "tokenHash": "8de62472540ce5743e55012b5c3db37b3974745d8c22f771838fb0d5cb507c16",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575578293,
+      "expiresAt": 1793167578293
+    },
+    {
+      "tokenHash": "296c611978e687331e8b48653f99928c4d89777d05a59876851d28ddc86b3032",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576308935,
+      "expiresAt": 1793168308935
+    },
+    {
+      "tokenHash": "8d07f8c3e23007bf8d74700bec10358b52bd503a4e48e451391a3ee7d9ce8bce",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576316603,
+      "expiresAt": 1793168316603
+    },
+    {
+      "tokenHash": "9aa0f6b93a03e1bcc2de68ff118b9ef05e54e94618703e0b10ab6f50e235f6d4",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576394415,
+      "expiresAt": 1793168394415
+    },
+    {
+      "tokenHash": "b942cc1e263113191b3f00e03e3e254a6a5d4953743c5c6740bf05a6817141fd",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576402104,
+      "expiresAt": 1793168402104
+    },
+    {
+      "tokenHash": "98995f80468bc9ded978c0fff9588ed89a6dcb383a2f925a3bea55656b6bd6e2",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576514322,
+      "expiresAt": 1793168514322
+    },
+    {
+      "tokenHash": "7e0f05542a695335ae387f706de8afc5acdcf7f553a27739e18ee64e34611018",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576548298,
+      "expiresAt": 1793168548298
+    },
+    {
+      "tokenHash": "d8d7ea337f96ce9f9c689c7f501de16aac3af68c9797c0925581161a8afe9b28",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576555955,
+      "expiresAt": 1793168555955
+    },
+    {
+      "tokenHash": "b1255ef8ca0d315880be4832e75002ccf176c96ff471f61b31522771397e5c6f",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576572925,
+      "expiresAt": 1793168572925
+    },
+    {
+      "tokenHash": "be99b0377904d2172e1e787d93628efd39477046a557d45c56a86dd9c7f25eef",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576654382,
+      "expiresAt": 1793168654382
+    },
+    {
+      "tokenHash": "dfd6a39d4eaa787b47b8ab6287dc63fc504c9c4f792a0beca5d79d7dbdbf9c01",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576667023,
+      "expiresAt": 1793168667023
+    },
+    {
+      "tokenHash": "c1e02c623708ad80bc3bc41f12f365310cd05dcc8efa51134c276ded67628747",
+      "userId": "PAR-MUKVO8QS-447",
+      "role": "parent",
+      "phone": "13900000500",
+      "createdAt": 1790577602885,
+      "expiresAt": 1793169602885
+    },
+    {
+      "tokenHash": "38f1834f4ec41abef9b8075b360d16a7cd2d41a4c083acff98119111747447b3",
+      "userId": "PAR-MUKVQ2MZ-383",
+      "role": "parent",
+      "phone": "13900000166",
+      "createdAt": 1790577688284,
+      "expiresAt": 1793169688284
+    },
+    {
+      "tokenHash": "df725f20ec2a4996901a1352f78014e97d73e30689f45a700ad496909cc0a96a",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790577870291,
+      "expiresAt": 1793169870291
+    },
+    {
+      "tokenHash": "901047709a405aefcf9da7ae53a844d2dc70ebe1e9c8ce7b4887a37204eff803",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790577878011,
+      "expiresAt": 1793169878011
+    },
+    {
+      "tokenHash": "21d73545f9d433807e11e9da40354f0993c54627d656175d05aa308dc0cb5852",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790578304664,
+      "expiresAt": 1793170304664
+    },
+    {
+      "tokenHash": "5707ee1c461cb98231517410d9b5e10bbb7746a5422fbc7503490462beef7cc6",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578313504,
+      "expiresAt": 1793170313504
+    },
+    {
+      "tokenHash": "33560eff2a614df246a53b3bc5195c19c73aab2c060c2c0a2ca65a0448f69647",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790578461380,
+      "expiresAt": 1793170461380
+    },
+    {
+      "tokenHash": "63cc4812764710cca5151fe7e82c9fa99bb08671cd6f17dbde24f702f7513823",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578470221,
+      "expiresAt": 1793170470221
+    },
+    {
+      "tokenHash": "cabb7dbb88a9f6e371fbe6017b167a2e349e237e69c46a3d68eb13eb590a8f88",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790578581087,
+      "expiresAt": 1793170581087
+    },
+    {
+      "tokenHash": "1d556b59c3a47a2f15295431e5282829e09ac2ab4a69c7a81cb8cb53fbfaa6dc",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578589920,
+      "expiresAt": 1793170589920
+    },
+    {
+      "tokenHash": "131dd4fa3fa8642625b0e9eadeca2fb0b4930a033897aa783779b55e41c23753",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790578672367,
+      "expiresAt": 1793170672367
+    },
+    {
+      "tokenHash": "e0baa63ac720da6789030d85a841af05c8c6c947dd1c2de8de494017c1cfd346",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578681212,
+      "expiresAt": 1793170681212
+    },
+    {
+      "tokenHash": "9c515c50e6aedfd9f261906c3bc0cba27a89d123fc3b5d47f702292a950a6c09",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790578751223,
+      "expiresAt": 1793170751223
+    },
+    {
+      "tokenHash": "2335a5511a064b4086879eecdbafc7038fb47bf5d40422a10d58cf89467cb993",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578760105,
+      "expiresAt": 1793170760105
+    },
+    {
+      "tokenHash": "4c4e3b4fbc83b60471aa01b9c11703c4c2a76dcdbc5965445e6f8e27dbd6600d",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578784867,
+      "expiresAt": 1793170784867
+    },
+    {
+      "tokenHash": "f6422cbccf4cf442c9d4220b07c83ca1cb1f7a7c713d5ca8bdbf2289a6aad364",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790578784948,
+      "expiresAt": 1793170784948
+    },
+    {
+      "tokenHash": "379051bf9c0990e31b94832f5d14e237c088257c877cc14701b91bd5b8baff2c",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790578784978,
+      "expiresAt": 1793170784978
+    }
+  ]
+}

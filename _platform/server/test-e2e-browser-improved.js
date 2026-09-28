@@ -68,44 +68,67 @@ async function testNewParentRegistration(browser) {
     await page.click('input[name="targetSubject"][value="数学"]');
     await delay(500);
     
-    // Click the subject's config button to open wizard
-    const configButton = await page.$('button[onclick*="openSubjectWizard"][onclick*="数学"]');
-    if (configButton) {
-      await configButton.click();
-      await delay(1000);
+    // The subject is checked, so wizard should open automatically
+    // Wait for wizard modal to appear
+    await delay(1500);
+    
+    // Check if wizard modal is visible
+    const wizardVisible = await page.evaluate(() => {
+      const modal = document.getElementById('subjectWizardModal');
+      return modal && !modal.classList.contains('hidden');
+    });
+    
+    if (wizardVisible) {
+      console.log('  ✓ Wizard modal opened');
       
-      // In the wizard modal, select weak points
+      // Select weak points
       const weakPoints = await page.$$('.wizard-topic-cb');
       if (weakPoints.length >= 2) {
         await weakPoints[0].click();
         await weakPoints[1].click();
+        await delay(300);
       }
-      await delay(300);
       
-      // Go to wizard step 2 (pacing)
-      await page.click('button[onclick="goToWizardStep(2)"]');
+      // Click next to go to pacing step
+      await page.click('#btnWizardNext');
       await delay(500);
       
-      // Select pacing
-      const pacingRadio = await page.$('input[name="wizardPacing"]');
-      if (pacingRadio) {
-        await pacingRadio.click();
-      }
-      await delay(300);
-      
-      // Go to wizard step 3 (pains)
-      await page.click('button[onclick="goToWizardStep(3)"]');
+      // Click next again to go to pain step (pacing already has default selection)
+      await page.click('#btnWizardNext');
       await delay(500);
       
       // Select a pain tag
-      const painTag = await page.$('#wizardPainContainer > span');
-      if (painTag) {
-        await painTag.click();
+      const painTags = await page.$$('#wizardPainContainer > span');
+      if (painTags.length > 0) {
+        await painTags[0].click();
+        await delay(300);
       }
-      await delay(300);
       
       // Finish wizard
-      await page.click('button[onclick="finishSubjectWizard()"]');
+      await page.click('#btnWizardFinish');
+      await delay(1000);
+      console.log('  ✓ Wizard completed');
+    } else {
+      console.log('  ⚠ Wizard did not open automatically, trying manual');
+      // Try to click config button manually
+      await page.evaluate(() => {
+        const btn = document.querySelector('button[onclick*="openSubjectWizard"]');
+        if (btn) btn.click();
+      });
+      await delay(1000);
+      
+      // Try wizard steps again
+      const weakPoints = await page.$$('.wizard-topic-cb');
+      if (weakPoints.length > 0) await weakPoints[0].click();
+      await delay(300);
+      await page.click('#btnWizardNext');
+      await delay(500);
+      await page.click('#btnWizardNext');
+      await delay(500);
+      const painTags = await page.$$('#wizardPainContainer > span');
+      if (painTags.length > 0) await painTags[0].click();
+      await delay(300);
+      await page.click('#btnWizardFinish');
       await delay(1000);
     }
     
@@ -274,39 +297,29 @@ async function testDuplicatePhoneRegistration(browser) {
     
     // Check math subject
     await page.click('input[name="targetSubject"][value="数学"]');
-    await delay(500);
+    await delay(1500); // Wait for wizard to auto-open
     
-    // Open wizard and quickly complete it
-    const configButton = await page.$('button[onclick*="openSubjectWizard"][onclick*="数学"]');
-    if (configButton) {
-      await configButton.click();
-      await delay(500);
-      
-      // Click first weak point
+    // Complete wizard if it opened
+    const wizardVisible = await page.evaluate(() => {
+      const modal = document.getElementById('subjectWizardModal');
+      return modal && !modal.classList.contains('hidden');
+    });
+    
+    if (wizardVisible) {
       const weakPoint = await page.$('.wizard-topic-cb');
       if (weakPoint) await weakPoint.click();
       await delay(200);
       
-      // Go to pacing step
-      await page.click('button[onclick="goToWizardStep(2)"]');
+      await page.click('#btnWizardNext');
+      await delay(300);
+      await page.click('#btnWizardNext');
       await delay(300);
       
-      // Select pacing
-      const pacing = await page.$('input[name="wizardPacing"]');
-      if (pacing) await pacing.click();
-      await delay(200);
-      
-      // Go to pain step
-      await page.click('button[onclick="goToWizardStep(3)"]');
-      await delay(300);
-      
-      // Select pain
       const pain = await page.$('#wizardPainContainer > span');
       if (pain) await pain.click();
       await delay(200);
       
-      // Finish
-      await page.click('button[onclick="finishSubjectWizard()"]');
+      await page.click('#btnWizardFinish');
       await delay(500);
     }
     
