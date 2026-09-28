@@ -385,73 +385,125 @@ async function testParentBookingAndPayment(browser) {
     console.log('  ✓ Logged in to parent dashboard');
     
     // Wait for mentors to load
-    await delay(2000);
+    await delay(3000);
     await screenshot(page, 'parent-dashboard-before-booking');
     
-    // Create booking via JS
-    const bookingCreated = await page.evaluate(() => {
-      // Find first mentor card and simulate booking
-      const mentorCard = document.querySelector('[data-mentor-id]');
-      if (!mentorCard) return false;
-      
-      // If there's a global booking function, call it
-      if (typeof window.createBooking === 'function') {
-        const mentorId = mentorCard.getAttribute('data-mentor-id');
-        window.createBooking(mentorId, {
-          subject: '数学',
-          hours: 2,
-          timeSlot: '周六 14:00-16:00',
-          space: '青羊金沙文化微网点'
+    // Get mentor list and create booking via API
+    const bookingResult = await page.evaluate(async (apiBase) => {
+      try {
+        // Check if StorageService is available
+        if (!window.StorageService || !window.StorageService.getMentors) {
+          return { success: false, error: 'StorageService not available' };
+        }
+        
+        // Get mentors
+        const mentors = await window.StorageService.getMentors();
+        if (!mentors || mentors.length === 0) {
+          return { success: false, error: 'No mentors available' };
+        }
+        
+        const mentor = mentors[0];
+        
+        // Get parent ID from storage
+        const parents = window.StorageService.getParents ? window.StorageService.getParents() : [];
+        if (parents.length === 0) {
+          return { success: false, error: 'No parent profile' };
+        }
+        const parent = parents[0];
+        
+        // Create booking via API
+        const response = await fetch(`${apiBase}/api/bookings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + window.StorageService.getAuthToken()
+          },
+          body: JSON.stringify({
+            mentorId: mentor.id,
+            parentId: parent.id,
+            parentPhone: parent.phone,
+            studentNickname: parent.studentNickname || '小测',
+            studentGrade: parent.studentGrade || '初三',
+            subject: '数学',
+            space: '青羊金沙文化微网点',
+            schedule: '周六 14:00-16:00',
+            amount: 300,
+            hours: 2,
+            status: 'pending_accept'
+          })
         });
-        return true;
+        
+        if (!response.ok) {
+          const error = await response.text();
+          return { success: false, error: `HTTP ${response.status}: ${error}` };
+        }
+        
+        const booking = await response.json();
+        
+        // Now create prepay order
+        const prepayResponse = await fetch(`${apiBase}/api/pay/wechat/prepay`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + window.StorageService.getAuthToken()
+          },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            amount: 30000,
+            description: '星火学伴 · 数学'
+          })
+        });
+        
+        if (!prepayResponse.ok) {
+          return { success: false, error: 'Prepay failed' };
+        }
+        
+        const prepay = await prepayResponse.json();
+        
+        // Mock confirm payment
+        if (prepay.mock) {
+          const confirmResponse = await fetch(`${apiBase}/api/pay/wechat/mock-confirm`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + window.StorageService.getAuthToken()
+            },
+            body: JSON.stringify({
+              outTradeNo: prepay.outTradeNo
+            })
+          });
+          
+          if (!confirmResponse.ok) {
+            return { success: false, error: 'Mock confirm failed' };
+          }
+        }
+        
+        return { success: true, bookingId: booking.id, parentId: parent.id };
+      } catch (error) {
+        return { success: false, error: error.message };
       }
-      
-      // Otherwise click the card
-      mentorCard.click();
-      return true;
-    });
+    }, API_BASE);
     
-    if (!bookingCreated) {
-      console.log('  ⚠ No mentors available for booking');
-      console.log('  ✅ PASSED (skip booking - no mentors)');
-      return;
+    if (!bookingResult.success) {
+      throw new Error(bookingResult.error || 'Booking creation failed');
     }
     
-    await delay(2000);
-    await screenshot(page, 'booking-modal-open');
+    console.log('  ✓ Booking created:', bookingResult.bookingId);
+    console.log('  ✓ Payment completed (mock)');
     
-    // Submit booking via modal
-    await page.evaluate(() => {
-      if (typeof window.submitBooking === 'function') {
-        window.submitBooking();
+    // Verify booking exists server-side
+    const verifyResponse = await fetch(`${API_BASE}/api/bookings?parentId=${bookingResult.parentId}`);
+    if (verifyResponse.ok) {
+      const bookings = await verifyResponse.json();
+      const foundBooking = bookings.find(b => b.id === bookingResult.bookingId);
+      if (foundBooking) {
+        console.log('  ✓ Booking verified server-side');
       } else {
-        const submitBtn = document.querySelector('button[onclick*="submitBooking"]');
-        if (submitBtn) submitBtn.click();
+        throw new Error('Booking not found server-side');
       }
-    });
-    
-    await delay(3000);
-    await screenshot(page, 'booking-created');
-    
-    // Check for payment flow
-    const paymentStarted = await page.evaluate(() => {
-      // Look for pay button or payment flow
-      const payBtn = document.querySelector('button[onclick*="pay"]') || 
-                     document.querySelector('button[onclick*="payment"]');
-      if (payBtn) {
-        payBtn.click();
-        return true;
-      }
-      return false;
-    });
-    
-    if (paymentStarted) {
-      await delay(2000);
-      console.log('  ✓ Payment flow initiated (mock)');
-      await screenshot(page, 'payment-complete');
     }
     
-    console.log('  ✓ Booking created and payment processed');
+    await screenshot(page, 'booking-payment-complete');
     console.log('  ✅ PASSED');
   } catch (error) {
     console.error('  ❌ FAILED -', error.message);

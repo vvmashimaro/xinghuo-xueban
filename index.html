@@ -2240,6 +2240,11 @@
           localStorage.removeItem('xh_mentor_register_draft_v2');
           localStorage.removeItem('xh_mentor_wizard_state_v1');
         } catch (e) {}
+        
+        // Redirect to mentor dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = 'mentor_dashboard.html';
+        }, 2000);
       } catch (error) {
         console.error('Registration error:', error);
         showToast(error.message || '注册失败，请重试', 'error');
