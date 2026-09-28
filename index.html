@@ -299,6 +299,21 @@
                 </div>
               </div>
 
+              <!-- 短信验证码 -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">短信验证码 <span class="text-red-500">*</span></label>
+                <div class="flex gap-2">
+                  <div class="relative flex-1">
+                    <i class="fa-solid fa-shield-halved absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="mentorSmsCode" required placeholder="6位验证码" maxlength="6" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                  </div>
+                  <button type="button" id="sendMentorSmsBtn" onclick="sendMentorSmsCode()" class="shrink-0 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                    发送验证码
+                  </button>
+                </div>
+                <p class="text-blue-700 text-[11px] mt-1">演示模式下请填写 888888</p>
+              </div>
+
               <!-- 身份证号 -->
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">身份证号码 <span class="text-red-500">*</span></label>
@@ -2040,7 +2055,63 @@
       __onboardAvailMounted = true;
     }
 
-    function submitApplication() {
+    async function sendMentorSmsCode() {
+      const phone = document.getElementById('phone')?.value.trim();
+      if (!phone || phone.length !== 11) {
+        showToast('请输入有效的 11 位手机号码！', 'warning');
+        return;
+      }
+      
+      const btn = document.getElementById('sendMentorSmsBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '发送中...';
+      }
+      
+      try {
+        const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
+        const response = await fetch(`${apiBase}/api/auth/sms/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, scene: 'register' })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          showToast(`验证码已发送至 ${phone}`, 'success');
+        } else {
+          showToast(result.error || '发送失败，请稍后重试', 'error');
+        }
+      } catch (error) {
+        console.error('SMS send error:', error);
+        showToast('验证码发送失败（演示环境默认码：888888）', 'warning');
+      } finally {
+        if (btn) {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = '发送验证码';
+          }, 3000);
+        }
+      }
+    }
+
+    async function submitApplication() {
+      const phone = document.getElementById('phone')?.value.trim();
+      const code = document.getElementById('mentorSmsCode')?.value.trim();
+
+      if (!phone || phone.length !== 11) {
+        showToast('请输入有效的 11 位手机号码！', 'warning');
+        goToStep(1);
+        return;
+      }
+
+      if (!code || code.length !== 6) {
+        showToast('请输入 6 位短信验证码！', 'warning');
+        goToStep(1);
+        return;
+      }
+
       const checkedSubjects = document.querySelectorAll('input[name="subject"]:checked');
       const hourlyRate = document.getElementById('hourlyRate').value.trim();
       const lectureUrl = document.getElementById('lectureUrl').value.trim();
@@ -2058,25 +2129,52 @@
         return;
       }
 
-      // 采集表单并写入共享存储 → 管理端审核队列可见
-      const subjectValues = Array.from(checkedSubjects).map(c => c.value);
-      const allSubjects = subjectValues.concat(customSubjectList || []);
-      const styleTags = Array.from(document.querySelectorAll('#styleTagContainer > span'))
-        .map(s => s.innerText.replace(/×|✕|✖/g, '').trim())
-        .filter(Boolean);
-      const proofFiles = (typeof uploadedMaterials !== 'undefined' ? uploadedMaterials : []).map(f => ({
-        name: f.name, size: f.size || '', verified: true, tag: f.tag || ''
-      }));
+      try {
+        // Step 1: 验证短信码获取票据
+        const verifyResult = await StorageService.verifySMS(phone, code, 'register');
+        
+        if (!verifyResult.success) {
+          showToast(verifyResult.error || '验证码错误，请重试', 'error');
+          goToStep(1);
+          return;
+        }
 
-      const availability = (window.__onboardAvailApi && window.__onboardAvailApi.getValue)
-        ? window.__onboardAvailApi.getValue()
-        : [];
+        const ticket = verifyResult.ticket;
+        if (!ticket) {
+          showToast('验证成功但未获取到票据，请重试', 'error');
+          return;
+        }
 
-      let saved = null;
-      if (window.StorageService) {
-        saved = StorageService.addMentor({
+        // Step 2: 准备注册数据
+        const subjectValues = Array.from(checkedSubjects).map(c => c.value);
+        const allSubjects = subjectValues.concat(customSubjectList || []);
+        const styleTags = Array.from(document.querySelectorAll('#styleTagContainer > span'))
+          .map(s => s.innerText.replace(/×|✕|✖/g, '').trim())
+          .filter(Boolean);
+        const proofFiles = (typeof uploadedMaterials !== 'undefined' ? uploadedMaterials : []).map(f => ({
+          name: f.name, size: f.size || '', verified: true, tag: f.tag || ''
+        }));
+
+        const availability = (window.__onboardAvailApi && window.__onboardAvailApi.getValue)
+          ? window.__onboardAvailApi.getValue()
+          : [];
+
+        const availableSlots = availability.length
+          ? (function() {
+              const wdNames = ['周日','周一','周二','周三','周四','周五','周六'];
+              const labels = [];
+              availability.forEach(function(item) {
+                (item.ranges || []).forEach(function(r) {
+                  labels.push((wdNames[item.weekday] || '') + ' ' + r.start + '-' + r.end);
+                });
+              });
+              return labels;
+            })()
+          : [];
+
+        const profile = {
           realName: document.getElementById('realName').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
+          phone: phone,
           idCard: document.getElementById('idCard').value.trim(),
           university: document.getElementById('finalUniversityValue').value.trim(),
           province: (document.getElementById('provinceSelect') && document.getElementById('provinceSelect').value) || '四川',
@@ -2096,59 +2194,56 @@
           lectureUrl: lectureUrl,
           bankName: (document.getElementById('bankName') && document.getElementById('bankName').value) || '',
           bankCardNumber: (document.getElementById('bankCardNumber') && document.getElementById('bankCardNumber').value.trim()) || '',
-          status: 'pending',
-          evalGrade: '待教研评级',
-          reviewComment: '',
           spacePreference: '青羊金沙文化微网点',
           availability: availability,
-          availableSlots: availability.length && StorageService
-            ? (function() {
-                // derive labels via setMentorAvailability helpers if present after create
-                const wdNames = ['周日','周一','周二','周三','周四','周五','周六'];
-                const labels = [];
-                availability.forEach(function(item) {
-                  (item.ranges || []).forEach(function(r) {
-                    labels.push((wdNames[item.weekday] || '') + ' ' + r.start + '-' + r.end);
-                  });
-                });
-                return labels;
-              })()
-            : undefined
-        });
+          availableSlots: availableSlots
+        };
+
+        // Step 3: 使用票据注册
+        const registerResult = await StorageService.register(ticket, 'mentor', profile);
+
+        if (!registerResult.success) {
+          showToast(registerResult.error || '注册失败，请重试', 'error');
+          return;
+        }
+
+        // Step 4: 注册成功，显示结果
+        const user = registerResult.user || {};
+        const randomCode = user.code || ('CD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
+        document.getElementById('resMentorId').innerText = randomCode;
+        document.getElementById('resName').innerText = document.getElementById('realName').value.trim();
+        document.getElementById('resUniversity').innerText = document.getElementById('finalUniversityValue').value.trim();
+        document.getElementById('resHourly').innerText = '¥ ' + hourlyRate + ' /h';
+
+        // 切换到完成卡片
+        document.getElementById('step2-card').classList.add('hidden');
+        document.getElementById('step3-card').classList.remove('hidden');
+
+        // 更新步骤条
+        document.getElementById('step2-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
+        document.getElementById('step2-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+        document.getElementById('step3-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
+        document.getElementById('step3-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+        document.getElementById('step3-text').className = "text-teal-700 font-bold";
+        document.getElementById('progress-bar-2').style.width = '100%';
+
+        window.scrollTo({ top: 350, behavior: 'smooth' });
+        showToast('入库申请已提交！可进入导师工作台查看待审状态');
+        try {
+          if (window.StorageService && StorageService.clearMentorRegisterDraftV2) {
+            StorageService.clearMentorRegisterDraftV2();
+          }
+          if (window.StorageService && StorageService.clearMentorRegisterDraft) {
+            StorageService.clearMentorRegisterDraft();
+          }
+          localStorage.removeItem('xh_mentor_register_draft_v1');
+          localStorage.removeItem('xh_mentor_register_draft_v2');
+          localStorage.removeItem('xh_mentor_wizard_state_v1');
+        } catch (e) {}
+      } catch (error) {
+        console.error('Registration error:', error);
+        showToast(error.message || '注册失败，请重试', 'error');
       }
-
-      const randomCode = (saved && saved.code) || ('CD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
-      document.getElementById('resMentorId').innerText = randomCode;
-      document.getElementById('resName').innerText = document.getElementById('realName').value.trim();
-      document.getElementById('resUniversity').innerText = document.getElementById('finalUniversityValue').value.trim();
-      document.getElementById('resHourly').innerText = '¥ ' + hourlyRate + ' /h';
-
-      // 切换到完成卡片
-      document.getElementById('step2-card').classList.add('hidden');
-      document.getElementById('step3-card').classList.remove('hidden');
-
-      // 更新步骤条
-      document.getElementById('step2-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
-      document.getElementById('step2-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
-      document.getElementById('step3-badge').className = "w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 step-done transition-all";
-      document.getElementById('step3-badge').innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
-      document.getElementById('step3-text').className = "text-teal-700 font-bold";
-      document.getElementById('progress-bar-2').style.width = '100%';
-
-      window.scrollTo({ top: 350, behavior: 'smooth' });
-      showToast('入库申请已提交！可进入导师工作台查看待审状态');
-      try {
-        // Clear both v1 and v2 drafts
-        if (window.StorageService && StorageService.clearMentorRegisterDraftV2) {
-          StorageService.clearMentorRegisterDraftV2();
-        }
-        if (window.StorageService && StorageService.clearMentorRegisterDraft) {
-          StorageService.clearMentorRegisterDraft();
-        }
-        localStorage.removeItem('xh_mentor_register_draft_v1');
-        localStorage.removeItem('xh_mentor_register_draft_v2');
-        localStorage.removeItem('xh_mentor_wizard_state_v1');
-      } catch (e) {}
     }
 
     /* ==========================================================================
