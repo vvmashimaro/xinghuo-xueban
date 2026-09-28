@@ -1496,9 +1496,6 @@
       booking.sessions[sIdx] = session;
       list[idx] = Object.assign({}, booking, { updatedAt: _now() });
       this.saveBookings(list);
-      this.updateBooking(bookingId, {
-        sessions: [{ id: sessionId, parentMessage: session.parentMessage }]
-      });
       _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/parent-message', {
         sessionId: sessionId,
         parentMessage: session.parentMessage

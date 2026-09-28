@@ -966,6 +966,40 @@ app.post('/api/bookings/:id/complete', requireAuth, (req, res) => {
   ok(res, result);
 });
 
+app.post('/api/bookings/:id/parent-message', requireAuth, (req, res) => {
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有家长可以留言');
+  }
+
+  const booking = db.getBookings().find((b) => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+
+  if (req.user.role === 'parent') {
+    const parent = db.getParents().find((p) => p.id === req.user.userId);
+    if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
+      return fail(res, 403, '只能为自己的预约留言');
+    }
+  }
+
+  const body = req.body || {};
+  const sessionId = body.sessionId;
+  if (!sessionId) {
+    return fail(res, 400, '缺少 sessionId');
+  }
+
+  const parentId = req.user.role === 'parent' ? req.user.userId : booking.parentId;
+  const result = db.saveParentMessage(
+    req.params.id,
+    sessionId,
+    body.parentMessage || body.message || body,
+    parentId
+  );
+  if (!result || result.ok === false) {
+    return res.status(400).json(result || { ok: false, error: '留言失败' });
+  }
+  ok(res, result);
+});
+
 app.post('/api/bookings/:id/summary', requireAuth, (req, res) => {
   // 只有导师可以提交课后小结
   if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
@@ -1122,12 +1156,13 @@ app.post('/api/contracts', requireAuth, (req, res) => {
       return fail(res, 403, '只能为自己的预约签署合约');
     }
 
+    const mentor = db.getMentorById(booking.mentorId || booking.tutorId);
     const record = db.saveContract({
       title: body.title || '三方托管服务居间协议',
       signer: body.signer,
-      tutorName: body.tutorName || booking.tutorName,
-      amount: body.amount != null ? body.amount : booking.amount,
-      space: body.space || booking.space,
+      tutorName: booking.tutorName || (mentor && mentor.realName) || '',
+      amount: pricing.bookingAmountYuan(booking),
+      space: booking.space || '',
       bookingId,
       parentId: parent.id,
       parentPhone: parent.phone,

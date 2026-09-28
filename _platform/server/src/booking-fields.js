@@ -79,6 +79,108 @@ const PAYMENT_PATCH_ALLOW = new Set([
 const PARENT_SESSION_PATCH_KEYS = new Set(['parentMessage']);
 const MENTOR_SESSION_PATCH_KEYS = new Set(['classSummary']);
 
+const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+const PARENT_MESSAGE_MAX_LEN = 500;
+
+function _sessionUid(index, dateStr) {
+  const d = (dateStr || 'X').replace(/-/g, '');
+  const rand = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `SES-${d}-${index}-${rand}`;
+}
+
+function computeLeaveDeadline(dateStr) {
+  if (!dateStr) return '';
+  const cursor = new Date(dateStr + 'T00:00:00');
+  if (isNaN(cursor.getTime())) return '';
+  const leaveDeadlineDate = new Date(cursor);
+  leaveDeadlineDate.setDate(leaveDeadlineDate.getDate() - 1);
+  leaveDeadlineDate.setHours(23, 59, 59, 0);
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    leaveDeadlineDate.getFullYear() +
+    '-' +
+    pad(leaveDeadlineDate.getMonth() + 1) +
+    '-' +
+    pad(leaveDeadlineDate.getDate()) +
+    ' 23:59'
+  );
+}
+
+/**
+ * Rebuild session list on booking create from schedule fields only.
+ */
+function rebuildSessionsFromClientInput(rawSessions) {
+  if (!Array.isArray(rawSessions)) return [];
+  return rawSessions.map((raw, index) => {
+    const input = raw && typeof raw === 'object' ? raw : {};
+    const date = input.date ? String(input.date).slice(0, 10) : '';
+    let weekday = input.weekday != null ? parseInt(input.weekday, 10) : NaN;
+    if (isNaN(weekday) && date) {
+      weekday = new Date(date + 'T12:00:00').getDay();
+    }
+    const weekdayLabel =
+      input.weekdayLabel ||
+      (!isNaN(weekday) && WEEKDAY_LABELS[weekday] ? WEEKDAY_LABELS[weekday] : '');
+    const timeStart = input.timeStart ? String(input.timeStart).slice(0, 5) : '';
+    const timeEnd = input.timeEnd ? String(input.timeEnd).slice(0, 5) : '';
+    const timeLabel =
+      input.timeLabel ||
+      (timeStart && timeEnd ? `${timeStart}-${timeEnd}` : timeStart || timeEnd || '');
+    return {
+      id: _sessionUid(index, date),
+      date,
+      weekday: isNaN(weekday) ? '' : weekday,
+      weekdayLabel,
+      timeStart,
+      timeEnd,
+      timeLabel,
+      status: 'scheduled',
+      escrowStatus: 'frozen',
+      leaveRequestedAt: '',
+      leaveConfirmedAt: '',
+      leaveRequestedBy: '',
+      leaveDeadline: computeLeaveDeadline(date),
+      completedAt: '',
+      releaseAt: ''
+    };
+  });
+}
+
+function assertBookingReadyForComplete(booking) {
+  if (!booking) return { ok: false, error: '约课不存在' };
+  const status = String(booking.status || '');
+  if (status !== 'accepted') {
+    return { ok: false, error: '预约尚未被导师接受' };
+  }
+  const ps = booking.paymentStatus;
+  if (ps === 'paid') {
+    return { ok: true };
+  }
+  if (ps === 'waived') {
+    return { ok: true };
+  }
+  return { ok: false, error: '须完成支付后方可结课' };
+}
+
+function assertSessionReadyForComplete(session) {
+  if (!session) return { ok: false, error: '课次不存在' };
+  if (session.status === 'completed') {
+    return { ok: true, already: true };
+  }
+  if (session.status === 'leave_approved' || session.status === 'cancelled') {
+    return { ok: false, error: '已请假/取消的课次不可结课' };
+  }
+  if (session.status === 'leave_pending') {
+    return { ok: false, error: '请假待确认课次不可结课' };
+  }
+  return { ok: true };
+}
+
+function bookingEscrowReleaseAllowed(booking) {
+  return !!(booking && booking.paymentStatus === 'paid');
+}
+
 function pickAllowed(obj, allowedSet) {
   const out = {};
   if (!obj || typeof obj !== 'object') return out;
@@ -176,7 +278,12 @@ module.exports = {
   filterPaymentBookingPatch,
   filterAdminBookingPatch,
   mergeClientSessionPatch,
+  rebuildSessionsFromClientInput,
+  assertBookingReadyForComplete,
+  assertSessionReadyForComplete,
+  bookingEscrowReleaseAllowed,
   bookingIsPaid,
+  PARENT_MESSAGE_MAX_LEN,
   BOOKING_CREATE_ALLOW,
   BOOKING_PROTECTED
 };
