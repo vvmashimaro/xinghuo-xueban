@@ -4,6 +4,9 @@
  */
 'use strict';
 
+const pricing = require('./pricing');
+const bookingFields = require('./booking-fields');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -988,6 +991,14 @@ function addBooking(booking) {
   const s = getState();
   const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
   const bookingType = (booking && booking.type) || 'one_off';
+  const mentor = mentorId ? getMentorById(mentorId) : null;
+  if (bookingType !== 'trial' && !mentor) {
+    return { ok: false, error: '导师不存在', code: 'MENTOR_NOT_FOUND' };
+  }
+  const computed = pricing.computeBookingPricing(mentor, booking);
+  if (computed.error) {
+    return { ok: false, error: computed.error, code: 'INVALID_PRICING' };
+  }
   if (bookingType === 'trial') {
     const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
     const subject = normalizeAssessmentSubject((booking && booking.subject) || '');
@@ -1005,22 +1016,32 @@ function addBooking(booking) {
       return { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
     }
   }
+  const clientFields = bookingFields.pickBookingCreateFields(booking);
+  let sessions = Array.isArray(clientFields.sessions) ? clientFields.sessions.slice() : [];
+  if (bookingType === 'trial' && sessions.length > 1) {
+    sessions = sessions.slice(0, 1);
+  }
+  delete clientFields.sessions;
+
   const record = Object.assign(
+    {},
+    clientFields,
     {
       id: _uid('BK'),
       createdAt: _now(),
       status: 'pending_accept',
       declineReason: '',
-      mentorId: mentorId,
-      tutorId: mentorId,
+      mentorId: mentorId || clientFields.mentorId || '',
+      tutorId: mentorId || clientFields.tutorId || clientFields.mentorId || '',
       type: bookingType,
-      sessions: (booking && booking.sessions) || [],
-      escrowStatus: (booking && booking.escrowStatus) || 'frozen'
-    },
-    booking || {},
-    {
-      mentorId: mentorId || (booking && booking.mentorId) || '',
-      tutorId: mentorId || (booking && (booking.tutorId || booking.mentorId)) || ''
+      sessions,
+      paymentStatus: computed.amount > 0 ? 'unpaid' : 'waived',
+      amount: computed.amount,
+      hours: computed.hours,
+      sessionCount: computed.sessionCount,
+      perSessionAmount: computed.perSessionAmount,
+      escrowStatus: computed.escrowStatus,
+      trialLabel: computed.trialLabel
     }
   );
   if (record.type === 'trial') {
@@ -1028,19 +1049,36 @@ function addBooking(booking) {
     record.amount = 0;
     record.perSessionAmount = 0;
     record.escrowStatus = 'waived';
-    record.trialLabel = '首次试课 · 1小时免费';
+    record.paymentStatus = 'waived';
+    record.trialLabel = record.trialLabel || '首次试课 · 1小时免费';
     record.sessionCount = 1;
+    if (Array.isArray(record.sessions) && record.sessions.length > 1) {
+      record.sessions = record.sessions.slice(0, 1);
+    }
   }
   s.bookings.unshift(record);
   persist();
   return record;
 }
 
-function updateBooking(id, patch) {
+function updateBooking(id, patch, options) {
   const s = getState();
   const idx = s.bookings.findIndex((b) => b.id === id);
   if (idx < 0) return null;
-  s.bookings[idx] = Object.assign({}, s.bookings[idx], patch || {}, { updatedAt: _now() });
+
+  const opts = options || {};
+  let safePatch = patch || {};
+  if (opts.trust === 'payment') {
+    safePatch = bookingFields.filterPaymentBookingPatch(safePatch);
+  } else if (opts.trust === 'admin') {
+    safePatch = bookingFields.filterAdminBookingPatch(safePatch);
+  } else if (opts.trust === 'internal') {
+    safePatch = Object.assign({}, safePatch);
+  } else {
+    safePatch = bookingFields.filterClientBookingPatch(safePatch, opts.role || 'parent');
+  }
+
+  s.bookings[idx] = Object.assign({}, s.bookings[idx], safePatch, { updatedAt: _now() });
   persist();
   return s.bookings[idx];
 }
@@ -1795,6 +1833,9 @@ module.exports = {
   getPayOrders,
   getPayOrder,
   savePayOrder,
+  bookingAmountFen: pricing.bookingAmountFen,
+  bookingAmountYuan: pricing.bookingAmountYuan,
+  isBookingPayable: pricing.isBookingPayable,
   getSession,
   setSession,
   matchTutors,

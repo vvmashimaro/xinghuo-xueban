@@ -403,7 +403,6 @@ Page({
     const tutor = this.data.bookingTutor;
     const parent = this._parent || Storage.getCurrentParent();
     const hours = Number(this.data.hours) || 2;
-    const amount = Number(this.data.escrowAmount) || tutor.hourlyRate * hours;
     const space = this.data.spaces[this.data.spaceIndex];
     const slot = this.data.selectedSlot;
 
@@ -420,16 +419,16 @@ Page({
       space,
       schedule: slot,
       timeSlot: slot,
-      amount,
       hours,
-      status: 'pending_accept',
-      escrowStatus: amount > 0 ? 'pending_payment' : 'waived'
+      status: 'pending_accept'
     });
 
     if (!booking || !booking.id) {
       showToast('预约创建失败', 'error');
       return;
     }
+
+    const amount = Number(booking.amount) || 0;
 
     try {
       await Storage.saveContract({
