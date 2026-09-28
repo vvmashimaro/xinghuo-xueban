@@ -238,6 +238,59 @@ async function testNewParentRegistration(browser) {
   }
 }
 
+async function assertL1SubstepShowsField(page, step, fieldId) {
+  await page.evaluate((s) => {
+    if (typeof goToL1SubStep === 'function') goToL1SubStep(s);
+  }, step);
+  await delay(400);
+  const ok = await page.evaluate((fid) => {
+    const el = document.getElementById(fid);
+    if (!el) return false;
+    const sub = el.closest('[id^="l1-substep-"]');
+    return sub && !sub.classList.contains('hidden');
+  }, fieldId);
+  if (!ok) throw new Error(`L1 substep ${step}: #${fieldId} not visible`);
+}
+
+async function assertL2SubstepShowsField(page, step, fieldId) {
+  await page.evaluate((s) => {
+    if (typeof goToStep === 'function') goToStep(2);
+    if (typeof goToL2SubStep === 'function') goToL2SubStep(s);
+  }, step);
+  await delay(400);
+  const ok = await page.evaluate((fid) => {
+    const el = document.getElementById(fid);
+    if (!el) return false;
+    const sub = el.closest('[id^="l2-substep-"]');
+    return sub && !sub.classList.contains('hidden');
+  }, fieldId);
+  if (!ok) throw new Error(`L2 substep ${step}: #${fieldId} not visible`);
+}
+
+async function testMentorWizardSubsteps(browser) {
+  console.log('\n[Test 2a] Mentor L1/L2 wizard substeps (mobile + desktop)');
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
+    const page = await browser.newPage();
+    try {
+      await page.setViewport(viewport);
+      await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 15000 });
+      await delay(1500);
+      await assertL1SubstepShowsField(page, 1, 'realName');
+      await assertL1SubstepShowsField(page, 2, 'chsiCode');
+      await assertL1SubstepShowsField(page, 3, 'bankCardNumber');
+      await assertL1SubstepShowsField(page, 4, 'privacyAuthAgree');
+      await assertL2SubstepShowsField(page, 1, 'customSubjectInput');
+      await assertL2SubstepShowsField(page, 2, 'hourlyRate');
+      await assertL2SubstepShowsField(page, 3, 'lectureUrl');
+      await screenshot(page, `mentor-wizard-substeps-${viewport.width}`);
+      console.log(`  ✓ Substeps OK at ${viewport.width}px`);
+    } finally {
+      await page.close();
+    }
+  }
+  console.log('  ✅ PASSED');
+}
+
 async function testNewMentorOnboarding(browser) {
   console.log(`\n[Test 2] New mentor ${NEW_MENTOR_PHONE} onboards via index.html`);
   const page = await browser.newPage();
@@ -249,6 +302,9 @@ async function testNewMentorOnboarding(browser) {
   try {
     await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 10000 });
     await delay(1000);
+
+    await assertL1SubstepShowsField(page, 2, 'provinceSelect');
+    await assertL1SubstepShowsField(page, 1, 'realName');
     
     // Fill ALL form fields via JS (L1 + L2 combined)
     await page.evaluate((phone, code) => {
@@ -267,7 +323,7 @@ async function testNewMentorOnboarding(browser) {
       const codeInput = document.getElementById('mentorSmsCode');
       if (codeInput) codeInput.value = code;
       
-      const privacyCheck = document.getElementById('privacyAgreeCheck');
+      const privacyCheck = document.getElementById('privacyAuthAgree');
       if (privacyCheck) privacyCheck.checked = true;
       
       // L2 fields (set them even if on step 1)
@@ -740,15 +796,15 @@ async function testUIChanges(browser) {
     const statusBadge = await page.evaluate(() => {
       const text = document.body.innerText;
       return {
-        hasApiStatus: text.includes('学信网 API 直连正常'),
+        hasApiStatus: text.includes('学信网 API 直连正常') || text.includes('学信网 API 联调'),
         hasAuthStatus: text.includes('公安实名认证通畅')
       };
     });
     
     if (!statusBadge.hasApiStatus && !statusBadge.hasAuthStatus) {
-      console.log('  ✓ Status badge removed from admin_audit.html');
+      console.log('  ✓ Fake integration status pill removed from admin_audit.html');
     } else {
-      throw new Error('Status badge still present on admin_audit.html');
+      throw new Error('Fake integration status pill still present on admin_audit.html');
     }
     
     // Test 3: Check 承诺书 section is removed from admin_audit.html
@@ -775,8 +831,134 @@ async function testUIChanges(browser) {
   }
 }
 
+async function testApprovedMentorDashboard(browser) {
+  console.log('\n[Test 7] Approved mentor sees profile (not empty state)');
+  const page = await browser.newPage();
+  const MENTOR_PHONE = '13880123456';
+  try {
+    await page.goto(`${BASE_URL}/login.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    await delay(800);
+    await page.evaluate((phone, code) => {
+      document.getElementById('loginMobile').value = phone;
+      if (window.sendLoginSMS) window.sendLoginSMS();
+      setTimeout(() => {
+        document.getElementById('smsCodeInput').value = code;
+        document.getElementById('agreementCheckbox').checked = true;
+        document.getElementById('btnSubmitLogin').click();
+      }, 200);
+    }, MENTOR_PHONE, CODE);
+    await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 8000 }).catch(() => {});
+    await delay(2500);
+    const state = await page.evaluate(() => ({
+      url: location.href,
+      emptyVisible: !(document.getElementById('emptyState')?.classList.contains('hidden')),
+      bodyVisible: !(document.getElementById('dashboardBody')?.classList.contains('hidden')),
+      headerName: document.getElementById('headerMentorName')?.innerText || ''
+    }));
+    if (!state.url.includes('mentor_dashboard.html')) {
+      throw new Error(`Expected mentor_dashboard, got ${state.url}`);
+    }
+    if (state.emptyVisible || !state.bodyVisible) {
+      throw new Error('Approved mentor still sees empty state');
+    }
+    if (!state.headerName || state.headerName === '导师') {
+      throw new Error('Mentor profile name not loaded');
+    }
+    await screenshot(page, 'approved-mentor-dashboard');
+    console.log('  ✓ Mentor profile visible:', state.headerName);
+    console.log('  ✅ PASSED');
+  } catch (error) {
+    console.error('  ✗ FAILED:', error.message);
+    await screenshot(page, 'approved-mentor-dashboard-error');
+    throw error;
+  } finally {
+    await page.close();
+  }
+}
+
+async function testLegalModals(browser) {
+  console.log('\n[Test 8] Legal modals open on login.html');
+  const page = await browser.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text());
+  });
+  try {
+    await page.goto(`${BASE_URL}/login.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    await delay(500);
+    if (errors.length) throw new Error('Console errors on load: ' + errors.join('; '));
+    await page.evaluate(() => {
+      if (typeof openServiceAgreement === 'function') openServiceAgreement();
+    });
+    await delay(400);
+    let serviceOpen = await page.evaluate(() => {
+      const m = document.getElementById('legalDocModal');
+      return m && !m.classList.contains('hidden');
+    });
+    if (!serviceOpen) throw new Error('Service agreement modal did not open');
+    await page.evaluate(() => { if (typeof closeLegalDoc === 'function') closeLegalDoc(); });
+    await delay(300);
+    await page.evaluate(() => {
+      if (typeof openPrivacyPolicy === 'function') openPrivacyPolicy();
+    });
+    await delay(400);
+    const privacyOpen = await page.evaluate(() => {
+      const m = document.getElementById('legalDocModal');
+      return m && !m.classList.contains('hidden');
+    });
+    if (!privacyOpen) throw new Error('Privacy policy modal did not open');
+    await screenshot(page, 'legal-modals-login');
+    console.log('  ✓ Service + privacy modals open');
+    console.log('  ✅ PASSED');
+  } catch (error) {
+    console.error('  ✗ FAILED:', error.message);
+    throw error;
+  } finally {
+    await page.close();
+  }
+}
+
+async function testNoConsoleErrorsOnKeyPages(browser) {
+  console.log('\n[Test 9] No uncaught errors on key static pages');
+  const paths = [
+    'login.html',
+    'parent_dashboard.html',
+    'mentor_dashboard.html',
+    'index.html',
+    'parent_register.html',
+    'admin_audit.html'
+  ];
+  for (const p of paths) {
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('console', (msg) => {
+      if (msg.type() !== 'error') return;
+      const t = msg.text();
+      // Expected when dashboards load without a session (hydrate 401)
+      if (/Failed to load resource/i.test(t) && /\b401\b/.test(t)) return;
+      if (/status of 401/i.test(t)) return;
+      errors.push(t);
+    });
+    try {
+      await page.goto(`${BASE_URL}/${p}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      await delay(1500);
+      if (errors.length) {
+        throw new Error(`${p}: ${errors.join(' | ')}`);
+      }
+      console.log(`  ✓ ${p}`);
+    } finally {
+      await page.close();
+      await context.close();
+    }
+  }
+  console.log('  ✅ PASSED');
+}
+
 async function testAdminLogin(browser) {
-  console.log('\n[Test 7] Admin login with real code lands on admin_audit.html');
+  console.log('\n[Test 10] Admin login with real code lands on admin_audit.html');
   const page = await browser.newPage();
   const fs = require('fs');
   
@@ -879,6 +1061,13 @@ async function main() {
   }
   
   try {
+    await testMentorWizardSubsteps(browser);
+    passed++;
+  } catch (e) {
+    failed++;
+  }
+  
+  try {
     await testNewMentorOnboarding(browser);
     passed++;
   } catch (e) {
@@ -914,6 +1103,28 @@ async function main() {
   }
   
   try {
+    await testApprovedMentorDashboard(browser);
+    passed++;
+  } catch (e) {
+    failed++;
+  }
+  
+  try {
+    await testLegalModals(browser);
+    passed++;
+  } catch (e) {
+    failed++;
+  }
+  
+  try {
+    await testNoConsoleErrorsOnKeyPages(browser);
+    passed++;
+  } catch (e) {
+    console.error('  ✗ Console hygiene test failed:', e.message);
+    failed++;
+  }
+  
+  try {
     await testAdminLogin(browser);
     passed++;
   } catch (e) {
@@ -923,8 +1134,8 @@ async function main() {
   await browser.close();
   
   console.log(`\n=== Summary ===`);
-  console.log(`Passed: ${passed}/7`);
-  console.log(`Failed: ${failed}/7`);
+  console.log(`Passed: ${passed}/11`);
+  console.log(`Failed: ${failed}/11`);
   
   process.exit(failed === 0 ? 0 : 1);
 }

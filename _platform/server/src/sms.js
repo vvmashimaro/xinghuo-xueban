@@ -104,10 +104,13 @@ function hashCode(code) {
  * @param {string} scene - 场景
  * @param {object} auth - auth 模块（用于检查管理员手机）
  */
+function maskPhoneForLog(phone) {
+  if (!phone || typeof phone !== 'string') return '***';
+  return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+}
+
 async function sendMockSMS(phone, code, scene, auth = null) {
-  const maskedPhone = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
-  console.log(`[SMS Mock] 发送验证码到 ${phone}`);
-  console.log(`[SMS Mock] 场景: ${scene}, 验证码: ${code}`);
+  const maskedPhone = maskPhoneForLog(phone);
   
   // 检查是否为管理员手机号
   const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
@@ -119,7 +122,6 @@ async function sendMockSMS(phone, code, scene, auth = null) {
     return { success: true, provider: 'mock', message: '验证码已发送（管理员需使用真实验证码）' };
   }
   
-  console.log(`[SMS Mock] 开发提示：任何手机号都可使用验证码 888888 进行验证`);
   return { success: true, provider: 'mock', message: '演示模式：请使用 888888' };
 }
 
@@ -231,7 +233,7 @@ async function sendTencentSMS(phone, code, scene) {
           if (result.Response && result.Response.SendStatusSet) {
             const status = result.Response.SendStatusSet[0];
             if (status.Code === 'Ok') {
-              console.log(`[SMS Tencent] 短信发送成功到 ${phone}`);
+              console.log(`[SMS Tencent] 短信发送成功到 ${maskPhoneForLog(phone)}`);
               resolve({ success: true, provider: 'tencent', message: '短信已发送' });
             } else {
               console.error('[SMS Tencent] 发送失败:', status.Message);
@@ -346,7 +348,7 @@ function verifySMS(phone, code, scene = 'login', auth = null) {
   
   // Mock 万能验证码（仅在非生产环境，且非管理员手机）
   if (!isProduction() && code === '888888' && !isAdmin) {
-    console.log(`[SMS Verify] Mock 验证通过：${phone}`);
+    console.log(`[SMS Verify] Mock 验证通过：${maskPhoneForLog(phone)}`);
     
     // 生成验证票据（标记为 mock）
     const ticket = auth ? auth.createVerificationTicket(phone, true) : null;
@@ -411,7 +413,7 @@ async function sendBookingNotification(phone, bookingInfo) {
   
   // Mock 模式
   if (provider === 'mock' || !templateId) {
-    console.log(`[SMS Booking Mock] 发送预约通知到 ${phone}`);
+    console.log(`[SMS Booking Mock] 发送预约通知到 ${maskPhoneForLog(phone)}`);
     console.log(`[SMS Booking Mock] 导师: ${bookingInfo.tutorName}, 科目: ${bookingInfo.subject}`);
     console.log(`[SMS Booking Mock] 时间: ${bookingInfo.schedule}, 地点: ${bookingInfo.space}`);
     return { success: true, provider: 'mock', message: 'Mock 预约通知已记录' };

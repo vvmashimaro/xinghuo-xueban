@@ -69,22 +69,7 @@ setInterval(() => {
 app.get('/api/health', (req, res) => {
   ok(res, {
     ok: true,
-    service: 'xinghuo-platform',
-    version: '1.0.0',
-    env: NODE_ENV,
-    port: PORT,
-    time: new Date().toISOString(),
-    db: db.DB_PATH,
-    sms: {
-      provider: sms.getProvider(),
-      available: true
-    },
-    payment: {
-      wechat: {
-        configured: wechatPay.isConfigComplete(),
-        mockAllowed: wechatPay.isMockPayAllowed()
-      }
-    }
+    env: NODE_ENV
   });
 });
 

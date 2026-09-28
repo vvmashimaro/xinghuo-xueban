@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>星火学伴 - 家长/学员主控中心与导师智能匹配平台</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1970,7 +1971,7 @@
           : '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>银行智能合约冻结中...</span>';
       }
 
-      setTimeout(() => {
+      setTimeout(async () => {
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = isTrial
@@ -1985,6 +1986,7 @@
         const dateChoice = meta.dateChoice || document.querySelector('input[name="bookingDate"]:checked')?.value || '';
         const total = (meta.total != null) ? Number(meta.total) : 270;
         const tutor = meta.tutor || selectedTutorForBooking;
+        const tutorName = tutor && (tutor.maskedName || tutor.name || tutor.realName || '导师');
 
         document.getElementById('passcodeSpaceName').innerText = `${spaceName}-01智能仓`;
         const scheduleText = dateChoice || ((meta.timeLabel) ? meta.timeLabel : '待定时段');
@@ -2005,7 +2007,7 @@
           createdBooking = StorageService.addBooking({
             mentorId: mentorId,
             tutorId: mentorId,
-            tutorName: tutor.maskedName,
+            tutorName: tutorName,
             space: spaceName,
             schedule: dateChoice || scheduleText,
             timeSlot: dateChoice || scheduleText,
@@ -2068,19 +2070,13 @@
         const payMode = window.XH_CONFIG?.PAY_MODE || 'demo';
         
         // 创建预支付订单
-        const prepayResponse = await fetch(`${apiBase}/api/pay/wechat/prepay`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId: bookingId,
-            amount: Math.round(amount * 100), // 转换为分
-            description: `星火学伴 · ${subject} · ${tutorName}`
-          })
+        const prepayResult = await StorageService.api('POST', '/api/pay/wechat/prepay', {
+          bookingId: bookingId,
+          amount: Math.round(amount * 100),
+          description: `星火学伴 · ${subject} · ${tutorName}`
         });
 
-        const prepayResult = await prepayResponse.json();
-
-        if (!prepayResponse.ok || !prepayResult.prepayId) {
+        if (!prepayResult || !prepayResult.prepayId) {
           showToast('支付订单创建失败', 'error');
           console.error('Prepay failed:', prepayResult);
           return;
@@ -2093,15 +2089,11 @@
           // 延迟模拟支付成功
           setTimeout(async () => {
             try {
-              const confirmResponse = await fetch(`${apiBase}/api/pay/wechat/mock-confirm`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ outTradeNo: prepayResult.outTradeNo })
+              const confirmResult = await StorageService.api('POST', '/api/pay/wechat/mock-confirm', {
+                outTradeNo: prepayResult.outTradeNo
               });
-
-              const confirmResult = await confirmResponse.json();
               
-              if (confirmResponse.ok && confirmResult.success) {
+              if (confirmResult && confirmResult.success) {
                 showToast('✓ 支付成功（演示模拟）', 'success');
                 try { renderParentBookings(); } catch (_) {}
               } else {

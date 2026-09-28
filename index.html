@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>星火导师入驻计划 - 阳光合规 · 资金秒结 · 专属智能空间</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -279,7 +280,7 @@
             </div>
 
             <!-- L1 子步骤 1: 身份信息 -->
-            <div id="l1-substep-1" class="space-y-4">
+            <div id="l1-substep-1" data-l1-substep="1" class="space-y-4">
 
               <!-- 姓名与电话 -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -342,7 +343,7 @@
             </div>
 
             <!-- L1 子步骤 2: 院校与学历核验 -->
-            <div id="l1-substep-2" class="space-y-4 hidden">
+            <div id="l1-substep-2" data-l1-substep="2" class="space-y-4 hidden">
 
             <!-- 核心升级项：就读/毕业高校（按省级区域下拉联动 + 全量本科高校 + 手动输入） -->
             <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3">
@@ -484,6 +485,15 @@
               </p>
             </div>
 
+              <div class="pt-2">
+                <button type="button" onclick="goToL1SubStep(3)" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>下一步：结算账户</span>
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="l1-substep-3" data-l1-substep="3" class="space-y-4 hidden">
             <!-- 新增：银行合约资金直连 · 导师收款清算账户填写 -->
             <div class="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3">
               <div class="flex items-center justify-between">
@@ -536,7 +546,15 @@
               </div>
             </div>
 
+              <div class="pt-2">
+                <button type="button" onclick="goToL1SubStep(4)" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>下一步：合规确认</span>
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+              </div>
+            </div>
 
+            <div id="l1-substep-4" data-l1-substep="4" class="space-y-4 hidden">
             <!-- 新增：个人信息保护与合规查询授权勾选（PIPL合规前置） -->
             <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
               <div class="flex items-center gap-2 text-slate-800">
@@ -584,6 +602,7 @@
               <span>完成 L1 核验与签约，进入 L2 能力画像</span>
               <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
+            </div>
           </div>
 
           <!-- ================= 阶段 2: L2 能力画像与辅导标签 ================= -->
@@ -599,6 +618,7 @@
               <p class="text-xs text-slate-500 mt-1.5">建立标准化教学标签体系，家长在智能终端可直观查阅你的擅长题型模型与试讲视频。</p>
             </div>
 
+            <div id="l2-substep-1" data-l2-substep="1" class="space-y-4">
             <!-- 主讲学段与学科细化：小学 / 初中 / 高中 / 考研 -->
             <div class="space-y-3 bg-slate-50/70 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80">
               <div class="flex items-center justify-between">
@@ -769,7 +789,9 @@
                 </div>
               </div>
             </div>
+            </div>
 
+            <div id="l2-substep-2" data-l2-substep="2" class="space-y-4 hidden">
             <!-- 分数亮点与期望时薪 -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -875,7 +897,9 @@
                 </button>
               </div>
             </div>
+            </div>
 
+            <div id="l2-substep-3" data-l2-substep="3" class="space-y-4 hidden">
             <!-- 新增：老师相关证明资质与佐证材料上传栏 -->
             <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-3">
               <div class="flex items-center justify-between">
@@ -960,6 +984,7 @@
                 <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
                 <span>确认无误，提交入库认证</span>
               </button>
+            </div>
             </div>
           </div>
 
