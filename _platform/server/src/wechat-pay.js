@@ -100,6 +100,17 @@ function generateNonceStr() {
 /**
  * Mock 预支付（开发/演示环境）
  */
+function registerMockOrder(order) {
+  if (order && order.outTradeNo) {
+    mockOrders.set(order.outTradeNo, order);
+  }
+}
+
+function hydrateMockOrders(orders) {
+  if (!Array.isArray(orders)) return;
+  orders.forEach((o) => registerMockOrder(o));
+}
+
 function createMockPrepay(bookingId, amount, description) {
   const prepayId = `MOCK-PREPAY-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
   const outTradeNo = `BK-${bookingId}-${Date.now()}`;
@@ -216,7 +227,7 @@ function mockConfirmPayment(outTradeNo) {
   
   const order = mockOrders.get(outTradeNo);
   if (!order) {
-    throw new Error('订单不存在');
+    return { success: false, error: '订单不存在' };
   }
   
   if (order.status === 'SUCCESS') {
@@ -316,5 +327,7 @@ module.exports = {
   handlePaymentNotify,
   getOrderStatus,
   isConfigComplete,
-  isMockPayAllowed
+  isMockPayAllowed,
+  registerMockOrder,
+  hydrateMockOrders
 };

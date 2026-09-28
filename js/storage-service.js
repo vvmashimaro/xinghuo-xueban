@@ -1019,7 +1019,7 @@
       return this.getBookings().find((b) => b.id === id) || null;
     },
 
-    addBooking: function (booking) {
+    addBooking: async function (booking) {
       const list = this.getBookings();
       const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
       const bookingType = (booking && booking.type) || 'one_off';
@@ -1032,6 +1032,37 @@
           return err;
         }
       }
+
+      const payload = Object.assign({}, booking || {}, {
+        mentorId: mentorId || (booking && booking.mentorId) || '',
+        tutorId: mentorId || (booking && (booking.tutorId || booking.mentorId)) || '',
+        type: bookingType,
+        status: (booking && booking.status) || 'pending_accept'
+      });
+      delete payload.id;
+
+      if (this.isLoggedIn()) {
+        try {
+          const remote = await _api('POST', '/api/bookings', payload);
+          if (remote && remote.ok === false) {
+            return remote;
+          }
+          if (!remote || !remote.id) {
+            return { ok: false, error: '创建预约失败' };
+          }
+          const normalized = Object.assign({}, remote);
+          if (normalized.type === 'trial') {
+            normalized.escrowStatus = normalized.escrowStatus || 'waived';
+          }
+          list.unshift(normalized);
+          this.saveBookings(list);
+          return normalized;
+        } catch (e) {
+          console.warn('[StorageService] addBooking API failed', e.message || e);
+          return { ok: false, error: e.message || '创建预约失败' };
+        }
+      }
+
       const record = Object.assign(
         {
           id: _uid('BK'),
@@ -1060,13 +1091,6 @@
       }
       list.unshift(record);
       this.saveBookings(list);
-      _apiSafe('POST', '/api/bookings', booking || record).then((remote) => {
-        if (remote && remote.id) {
-          const all = this.getBookings().filter((b) => b.id !== record.id);
-          all.unshift(remote);
-          this.saveBookings(all);
-        }
-      });
       return record;
     },
 
@@ -1598,12 +1622,30 @@
       return _read(KEYS.contracts, []);
     },
 
-    saveContract: function (contract) {
+    saveContract: async function (contract) {
+      const body = Object.assign({}, contract || {});
+      delete body.parentId;
+
+      if (this.isLoggedIn()) {
+        try {
+          const remote = await _api('POST', '/api/contracts', body);
+          if (remote && remote.id) {
+            const list = this.getContracts();
+            list.unshift(remote);
+            _write(KEYS.contracts, list);
+            return remote;
+          }
+          return null;
+        } catch (e) {
+          console.warn('[StorageService] saveContract API failed', e.message || e);
+          throw e;
+        }
+      }
+
       const list = this.getContracts();
       const record = Object.assign({ id: _uid('CT'), signedAt: _now() }, contract);
       list.unshift(record);
       _write(KEYS.contracts, list);
-      _apiSafe('POST', '/api/contracts', contract || record);
       return record;
     },
 

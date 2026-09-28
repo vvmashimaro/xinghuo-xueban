@@ -573,120 +573,69 @@ async function testParentBookingAndPayment(browser) {
     await delay(3000);
     await screenshot(page, 'parent-dashboard-before-booking');
     
-    // Get mentor list and create booking via API
-    const bookingResult = await page.evaluate(async (apiBase) => {
+    const bookingResult = await page.evaluate(async () => {
       try {
-        // Check if StorageService is available
-        if (!window.StorageService || !window.StorageService.getMentors) {
+        if (!window.StorageService) {
           return { success: false, error: 'StorageService not available' };
         }
-        
-        // Get mentors
         const mentors = await window.StorageService.getMentors();
-        if (!mentors || mentors.length === 0) {
+        if (!mentors || !mentors.length) {
           return { success: false, error: 'No mentors available' };
         }
-        
         const mentor = mentors[0];
-        
-        // Get parent ID from storage
-        const parents = window.StorageService.getParents ? window.StorageService.getParents() : [];
-        if (parents.length === 0) {
-          return { success: false, error: 'No parent profile' };
-        }
-        const parent = parents[0];
-        
-        // Create booking via API
-        const response = await fetch(`${apiBase}/api/bookings`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + window.StorageService.getAuthToken()
-          },
-          body: JSON.stringify({
-            mentorId: mentor.id,
-            parentId: parent.id,
-            parentPhone: parent.phone,
-            studentNickname: parent.studentNickname || '小测',
-            studentGrade: parent.studentGrade || '初三',
-            subject: '数学',
-            space: '青羊金沙文化微网点',
-            schedule: '周六 14:00-16:00',
-            amount: 300,
-            hours: 2,
-            status: 'pending_accept'
-          })
+        const booking = await window.StorageService.addBooking({
+          mentorId: mentor.id,
+          tutorId: mentor.id,
+          tutorName: mentor.realName || mentor.maskedName || '导师',
+          subject: '数学',
+          space: '青羊金沙文化微网点',
+          schedule: '周六 14:00-16:00',
+          timeSlot: '周六 14:00-16:00',
+          amount: 300,
+          hours: 2,
+          status: 'pending_accept'
         });
-        
-        if (!response.ok) {
-          const error = await response.text();
-          return { success: false, error: `HTTP ${response.status}: ${error}` };
+        if (!booking || booking.ok === false || !booking.id) {
+          return { success: false, error: (booking && booking.error) || 'addBooking failed' };
         }
-        
-        const booking = await response.json();
-        
-        // Now create prepay order
-        const prepayResponse = await fetch(`${apiBase}/api/pay/wechat/prepay`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + window.StorageService.getAuthToken()
-          },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            amount: 30000,
-            description: '星火学伴 · 数学'
-          })
+        const payResult = await handleWeChatPayment(booking.id, 300, booking.tutorName || '导师', '数学');
+        if (!payResult || !payResult.success) {
+          return { success: false, error: (payResult && payResult.error) || 'payment failed', bookingId: booking.id };
+        }
+        await window.StorageService.hydrateFromServer();
+        const refreshed = window.StorageService.getBookingById(booking.id);
+        const contract = await window.StorageService.saveContract({
+          bookingId: booking.id,
+          title: '三方托管服务居间协议',
+          signer: '测试家长',
+          tutorName: booking.tutorName,
+          amount: 300,
+          space: booking.space
         });
-        
-        if (!prepayResponse.ok) {
-          return { success: false, error: 'Prepay failed' };
-        }
-        
-        const prepay = await prepayResponse.json();
-        
-        // Mock confirm payment
-        if (prepay.mock) {
-          const confirmResponse = await fetch(`${apiBase}/api/pay/wechat/mock-confirm`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + window.StorageService.getAuthToken()
-            },
-            body: JSON.stringify({
-              outTradeNo: prepay.outTradeNo
-            })
-          });
-          
-          if (!confirmResponse.ok) {
-            return { success: false, error: 'Mock confirm failed' };
-          }
-        }
-        
-        return { success: true, bookingId: booking.id, parentId: parent.id };
+        return {
+          success: true,
+          bookingId: booking.id,
+          paymentStatus: refreshed && refreshed.paymentStatus,
+          contractId: contract && contract.id
+        };
       } catch (error) {
         return { success: false, error: error.message };
       }
-    }, API_BASE);
-    
+    });
+
     if (!bookingResult.success) {
-      throw new Error(bookingResult.error || 'Booking creation failed');
+      throw new Error(bookingResult.error || 'Booking/payment flow failed');
     }
-    
-    console.log('  ✓ Booking created:', bookingResult.bookingId);
-    console.log('  ✓ Payment completed (mock)');
-    
-    // Verify booking exists server-side
-    const verifyResponse = await fetch(`${API_BASE}/api/bookings?parentId=${bookingResult.parentId}`);
-    if (verifyResponse.ok) {
-      const bookings = await verifyResponse.json();
-      const foundBooking = bookings.find(b => b.id === bookingResult.bookingId);
-      if (foundBooking) {
-        console.log('  ✓ Booking verified server-side');
-      } else {
-        throw new Error('Booking not found server-side');
-      }
+    if (bookingResult.paymentStatus !== 'paid') {
+      throw new Error(`Expected paymentStatus=paid, got ${bookingResult.paymentStatus}`);
     }
+    if (!bookingResult.contractId) {
+      throw new Error('Parent contract was not saved');
+    }
+
+    console.log('  ✓ Booking created with server id:', bookingResult.bookingId);
+    console.log('  ✓ Mock pay succeeded (paymentStatus=paid)');
+    console.log('  ✓ Parent contract saved:', bookingResult.contractId);
     
     await screenshot(page, 'booking-payment-complete');
     console.log('  ✅ PASSED');
@@ -957,6 +906,136 @@ async function testNoConsoleErrorsOnKeyPages(browser) {
   console.log('  ✅ PASSED');
 }
 
+async function testPayFailureDoesNotShowSuccess(browser) {
+  console.log('\n[Test 11] Forced pay failure returns error (no false success)');
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${BASE_URL}/login.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    await delay(800);
+    await page.evaluate((phone, code) => {
+      document.getElementById('tabParent').click();
+      setTimeout(() => {
+        document.getElementById('loginMobile').value = phone;
+        if (window.sendLoginSMS) window.sendLoginSMS();
+        setTimeout(() => {
+          document.getElementById('smsCodeInput').value = code;
+          document.getElementById('agreementCheckbox').checked = true;
+          document.getElementById('btnSubmitLogin').click();
+        }, 150);
+      }, 100);
+    }, PARENT_PHONE, CODE);
+    await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 8000 }).catch(() => {});
+    await delay(2000);
+    const result = await page.evaluate(async () => {
+      if (typeof handleWeChatPayment !== 'function') {
+        return { ok: false, error: 'handleWeChatPayment missing' };
+      }
+      const pay = await handleWeChatPayment('BK-DOES-NOT-EXIST', 300, '导师', '数学');
+      return { ok: !!(pay && pay.success === false), error: pay && pay.error };
+    });
+    if (!result.ok) {
+      throw new Error(result.error || 'Expected pay failure');
+    }
+    console.log('  ✓ Pay failure surfaced:', result.error);
+    console.log('  ✅ PASSED');
+  } finally {
+    await page.close();
+  }
+}
+
+async function testWizardL2SubmitButton(browser) {
+  console.log('\n[Test 12] L2 wizard submit button calls submitApplication');
+  const page = await browser.newPage();
+  try {
+    await page.setViewport({ width: 1280, height: 800 });
+    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 15000 });
+    await delay(1500);
+    const called = await page.evaluate(() => {
+      if (typeof goToStep !== 'function' || typeof goToL2SubStep !== 'function' || typeof completeL2AndSubmit !== 'function') {
+        return false;
+      }
+      const subject = document.querySelector('input[name="subject"][value="初中数学"]');
+      if (subject) subject.checked = true;
+      const rate = document.getElementById('hourlyRate');
+      if (rate) rate.value = '120';
+      const lecture = document.getElementById('lectureUrl');
+      if (lecture) lecture.value = 'https://example.com/demo';
+      goToStep(2);
+      goToL2SubStep(3);
+      let invoked = false;
+      const previous = window.submitApplication;
+      window.submitApplication = function () {
+        invoked = true;
+        if (typeof previous === 'function') {
+          try { previous(); } catch (_) {}
+        }
+      };
+      completeL2AndSubmit();
+      return invoked;
+    });
+    if (!called) {
+      throw new Error('completeL2AndSubmit did not invoke submitApplication');
+    }
+    await screenshot(page, 'wizard-l2-submit');
+    console.log('  ✅ PASSED');
+  } finally {
+    await page.close();
+  }
+}
+
+async function testNoDuplicateWizardNav(browser) {
+  console.log('\n[Test 13] No duplicate L1/L2 wizard nav rows on mobile');
+  const page = await browser.newPage();
+  try {
+    await page.setViewport({ width: 390, height: 844 });
+    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 15000 });
+    await delay(1500);
+    const counts = await page.evaluate(() => {
+      const l1 = document.getElementById('l1-substep-1');
+      const l2 = document.getElementById('l2-substep-2');
+      return {
+        l1Next: l1 ? l1.querySelectorAll('button[onclick*="goToL1SubStep(2)"]').length : -1,
+        l2Next: l2 ? l2.querySelectorAll('button[onclick*="goToL2SubStep(3)"]').length : -1,
+        l2Submit: document.querySelectorAll('#l2-substep-3 button[onclick*="completeL2AndSubmit"]').length
+      };
+    });
+    if (counts.l1Next !== 1) {
+      throw new Error(`Expected 1 L1 next button, found ${counts.l1Next}`);
+    }
+    if (counts.l2Next > 1) {
+      throw new Error(`Duplicate L2 next buttons: ${counts.l2Next}`);
+    }
+    if (counts.l2Submit !== 1) {
+      throw new Error(`Expected 1 L2 submit button, found ${counts.l2Submit}`);
+    }
+    console.log('  ✓ Single nav row per substep');
+    console.log('  ✅ PASSED');
+  } finally {
+    await page.close();
+  }
+}
+
+async function testViewportNoHorizontalOverflow(browser) {
+  console.log('\n[Test 14] No horizontal overflow at 390px viewport');
+  const paths = ['login.html', 'parent_dashboard.html', 'mentor_dashboard.html', 'index.html', 'parent_register.html', 'admin_audit.html'];
+  for (const p of paths) {
+    const page = await browser.newPage();
+    try {
+      await page.setViewport({ width: 390, height: 844 });
+      await page.goto(`${BASE_URL}/${p}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      await delay(1200);
+      const width = await page.evaluate(() => document.documentElement.scrollWidth);
+      if (width > 390) {
+        throw new Error(`${p}: scrollWidth=${width}`);
+      }
+      console.log(`  ✓ ${p} (${width}px)`);
+    } finally {
+      await page.close();
+    }
+  }
+  console.log('  ✅ PASSED');
+}
+
 async function testAdminLogin(browser) {
   console.log('\n[Test 10] Admin login with real code lands on admin_audit.html');
   const page = await browser.newPage();
@@ -1125,6 +1204,38 @@ async function main() {
   }
   
   try {
+    await testPayFailureDoesNotShowSuccess(browser);
+    passed++;
+  } catch (e) {
+    console.error('  ✗', e.message);
+    failed++;
+  }
+
+  try {
+    await testWizardL2SubmitButton(browser);
+    passed++;
+  } catch (e) {
+    console.error('  ✗', e.message);
+    failed++;
+  }
+
+  try {
+    await testNoDuplicateWizardNav(browser);
+    passed++;
+  } catch (e) {
+    console.error('  ✗', e.message);
+    failed++;
+  }
+
+  try {
+    await testViewportNoHorizontalOverflow(browser);
+    passed++;
+  } catch (e) {
+    console.error('  ✗', e.message);
+    failed++;
+  }
+
+  try {
     await testAdminLogin(browser);
     passed++;
   } catch (e) {
@@ -1134,8 +1245,8 @@ async function main() {
   await browser.close();
   
   console.log(`\n=== Summary ===`);
-  console.log(`Passed: ${passed}/11`);
-  console.log(`Failed: ${failed}/11`);
+  console.log(`Passed: ${passed}/15`);
+  console.log(`Failed: ${failed}/15`);
   
   process.exit(failed === 0 ? 0 : 1);
 }

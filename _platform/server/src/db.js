@@ -683,6 +683,7 @@ function emptySnapshot() {
     parents: [getSeedParent()],
     bookings: getSeedBookings(),
     contracts: [],
+    payOrders: [],
     assessments: [],
     users: [],
     phoneAuditLogs: [],
@@ -718,6 +719,7 @@ function load() {
     if (!state.parents) state.parents = [];
     if (!state.bookings) state.bookings = [];
     if (!state.contracts) state.contracts = [];
+    if (!state.payOrders) state.payOrders = [];
     if (!state.assessments) state.assessments = [];
     if (!state.users) state.users = [];
     if (!state.phoneAuditLogs) state.phoneAuditLogs = [];
@@ -1325,6 +1327,28 @@ function saveContract(contract) {
   return record;
 }
 
+function getPayOrders() {
+  return (getState().payOrders || []).slice();
+}
+
+function getPayOrder(outTradeNo) {
+  if (!outTradeNo) return null;
+  return (getState().payOrders || []).find((o) => o.outTradeNo === outTradeNo) || null;
+}
+
+function savePayOrder(order) {
+  const s = getState();
+  if (!s.payOrders) s.payOrders = [];
+  const outTradeNo = order && order.outTradeNo;
+  if (!outTradeNo) return null;
+  const idx = s.payOrders.findIndex((o) => o.outTradeNo === outTradeNo);
+  const record = Object.assign({}, idx >= 0 ? s.payOrders[idx] : {}, order, { outTradeNo });
+  if (idx >= 0) s.payOrders[idx] = record;
+  else s.payOrders.unshift(record);
+  persist();
+  return record;
+}
+
 /* ---------- Session ---------- */
 // 旧的共享 session 已废弃，改用基于令牌的认证（见 auth.js）
 // 保留导出以兼容旧代码，但返回空对象
@@ -1768,6 +1792,9 @@ module.exports = {
   processEscrowReleases,
   getContracts,
   saveContract,
+  getPayOrders,
+  getPayOrder,
+  savePayOrder,
   getSession,
   setSession,
   matchTutors,

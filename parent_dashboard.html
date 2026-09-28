@@ -77,7 +77,7 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
@@ -142,7 +142,7 @@
   </header>
 
   <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
-    <div class="absolute -right-28 -top-28 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto relative z-10 space-y-4">
 
       <!-- AI 算力匹配状态头 -->
@@ -1946,22 +1946,15 @@
         showToast('请输入电子签名姓名', 'warning');
         return;
       }
-      if (window.StorageService && pendingBookingMeta) {
-        StorageService.saveContract({
-          title: '三方托管服务居间协议',
-          signer: signName,
-          tutorId: pendingBookingMeta.tutor.mentorId || pendingBookingMeta.tutor.id,
-          tutorName: pendingBookingMeta.tutor.maskedName,
-          amount: pendingBookingMeta.total,
-          space: pendingBookingMeta.spaceName
-        });
+      if (pendingBookingMeta) {
+        pendingBookingMeta.contractSigner = signName;
       }
       window.__eContractSignedForSession = true;
       closeEContractModal();
       confirmBookingSubmit();
     }
 
-    function confirmBookingSubmit() {
+    async function confirmBookingSubmit() {
       const btn = document.getElementById('btnConfirmBooking');
       const isTrial = (pendingBookingMeta && pendingBookingMeta.type === 'trial') || getSelectedBookingType() === 'trial';
       if (btn) {
@@ -1972,85 +1965,113 @@
       }
 
       setTimeout(async () => {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = isTrial
-            ? '<i class="fa-solid fa-gift text-xs"></i><span>确认试课 · 免费预约</span>'
-            : '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
-        }
-
-        closeBookingDrawer();
-
         const meta = pendingBookingMeta || {};
         const spaceName = meta.spaceName || document.getElementById('bookingSpaceSelect')?.value || '青羊金沙文化微网点';
         const dateChoice = meta.dateChoice || document.querySelector('input[name="bookingDate"]:checked')?.value || '';
         const total = (meta.total != null) ? Number(meta.total) : 270;
         const tutor = meta.tutor || selectedTutorForBooking;
         const tutorName = tutor && (tutor.maskedName || tutor.name || tutor.realName || '导师');
-
-        document.getElementById('passcodeSpaceName').innerText = `${spaceName}-01智能仓`;
         const scheduleText = dateChoice || ((meta.timeLabel) ? meta.timeLabel : '待定时段');
-        document.getElementById('passcodeScheduleTime').innerText = scheduleText;
-        document.getElementById('passcodeDisplay').innerText = Math.floor(100000 + Math.random() * 900000);
-
-        const iotPanel = document.getElementById('iotStatusPanel');
-        if (iotPanel) iotPanel.classList.add('hidden');
-        if (window.iotCountdownTimer) { clearInterval(window.iotCountdownTimer); window.iotCountdownTimer = null; }
 
         let createdBooking = null;
         let assessmentSubject = '';
-        if (window.StorageService && tutor) {
-          const mentorId = tutor.mentorId || tutor.id;
-          const parent = CURRENT_PARENT || StorageService.getCurrentParent();
-          const bookingType = meta.type || 'one_off';
-          assessmentSubject = (tutor.subjects && tutor.subjects[0]) || '学科辅导';
-          createdBooking = StorageService.addBooking({
-            mentorId: mentorId,
-            tutorId: mentorId,
-            tutorName: tutorName,
-            space: spaceName,
-            schedule: dateChoice || scheduleText,
-            timeSlot: dateChoice || scheduleText,
-            amount: total,
-            hours: bookingType === 'trial' ? 1 : (meta.hours || 2),
-            subject: assessmentSubject,
-            paymentMethod: meta.paymentMethod || selectedPaymentMethod || (bookingType === 'trial' ? '免费' : '微信支付'),
-            parentId: parent && parent.id,
-            parentName: parent && (parent.parentName || parent.name),
-            parentPhone: parent && parent.phone,
-            studentNickname: parent && parent.studentNickname,
-            studentGrade: parent && parent.studentGrade,
-            status: 'pending_accept',
-            type: bookingType,
-            weekday: bookingType === 'weekly' ? meta.weekday : undefined,
-            time: bookingType === 'weekly' ? meta.timeStart : undefined,
-            sessionCount: bookingType === 'weekly' ? meta.sessionCount : 1,
-            sessions: bookingType === 'weekly' ? (meta.sessions || []) : [],
-            escrowStatus: bookingType === 'trial' ? 'waived' : 'frozen',
-            perSessionAmount: bookingType === 'trial' ? 0 : (meta.perSession || total),
-            sourceBookingId: window.__renewalSourceBookingId || undefined
-          });
-          window.__renewalSourceBookingId = null;
-          if (createdBooking && createdBooking.ok === false) {
-            showToast(createdBooking.error || '试课预约失败', 'warning');
-            return;
+        try {
+          if (window.StorageService && tutor) {
+            const mentorId = tutor.mentorId || tutor.id;
+            const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+            const bookingType = meta.type || 'one_off';
+            assessmentSubject = (tutor.subjects && tutor.subjects[0]) || '学科辅导';
+            createdBooking = await StorageService.addBooking({
+              mentorId: mentorId,
+              tutorId: mentorId,
+              tutorName: tutorName,
+              space: spaceName,
+              schedule: dateChoice || scheduleText,
+              timeSlot: dateChoice || scheduleText,
+              amount: total,
+              hours: bookingType === 'trial' ? 1 : (meta.hours || 2),
+              subject: assessmentSubject,
+              paymentMethod: meta.paymentMethod || selectedPaymentMethod || (bookingType === 'trial' ? '免费' : '微信支付'),
+              parentId: parent && parent.id,
+              parentName: parent && (parent.parentName || parent.name),
+              parentPhone: parent && parent.phone,
+              studentNickname: parent && parent.studentNickname,
+              studentGrade: parent && parent.studentGrade,
+              status: 'pending_accept',
+              type: bookingType,
+              weekday: bookingType === 'weekly' ? meta.weekday : undefined,
+              time: bookingType === 'weekly' ? meta.timeStart : undefined,
+              sessionCount: bookingType === 'weekly' ? meta.sessionCount : 1,
+              sessions: bookingType === 'weekly' ? (meta.sessions || []) : [],
+              escrowStatus: bookingType === 'trial' ? 'waived' : 'pending_payment',
+              perSessionAmount: bookingType === 'trial' ? 0 : (meta.perSession || total),
+              sourceBookingId: window.__renewalSourceBookingId || undefined
+            });
+            window.__renewalSourceBookingId = null;
+            if (createdBooking && createdBooking.ok === false) {
+              showToast(createdBooking.error || '试课预约失败', 'warning');
+              return;
+            }
+            if (!createdBooking || !createdBooking.id) {
+              showToast('预约创建失败，请稍后重试', 'error');
+              return;
+            }
+
+            if (meta.contractSigner && window.__eContractSignedForSession) {
+              try {
+                await StorageService.saveContract({
+                  bookingId: createdBooking.id,
+                  title: '三方托管服务居间协议',
+                  signer: meta.contractSigner,
+                  tutorName: tutorName,
+                  amount: total,
+                  space: spaceName
+                });
+              } catch (contractErr) {
+                console.warn('Contract save failed', contractErr);
+                showToast('合约保存失败：' + (contractErr.message || '请重试'), 'error');
+                return;
+              }
+            }
           }
+
+          let paymentOk = isTrial || total <= 0;
+          if (total > 0 && !isTrial && createdBooking && createdBooking.id) {
+            const payResult = await handleWeChatPayment(createdBooking.id, total, tutorName, assessmentSubject);
+            paymentOk = !!(payResult && payResult.success);
+            if (!paymentOk) {
+              showToast(payResult && payResult.error ? payResult.error : '支付失败，托管未冻结', 'error');
+              return;
+            }
+            try {
+              await StorageService.hydrateFromServer();
+              createdBooking = StorageService.getBookingById(createdBooking.id) || createdBooking;
+            } catch (_) {}
+            if (createdBooking.paymentStatus !== 'paid') {
+              showToast('支付尚未确认，请稍后在「我的预约」查看', 'warning');
+              return;
+            }
+          }
+
+          closeBookingDrawer();
+
+          document.getElementById('passcodeSpaceName').innerText = `${spaceName}-01智能仓`;
+          document.getElementById('passcodeScheduleTime').innerText = scheduleText;
+          document.getElementById('passcodeDisplay').innerText = Math.floor(100000 + Math.random() * 900000);
+
+          const iotPanel = document.getElementById('iotStatusPanel');
+          if (iotPanel) iotPanel.classList.add('hidden');
+          if (window.iotCountdownTimer) { clearInterval(window.iotCountdownTimer); window.iotCountdownTimer = null; }
+
+          const headerBal = document.getElementById('headerEscrowBalance');
+          if (headerBal && total > 0 && !isTrial && paymentOk) {
+            const cur = parseFloat(headerBal.innerText) || 315;
+            const next = Math.max(0, cur - total);
+            headerBal.innerText = next.toFixed(2);
+          }
+
           try { renderParentBookings(); } catch (_) {}
-        }
 
-        // 微信支付流程（非免费课程）
-        if (total > 0 && !isTrial && createdBooking && createdBooking.id) {
-          await handleWeChatPayment(createdBooking.id, total, tutorName, assessmentSubject);
-        }
-
-        const headerBal = document.getElementById('headerEscrowBalance');
-        if (headerBal && total > 0) {
-          const cur = parseFloat(headerBal.innerText) || 315;
-          const next = Math.max(0, cur - total);
-          headerBal.innerText = next.toFixed(2);
-        }
-
-        setTimeout(() => {
           openPodPasscodeModal();
           if (isTrial) {
             showToast('试课已预约（免费）· 等待导师接单');
@@ -2058,18 +2079,22 @@
           } else {
             showToast('协议已签 · 托管已锁定，等待导师接单；通过后可扫码开仓');
           }
-        }, 300);
-
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = isTrial
+              ? '<i class="fa-solid fa-gift text-xs"></i><span>确认试课 · 免费预约</span>'
+              : '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
+          }
+        }
       }, 900);
     }
 
     // 微信支付处理
     async function handleWeChatPayment(bookingId, amount, tutorName, subject) {
       try {
-        const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
         const payMode = window.XH_CONFIG?.PAY_MODE || 'demo';
-        
-        // 创建预支付订单
+
         const prepayResult = await StorageService.api('POST', '/api/pay/wechat/prepay', {
           bookingId: bookingId,
           amount: Math.round(amount * 100),
@@ -2077,43 +2102,25 @@
         });
 
         if (!prepayResult || !prepayResult.prepayId) {
-          showToast('支付订单创建失败', 'error');
-          console.error('Prepay failed:', prepayResult);
-          return;
+          return { success: false, error: '支付订单创建失败' };
         }
 
-        // Demo 模式：自动模拟支付成功
         if (payMode === 'demo' && prepayResult.mock) {
-          showToast('支付订单创建成功（演示模式）');
-          
-          // 延迟模拟支付成功
-          setTimeout(async () => {
-            try {
-              const confirmResult = await StorageService.api('POST', '/api/pay/wechat/mock-confirm', {
-                outTradeNo: prepayResult.outTradeNo
-              });
-              
-              if (confirmResult && confirmResult.success) {
-                showToast('✓ 支付成功（演示模拟）', 'success');
-                try { renderParentBookings(); } catch (_) {}
-              } else {
-                showToast('模拟支付确认失败', 'error');
-              }
-            } catch (error) {
-              console.error('Mock confirm error:', error);
-              showToast('模拟支付处理异常', 'warning');
-            }
-          }, 1500);
-        } else {
-          // 生产模式：显示支付二维码或跳转支付页
-          showToast('请使用微信扫码支付');
-          // TODO: 在生产环境，这里应该显示支付二维码或调用微信 JSAPI 支付
-          console.log('Payment prepay ID:', prepayResult.prepayId);
-          console.log('Scan to pay or implement JSAPI payment here');
+          const confirmResult = await StorageService.api('POST', '/api/pay/wechat/mock-confirm', {
+            outTradeNo: prepayResult.outTradeNo
+          });
+
+          if (!confirmResult || !confirmResult.success) {
+            return { success: false, error: (confirmResult && confirmResult.error) || '模拟支付确认失败' };
+          }
+          return { success: true, outTradeNo: prepayResult.outTradeNo };
         }
+
+        showToast('请使用微信扫码支付');
+        return { success: false, error: '请完成微信支付' };
       } catch (error) {
         console.error('WeChat payment error:', error);
-        showToast('支付处理异常，请稍后重试', 'error');
+        return { success: false, error: error.message || '支付处理异常' };
       }
     }
 

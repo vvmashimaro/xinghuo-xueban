@@ -290,11 +290,25 @@ function organizeL1Fields() {
 /**
  * Add navigation buttons to L1 substeps
  */
+function substepHasInlineWizardNav(container, stepFn) {
+  if (!container) return false;
+  if (container.querySelector('[data-l1-wizard-nav], [data-l2-wizard-nav]')) return true;
+  const buttons = container.querySelectorAll('button[onclick]');
+  for (const btn of buttons) {
+    const oc = btn.getAttribute('onclick') || '';
+    if (oc.includes(stepFn) || oc.includes('goToStep(2)') || oc.includes('submitApplication')) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function addL1SubStepNavigationIfMissing() {
   for (let i = 1; i <= 4; i++) {
     const container = document.getElementById(`l1-substep-${i}`);
     if (!container) continue;
     if (container.querySelector('[data-l1-wizard-nav]')) continue;
+    if (substepHasInlineWizardNav(container, 'goToL1SubStep')) continue;
     addL1SubStepNavigationToContainer(i, container);
   }
 }
@@ -302,7 +316,6 @@ function addL1SubStepNavigationIfMissing() {
 function addL1SubStepNavigationToContainer(i, container) {
     const navHTML = `
       <div data-l1-wizard-nav="1" class="flex gap-2.5 pt-2">
-      <div class="flex gap-2.5 pt-2">
         ${i > 1 ? `<button type="button" onclick="goToL1SubStep(${i - 1})" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">返回上一步</button>` : ''}
         ${i < 4 ? `<button type="button" onclick="goToL1SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
           <span>下一步：${L1_SUBSTEPS[i + 1].title}</span>
@@ -420,6 +433,7 @@ function addL2SubStepNavigationIfMissing() {
     const container = document.getElementById(`l2-substep-${i}`);
     if (!container) continue;
     if (container.querySelector('[data-l2-wizard-nav]')) continue;
+    if (substepHasInlineWizardNav(container, 'goToL2SubStep')) continue;
     addL2SubStepNavigationToContainer(i, container);
   }
 }
@@ -615,10 +629,12 @@ function completeL2AndSubmit() {
     }
   }
 
-  // Call the existing submit function
-  if (typeof submitMentorProfile === 'function') {
-    submitMentorProfile();
+  if (typeof submitApplication === 'function') {
+    submitApplication();
+    return;
   }
+  const submitBtn = document.querySelector('button[onclick*="submitApplication"]');
+  if (submitBtn) submitBtn.click();
 }
 
 /**

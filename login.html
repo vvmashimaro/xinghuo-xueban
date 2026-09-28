@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="overflow-x-hidden">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -67,11 +67,13 @@
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900 relative overflow-x-hidden">
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900 relative overflow-x-hidden max-w-[100vw]">
 
   <!-- 背景光影装饰 -->
-  <div class="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+  </div>
 
   <!-- 顶部轻量系统栏：左侧品牌，右侧角色切换 -->
   <header class="w-full px-5 sm:px-8 py-4 flex items-center justify-between relative z-10 gap-3">
