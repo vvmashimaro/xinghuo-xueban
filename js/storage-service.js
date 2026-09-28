@@ -536,16 +536,19 @@
       return !!this.getAuthToken();
     },
     
-    login: async function (phone, code, role) {
+    verifySMS: async function (phone, code, scene) {
       try {
-        // 先验证短信
-        const verifyResult = await _api('POST', '/api/auth/sms/verify', { phone, code, scene: 'login' });
-        if (!verifyResult.success) {
-          return { success: false, error: verifyResult.error };
-        }
-        
-        // 登录
-        const loginResult = await _api('POST', '/api/auth/login', { phone, role });
+        const result = await _api('POST', '/api/auth/sms/verify', { phone, code, scene: scene || 'login' });
+        return result;
+      } catch (error) {
+        console.error('[SMS Verify Error]', error);
+        return { success: false, error: error.message || '验证失败' };
+      }
+    },
+    
+    login: async function (ticket, role) {
+      try {
+        const loginResult = await _api('POST', '/api/auth/login', { ticket, role });
         if (loginResult.success && loginResult.token) {
           this.setAuthToken(loginResult.token);
           return { success: true, user: loginResult.user };
@@ -558,16 +561,9 @@
       }
     },
     
-    register: async function (phone, code, role, profile) {
+    register: async function (ticket, role, profile) {
       try {
-        // 先验证短信
-        const verifyResult = await _api('POST', '/api/auth/sms/verify', { phone, code, scene: 'login' });
-        if (!verifyResult.success) {
-          return { success: false, error: verifyResult.error };
-        }
-        
-        // 注册
-        const registerResult = await _api('POST', '/api/auth/register', { phone, role, profile });
+        const registerResult = await _api('POST', '/api/auth/register', { ticket, role, profile });
         if (registerResult.success && registerResult.token) {
           this.setAuthToken(registerResult.token);
           return { success: true, user: registerResult.user };
@@ -614,8 +610,7 @@
 
     hydrateFromServer: async function () {
       try {
-        // 快照接口现在需要管理员权限，普通用户直接使用本地数据
-        // 只有登录状态下才尝试从服务器获取数据
+        // 如果没有登录，使用本地种子数据
         if (!this.isLoggedIn()) {
           console.log('[StorageService] No auth token, using local seed data');
           StorageService.seedIfEmptyLocal();
@@ -623,22 +618,43 @@
           return null;
         }
         
-        // 尝试获取当前用户信息来验证令牌
+        // 获取当前用户信息
         try {
           const user = await this.getCurrentUser();
+          
           if (user && user.role === 'admin') {
-            // 只有管理员可以拉取完整快照
+            // 管理员拉取完整快照
             const snap = await _api('GET', '/api/snapshot');
             _applySnapshot(snap);
             _hydrated = true;
             return snap;
+          } else if (user && (user.role === 'parent' || user.role === 'mentor')) {
+            // 普通用户从服务器拉取自己的数据
+            const mentors = await _apiSafe('GET', '/api/mentors');
+            const bookings = await _apiSafe('GET', '/api/bookings');
+            const assessments = await _apiSafe('GET', '/api/assessments');
+            
+            if (mentors) _write(KEYS.mentors, mentors);
+            if (bookings) _write(KEYS.bookings, bookings);
+            if (assessments) _write(KEYS.assessments, assessments);
+            
+            // 如果是家长，拉取自己的资料
+            if (user.role === 'parent') {
+              const parents = await _apiSafe('GET', '/api/parents');
+              if (parents) _write(KEYS.parents, parents);
+            }
+            
+            _hydrated = true;
+            console.log(`[StorageService] Hydrated ${user.role} data from server`);
+            return { user, mentors, bookings, assessments };
           }
         } catch (e) {
-          // 令牌无效或其他错误，使用本地数据
-          console.warn('[StorageService] Failed to verify user, using local data', e.message);
+          // 令牌无效或其他错误，清除令牌并使用本地数据
+          console.warn('[StorageService] Failed to verify user, clearing token', e.message);
+          this.clearAuthToken();
         }
         
-        // 非管理员用户使用本地数据
+        // 回退到本地数据
         StorageService.seedIfEmptyLocal();
         _hydrated = true;
         return null;
