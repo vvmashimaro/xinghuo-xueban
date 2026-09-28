@@ -621,6 +621,48 @@ const StorageService = {
       console.warn('Audit log failed:', e);
       return { success: false };
     }
+  },
+
+  // Booking operations
+  async createBooking(bookingData) {
+    try {
+      const result = await _request('POST', '/api/bookings', bookingData);
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '创建预约失败' };
+    }
+  },
+
+  async getBookings() {
+    try {
+      const result = await _request('GET', '/api/bookings', null);
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '获取预约列表失败' };
+    }
+  },
+
+  // Payment operations
+  async prepayWechat(bookingId, amount, description) {
+    try {
+      const result = await _request('POST', '/api/pay/wechat/prepay', {
+        bookingId,
+        amount: Math.round(amount * 100),
+        description
+      });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '创建支付订单失败' };
+    }
+  },
+
+  async mockConfirmPayment(outTradeNo) {
+    try {
+      const result = await _request('POST', '/api/pay/wechat/mock-confirm', { outTradeNo });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '确认支付失败' };
+    }
   }
 };
 

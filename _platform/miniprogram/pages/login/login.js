@@ -73,22 +73,9 @@ Page({
     if (this.data.smsCooldown > 0) return;
 
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const result = await Storage.sendSMS(mobile, 'login');
 
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/auth/sms/send`,
-          method: 'POST',
-          data: { phone: mobile, scene: 'login' },
-          success: resolve,
-          fail: reject
-        });
-      });
-
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
+      if (result.success) {
         const msg = result.provider === 'mock' 
           ? '短信验证码已发送（演示可用：888888）'
           : '短信验证码已发送，请查收';

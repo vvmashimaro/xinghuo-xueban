@@ -58,29 +58,14 @@ Page({
 
   async onUnbindPhone() {
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
-      const session = Storage.getSession() || {};
-      const userId = session.userId || this.data.parentId || '';
-
-      if (!userId) {
+      if (!Storage.isLoggedIn()) {
         showToast('用户信息不完整', 'error');
         return;
       }
 
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/auth/phone/unbind`,
-          method: 'POST',
-          data: { userId },
-          success: resolve,
-          fail: reject
-        });
-      });
+      const result = await Storage.unbindPhone();
 
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
+      if (result.success) {
         // Update local storage
         const parent = this._parent || Storage.getCurrentParent();
         if (parent) {
@@ -115,29 +100,14 @@ Page({
 
   async onCancelAccount() {
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
-      const session = Storage.getSession() || {};
-      const userId = session.userId || this.data.parentId || '';
-
-      if (!userId) {
+      if (!Storage.isLoggedIn()) {
         showToast('用户信息不完整', 'error');
         return;
       }
 
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/auth/phone/cancel`,
-          method: 'POST',
-          data: { userId },
-          success: resolve,
-          fail: reject
-        });
-      });
+      const result = await Storage.cancelAccount('用户主动注销');
 
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
+      if (result.success) {
         showToast('账号已注销，正在退出...');
         
         // Clear all local data
