@@ -747,6 +747,106 @@
   ],
   "parents": [
     {
+      "id": "PAR-MUKVSQQH-637",
+      "createdAt": "2026-09-28 06:43",
+      "phone": "13900000028",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "PAR-MUKVS8LR-180",
+      "createdAt": "2026-09-28 06:43",
+      "phone": "13900000142",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "PAR-MUKVQHGR-766",
+      "createdAt": "2026-09-28 06:41",
+      "phone": "13900000061",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:41"
+    },
+    {
+      "id": "PAR-MUKVQ2MZ-383",
+      "createdAt": "2026-09-28 06:41",
+      "phone": "13900000166",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:41"
+    },
+    {
+      "id": "PAR-MUKVO8QS-447",
+      "createdAt": "2026-09-28 06:40",
+      "phone": "13900000500",
+      "parentName": "李家长",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "cityDistrict": "青羊区",
+      "subjects": [
+        "数学",
+        "物理"
+      ],
+      "budgetMin": 100,
+      "budgetMax": 180,
+      "budgetRate": 140,
+      "subjectPlans": {},
+      "syllabusTopics": [],
+      "painTags": [],
+      "updatedAt": "2026-09-28 06:40"
+    },
+    {
       "id": "PAR-DEMO-001",
       "parentName": "刘女士",
       "parentRole": "妈妈",
@@ -803,6 +903,56 @@
     }
   ],
   "bookings": [
+    {
+      "id": "BK-MUKVSQQM-534",
+      "createdAt": "2026-09-28 06:43",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-MUKVSQQH-637",
+      "parentPhone": "13900000028",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:43:32.833Z",
+      "transactionId": "MOCK-WX-1790577812833",
+      "updatedAt": "2026-09-28 06:43"
+    },
+    {
+      "id": "BK-MUKVS8LV-334",
+      "createdAt": "2026-09-28 06:43",
+      "status": "pending_accept",
+      "declineReason": "",
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "escrowStatus": "frozen",
+      "parentId": "PAR-MUKVS8LR-180",
+      "parentPhone": "13900000142",
+      "studentNickname": "小明",
+      "studentGrade": "初三",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "amount": 300,
+      "hours": 2,
+      "paymentStatus": "paid",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-28T06:43:09.335Z",
+      "transactionId": "MOCK-WX-1790577789335",
+      "updatedAt": "2026-09-28 06:43"
+    },
     {
       "id": "BK-SEED-001",
       "mentorId": "AP-8802",
@@ -1103,6 +1253,180 @@
   "seeded": true,
   "assessments": [],
   "users": [],
-  "phoneAuditLogs": [],
-  "authTokens": []
+  "phoneAuditLogs": [
+    {
+      "id": "AUDIT-MUKVSQQS-603",
+      "timestamp": "2026-09-28 06:43",
+      "userId": "PAR-MUKVSQQH-637",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    },
+    {
+      "id": "AUDIT-MUKVS8M3-357",
+      "timestamp": "2026-09-28 06:43",
+      "userId": "PAR-MUKVS8LR-180",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    },
+    {
+      "id": "AUDIT-MUKVQHGY-858",
+      "timestamp": "2026-09-28 06:41",
+      "userId": "PAR-MUKVQHGR-766",
+      "action": "test_action",
+      "source": "test_source",
+      "phoneHash": "",
+      "ip": "127.0.0.1",
+      "ua": "",
+      "success": true,
+      "error": ""
+    }
+  ],
+  "authTokens": [
+    {
+      "tokenHash": "f32b8cbec402d6d6fbf7ab2f64fad395720fa9d76a17ac057e147ac32add9225",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790575556807,
+      "expiresAt": 1793167556807
+    },
+    {
+      "tokenHash": "751d03aea45d31b80cda314cb93495d247a8ff2cc0a6e3fd4b721b790ccaa84a",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575556830,
+      "expiresAt": 1793167556830
+    },
+    {
+      "tokenHash": "428e66ec3f7c4dd5057f8e37d252862278546a57838e512f7e7447fb531ff00f",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575578171,
+      "expiresAt": 1793167578171
+    },
+    {
+      "tokenHash": "1c82e59970a7c390471ad04656f2b3223fb9e48eb1374a62256925df78d0097b",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790575578260,
+      "expiresAt": 1793167578260
+    },
+    {
+      "tokenHash": "8de62472540ce5743e55012b5c3db37b3974745d8c22f771838fb0d5cb507c16",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575578293,
+      "expiresAt": 1793167578293
+    },
+    {
+      "tokenHash": "296c611978e687331e8b48653f99928c4d89777d05a59876851d28ddc86b3032",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576308935,
+      "expiresAt": 1793168308935
+    },
+    {
+      "tokenHash": "8d07f8c3e23007bf8d74700bec10358b52bd503a4e48e451391a3ee7d9ce8bce",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576316603,
+      "expiresAt": 1793168316603
+    },
+    {
+      "tokenHash": "9aa0f6b93a03e1bcc2de68ff118b9ef05e54e94618703e0b10ab6f50e235f6d4",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576394415,
+      "expiresAt": 1793168394415
+    },
+    {
+      "tokenHash": "b942cc1e263113191b3f00e03e3e254a6a5d4953743c5c6740bf05a6817141fd",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576402104,
+      "expiresAt": 1793168402104
+    },
+    {
+      "tokenHash": "98995f80468bc9ded978c0fff9588ed89a6dcb383a2f925a3bea55656b6bd6e2",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576514322,
+      "expiresAt": 1793168514322
+    },
+    {
+      "tokenHash": "7e0f05542a695335ae387f706de8afc5acdcf7f553a27739e18ee64e34611018",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576548298,
+      "expiresAt": 1793168548298
+    },
+    {
+      "tokenHash": "d8d7ea337f96ce9f9c689c7f501de16aac3af68c9797c0925581161a8afe9b28",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576555955,
+      "expiresAt": 1793168555955
+    },
+    {
+      "tokenHash": "b1255ef8ca0d315880be4832e75002ccf176c96ff471f61b31522771397e5c6f",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576572925,
+      "expiresAt": 1793168572925
+    },
+    {
+      "tokenHash": "be99b0377904d2172e1e787d93628efd39477046a557d45c56a86dd9c7f25eef",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790576654382,
+      "expiresAt": 1793168654382
+    },
+    {
+      "tokenHash": "dfd6a39d4eaa787b47b8ab6287dc63fc504c9c4f792a0beca5d79d7dbdbf9c01",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790576667023,
+      "expiresAt": 1793168667023
+    },
+    {
+      "tokenHash": "c1e02c623708ad80bc3bc41f12f365310cd05dcc8efa51134c276ded67628747",
+      "userId": "PAR-MUKVO8QS-447",
+      "role": "parent",
+      "phone": "13900000500",
+      "createdAt": 1790577602885,
+      "expiresAt": 1793169602885
+    },
+    {
+      "tokenHash": "38f1834f4ec41abef9b8075b360d16a7cd2d41a4c083acff98119111747447b3",
+      "userId": "PAR-MUKVQ2MZ-383",
+      "role": "parent",
+      "phone": "13900000166",
+      "createdAt": 1790577688284,
+      "expiresAt": 1793169688284
+    }
+  ]
 }
