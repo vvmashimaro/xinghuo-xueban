@@ -5,6 +5,9 @@ set -e
 
 echo "=== Setting up test environment ==="
 
+# Record db.json state before tests
+DB_BEFORE_HASH=$(git hash-object data/db.json 2>/dev/null || md5sum data/db.json | awk '{print $1}')
+
 # Create test database copy
 cp data/db.json data/db.test.json
 echo "✓ Test database created"
@@ -68,3 +71,22 @@ node test-miniprogram-flow.js
 
 echo ""
 echo "=== All tests complete ==="
+
+# Verify db.json hasn't been modified by tests
+echo ""
+echo "=== Verifying db.json integrity ==="
+DB_AFTER_HASH=$(git hash-object data/db.json 2>/dev/null || md5sum data/db.json | awk '{print $1}')
+
+if [ "$DB_BEFORE_HASH" = "$DB_AFTER_HASH" ]; then
+  echo "✓ db.json unchanged (tests used temp databases correctly)"
+else
+  echo "✗ ERROR: db.json was modified by tests!"
+  echo "  Before: $DB_BEFORE_HASH"
+  echo "  After:  $DB_AFTER_HASH"
+  git diff --quiet -- data/db.json || {
+    echo ""
+    echo "Changes detected:"
+    git diff data/db.json | head -50
+  }
+  exit 1
+fi
