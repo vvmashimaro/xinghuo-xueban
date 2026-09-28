@@ -27,7 +27,7 @@
       </picker>
     </view>
     <view class="field">
-      <text class="label">偏好教学仓</text>
+      <text class="label">{{spacePrefLabel}}</text>
       <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onSpace">
         <view class="input">{{spaces[spaceIndex]}}</view>
       </picker>

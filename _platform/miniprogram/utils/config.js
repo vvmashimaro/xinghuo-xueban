@@ -27,5 +27,8 @@ module.exports = {
   PAY_MODE: 'demo', // demo 或 production
   
   // 短信模式
-  SMS_MODE: 'demo' // demo（允许888888）或 production
+  SMS_MODE: 'demo', // demo（允许888888）或 production
+
+  // 智能仓 / IoT 门禁（暂缓上线时保持 false）
+  FEATURE_SMART_WAREHOUSE: false
 };

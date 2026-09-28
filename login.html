@@ -243,6 +243,7 @@
   </div>
 
     <script src="js/config.js"></script>
+    <script src="js/feature-flags.js"></script>
     <script src="js/storage-service.js"></script>
     <script src="js/legal-docs.js"></script>
 
@@ -327,7 +328,9 @@
         tabMentor.className = ROLE_TAB_ACTIVE;
         tabMentor.setAttribute('aria-selected', 'true');
         roleTitle.innerText = "青年导师端登录";
-        roleSubtitle.innerText = "银行合约直达秒结 · 免押扫码开启智能教学仓";
+        roleSubtitle.innerText = window.getLoginRoleSubtitle
+          ? window.getLoginRoleSubtitle('mentor')
+          : '银行合约直达秒结 · 阳光透明接单授课';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
           <button type="button" onclick="safeNavigate('index.html', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -339,7 +342,9 @@
         tabParent.className = ROLE_TAB_ACTIVE;
         tabParent.setAttribute('aria-selected', 'true');
         roleTitle.innerText = "家长 / 学员登录";
-        roleSubtitle.innerText = "单次约课零预付 · 优选双一流学霸与合规微空间";
+        roleSubtitle.innerText = window.getLoginRoleSubtitle
+          ? window.getLoginRoleSubtitle('parent')
+          : '单次约课零预付 · 优选双一流学霸导师';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">首次约课辅导？</span>
           <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -689,6 +694,11 @@
         toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
         toast.classList.remove('opacity-100', 'translate-y-0');
       }, 2600);
+    }
+
+    if (window.getLoginRoleSubtitle) {
+      const rs = document.getElementById('roleSubtitle');
+      if (rs) rs.innerText = window.getLoginRoleSubtitle(currentRole);
     }
   </script>
 </body>

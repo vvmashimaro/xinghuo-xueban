@@ -219,7 +219,8 @@
             </div>
 
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5">偏好教学仓（可多选）</label>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5" data-warehouse-only>偏好教学仓（可多选）</label>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5 hidden" data-warehouse-off>偏好上课网点（可多选）</label>
               <div id="spaceCheckboxes" class="flex flex-wrap gap-2"></div>
             </div>
 
@@ -465,6 +466,7 @@
   </div>
 
 <script src="js/config.js"></script>
+<script src="js/feature-flags.js"></script>
   <script src="js/storage-service.js"></script>
   <script src="js/availability-picker.js"></script>
 
@@ -913,7 +915,9 @@
           : (b.status === 'declined' && b.declineReason
             ? '<div class="mt-2 text-[11px] text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-2.5 py-1.5">婉拒原因：' + escapeHtml(b.declineReason) + '</div>'
             : (b.status === 'accepted'
-              ? '<div class="mt-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单 · 家长端可开启 IoT 通行凭证 · 结课后 48h 划拨</div>'
+              ? (window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()
+                ? '<div class="mt-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单 · 家长端可开启 IoT 通行凭证 · 结课后 48h 划拨</div>'
+                : '<div class="mt-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单，请按时上课 · 结课后 48h 划拨</div>')
               : ''));
 
         let sessionsHtml = '';
@@ -1090,7 +1094,11 @@
         showToast('未找到该约课申请', 'error');
         return;
       }
-      showToast('已接单 · 家长端可开启通行凭证');
+      showToast(
+        window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()
+          ? '已接单 · 家长端可开启通行凭证'
+          : '已接单 · 请按时上课'
+      );
       renderInbox(CURRENT_MENTOR);
     }
 

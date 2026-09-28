@@ -157,7 +157,8 @@
             </span>
           </div>
           <span class="text-[10px] text-slate-400 font-medium tracking-wide block">
-            阳光课业辅导 · 智能微仓匹配 · 银行合约资金托管
+            <span data-warehouse-only>阳光课业辅导 · 智能微仓匹配 · 银行合约资金托管</span>
+            <span class="hidden" data-warehouse-off>阳光课业辅导 · 导师匹配 · 银行合约资金托管</span>
           </span>
         </div>
       </div>
@@ -199,11 +200,18 @@
           </div>
         </div>
 
-        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
+        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm" data-warehouse-only>
           <i class="fa-solid fa-door-closed text-teal-400 text-xs shrink-0"></i>
           <div>
             <div class="font-bold text-[11px] text-white">社区智能隔音仓</div>
             <div class="text-[9px] text-slate-400">免进陌生家庭隐患</div>
+          </div>
+        </div>
+        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm hidden" data-warehouse-off>
+          <i class="fa-solid fa-location-dot text-teal-400 text-xs shrink-0"></i>
+          <div>
+            <div class="font-bold text-[11px] text-white">约定合规网点</div>
+            <div class="text-[9px] text-slate-400">就近选择上课地点</div>
           </div>
         </div>
 
@@ -326,7 +334,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  手机号码（接收匹配与开仓短信）<span class="text-rose-500">*</span>
+                  <span data-warehouse-only>手机号码（接收匹配与开仓短信）</span><span class="hidden" data-warehouse-off>手机号码（接收匹配与约课短信）</span><span class="text-rose-500">*</span>
                 </label>
                 <div class="relative">
                   <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold pr-2 border-r border-slate-200">+86</span>
@@ -538,8 +546,11 @@
                   <span class="w-2 h-4 bg-teal-600 rounded-sm"></span>
                   线下教学空间与导师选拔偏好
                 </h2>
-                <p class="text-[11px] text-slate-400 mt-0.5">
+                <p class="text-[11px] text-slate-400 mt-0.5" data-warehouse-only>
                   智能仓安全免押开锁 · 银行合约资金闭环直结
+                </p>
+                <p class="text-[11px] text-slate-400 mt-0.5 hidden" data-warehouse-off>
+                  选定上课网点与课酬预算 · 银行合约资金托管
                 </p>
               </div>
               <span class="text-[10px] bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded border border-teal-200">步骤 3/3</span>
@@ -991,7 +1002,8 @@
         </div>
 
         <div class="bg-white/80 rounded-xl p-2 text-[11px] text-slate-600 flex items-center justify-between border border-teal-50">
-          <span>智能仓排期：<strong class="text-slate-900">本周六 10:00 (青羊金沙仓)</strong></span>
+          <span data-warehouse-only>智能仓排期：<strong class="text-slate-900">本周六 10:00 (青羊金沙仓)</strong></span>
+          <span class="hidden" data-warehouse-off>建议时段：<strong class="text-slate-900">本周六 10:00 · 青羊金沙网点</strong></span>
           <span class="text-emerald-600 font-medium">支持单次试听</span>
         </div>
       </div>
@@ -1027,6 +1039,7 @@
 
   <!-- ======================= 业务逻辑 JavaScript ======================= -->
     <script src="js/config.js"></script>
+    <script src="js/feature-flags.js"></script>
     <script src="js/storage-service.js"></script>
 
     <script>
