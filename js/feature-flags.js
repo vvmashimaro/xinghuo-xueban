@@ -48,8 +48,20 @@
     });
   }
 
+  function getLoginRoleSubtitle(role) {
+    if (role === 'mentor') {
+      return isSmartWarehouseEnabled()
+        ? '银行合约直达秒结 · 免押扫码开启智能教学仓'
+        : '银行合约直达秒结 · 阳光透明接单授课';
+    }
+    return isSmartWarehouseEnabled()
+      ? '单次约课零预付 · 优选双一流学霸与合规微空间'
+      : '单次约课零预付 · 优选双一流学霸导师';
+  }
+
   window.isSmartWarehouseEnabled = isSmartWarehouseEnabled;
   window.applySmartWarehouseGating = applySmartWarehouseGating;
+  window.getLoginRoleSubtitle = getLoginRoleSubtitle;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applySmartWarehouseGating);

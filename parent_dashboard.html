@@ -461,7 +461,8 @@
             <i class="fa-solid fa-calendar-plus"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm">预约辅导与智能隔音仓选座</h3>
+            <h3 class="font-bold text-sm" data-warehouse-only>预约辅导与智能隔音仓选座</h3>
+            <h3 class="font-bold text-sm hidden" data-warehouse-off>预约辅导与上课网点</h3>
             <p class="text-[10px] text-slate-400">单次 / 每周固定 · 费用提前冻结 · 结课后 48h 划拨</p>
           </div>
         </div>
@@ -630,7 +631,8 @@
           <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-sm">—</strong></div>
         </div>
         <p class="text-[10px] text-slate-500 leading-relaxed border-t border-teal-100 pt-1.5">
-          退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。
+          <span data-warehouse-only>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
+          <span class="hidden" data-warehouse-off>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；导师结课确认后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
         </p>
         <div class="flex gap-2 pt-1">
           <button type="button" onclick="hideEscrowSummary()" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">返回修改</button>
@@ -851,7 +853,8 @@
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-[11px]">
           <p data-contract-iot-clause>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
           <p class="hidden" data-warehouse-off>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</p>
-          <p>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+          <p data-warehouse-only>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+          <p class="hidden" data-warehouse-off>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
           <p data-contract-warehouse-clause>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
           <p>4. 开课前 2 小时可原路撤销；观察期内遇质量投诉，资金继续冻结并由平台协调处理。</p>
           <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>

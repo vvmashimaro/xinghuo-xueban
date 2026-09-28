@@ -1,5 +1,6 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
+const appConfig = require('../../utils/config');
 const {
   getTopicsForSubject,
   PAIN_OPTIONS,
@@ -38,6 +39,8 @@ Page({
     budgetMax: 180,
     targetGoal: '',
     consent: false,
+    featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
+    spacePrefLabel: appConfig.FEATURE_SMART_WAREHOUSE ? '偏好教学仓' : '偏好上课网点',
     privacyRead: false,
     phoneAuthorized: false,
     phoneMasked: '',

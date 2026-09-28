@@ -137,7 +137,8 @@
             </div>
             <div class="text-xs font-bold text-white mb-1">银行合约 · 一课一结</div>
             <p class="text-[11px] text-slate-400 leading-relaxed">
-              家长预付锁定托管户，双方扫码下课<strong class="text-emerald-300 font-semibold">资金秒到账</strong>，彻底免除赖账纠纷。
+              <span data-warehouse-only>家长预付锁定托管户，双方扫码下课<strong class="text-emerald-300 font-semibold">资金秒到账</strong>，彻底免除赖账纠纷。</span>
+              <span class="hidden" data-warehouse-off>家长预付锁定托管户，双方确认结课<strong class="text-emerald-300 font-semibold">资金秒到账</strong>，彻底免除赖账纠纷。</span>
             </p>
           </div>
         </div>
@@ -1007,8 +1008,11 @@
             </div>
             <div>
               <h3 class="text-xl font-black text-slate-900">恭喜！导师入库档案已建立</h3>
-              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1.5 leading-relaxed">
+              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1.5 leading-relaxed" data-warehouse-only>
                 您的资质信息已进入平台合规智囊库。教研审核组将在 24 小时内完成试讲核验，并向您的手机推送智能教学仓首期免费使用体验码。
+              </p>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1.5 leading-relaxed hidden" data-warehouse-off>
+                您的资质信息已进入平台合规智囊库。教研审核组将在 24 小时内完成试讲核验，结果将短信通知您。
               </p>
             </div>
 
