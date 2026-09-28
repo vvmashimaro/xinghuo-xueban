@@ -13,7 +13,8 @@
     mentors: 'xh_mentors_v1',
     parents: 'xh_parents_v1',
     bookings: 'xh_bookings_v1',
-    session: 'xh_session_v1',
+    session: 'xh_session_v1', // 已废弃，保留兼容
+    authToken: 'xh_auth_token_v1',
     contracts: 'xh_contracts_v1',
     assessments: 'xh_assessments_v1',
     seeded: 'xh_seeded_v1',
@@ -466,14 +467,45 @@
       method: method,
       headers: { Accept: 'application/json' }
     };
+    
+    // 添加认证令牌
+    const token = _read(KEYS.authToken, null);
+    if (token) {
+      opts.headers['Authorization'] = 'Bearer ' + token;
+    }
+    
     if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
+    
     const resp = await fetch(url, opts);
+    
+    // 401 表示未登录或会话过期，清除令牌并跳转登录
+    if (resp.status === 401) {
+      _write(KEYS.authToken, null);
+      try { localStorage.removeItem(KEYS.authToken); } catch (e) {}
+      
+      // 如果当前不在登录页，跳转到登录页
+      if (typeof window !== 'undefined' && window.location && !window.location.pathname.includes('login')) {
+        console.warn('[StorageService] 会话过期，请重新登录');
+        window.location.href = '/login.html';
+      }
+      
+      throw new Error('未登录或会话已过期');
+    }
+    
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
-      throw new Error('API ' + resp.status + ' ' + path + ' ' + text);
+      let errorData = null;
+      try {
+        errorData = JSON.parse(text);
+      } catch (parseErr) {
+        // Not JSON, throw raw text
+        throw new Error(text || `HTTP ${resp.status}`);
+      }
+      // JSON parsed successfully, extract error message
+      throw new Error(errorData.error || errorData.message || text || `HTTP ${resp.status}`);
     }
     const ct = resp.headers.get('content-type') || '';
     if (ct.includes('application/json')) return resp.json();
@@ -495,6 +527,87 @@
     SPACE_OPTIONS: SPACE_OPTIONS,
     DEFAULT_SLOTS: DEFAULT_SLOTS,
 
+    /* ---------- Authentication ---------- */
+    getAuthToken: function () {
+      return _read(KEYS.authToken, null);
+    },
+    
+    setAuthToken: function (token) {
+      return _write(KEYS.authToken, token);
+    },
+    
+    clearAuthToken: function () {
+      try { localStorage.removeItem(KEYS.authToken); } catch (e) {}
+    },
+    
+    isLoggedIn: function () {
+      return !!this.getAuthToken();
+    },
+    
+    verifySMS: async function (phone, code, scene) {
+      try {
+        const result = await _api('POST', '/api/auth/sms/verify', { phone, code, scene: scene || 'login' });
+        return result;
+      } catch (error) {
+        console.error('[SMS Verify Error]', error);
+        return { success: false, error: error.message || '验证失败' };
+      }
+    },
+    
+    login: async function (ticket, role) {
+      try {
+        const loginResult = await _api('POST', '/api/auth/login', { ticket, role });
+        if (loginResult.success && loginResult.token) {
+          this.setAuthToken(loginResult.token);
+          return { success: true, user: loginResult.user };
+        }
+        
+        return { success: false, error: '登录失败' };
+      } catch (error) {
+        console.error('[Login Error]', error);
+        return { success: false, error: error.message || '登录失败' };
+      }
+    },
+    
+    register: async function (ticket, role, profile) {
+      try {
+        const registerResult = await _api('POST', '/api/auth/register', { ticket, role, profile });
+        if (registerResult.success && registerResult.token) {
+          this.setAuthToken(registerResult.token);
+          return { success: true, user: registerResult.user };
+        }
+        
+        return { success: false, error: '注册失败' };
+      } catch (error) {
+        console.error('[Register Error]', error);
+        return { success: false, error: error.message || '注册失败' };
+      }
+    },
+    
+    logout: async function () {
+      try {
+        await _apiSafe('POST', '/api/auth/logout');
+        this.clearAuthToken();
+        this.clearSession();
+        return { success: true };
+      } catch (error) {
+        console.error('[Logout Error]', error);
+        this.clearAuthToken();
+        this.clearSession();
+        return { success: false, error: error.message };
+      }
+    },
+    
+    getCurrentUser: async function () {
+      try {
+        const result = await _api('GET', '/api/auth/me');
+        return result;
+      } catch (error) {
+        console.error('[Get Current User Error]', error);
+        return null;
+      }
+    },
+
     ready: function () {
       return _readyPromise;
     },
@@ -505,13 +618,56 @@
 
     hydrateFromServer: async function () {
       try {
-        const snap = await _api('GET', '/api/snapshot');
-        _applySnapshot(snap);
+        // 如果没有登录，使用本地种子数据
+        if (!this.isLoggedIn()) {
+          console.log('[StorageService] No auth token, using local seed data');
+          StorageService.seedIfEmptyLocal();
+          _hydrated = true;
+          return null;
+        }
+        
+        // 获取当前用户信息
+        try {
+          const user = await this.getCurrentUser();
+          
+          if (user && user.role === 'admin') {
+            // 管理员拉取完整快照
+            const snap = await _api('GET', '/api/snapshot');
+            _applySnapshot(snap);
+            _hydrated = true;
+            return snap;
+          } else if (user && (user.role === 'parent' || user.role === 'mentor')) {
+            // 普通用户从服务器拉取自己的数据
+            const mentors = await _apiSafe('GET', '/api/mentors');
+            const bookings = await _apiSafe('GET', '/api/bookings');
+            const assessments = await _apiSafe('GET', '/api/assessments');
+            
+            if (mentors) _write(KEYS.mentors, mentors);
+            if (bookings) _write(KEYS.bookings, bookings);
+            if (assessments) _write(KEYS.assessments, assessments);
+            
+            // 如果是家长，拉取自己的资料
+            if (user.role === 'parent') {
+              const parents = await _apiSafe('GET', '/api/parents');
+              if (parents) _write(KEYS.parents, parents);
+            }
+            
+            _hydrated = true;
+            console.log(`[StorageService] Hydrated ${user.role} data from server`);
+            return { user, mentors, bookings, assessments };
+          }
+        } catch (e) {
+          // 令牌无效或其他错误，清除令牌并使用本地数据
+          console.warn('[StorageService] Failed to verify user, clearing token', e.message);
+          this.clearAuthToken();
+        }
+        
+        // 回退到本地数据
+        StorageService.seedIfEmptyLocal();
         _hydrated = true;
-        return snap;
+        return null;
       } catch (e) {
         console.warn('[StorageService] hydrate fail, local fallback', e.message || e);
-        _toastOnce('统一库暂不可用，已切换本地缓存（请确认已启动 server:8787）');
         StorageService.seedIfEmptyLocal();
         _hydrated = true;
         return null;

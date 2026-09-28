@@ -1127,28 +1127,27 @@
     }
 
     async function initDashboard() {
-      if (!window.StorageService) {
-        document.getElementById('emptyState').classList.remove('hidden');
-        document.getElementById('dashboardBody').classList.add('hidden');
+      if (!StorageService.isLoggedIn()) {
+        showToast('请先登录', 'warning');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
         return;
       }
-      if (StorageService.ready) await StorageService.ready();
-      StorageService.seedIfEmpty();
-      CURRENT_MENTOR = StorageService.getCurrentMentor();
-      // 若会话无导师但有手机号，再试一次
-      if (!CURRENT_MENTOR) {
-        const session = StorageService.getSession();
-        if (session && session.phone) {
-          CURRENT_MENTOR = StorageService.getMentorByPhone(session.phone);
-          if (CURRENT_MENTOR) {
-            StorageService.setSession(Object.assign({}, session, {
-              role: 'mentor',
-              mentorId: CURRENT_MENTOR.id,
-              phone: CURRENT_MENTOR.phone
-            }));
-          }
-        }
+
+      const user = await StorageService.getCurrentUser();
+      if (!user || user.role !== 'mentor') {
+        showToast('权限错误：需要导师身份', 'error');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        return;
       }
+
+      try {
+        await StorageService.hydrateFromServer();
+      } catch (e) {
+        console.warn('Failed to hydrate from server:', e);
+      }
+
+      const mentors = await StorageService.getMentors();
+      CURRENT_MENTOR = mentors.find(m => m.phone === user.phone);
 
       if (!CURRENT_MENTOR) {
         document.getElementById('emptyState').classList.remove('hidden');

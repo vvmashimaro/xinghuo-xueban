@@ -1101,5 +1101,20 @@
   ],
   "contracts": [],
   "session": null,
-  "seeded": true
+  "seeded": true,
+  "assessments": [],
+  "authTokens": [],
+  "phoneAuditLogs": [],
+  "users": [
+    {
+      "phone": "13540012341",
+      "role": "admin",
+      "createdAt": "2026-01-15 09:00"
+    },
+    {
+      "phone": "18080141668",
+      "role": "admin",
+      "createdAt": "2026-01-15 09:00"
+    }
+  ]
 }

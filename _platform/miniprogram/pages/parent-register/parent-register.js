@@ -184,20 +184,7 @@ Page({
       
       // 记录拒绝授权的审计日志
       try {
-        const config = require('../../utils/config');
-        const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
-        const session = Storage.getSession() || {};
-        
-        wx.request({
-          url: `${apiBase}/api/auth/phone/audit`,
-          method: 'POST',
-          data: {
-            userId: session.userId || 'anonymous',
-            action: 'authorize_deny',
-            source: 'wechat_auth',
-            success: false
-          }
-        });
+        await Storage.auditLog('authorize_deny', 'wechat_auth', false);
       } catch (error) {
         console.error('[Audit Log Error]', error);
       }
@@ -209,33 +196,27 @@ Page({
     const code = e.detail.code;
     
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
-      const session = Storage.getSession() || {};
+      const result = await Storage.getWeChatPhone(code);
 
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/wx/phone`,
-          method: 'POST',
-          data: { code, userId: session.userId || '' },
-          success: resolve,
-          fail: reject
-        });
-      });
-
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
+      if (result.success) {
+        // Store ticket if provided
+        if (result.ticket) {
+          // Ticket will be used for registration
+          this._wechatTicket = result.ticket;
+        }
+        
         this.setData({
           phone: result.phone,
-          phoneMasked: result.masked,
+          phoneMasked: result.masked || (result.phone.slice(0, 3) + '****' + result.phone.slice(7)),
           phoneAuthorized: true
         });
         
         showToast('手机号授权成功');
         
-        // 绑定手机号到用户账号
-        await this.bindPhoneToAccount(result.phone, 'wechat_auth');
+        // Bind phone to account if logged in
+        if (Storage.isLoggedIn()) {
+          await this.bindPhoneToAccount(result.phone, 'wechat_auth');
+        }
       } else {
         showToast(result.error || '获取手机号失败', 'error');
       }
@@ -268,22 +249,9 @@ Page({
     if (this.data.smsCooldown > 0) return;
 
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const result = await Storage.sendSMS(phone, 'register');
 
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/auth/sms/send`,
-          method: 'POST',
-          data: { phone, scene: 'bind' },
-          success: resolve,
-          fail: reject
-        });
-      });
-
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
+      if (result.success) {
         const msg = result.provider === 'mock'
           ? '验证码已发送（演示可用：888888）'
           : '验证码已发送，请查收';
@@ -319,46 +287,14 @@ Page({
     }
 
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
+      const result = await Storage.verifySMS(phone, code, 'register');
 
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/auth/sms/verify`,
-          method: 'POST',
-          data: { phone, code, scene: 'bind' },
-          success: resolve,
-          fail: reject
-        });
-      });
-
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
-        // 脱敏显示
-        const masked = phone.slice(0, 3) + '****' + phone.slice(7);
+      if (result.success) {
+        // Store ticket if provided
+        if (result.ticket) {
+          this._smsTicket = result.ticket;
+        }
         
-        this.setData({
-          phone: result.phone,
-          phoneMasked: masked,
-          phoneAuthorized: true,
-          showSmsBinding: false,
-          smsPhone: '',
-          smsCode: ''
-        });
-
-        showToast('手机号验证成功');
-
-        // 绑定手机号到用户账号
-        await this.bindPhoneToAccount(result.phone, 'sms_verify');
-      } else {
-        showToast(result.error || '验证失败', 'error');
-      }
-    } catch (error) {
-      console.error('[SMS Verify Error]', error);
-      
-      // 降级：演示模式验证
-      if (code === '888888') {
         const masked = phone.slice(0, 3) + '****' + phone.slice(7);
         this.setData({
           phone: phone,
@@ -368,40 +304,28 @@ Page({
           smsPhone: '',
           smsCode: ''
         });
-        showToast('手机号验证成功（演示模式）');
-        await this.bindPhoneToAccount(phone, 'sms_verify');
+
+        showToast('手机号验证成功');
+
+        // Bind phone to account if logged in
+        if (Storage.isLoggedIn()) {
+          await this.bindPhoneToAccount(phone, 'sms_verify');
+        }
       } else {
-        showToast('验证失败（演示可用：888888）', 'warning');
+        showToast(result.error || '验证失败', 'error');
       }
+    } catch (error) {
+      console.error('[SMS Verify Error]', error);
+      showToast('验证失败，请重试', 'error');
     }
   },
 
   async bindPhoneToAccount(phone, source) {
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
-      const session = Storage.getSession() || {};
+      const result = await Storage.bindPhone(phone, source);
 
-      // 如果没有 userId，生成一个临时 ID
-      const userId = session.userId || 'TEMP-' + Date.now();
-
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${apiBase}/api/auth/phone/bind`,
-          method: 'POST',
-          data: { userId, phone, source },
-          success: resolve,
-          fail: reject
-        });
-      });
-
-      const result = res.data;
-
-      if (res.statusCode === 200 && result.success) {
+      if (result.success) {
         console.log('[Phone Bind Success]', result);
-        
-        // 更新 session
-        Storage.setSession(Object.assign({}, session, { userId, phone }));
       } else {
         console.error('[Phone Bind Failed]', result.error);
         showToast(result.error || '绑定失败', 'error');
@@ -560,7 +484,7 @@ Page({
     showToast('已勾选同意《资金托管与服务协议》');
   },
 
-  submitProfile() {
+  async submitProfile() {
     const parentName = (this.data.parentName || '').trim();
     const phone = (this.data.phone || '').trim();
     const studentNickname = (this.data.studentNickname || '').trim();
@@ -619,16 +543,35 @@ Page({
     };
     if (this.data.editMode && this.data.editingId) {
       payload.id = this.data.editingId;
-    }
-    Storage.saveParent(payload);
-    if (this.data.editMode) {
+      Storage.saveParent(payload);
       showToast('画像已保存，正在返回主控…');
-    } else {
-      showToast('建档完成，正在进入智能匹配…');
+      setTimeout(() => {
+        wx.reLaunch({ url: '/pages/parent-dashboard/parent-dashboard' });
+      }, 400);
+      return;
     }
-    setTimeout(() => {
-      wx.reLaunch({ url: '/pages/parent-dashboard/parent-dashboard' });
-    }, 400);
+    
+    // New registration: use ticket-based flow
+    const ticket = this._smsTicket || this._wechatTicket;
+    if (!ticket) {
+      showToast('请先完成手机号验证', 'warning');
+      return;
+    }
+    
+    try {
+      const result = await Storage.register(ticket, 'parent', payload);
+      if (result.success) {
+        showToast('建档完成，正在进入智能匹配…');
+        setTimeout(() => {
+          wx.reLaunch({ url: '/pages/parent-dashboard/parent-dashboard' });
+        }, 400);
+      } else {
+        showToast(result.error || '注册失败，请重试', 'error');
+      }
+    } catch (error) {
+      console.error('[Registration Error]', error);
+      showToast(error.message || '注册失败，请重试', 'error');
+    }
   },
 
   goLogin() {

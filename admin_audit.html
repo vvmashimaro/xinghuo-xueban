@@ -85,13 +85,6 @@
 
       <!-- 快速功能区与审核员身份 -->
       <div class="flex items-center gap-3">
-        <div class="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-slate-300">学信网 API 直连正常</span>
-          <span class="text-slate-500">|</span>
-          <span class="text-slate-300">公安实名认证通畅</span>
-        </div>
-
         <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1.5 rounded-xl transition cursor-pointer">
           <i class="fa-solid fa-right-to-bracket mr-1"></i>登录
         </button>
@@ -330,21 +323,6 @@
                 </div>
               </div>
 
-              <!-- 公立校在职教师禁入承诺核验 -->
-              <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-start justify-between gap-2">
-                <div class="space-y-1">
-                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-contract text-teal-600"></i>
-                    <span>公立中小学在职教师红线排查</span>
-                  </div>
-                  <p class="text-[11px] text-slate-500 leading-relaxed">
-                    申请人已全选签署《非在职编制教师合规承诺书》，全国教师资格系统社保交叉比对未发现公办在岗代课记录。
-                  </p>
-                </div>
-                <span class="shrink-0 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-semibold">
-                  红线合规通过
-                </span>
-              </div>
             </div>
 
             <!-- ===================== 模块二：L2 能力画像与试讲评审 ===================== -->
@@ -1223,11 +1201,27 @@
     }
 
     // 初始化启动
-    window.onload = function() {
-      if (window.StorageService) {
-        StorageService.seedIfEmpty();
-        applicantsData = StorageService.getMentors().slice();
+    window.onload = async function() {
+      if (!StorageService.isLoggedIn()) {
+        showToast('请先登录', 'warning');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        return;
       }
+
+      const user = await StorageService.getCurrentUser();
+      if (!user || user.role !== 'admin') {
+        showToast('权限错误：需要管理员身份', 'error');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        return;
+      }
+
+      try {
+        await StorageService.hydrateFromServer();
+      } catch (e) {
+        console.warn('Failed to hydrate from server:', e);
+      }
+
+      applicantsData = (await StorageService.getMentors()).slice();
       currentApplicant = applicantsData[0] || null;
       renderApplicantList();
       if (currentApplicant) renderAuditDetail();

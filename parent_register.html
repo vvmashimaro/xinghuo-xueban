@@ -329,7 +329,7 @@
                 </label>
                 <div class="relative">
                   <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold pr-2 border-r border-slate-200">+86</span>
-                  <input type="tel" id="parentPhone" maxlength="11" placeholder="例：138****8000" required oninput="onParentStepFieldChange()" class="w-full pl-15 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono font-medium">
+                  <input type="tel" id="parentPhone" maxlength="11" placeholder="例：138****8000" required oninput="onParentPhoneEdit()" class="w-full pl-15 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono font-medium">
                 </div>
               </div>
 
@@ -625,6 +625,22 @@
                   我已阅读并同意 <a href="javascript:void(0)" onclick="event.preventDefault(); openAgreementModal();" class="text-teal-700 underline font-medium">《资金托管与服务协议》</a>，知晓课酬按单次托管锁定，课后 <strong class="text-teal-800">48 小时</strong>无投诉或其他冻结事由则自动划拨至导师，不设大额预存消费包。
                 </span>
               </label>
+            </div>
+
+            <!-- Registration error display -->
+            <div id="registrationError" class="hidden bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm">
+              <div class="flex items-start gap-2">
+                <i class="fa-solid fa-circle-exclamation text-rose-500 mt-0.5"></i>
+                <div class="flex-1">
+                  <p id="registrationErrorText" class="text-rose-800 font-medium"></p>
+                  <a href="login.html" class="text-rose-600 hover:text-rose-700 underline text-xs mt-1 inline-block">
+                    前往登录页面 →
+                  </a>
+                </div>
+                <button type="button" onclick="hideRegistrationError()" class="text-rose-400 hover:text-rose-600">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
             </div>
 
             <!-- 终极提交与建档按钮 -->
@@ -1674,11 +1690,43 @@
     /* ==========================================================================
        表单提交与智能匹配弹窗
        ========================================================================== */
-    function handleParentSubmit() {
+    async function handleParentSubmit() {
       const agree = document.getElementById('parentAgreementCheck')?.checked;
       if (!agree) {
         showToast('请阅读并同意《资金托管与服务协议》！', 'warning');
         openAgreementModal();
+        return;
+      }
+
+      const phoneEl = document.getElementById('parentPhone');
+      const codeEl = document.getElementById('parentSmsCode');
+      
+      if (!phoneEl) {
+        showToast('表单元素加载异常：找不到手机号输入框', 'error');
+        console.error('Element not found: parentPhone');
+        return;
+      }
+      
+      if (!codeEl) {
+        showToast('表单元素加载异常：找不到验证码输入框', 'error');
+        console.error('Element not found: parentSmsCode');
+        return;
+      }
+      
+      const phone = phoneEl.value.trim();
+      const code = codeEl.value.trim();
+      
+      if (!phone || phone.length !== 11) {
+        showToast('请输入有效的 11 位手机号码！', 'warning');
+        console.warn('Phone validation failed:', phone);
+        goToStep(1);
+        return;
+      }
+
+      if (!code || code.length !== 6) {
+        showToast('请输入 6 位短信验证码！', 'warning');
+        console.warn('Code validation failed:', code);
+        goToStep(1);
         return;
       }
 
@@ -1699,13 +1747,36 @@
       const btn = document.getElementById('btnSubmitParent');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>AI 正在匹配导师智库...</span>';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>验证身份中...</span>';
       }
 
-      setTimeout(() => {
+      try {
+        // Step 1: 验证短信码获取票据
+        const verifyResult = await StorageService.verifySMS(phone, code, 'register');
+        
+        if (!verifyResult.success) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          }
+          showToast(verifyResult.error || '验证码错误，请重试', 'error');
+          goToStep(1);
+          return;
+        }
+
+        const ticket = verifyResult.ticket;
+        if (!ticket) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          }
+          showToast('验证成功但未获取到票据，请重试', 'error');
+          return;
+        }
+
+        // Step 2: 准备注册数据
         if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>AI 正在匹配导师智库...</span>';
         }
 
         const agg = aggregateFromPlans();
@@ -1716,7 +1787,6 @@
         const budgetMax = parseInt(document.getElementById('budgetMaxRange')?.value || '180', 10);
         const budgetRate = Math.round((budgetMin + budgetMax) / 2);
 
-        // 深拷贝 subjectPlans
         const plansCopy = {};
         Object.keys(subjectPlans).forEach((k) => {
           plansCopy[k] = {
@@ -1726,25 +1796,47 @@
           };
         });
 
-        if (window.StorageService) {
-          StorageService.saveParent({
-            parentName: document.getElementById('parentName')?.value.trim() || '',
-            parentRole: parentRole,
-            phone: document.getElementById('parentPhone')?.value.trim() || '',
-            studentNickname: document.getElementById('studentNickname')?.value.trim() || '',
-            studentGrade: document.getElementById('studentGrade')?.value || '',
-            cityDistrict: cityDistrict,
-            subjects: checkedSubjects,
-            subjectPlans: plansCopy,
-            syllabusTopics: agg.weakPoints,
-            pacingMode: agg.pacingMode,
-            budgetMin: budgetMin,
-            budgetMax: budgetMax,
-            budgetRate: budgetRate,
-            selectedSpace: selectedSpace,
-            targetGoal: document.getElementById('targetGoal')?.value.trim() || '',
-            painTags: agg.pains
-          });
+        const profile = {
+          parentName: document.getElementById('parentName')?.value.trim() || '',
+          parentRole: parentRole,
+          phone: phone,
+          studentNickname: document.getElementById('studentNickname')?.value.trim() || '',
+          studentGrade: document.getElementById('studentGrade')?.value || '',
+          cityDistrict: cityDistrict,
+          subjects: checkedSubjects,
+          subjectPlans: plansCopy,
+          syllabusTopics: agg.weakPoints,
+          pacingMode: agg.pacingMode,
+          budgetMin: budgetMin,
+          budgetMax: budgetMax,
+          budgetRate: budgetRate,
+          selectedSpace: selectedSpace,
+          targetGoal: document.getElementById('targetGoal')?.value.trim() || '',
+          painTags: agg.pains
+        };
+
+        // Step 3: 使用票据注册
+        const registerResult = await StorageService.register(ticket, 'parent', profile);
+
+        if (!registerResult.success) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          }
+          const errorMsg = registerResult.error || '注册失败，请重试';
+          showToast(errorMsg, 'error');
+          
+          // Display inline error for duplicate registration
+          if (errorMsg.includes('已注册') || errorMsg.includes('请直接登录')) {
+            showRegistrationError(errorMsg);
+          }
+          return;
+        }
+
+        // Step 4: 注册成功，显示匹配结果
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
         }
 
         const modalPacing = document.getElementById('modalSuccessPacing');
@@ -1758,13 +1850,14 @@
         }
 
         if (window.StorageService) {
-          const tutors = StorageService.getTutorListForParent(StorageService.getCurrentParent());
-          const top = tutors[0];
+          const tutors = await StorageService.getMentors();
+          const filtered = tutors.filter(t => t.status === 'approved');
+          const top = filtered[0];
           if (top) {
             const nameEl = document.querySelector('#matchModalContent .font-black.text-sm.text-white');
-            if (nameEl) nameEl.innerText = top.maskedName;
+            if (nameEl) nameEl.innerText = top.name || '优选导师';
             const avatarEl = document.querySelector('#matchModalContent .w-11.h-11');
-            if (avatarEl) avatarEl.innerText = top.avatarLetter;
+            if (avatarEl) avatarEl.innerText = (top.name || 'T')[0];
           }
         }
 
@@ -1774,7 +1867,19 @@
           if (window.StorageService && StorageService.clearParentRegisterDraft) StorageService.clearParentRegisterDraft();
           else localStorage.removeItem('xh_parent_register_draft_v1');
         } catch (e) {}
-      }, 900);
+        
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = 'parent_dashboard.html';
+        }, 2000);
+      } catch (error) {
+        console.error('Registration error:', error);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+        }
+        showToast(error.message || '注册失败，请重试', 'error');
+      }
     }
 
     function openMatchModal() {
@@ -1804,13 +1909,45 @@
     /* ==========================================================================
        辅助（字段使用灰色 placeholder 示例引导填写）
        ========================================================================== */
-    function sendParentSmsCode() {
+    async function sendParentSmsCode() {
       const phone = document.getElementById('parentPhone')?.value.trim();
       if (!phone || phone.length !== 11) {
         showToast('请输入有效的 11 位手机号码！', 'warning');
         return;
       }
-      showToast('验证码已发送至手机（演示环境默认码：888888）');
+      
+      const btn = document.getElementById('sendParentSmsBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '发送中...';
+      }
+      
+      try {
+        const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
+        const response = await fetch(`${apiBase}/api/auth/sms/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, scene: 'register' })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          showToast(`验证码已发送至 ${phone}`, 'success');
+        } else {
+          showToast(result.error || '发送失败，请稍后重试', 'error');
+        }
+      } catch (error) {
+        console.error('SMS send error:', error);
+        showToast('验证码发送失败（演示环境默认码：888888）', 'warning');
+      } finally {
+        if (btn) {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = '发送验证码';
+          }, 3000);
+        }
+      }
     }
 
     function safeNavigate(targetUrl, targetTitle) {
@@ -1851,6 +1988,29 @@
         toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
         toast.classList.remove('opacity-100', 'translate-y-0');
       }, 2500);
+    }
+
+    function showRegistrationError(message) {
+      const errorDiv = document.getElementById('registrationError');
+      const errorText = document.getElementById('registrationErrorText');
+      if (errorDiv && errorText) {
+        errorText.innerText = message;
+        errorDiv.classList.remove('hidden');
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function hideRegistrationError() {
+      const errorDiv = document.getElementById('registrationError');
+      if (errorDiv) {
+        errorDiv.classList.add('hidden');
+      }
+    }
+
+    // Hide error when phone field is edited
+    function onParentPhoneEdit() {
+      hideRegistrationError();
+      onParentStepFieldChange();
     }
 
     // 初始化运行
