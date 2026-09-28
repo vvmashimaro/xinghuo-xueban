@@ -99,11 +99,6 @@
         <span class="hidden xs:inline sm:inline">导师端</span>
         <span class="sm:hidden">导师</span>
       </button>
-      <button type="button" id="tabAdmin" onclick="switchRole('admin')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false">
-        <i class="fa-solid fa-shield-halved text-[10px] opacity-70"></i>
-        <span class="hidden xs:inline sm:inline">管理端</span>
-        <span class="sm:hidden">管理</span>
-      </button>
     </div>
   </header>
 
@@ -316,17 +311,14 @@
       currentRole = role;
       const tabMentor = document.getElementById('tabMentor');
       const tabParent = document.getElementById('tabParent');
-      const tabAdmin = document.getElementById('tabAdmin');
       const roleTitle = document.getElementById('roleTitle');
       const roleSubtitle = document.getElementById('roleSubtitle');
       const regBox = document.getElementById('registerPromptBox');
 
       tabMentor.className = ROLE_TAB_IDLE;
       tabParent.className = ROLE_TAB_IDLE;
-      if (tabAdmin) tabAdmin.className = ROLE_TAB_IDLE;
       tabMentor.setAttribute('aria-selected', 'false');
       tabParent.setAttribute('aria-selected', 'false');
-      if (tabAdmin) tabAdmin.setAttribute('aria-selected', 'false');
 
       if (role === 'mentor') {
         tabMentor.className = ROLE_TAB_ACTIVE;
@@ -337,20 +329,6 @@
           <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
           <button type="button" onclick="safeNavigate('index.html', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
             <span>进入导师认证与建库 (L1/L2)</span>
-            <i class="fa-solid fa-angle-right text-[10px]"></i>
-          </button>
-        `;
-      } else if (role === 'admin') {
-        if (tabAdmin) {
-          tabAdmin.className = ROLE_TAB_ACTIVE;
-          tabAdmin.setAttribute('aria-selected', 'true');
-        }
-        roleTitle.innerText = "管理端登录";
-        roleSubtitle.innerText = "资质审核 · 合规风控 · 平台运营总控台";
-        regBox.innerHTML = `
-          <span class="text-slate-400 shrink-0">管理审核入口</span>
-          <button type="button" onclick="safeNavigate('admin_audit.html', '管理端审核台')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
-            <span>直达管理审核台</span>
             <i class="fa-solid fa-angle-right text-[10px]"></i>
           </button>
         `;

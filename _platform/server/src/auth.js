@@ -29,12 +29,22 @@ function isProduction() {
 
 /**
  * 检查手机号是否为管理员
+ * 默认管理员: 13540012341, 18080141668
+ * ADMIN_PHONES 环境变量可覆盖或扩展
  */
 function isAdminPhone(phone) {
-  const adminPhones = process.env.ADMIN_PHONES;
-  if (!adminPhones) return false;
+  const DEFAULT_ADMIN_PHONES = ['13540012341', '18080141668'];
+  const adminPhonesEnv = process.env.ADMIN_PHONES;
   
-  const list = adminPhones.split(',').map(p => p.trim()).filter(Boolean);
+  let list = [];
+  if (adminPhonesEnv) {
+    // ADMIN_PHONES 可以覆盖默认列表，或使用逗号分隔添加更多
+    list = adminPhonesEnv.split(',').map(p => p.trim()).filter(Boolean);
+  } else {
+    // 使用默认管理员列表
+    list = DEFAULT_ADMIN_PHONES;
+  }
+  
   return list.includes(String(phone).trim());
 }
 

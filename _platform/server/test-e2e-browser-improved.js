@@ -710,6 +710,71 @@ async function testMentorAcceptBooking(browser) {
   }
 }
 
+async function testUIChanges(browser) {
+  console.log('\n[Test 6] Verify UI changes (CHSI button, removed badge and 承诺书)');
+  const page = await browser.newPage();
+  
+  try {
+    // Test 1: Check CHSI button exists on mentor onboarding page
+    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    
+    const chsiButton = await page.evaluate(() => {
+      const link = document.querySelector('a[href*="chsi.com.cn"]');
+      return link ? {
+        exists: true,
+        href: link.href,
+        text: link.innerText
+      } : { exists: false };
+    });
+    
+    if (chsiButton.exists && chsiButton.href.includes('chsi.com.cn')) {
+      console.log('  ✓ CHSI verification button exists on index.html');
+      console.log(`    Link: ${chsiButton.href}`);
+    } else {
+      throw new Error('CHSI button not found on index.html');
+    }
+    
+    // Test 2: Check status badge is removed from admin_audit.html
+    await page.goto(`${BASE_URL}/admin_audit.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    
+    const statusBadge = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return {
+        hasApiStatus: text.includes('学信网 API 直连正常'),
+        hasAuthStatus: text.includes('公安实名认证通畅')
+      };
+    });
+    
+    if (!statusBadge.hasApiStatus && !statusBadge.hasAuthStatus) {
+      console.log('  ✓ Status badge removed from admin_audit.html');
+    } else {
+      throw new Error('Status badge still present on admin_audit.html');
+    }
+    
+    // Test 3: Check 承诺书 section is removed from admin_audit.html
+    const compliance = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return {
+        hasCompliance: text.includes('非在职编制教师合规承诺书') || 
+                      text.includes('公立中小学在职教师红线排查')
+      };
+    });
+    
+    if (!compliance.hasCompliance) {
+      console.log('  ✓ 承诺书 section removed from admin_audit.html');
+    } else {
+      throw new Error('承诺书 section still present on admin_audit.html');
+    }
+    
+    console.log('  ✅ PASSED');
+  } catch (error) {
+    console.error(`  ✗ FAILED: ${error.message}`);
+    throw error;
+  } finally {
+    await page.close();
+  }
+}
+
 async function main() {
   console.log('=== 星火学伴 E2E Browser Tests (Improved) ===\n');
   console.log(`BASE_URL: ${BASE_URL}`);
@@ -760,11 +825,18 @@ async function main() {
     failed++;
   }
   
+  try {
+    await testUIChanges(browser);
+    passed++;
+  } catch (e) {
+    failed++;
+  }
+  
   await browser.close();
   
   console.log(`\n=== Summary ===`);
-  console.log(`Passed: ${passed}/5`);
-  console.log(`Failed: ${failed}/5`);
+  console.log(`Passed: ${passed}/6`);
+  console.log(`Failed: ${failed}/6`);
   
   process.exit(failed === 0 ? 0 : 1);
 }

@@ -436,11 +436,17 @@
                     <i class="fa-solid fa-fingerprint absolute left-3 top-3 text-slate-400 text-sm"></i>
                     <input type="text" id="chsiCode" required placeholder="例：A98F72KL50198821（学信网在线验证码）" oninput="onChsiInputChanged(); updateL1Progress();" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition font-mono uppercase">
                   </div>
+                  <a href="https://my.chsi.com.cn/archive/index.jsp" target="_blank" rel="noopener" class="shrink-0 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-300 whitespace-nowrap">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    <span class="hidden sm:inline">去学信网查验证码</span>
+                    <span class="sm:hidden">查验证码</span>
+                  </a>
                   <button type="button" id="btnVerifyChsi" onclick="triggerChsiAutoVerification()" class="shrink-0 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-cloud-arrow-down text-xs" id="chsiVerifyIcon"></i>
                     <span id="chsiVerifyBtnText">联网验证</span>
                   </button>
                 </div>
+                <p class="text-[11px] text-slate-500 mt-1.5 leading-tight">登录学信档案，申请「教育部学籍在线验证报告」，复制报告上的在线验证码</p>
               </div>
             </div>
 

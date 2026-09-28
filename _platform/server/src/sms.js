@@ -101,8 +101,16 @@ function hashCode(code) {
  * Mock 短信发送（开发/演示模式）
  */
 async function sendMockSMS(phone, code, scene) {
+  const maskedPhone = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
   console.log(`[SMS Mock] 发送验证码到 ${phone}`);
   console.log(`[SMS Mock] 场景: ${scene}, 验证码: ${code}`);
+  
+  // 对于管理员手机号，记录真实验证码到日志（用于 pm2 logs 查看）
+  const ADMIN_PHONES = ['13540012341', '18080141668'];
+  if (ADMIN_PHONES.includes(phone)) {
+    console.log(`[mock-sms] ${maskedPhone} code=${code}`);
+  }
+  
   console.log(`[SMS Mock] 开发提示：任何手机号都可使用验证码 888888 进行验证`);
   return { success: true, provider: 'mock', message: '演示模式：请使用 888888' };
 }
