@@ -4,6 +4,8 @@
  */
 'use strict';
 
+const pricing = require('./pricing');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -988,6 +990,14 @@ function addBooking(booking) {
   const s = getState();
   const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
   const bookingType = (booking && booking.type) || 'one_off';
+  const mentor = mentorId ? getMentorById(mentorId) : null;
+  if (bookingType !== 'trial' && !mentor) {
+    return { ok: false, error: '导师不存在', code: 'MENTOR_NOT_FOUND' };
+  }
+  const computed = pricing.computeBookingPricing(mentor, booking);
+  if (computed.error) {
+    return { ok: false, error: computed.error, code: 'INVALID_PRICING' };
+  }
   if (bookingType === 'trial') {
     const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
     const subject = normalizeAssessmentSubject((booking && booking.subject) || '');
@@ -1005,6 +1015,14 @@ function addBooking(booking) {
       return { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
     }
   }
+  const sanitized = Object.assign({}, booking || {});
+  delete sanitized.amount;
+  delete sanitized.total;
+  delete sanitized.price;
+  delete sanitized.hourlyRate;
+  delete sanitized.perSessionAmount;
+  delete sanitized.escrowStatus;
+
   const record = Object.assign(
     {
       id: _uid('BK'),
@@ -1015,12 +1033,18 @@ function addBooking(booking) {
       tutorId: mentorId,
       type: bookingType,
       sessions: (booking && booking.sessions) || [],
-      escrowStatus: (booking && booking.escrowStatus) || 'frozen'
+      paymentStatus: computed.amount > 0 ? 'unpaid' : 'waived'
     },
-    booking || {},
+    sanitized,
     {
       mentorId: mentorId || (booking && booking.mentorId) || '',
-      tutorId: mentorId || (booking && (booking.tutorId || booking.mentorId)) || ''
+      tutorId: mentorId || (booking && (booking.tutorId || booking.mentorId)) || '',
+      amount: computed.amount,
+      hours: computed.hours,
+      sessionCount: computed.sessionCount,
+      perSessionAmount: computed.perSessionAmount,
+      escrowStatus: computed.escrowStatus,
+      trialLabel: computed.trialLabel
     }
   );
   if (record.type === 'trial') {
@@ -1028,7 +1052,8 @@ function addBooking(booking) {
     record.amount = 0;
     record.perSessionAmount = 0;
     record.escrowStatus = 'waived';
-    record.trialLabel = '首次试课 · 1小时免费';
+    record.paymentStatus = 'waived';
+    record.trialLabel = record.trialLabel || '首次试课 · 1小时免费';
     record.sessionCount = 1;
   }
   s.bookings.unshift(record);
@@ -1795,6 +1820,9 @@ module.exports = {
   getPayOrders,
   getPayOrder,
   savePayOrder,
+  bookingAmountFen: pricing.bookingAmountFen,
+  bookingAmountYuan: pricing.bookingAmountYuan,
+  isBookingPayable: pricing.isBookingPayable,
   getSession,
   setSession,
   matchTutors,

@@ -1975,6 +1975,8 @@
 
         let createdBooking = null;
         let assessmentSubject = '';
+        let chargeAmount = NaN;
+        let serverAmount = isTrial ? 0 : total;
         try {
           if (window.StorageService && tutor) {
             const mentorId = tutor.mentorId || tutor.id;
@@ -2017,6 +2019,9 @@
               return;
             }
 
+            chargeAmount = Number(createdBooking.amount);
+            serverAmount = Number.isFinite(chargeAmount) ? chargeAmount : (isTrial ? 0 : total);
+
             if (meta.contractSigner && window.__eContractSignedForSession) {
               try {
                 await StorageService.saveContract({
@@ -2024,7 +2029,7 @@
                   title: '三方托管服务居间协议',
                   signer: meta.contractSigner,
                   tutorName: tutorName,
-                  amount: total,
+                  amount: serverAmount,
                   space: spaceName
                 });
               } catch (contractErr) {
@@ -2035,9 +2040,10 @@
             }
           }
 
-          let paymentOk = isTrial || total <= 0;
-          if (total > 0 && !isTrial && createdBooking && createdBooking.id) {
-            const payResult = await handleWeChatPayment(createdBooking.id, total, tutorName, assessmentSubject);
+          const payYuan = createdBooking ? (Number.isFinite(chargeAmount) ? chargeAmount : serverAmount) : total;
+          let paymentOk = isTrial || payYuan <= 0;
+          if (payYuan > 0 && !isTrial && createdBooking && createdBooking.id) {
+            const payResult = await handleWeChatPayment(createdBooking.id, payYuan, tutorName, assessmentSubject);
             paymentOk = !!(payResult && payResult.success);
             if (!paymentOk) {
               showToast(payResult && payResult.error ? payResult.error : '支付失败，托管未冻结', 'error');
@@ -2064,9 +2070,9 @@
           if (window.iotCountdownTimer) { clearInterval(window.iotCountdownTimer); window.iotCountdownTimer = null; }
 
           const headerBal = document.getElementById('headerEscrowBalance');
-          if (headerBal && total > 0 && !isTrial && paymentOk) {
+          if (headerBal && payYuan > 0 && !isTrial && paymentOk) {
             const cur = parseFloat(headerBal.innerText) || 315;
-            const next = Math.max(0, cur - total);
+            const next = Math.max(0, cur - payYuan);
             headerBal.innerText = next.toFixed(2);
           }
 
@@ -2091,13 +2097,12 @@
     }
 
     // 微信支付处理
-    async function handleWeChatPayment(bookingId, amount, tutorName, subject) {
+    async function handleWeChatPayment(bookingId, _displayAmountYuan, tutorName, subject) {
       try {
         const payMode = window.XH_CONFIG?.PAY_MODE || 'demo';
 
         const prepayResult = await StorageService.api('POST', '/api/pay/wechat/prepay', {
           bookingId: bookingId,
-          amount: Math.round(amount * 100),
           description: `星火学伴 · ${subject} · ${tutorName}`
         });
 

@@ -693,11 +693,10 @@ const StorageService = {
   },
 
   // Payment operations
-  async prepayWechat(bookingId, amount, description) {
+  async prepayWechat(bookingId, _displayAmountYuan, description) {
     try {
       const result = await _request('POST', '/api/pay/wechat/prepay', {
         bookingId,
-        amount: Math.round(amount * 100),
         description
       });
       return result;

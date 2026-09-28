@@ -13,6 +13,7 @@ const db = require('./db');
 const sms = require('./sms');
 const auth = require('./auth');
 const wechatPay = require('./wechat-pay');
+const pricing = require('./pricing');
 const wechatPhone = require('./wechat-phone');
 const phoneCrypto = require('./phone-crypto');
 
@@ -459,23 +460,17 @@ app.post('/api/auth/phone/audit', requireAuth, (req, res) => {
 /* ========== 微信支付 ========== */
 app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
   try {
-    const { bookingId, amount, description, openid, payType } = req.body || {};
+    const { bookingId, description, openid, payType } = req.body || {};
     
     if (!bookingId) {
       return fail(res, 400, '缺少 bookingId');
     }
     
-    if (!amount || amount <= 0) {
-      return fail(res, 400, '金额无效');
-    }
-    
-    // 验证用户只能为自己的预约支付
     const booking = db.getBookings().find(b => b.id === bookingId);
     if (!booking) {
       return fail(res, 404, '预约不存在');
     }
     
-    // 只有家长可以支付，且只能支付自己的预约
     if (req.user.role !== 'parent' && req.user.role !== 'admin') {
       return fail(res, 403, '只有家长可以支付');
     }
@@ -486,10 +481,17 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
         return fail(res, 403, '只能支付自己的预约');
       }
     }
+
+    const payable = pricing.isBookingPayable(booking);
+    if (!payable.ok) {
+      return fail(res, 400, payable.error);
+    }
+
+    const amountFen = payable.amountFen;
     
     const result = await wechatPay.createPrepay({
       bookingId,
-      amount,
+      amount: amountFen,
       description: description || '星火学伴 · 课程预约',
       openid,
       payType: payType || 'JSAPI'
@@ -500,7 +502,8 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
         outTradeNo: result.outTradeNo,
         prepayId: result.prepayId,
         bookingId,
-        amount,
+        amount: amountFen,
+        amountYuan: payable.amountYuan,
         description: description || '星火学伴 · 课程预约',
         status: 'NOTPAY',
         mock: !!result.mock,
@@ -509,7 +512,7 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
       wechatPay.registerMockOrder(payOrder);
     }
     
-    ok(res, result);
+    ok(res, Object.assign({}, result, { amountFen, amountYuan: payable.amountYuan }));
   } catch (error) {
     console.error('[WeChat Pay Prepay Error]', error);
     fail(res, 500, error.message || '创建预支付订单失败');
@@ -552,7 +555,7 @@ app.post('/api/pay/wechat/notify', (req, res) => {
 // Mock 支付确认（仅开发/测试环境）
 app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
   try {
-    if (isProduction && !wechatPay.isMockPayAllowed()) {
+    if (!wechatPay.isMockPayAllowed()) {
       return fail(res, 403, '生产环境不允许模拟支付');
     }
     
@@ -562,15 +565,48 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
       return fail(res, 400, '缺少 outTradeNo');
     }
     
-    const storedOrder = db.getPayOrder(outTradeNo);
-    if (storedOrder) {
-      wechatPay.registerMockOrder(storedOrder);
+    const payOrder = db.getPayOrder(outTradeNo);
+    if (!payOrder) {
+      return fail(res, 404, '订单不存在');
     }
+
+    const booking = db.getBookings().find(b => b.id === payOrder.bookingId);
+    if (!booking) {
+      return fail(res, 404, '预约不存在');
+    }
+
+    if (req.user.role === 'parent') {
+      const parent = db.getParents().find(p => p.id === req.user.userId);
+      if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
+        return fail(res, 403, '只能确认自己的订单');
+      }
+    } else if (req.user.role !== 'admin') {
+      return fail(res, 403, '无权限确认支付');
+    }
+
+    const payable = pricing.isBookingPayable(booking);
+    if (!payable.ok) {
+      return fail(res, 400, payable.error);
+    }
+
+    if (Number(payOrder.amount) !== payable.amountFen) {
+      return fail(res, 400, '订单金额与预约不一致');
+    }
+
+    if (payOrder.status === 'SUCCESS' || booking.paymentStatus === 'paid') {
+      return fail(res, 400, '订单已支付');
+    }
+
+    wechatPay.registerMockOrder(payOrder);
 
     const result = wechatPay.mockConfirmPayment(outTradeNo);
     
     if (!result.success) {
       return fail(res, 400, result.error || '确认失败');
+    }
+
+    if (result.bookingId !== payOrder.bookingId) {
+      return fail(res, 400, '订单与预约不匹配');
     }
 
     db.savePayOrder({
@@ -579,25 +615,15 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
       transactionId: result.transactionId,
       successTime: result.successTime || new Date().toISOString()
     });
-    
-    // 验证用户只能确认自己的订单
-    const booking = db.getBookings().find(b => b.id === result.bookingId);
-    if (booking) {
-      if (req.user.role === 'parent') {
-        const parent = db.getParents().find(p => p.id === req.user.userId);
-        if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
-          return fail(res, 403, '只能确认自己的订单');
-        }
-      }
       
-      db.updateBooking(booking.id, {
-        paymentStatus: 'paid',
-        paymentMethod: 'wechat',
-        paidAt: new Date().toISOString(),
-        transactionId: result.transactionId,
-        escrowStatus: 'frozen'
-      });
-    }
+    db.updateBooking(booking.id, {
+      paymentStatus: 'paid',
+      paymentMethod: 'wechat',
+      paidAt: new Date().toISOString(),
+      transactionId: result.transactionId,
+      escrowStatus: 'frozen',
+      amount: payable.amountYuan
+    });
     
     ok(res, result);
   } catch (error) {
@@ -802,6 +828,13 @@ app.post('/api/bookings', requireAuth, async (req, res) => {
   }
   
   const booking = db.addBooking(bookingData);
+
+  if (booking && booking.ok === false) {
+    return fail(res, 400, booking.error || '创建预约失败');
+  }
+  if (!booking || !booking.id) {
+    return fail(res, 400, '创建预约失败');
+  }
   
   // 发送预约成功短信通知
   if (booking && booking.id && booking.parentPhone) {

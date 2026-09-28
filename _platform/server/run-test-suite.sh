@@ -61,6 +61,10 @@ echo ""
 echo "=== Running auth tests ==="
 bash test-auth.sh
 
+echo ""
+echo "=== Running pricing security tests ==="
+node test-pricing-security.js
+
 # Run miniprogram flow test
 echo ""
 echo "=== Running miniprogram flow test ==="
