@@ -475,13 +475,18 @@
 
     // 提交登录逻辑
     async function resolvePostLoginTargetAsync(user) {
+      console.log('[resolvePostLoginTargetAsync] user:', user);
+      
       if (user.role === 'admin') {
         return { url: 'admin_audit.html', title: '管理端审核台' };
       }
       if (user.role === 'mentor') {
         try {
           const mentors = await StorageService.getMentors();
-          const mentor = mentors.find(m => m.phone === user.phone);
+          console.log('[resolvePostLoginTargetAsync] mentors:', mentors.length, 'total');
+          // Use userId instead of phone since phone is masked in the user object
+          const mentor = mentors.find(m => m.id === user.id);
+          console.log('[resolvePostLoginTargetAsync] found mentor:', mentor ? mentor.id : 'none');
           if (mentor && mentor.status === 'approved') {
             return { url: 'mentor_dashboard.html', title: '导师工作台' };
           }
@@ -492,7 +497,11 @@
       }
       try {
         const parents = await StorageService.getParents();
-        const hasProfile = parents.some(p => p.phone === user.phone);
+        console.log('[resolvePostLoginTargetAsync] parents:', parents.length, 'total');
+        console.log('[resolvePostLoginTargetAsync] looking for user.id:', user.id);
+        // Use userId instead of phone since phone is masked in the user object
+        const hasProfile = parents.some(p => p.id === user.id);
+        console.log('[resolvePostLoginTargetAsync] hasProfile:', hasProfile);
         if (hasProfile) {
           return { url: 'parent_dashboard.html', title: '家长主控与智能匹配' };
         }

@@ -37,10 +37,11 @@ async function testParentLoginAndBooking(browser) {
   console.log('\n[Test 1] Parent 13980889211 logs in, views bookings, creates booking, pays');
   const page = await browser.newPage();
   
-  // Log console errors
+  // Log console messages
   page.on('console', msg => {
-    if (msg.type() === 'error') {
-      console.log('  [Browser Error]', msg.text());
+    const type = msg.type();
+    if (type === 'error' || type === 'log') {
+      console.log(`  [Browser ${type}]`, msg.text());
     }
   });
   
