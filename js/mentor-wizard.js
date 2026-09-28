@@ -158,7 +158,44 @@ function organizeL1Fields() {
   const progressIdx = allChildren.findIndex(el => el.querySelector('#l1SubTab1'));
   if (progressIdx < 0) return;
 
+  // Get content children BEFORE creating new containers
   const contentChildren = allChildren.slice(progressIdx + 1);
+  
+  // Detach all content children first to avoid hierarchy issues
+  const childrenToMove = [];
+  contentChildren.forEach(child => {
+    if (child && child.nodeType === 1 && child.parentNode === step1Card) {
+      const html = child.outerHTML || '';
+      const text = child.textContent || '';
+      let targetSubstep = 1; // default
+      
+      // Substep 1: Identity fields (name, phone, ID)
+      if (html.includes('id="realName"') || html.includes('id="phone"') || html.includes('id="idCard"') ||
+          text.includes('真实姓名') || text.includes('手机号码') || text.includes('身份证号')) {
+        targetSubstep = 1;
+      }
+      // Substep 2: University and CHSI (before bank section)
+      else if (html.includes('id="provinceSelect"') || html.includes('id="universitySelect"') || 
+               html.includes('id="educationLevel"') || html.includes('id="chsiCode"') || 
+               html.includes('id="chsiResultPanel"') || html.includes('id="manualUniversityInput"') ||
+               text.includes('就读') || text.includes('毕业高校') || text.includes('学信网') || text.includes('学历')) {
+        targetSubstep = 2;
+      }
+      // Substep 3: Bank account (after CHSI, before checkboxes)
+      else if (html.includes('id="bankName"') || html.includes('id="bankCardNumber"') || html.includes('id="bankAccountName"') ||
+               text.includes('银行') || text.includes('清算账户') || text.includes('托管')) {
+        targetSubstep = 3;
+      }
+      // Substep 4: Compliance checkboxes
+      else if (html.includes('id="privacyAuthAgree"') ||
+               text.includes('隐私授权') || text.includes('合规')) {
+        targetSubstep = 4;
+      }
+      
+      childrenToMove.push({ child, targetSubstep });
+      child.remove(); // Detach from DOM
+    }
+  });
 
   // Create substep containers
   for (let i = 1; i <= 4; i++) {
@@ -169,40 +206,10 @@ function organizeL1Fields() {
     step1Card.appendChild(container);
   }
 
-  // Distribute fields based on their content
-  contentChildren.forEach(child => {
-    if (!child || !child.nodeType || child.nodeType !== 1) return;
-    
-    const html = child.outerHTML || '';
-    const text = child.textContent || '';
-    
-    let targetSubstep = 1; // default
-    
-    // Substep 1: Identity fields (name, phone, ID)
-    if (html.includes('id="realName"') || html.includes('id="phone"') || html.includes('id="idCard"') ||
-        text.includes('真实姓名') || text.includes('手机号码') || text.includes('身份证号')) {
-      targetSubstep = 1;
-    }
-    // Substep 2: University and CHSI (before bank section)
-    else if (html.includes('id="provinceSelect"') || html.includes('id="universitySelect"') || 
-             html.includes('id="educationLevel"') || html.includes('id="chsiCode"') || 
-             html.includes('id="chsiResultPanel"') || html.includes('id="manualUniversityInput"') ||
-             text.includes('就读') || text.includes('毕业高校') || text.includes('学信网') || text.includes('学历')) {
-      targetSubstep = 2;
-    }
-    // Substep 3: Bank account (after CHSI, before checkboxes)
-    else if (html.includes('id="bankName"') || html.includes('id="bankCardNumber"') || html.includes('id="bankAccountName"') ||
-             text.includes('银行') || text.includes('清算账户') || text.includes('托管')) {
-      targetSubstep = 3;
-    }
-    // Substep 4: Compliance checkboxes
-    else if (html.includes('id="privacyAuthAgree"') ||
-             text.includes('隐私授权') || text.includes('合规')) {
-      targetSubstep = 4;
-    }
-    
+  // Now append children to their target containers
+  childrenToMove.forEach(({ child, targetSubstep }) => {
     const targetContainer = document.getElementById(`l1-substep-${targetSubstep}`);
-    if (targetContainer && child.parentNode === step1Card) {
+    if (targetContainer) {
       targetContainer.appendChild(child);
     }
   });
@@ -276,7 +283,40 @@ function organizeL2Fields() {
   const progressIdx = allChildren.findIndex(el => el.querySelector('#l2SubTab1'));
   if (progressIdx < 0) return;
 
+  // Get content children BEFORE creating new containers
   const contentChildren = allChildren.slice(progressIdx + 1);
+  
+  // Detach all content children first to avoid hierarchy issues
+  const childrenToMove = [];
+  contentChildren.forEach(child => {
+    if (child && child.nodeType === 1 && child.parentNode === step2Card) {
+      const html = child.outerHTML || '';
+      const text = child.textContent || '';
+      let targetSubstep = 1; // default
+      
+      // Substep 1: Subjects and grades
+      if (html.includes('name="subject"') || html.includes('id="customSubjectsList"') ||
+          text.includes('授课科目') || text.includes('年级') || text.includes('科目') ||
+          (html.includes('type="checkbox"') && text.includes('数学'))) {
+        targetSubstep = 1;
+      }
+      // Substep 2: Rate and style
+      else if (html.includes('id="hourlyRate"') || html.includes('id="scoreHighlight"') || 
+               html.includes('id="styleTagContainer"') ||
+               text.includes('课时费') || text.includes('风格') || text.includes('时薪')) {
+        targetSubstep = 2;
+      }
+      // Substep 3: Lecture materials and availability
+      else if (html.includes('id="lectureUrl"') || html.includes('id="uploadedFilesList"') || 
+               html.includes('id="availabilitySection"') || html.includes('id="fileUploadInput"') ||
+               text.includes('试讲') || text.includes('素材') || text.includes('空闲时段') || text.includes('上传')) {
+        targetSubstep = 3;
+      }
+      
+      childrenToMove.push({ child, targetSubstep });
+      child.remove(); // Detach from DOM
+    }
+  });
 
   // Create substep containers
   for (let i = 1; i <= 3; i++) {
@@ -287,36 +327,10 @@ function organizeL2Fields() {
     step2Card.appendChild(container);
   }
 
-  // Distribute fields
-  contentChildren.forEach(child => {
-    if (!child || !child.nodeType || child.nodeType !== 1) return;
-    
-    const html = child.outerHTML || '';
-    const text = child.textContent || '';
-    
-    let targetSubstep = 1; // default
-    
-    // Substep 1: Subjects and grades
-    if (html.includes('name="subject"') || html.includes('id="customSubjectsList"') ||
-        text.includes('授课科目') || text.includes('年级') || text.includes('科目') ||
-        (html.includes('type="checkbox"') && text.includes('数学'))) {
-      targetSubstep = 1;
-    }
-    // Substep 2: Rate and style
-    else if (html.includes('id="hourlyRate"') || html.includes('id="scoreHighlight"') || 
-             html.includes('id="styleTagContainer"') ||
-             text.includes('课时费') || text.includes('风格') || text.includes('时薪')) {
-      targetSubstep = 2;
-    }
-    // Substep 3: Lecture materials and availability
-    else if (html.includes('id="lectureUrl"') || html.includes('id="uploadedFilesList"') || 
-             html.includes('id="availabilitySection"') || html.includes('id="fileUploadInput"') ||
-             text.includes('试讲') || text.includes('素材') || text.includes('空闲时段') || text.includes('上传')) {
-      targetSubstep = 3;
-    }
-    
+  // Now append children to their target containers
+  childrenToMove.forEach(({ child, targetSubstep }) => {
     const targetContainer = document.getElementById(`l2-substep-${targetSubstep}`);
-    if (targetContainer && child.parentNode === step2Card) {
+    if (targetContainer) {
       targetContainer.appendChild(child);
     }
   });

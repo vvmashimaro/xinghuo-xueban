@@ -497,15 +497,15 @@
     
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
+      let errorData = null;
       try {
-        const errorData = JSON.parse(text);
-        // Extract the error message from the JSON response
-        throw new Error(errorData.error || errorData.message || text || `HTTP ${resp.status}`);
-      } catch (e) {
-        // If not JSON, throw the raw text
-        if (e.message && e.message.includes('error')) throw e;
+        errorData = JSON.parse(text);
+      } catch (parseErr) {
+        // Not JSON, throw raw text
         throw new Error(text || `HTTP ${resp.status}`);
       }
+      // JSON parsed successfully, extract error message
+      throw new Error(errorData.error || errorData.message || text || `HTTP ${resp.status}`);
     }
     const ct = resp.headers.get('content-type') || '';
     if (ct.includes('application/json')) return resp.json();
