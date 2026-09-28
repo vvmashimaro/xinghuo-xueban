@@ -2834,7 +2834,26 @@
     }
 
     // 初始化运行
-    window.onload = function() {
+    window.onload = async function() {
+      if (!StorageService.isLoggedIn()) {
+        showToast('请先登录', 'warning');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        return;
+      }
+
+      const user = await StorageService.getCurrentUser();
+      if (!user || user.role !== 'parent') {
+        showToast('权限错误：需要家长身份', 'error');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        return;
+      }
+
+      try {
+        await StorageService.hydrateFromServer();
+      } catch (e) {
+        console.warn('Failed to hydrate from server:', e);
+      }
+
       reloadTutorDatabase();
       initBudgetFilterFromParent();
       applyParentHeaderAndPassport();

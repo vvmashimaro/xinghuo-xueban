@@ -1674,11 +1674,26 @@
     /* ==========================================================================
        表单提交与智能匹配弹窗
        ========================================================================== */
-    function handleParentSubmit() {
+    async function handleParentSubmit() {
       const agree = document.getElementById('parentAgreementCheck')?.checked;
       if (!agree) {
         showToast('请阅读并同意《资金托管与服务协议》！', 'warning');
         openAgreementModal();
+        return;
+      }
+
+      const phone = document.getElementById('parentPhone')?.value.trim();
+      const code = document.getElementById('parentSmsCode')?.value.trim();
+      
+      if (!phone || phone.length !== 11) {
+        showToast('请输入有效的 11 位手机号码！', 'warning');
+        goToStep(1);
+        return;
+      }
+
+      if (!code || code.length !== 6) {
+        showToast('请输入 6 位短信验证码！', 'warning');
+        goToStep(1);
         return;
       }
 
@@ -1699,13 +1714,36 @@
       const btn = document.getElementById('btnSubmitParent');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>AI 正在匹配导师智库...</span>';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>验证身份中...</span>';
       }
 
-      setTimeout(() => {
+      try {
+        // Step 1: 验证短信码获取票据
+        const verifyResult = await StorageService.verifySMS(phone, code, 'register');
+        
+        if (!verifyResult.success) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          }
+          showToast(verifyResult.error || '验证码错误，请重试', 'error');
+          goToStep(1);
+          return;
+        }
+
+        const ticket = verifyResult.ticket;
+        if (!ticket) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          }
+          showToast('验证成功但未获取到票据，请重试', 'error');
+          return;
+        }
+
+        // Step 2: 准备注册数据
         if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>AI 正在匹配导师智库...</span>';
         }
 
         const agg = aggregateFromPlans();
@@ -1716,7 +1754,6 @@
         const budgetMax = parseInt(document.getElementById('budgetMaxRange')?.value || '180', 10);
         const budgetRate = Math.round((budgetMin + budgetMax) / 2);
 
-        // 深拷贝 subjectPlans
         const plansCopy = {};
         Object.keys(subjectPlans).forEach((k) => {
           plansCopy[k] = {
@@ -1726,25 +1763,41 @@
           };
         });
 
-        if (window.StorageService) {
-          StorageService.saveParent({
-            parentName: document.getElementById('parentName')?.value.trim() || '',
-            parentRole: parentRole,
-            phone: document.getElementById('parentPhone')?.value.trim() || '',
-            studentNickname: document.getElementById('studentNickname')?.value.trim() || '',
-            studentGrade: document.getElementById('studentGrade')?.value || '',
-            cityDistrict: cityDistrict,
-            subjects: checkedSubjects,
-            subjectPlans: plansCopy,
-            syllabusTopics: agg.weakPoints,
-            pacingMode: agg.pacingMode,
-            budgetMin: budgetMin,
-            budgetMax: budgetMax,
-            budgetRate: budgetRate,
-            selectedSpace: selectedSpace,
-            targetGoal: document.getElementById('targetGoal')?.value.trim() || '',
-            painTags: agg.pains
-          });
+        const profile = {
+          parentName: document.getElementById('parentName')?.value.trim() || '',
+          parentRole: parentRole,
+          phone: phone,
+          studentNickname: document.getElementById('studentNickname')?.value.trim() || '',
+          studentGrade: document.getElementById('studentGrade')?.value || '',
+          cityDistrict: cityDistrict,
+          subjects: checkedSubjects,
+          subjectPlans: plansCopy,
+          syllabusTopics: agg.weakPoints,
+          pacingMode: agg.pacingMode,
+          budgetMin: budgetMin,
+          budgetMax: budgetMax,
+          budgetRate: budgetRate,
+          selectedSpace: selectedSpace,
+          targetGoal: document.getElementById('targetGoal')?.value.trim() || '',
+          painTags: agg.pains
+        };
+
+        // Step 3: 使用票据注册
+        const registerResult = await StorageService.register(ticket, 'parent', profile);
+
+        if (!registerResult.success) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+          }
+          showToast(registerResult.error || '注册失败，请重试', 'error');
+          return;
+        }
+
+        // Step 4: 注册成功，显示匹配结果
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
         }
 
         const modalPacing = document.getElementById('modalSuccessPacing');
@@ -1758,13 +1811,14 @@
         }
 
         if (window.StorageService) {
-          const tutors = StorageService.getTutorListForParent(StorageService.getCurrentParent());
-          const top = tutors[0];
+          const tutors = await StorageService.getMentors();
+          const filtered = tutors.filter(t => t.status === 'approved');
+          const top = filtered[0];
           if (top) {
             const nameEl = document.querySelector('#matchModalContent .font-black.text-sm.text-white');
-            if (nameEl) nameEl.innerText = top.maskedName;
+            if (nameEl) nameEl.innerText = top.name || '优选导师';
             const avatarEl = document.querySelector('#matchModalContent .w-11.h-11');
-            if (avatarEl) avatarEl.innerText = top.avatarLetter;
+            if (avatarEl) avatarEl.innerText = (top.name || 'T')[0];
           }
         }
 
@@ -1774,7 +1828,14 @@
           if (window.StorageService && StorageService.clearParentRegisterDraft) StorageService.clearParentRegisterDraft();
           else localStorage.removeItem('xh_parent_register_draft_v1');
         } catch (e) {}
-      }, 900);
+      } catch (error) {
+        console.error('Registration error:', error);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
+        }
+        showToast(error.message || '注册失败，请重试', 'error');
+      }
     }
 
     function openMatchModal() {
@@ -1804,13 +1865,45 @@
     /* ==========================================================================
        辅助（字段使用灰色 placeholder 示例引导填写）
        ========================================================================== */
-    function sendParentSmsCode() {
+    async function sendParentSmsCode() {
       const phone = document.getElementById('parentPhone')?.value.trim();
       if (!phone || phone.length !== 11) {
         showToast('请输入有效的 11 位手机号码！', 'warning');
         return;
       }
-      showToast('验证码已发送至手机（演示环境默认码：888888）');
+      
+      const btn = document.getElementById('sendParentSmsBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '发送中...';
+      }
+      
+      try {
+        const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
+        const response = await fetch(`${apiBase}/api/auth/sms/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, scene: 'register' })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          showToast(`验证码已发送至 ${phone}`, 'success');
+        } else {
+          showToast(result.error || '发送失败，请稍后重试', 'error');
+        }
+      } catch (error) {
+        console.error('SMS send error:', error);
+        showToast('验证码发送失败（演示环境默认码：888888）', 'warning');
+      } finally {
+        if (btn) {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = '发送验证码';
+          }, 3000);
+        }
+      }
     }
 
     function safeNavigate(targetUrl, targetTitle) {

@@ -474,52 +474,30 @@
     }
 
     // 提交登录逻辑
-    function resolvePostLoginTarget(mobileVal) {
-      if (currentRole === 'admin') {
-        if (window.StorageService) {
-          StorageService.setSession({
-            role: 'admin',
-            phone: mobileVal,
-            loggedInAt: new Date().toISOString()
-          });
-        }
+    async function resolvePostLoginTargetAsync(user) {
+      if (user.role === 'admin') {
         return { url: 'admin_audit.html', title: '管理端审核台' };
       }
-      if (currentRole === 'mentor') {
-        let mentor = null;
-        if (window.StorageService) {
-          mentor = StorageService.getMentorByPhone(mobileVal);
-          if (mentor) {
-            StorageService.setSession({
-              role: 'mentor',
-              phone: mobileVal,
-              mentorId: mentor.id,
-              loggedInAt: new Date().toISOString()
-            });
+      if (user.role === 'mentor') {
+        try {
+          const mentors = await StorageService.getMentors();
+          const mentor = mentors.find(m => m.phone === user.phone);
+          if (mentor && mentor.status === 'approved') {
             return { url: 'mentor_dashboard.html', title: '导师工作台' };
           }
-          StorageService.setSession({
-            role: 'mentor',
-            phone: mobileVal,
-            loggedInAt: new Date().toISOString()
-          });
+        } catch (e) {
+          console.warn('Failed to fetch mentors:', e);
         }
         return { url: 'index.html', title: '导师入库招募页' };
       }
-      if (window.StorageService) {
-        StorageService.setSession({ role: currentRole, phone: mobileVal, loggedInAt: new Date().toISOString() });
-      }
-      let hasProfile = false;
-      if (window.StorageService) {
-        const parents = StorageService.getParents();
-        hasProfile = parents.some(p => p.phone === mobileVal);
+      try {
+        const parents = await StorageService.getParents();
+        const hasProfile = parents.some(p => p.phone === user.phone);
         if (hasProfile) {
-          const hit = parents.find(p => p.phone === mobileVal);
-          StorageService.setSession({ role: 'parent', phone: mobileVal, parentId: hit.id, loggedInAt: new Date().toISOString() });
+          return { url: 'parent_dashboard.html', title: '家长主控与智能匹配' };
         }
-      }
-      if (hasProfile) {
-        return { url: 'parent_dashboard.html', title: '家长主控与智能匹配' };
+      } catch (e) {
+        console.warn('Failed to fetch parents:', e);
       }
       return { url: 'parent_register.html', title: '学情建档与注册' };
     }
@@ -559,88 +537,79 @@
         // 验证 SMS 验证码（调用 API）
         (async () => {
           try {
-            const apiBase = window.XH_CONFIG?.API_BASE || 'http://127.0.0.1:8787';
-            const response = await fetch(`${apiBase}/api/auth/sms/verify`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ phone: mobile, code, scene: 'login' })
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-              // 验证成功，继续登录流程
-              submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>安全验证通过，正在进入...</span>';
-              const roleLabel = currentRole === 'mentor' ? '导师工作台' : (currentRole === 'admin' ? '管理审核台' : '预约中心');
-              showToast(`欢迎回来！正在进入${roleLabel}...`);
-
-              const mobileVal = mobile;
-              const target = resolvePostLoginTarget(mobileVal);
-              pendingNavUrl = target.url;
-
-              // 预填手动进入链接
-              const link = document.getElementById('manualEnterLink');
-              if (link) {
-                link.href = target.url;
-                link.onclick = function(e) {
-                  e.preventDefault();
-                  try { window.location.href = target.url; } catch (_) {}
-                  try { window.location.assign(target.url); } catch (_) {}
-                };
-              }
-
-              setTimeout(() => {
-                try {
-                  window.location.assign(target.url);
-                } catch (e1) {
-                  try { window.location.href = target.url; } catch (e2) {
-                    console.warn('explicit navigate failed', e2);
-                  }
-                }
-              }, 350);
-
-              // 若约 2.5s 后仍停留在登录页，展示「手动进入」并恢复按钮
-              if (pendingNavWatch) clearTimeout(pendingNavWatch);
-              pendingNavWatch = setTimeout(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
-                showManualEnterFallback(target.url);
-                showToast('自动跳转未完成，请点击「手动进入」', 'warning');
-              }, 2500);
-            } else {
+            // Step 1: 验证短信码获取票据
+            const verifyResult = await StorageService.verifySMS(mobile, code, 'login');
+            
+            if (!verifyResult.success) {
               submitBtn.disabled = false;
               submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
-              showToast(result.error || '验证码错误，请重试', 'error');
+              showToast(verifyResult.error || '验证码错误，请重试', 'error');
+              return;
             }
+
+            const ticket = verifyResult.ticket;
+            if (!ticket) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              showToast('验证成功但未获取到票据，请重试', 'error');
+              return;
+            }
+
+            // Step 2: 使用票据登录
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>登录中...</span>';
+            const loginResult = await StorageService.login(ticket, currentRole);
+
+            if (!loginResult.success) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              showToast(loginResult.error || '登录失败，请重试', 'error');
+              return;
+            }
+
+            // Step 3: 登录成功，确定跳转目标
+            const user = loginResult.user;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>登录成功，正在进入...</span>';
+            const roleLabel = user.role === 'mentor' ? '导师工作台' : (user.role === 'admin' ? '管理审核台' : '预约中心');
+            showToast(`欢迎回来！正在进入${roleLabel}...`);
+
+            // 异步获取跳转目标
+            const target = await resolvePostLoginTargetAsync(user);
+            pendingNavUrl = target.url;
+
+            // 预填手动进入链接
+            const link = document.getElementById('manualEnterLink');
+            if (link) {
+              link.href = target.url;
+              link.onclick = function(e) {
+                e.preventDefault();
+                try { window.location.href = target.url; } catch (_) {}
+                try { window.location.assign(target.url); } catch (_) {}
+              };
+            }
+
+            setTimeout(() => {
+              try {
+                window.location.assign(target.url);
+              } catch (e1) {
+                try { window.location.href = target.url; } catch (e2) {
+                  console.warn('explicit navigate failed', e2);
+                }
+              }
+            }, 350);
+
+            // 若约 2.5s 后仍停留在登录页，展示「手动进入」并恢复按钮
+            if (pendingNavWatch) clearTimeout(pendingNavWatch);
+            pendingNavWatch = setTimeout(() => {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              showManualEnterFallback(target.url);
+              showToast('自动跳转未完成，请点击「手动进入」', 'warning');
+            }, 2500);
           } catch (error) {
-            console.error('SMS verify error:', error);
+            console.error('Login error:', error);
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
-            // 降级到本地验证
-            if (code === '888888') {
-              submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>安全验证通过，正在进入...</span>';
-              const roleLabel = currentRole === 'mentor' ? '导师工作台' : (currentRole === 'admin' ? '管理审核台' : '预约中心');
-              showToast(`演示模式验证通过！正在进入${roleLabel}...`);
-              const mobileVal = mobile;
-              const target = resolvePostLoginTarget(mobileVal);
-              pendingNavUrl = target.url;
-              const link = document.getElementById('manualEnterLink');
-              if (link) {
-                link.href = target.url;
-                link.onclick = function(e) {
-                  e.preventDefault();
-                  try { window.location.href = target.url; } catch (_) {}
-                  try { window.location.assign(target.url); } catch (_) {}
-                };
-              }
-              setTimeout(() => {
-                try { window.location.assign(target.url); } catch (e1) {
-                  try { window.location.href = target.url; } catch (e2) {}
-                }
-              }, 350);
-            } else {
-              showToast('API 连接失败，演示模式请使用验证码 888888', 'warning');
-            }
+            showToast(error.message || '登录失败，请重试', 'error');
           }
         })();
         return; // 异步处理，不继续执行下面的代码
