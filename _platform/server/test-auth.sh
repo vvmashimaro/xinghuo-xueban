@@ -8,8 +8,15 @@ PARENT_PHONE="13980889211"
 MENTOR_PHONE="13880123456"
 CODE="888888"
 
+# Use temp database for tests to avoid polluting committed db.json
+export DATABASE_PATH="${DATABASE_PATH:-/tmp/test-db-$$.json}"
+if [ ! -f "$DATABASE_PATH" ]; then
+  cp "$(dirname "$0")/data/db.json" "$DATABASE_PATH"
+fi
+
 echo "===== 星火学伴 API 测试 ====="
 echo "API Base: $API_BASE"
+echo "Test DB: $DATABASE_PATH"
 echo ""
 
 # 测试健康检查（公开）
