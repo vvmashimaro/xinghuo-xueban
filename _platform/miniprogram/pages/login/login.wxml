@@ -7,7 +7,6 @@
   <view class="role-tabs">
     <view class="role-tab {{role==='mentor'?'on':''}}" data-role="mentor" bindtap="onSwitchRole">青年导师</view>
     <view class="role-tab {{role==='parent'?'on':''}}" data-role="parent" bindtap="onSwitchRole">家长 / 学员</view>
-    <view class="role-tab {{role==='admin'?'on':''}}" data-role="admin" bindtap="onSwitchRole">管理审核</view>
   </view>
 
   <view class="card">
@@ -38,12 +37,17 @@
     </view>
 
     <button class="btn-primary" style="width:100%;" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
-      {{role==='admin' ? '进入管理端质审台' : '安全登录'}}
+      安全登录
     </button>
 
     <view class="fallback" wx:if="{{showFallback}}">
       <view class="muted" style="margin-bottom:12rpx;">自动跳转未完成，请手动进入：</view>
       <button class="btn-ghost" style="width:100%;" bindtap="onManualEnter">手动进入 → {{fallbackTitle}}</button>
+    </view>
+
+    <view class="muted" wx:if="{{role==='parent'}}" style="text-align:center;margin-top:16rpx;">
+      还没有账号？
+      <text class="link" style="font-weight:700;" bindtap="goRegister">立即注册</text>
     </view>
   </view>
 

@@ -515,22 +515,6 @@
               </div>
             </div>
 
-            <!-- 公立在职教师红线排查承诺 (政策合规关键) -->
-            <div class="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 space-y-2.5">
-              <div class="flex items-center gap-2 text-amber-800">
-                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
-                <span class="text-xs font-bold">合规避险机制 · 公立校在职教师禁入承诺</span>
-              </div>
-              <p class="text-[11px] text-amber-700 leading-relaxed">
-                依据国家“双减”政策及校外培训治理法规，本平台<strong class="font-bold text-amber-900">严禁任何中小学校在职在编教师、公办代课教师</strong>入驻。平台保留对虚假身份一票否决并向教育局及纪检通报的权利。
-              </p>
-              <label class="flex items-start gap-2.5 pt-1 cursor-pointer select-none text-base">
-                <input type="checkbox" id="nonPublicTeacherAgree" onchange="updateL1Progress()" class="mt-0.5 w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300">
-                <span class="text-xs font-semibold text-slate-800 leading-tight">
-                  本人承诺非任何公立/民办中小学在职教师，具备完全民事行为能力，自愿参与勤工助学及学术答疑。
-                </span>
-              </label>
-            </div>
 
             <!-- 新增：个人信息保护与合规查询授权勾选（PIPL合规前置） -->
             <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
@@ -570,7 +554,6 @@
                 <li data-key="university" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>就读高校</li>
                 <li data-key="chsiCode" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>学信网验证码</li>
                 <li data-key="bankCard" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>收款银行卡</li>
-                <li data-key="nonPublic" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>非公职教师承诺</li>
                 <li data-key="privacy" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>隐私授权同意</li>
               </ul>
               <p id="l1ValidationHint" class="hidden text-[11px] text-rose-600 bg-rose-50 border border-rose-200 rounded-xl px-2.5 py-1.5"></p>
@@ -1918,7 +1901,6 @@
       const university = (document.getElementById('finalUniversityValue')?.value || '').trim();
       const chsiCode = (document.getElementById('chsiCode')?.value || '').trim();
       const bankCard = (document.getElementById('bankCardNumber')?.value || '').trim();
-      const nonPublic = !!document.getElementById('nonPublicTeacherAgree')?.checked;
       const privacy = !!document.getElementById('privacyAuthAgree')?.checked;
       return {
         realName: !!realName,
@@ -1927,14 +1909,13 @@
         university: !!university,
         chsiCode: chsiCode.length >= 12,
         bankCard: bankCard.length >= 16,
-        nonPublic,
         privacy
       };
     }
 
     function updateL1Progress() {
       const state = getL1FieldState();
-      const keys = ['realName','phone','idCard','university','chsiCode','bankCard','nonPublic','privacy'];
+      const keys = ['realName','phone','idCard','university','chsiCode','bankCard','privacy'];
       const done = keys.filter(k => state[k]).length;
       const pct = Math.round((done / keys.length) * 100);
       const bar = document.getElementById('l1ProgressBar');
@@ -1972,7 +1953,6 @@
         const university = document.getElementById('finalUniversityValue').value.trim();
         const chsiCode = document.getElementById('chsiCode').value.trim();
         const bankCard = document.getElementById('bankCardNumber').value.trim();
-        const nonPublicAgree = document.getElementById('nonPublicTeacherAgree').checked;
         const privacyAgree = document.getElementById('privacyAuthAgree').checked;
         const hint = document.getElementById('l1ValidationHint');
 
@@ -2001,11 +1981,6 @@
           markL1FieldError('bankCardNumber');
           if (hint) { hint.classList.remove('hidden'); hint.innerText = '请填写 16-19 位银联借记卡号'; }
           showToast('请填写用于课酬直达秒结的 16-19 位银联借记卡号！', 'warning');
-          return;
-        }
-        if (!nonPublicAgree) {
-          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请勾选“公立学校在职教师禁入承诺”'; }
-          showToast('请阅读并勾选“公立学校在职教师禁入承诺”！', 'warning');
           return;
         }
         if (!privacyAgree) {
@@ -2230,7 +2205,7 @@
 
     function isL1Complete() {
       const state = getL1FieldState();
-      return ['realName','phone','idCard','university','chsiCode','bankCard','nonPublic','privacy'].every((k) => !!state[k]);
+      return ['realName','phone','idCard','university','chsiCode','bankCard','privacy'].every((k) => !!state[k]);
     }
 
     function isL2Complete() {
@@ -2292,7 +2267,6 @@
         chsiCode: document.getElementById('chsiCode')?.value || '',
         bankCardNumber: document.getElementById('bankCardNumber')?.value || '',
         bankName: document.getElementById('bankName')?.value || '',
-        nonPublicTeacherAgree: !!document.getElementById('nonPublicTeacherAgree')?.checked,
         privacyAuthAgree: !!document.getElementById('privacyAuthAgree')?.checked,
         subjects: checkedSubjects,
         customSubjects: (typeof customSubjectList !== 'undefined' ? customSubjectList.slice() : []),
@@ -2366,8 +2340,6 @@
         if (draft.universitySelect) setVal('universitySelect', draft.universitySelect);
         if (draft.manualUniversity) setVal('manualUniversityInput', draft.manualUniversity);
         if (draft.university) setVal('finalUniversityValue', draft.university);
-        const nonPublic = document.getElementById('nonPublicTeacherAgree');
-        if (nonPublic) nonPublic.checked = !!draft.nonPublicTeacherAgree;
         const privacy = document.getElementById('privacyAuthAgree');
         if (privacy) privacy.checked = !!draft.privacyAuthAgree;
         if (Array.isArray(draft.customSubjects)) {

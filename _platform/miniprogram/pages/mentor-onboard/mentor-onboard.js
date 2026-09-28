@@ -17,7 +17,7 @@ Page({
     form: {
       realName: '', phone: '', idCard: '', university: '', degree: '本科在读 (大三)',
       chsiCode: '', bankName: '招商银行', bankCardNumber: '',
-      nonPublic: false, privacy: false,
+      privacy: false,
       subjects: [], scoreHighlight: '', hourlyRate: '130', styles: [],
       lectureUrl: '', spacePreference: '青羊金沙文化微网点'
     },
@@ -53,9 +53,6 @@ Page({
     const i = Number(e.detail.value);
     this.setData({ spaceIndex: i, 'form.spacePreference': this.data.spaces[i] });
   },
-  onToggleNonPublic() {
-    this.setData({ 'form.nonPublic': !this.data.form.nonPublic }, () => this.refreshL1());
-  },
   onTogglePrivacy() {
     this.setData({ 'form.privacy': !this.data.form.privacy }, () => this.refreshL1());
   },
@@ -69,7 +66,6 @@ Page({
       university: !!((f.university || '').trim()),
       chsiCode: (f.chsiCode || '').trim().length >= 12,
       bankCard: (f.bankCardNumber || '').trim().length >= 16,
-      nonPublic: !!f.nonPublic,
       privacy: !!f.privacy
     };
     const keys = Object.keys(state);
@@ -112,7 +108,6 @@ Page({
     if (!s.university) { showToast('请填写就读/毕业高校！', 'error'); return; }
     if (!s.chsiCode) { showToast('请输入有效的学信网在线验证码（通常为16位）！', 'error'); return; }
     if (!s.bankCard) { showToast('请填写 16-19 位银联借记卡号！', 'warning'); return; }
-    if (!s.nonPublic) { showToast('请勾选“公立学校在职教师禁入承诺”！', 'warning'); return; }
     if (!s.privacy) { showToast('请勾选《个人信息保护与法定核查授权条款》！', 'warning'); return; }
     this.setData({ step: 2 });
     showToast('L1 身份、学信网与清算账户签约通过！');
