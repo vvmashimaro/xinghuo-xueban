@@ -1103,5 +1103,47 @@
   "seeded": true,
   "assessments": [],
   "users": [],
-  "phoneAuditLogs": []
+  "phoneAuditLogs": [],
+  "authTokens": [
+    {
+      "tokenHash": "f32b8cbec402d6d6fbf7ab2f64fad395720fa9d76a17ac057e147ac32add9225",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790575556807,
+      "expiresAt": 1793167556807
+    },
+    {
+      "tokenHash": "751d03aea45d31b80cda314cb93495d247a8ff2cc0a6e3fd4b721b790ccaa84a",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575556830,
+      "expiresAt": 1793167556830
+    },
+    {
+      "tokenHash": "428e66ec3f7c4dd5057f8e37d252862278546a57838e512f7e7447fb531ff00f",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575578171,
+      "expiresAt": 1793167578171
+    },
+    {
+      "tokenHash": "1c82e59970a7c390471ad04656f2b3223fb9e48eb1374a62256925df78d0097b",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790575578260,
+      "expiresAt": 1793167578260
+    },
+    {
+      "tokenHash": "8de62472540ce5743e55012b5c3db37b3974745d8c22f771838fb0d5cb507c16",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1790575578293,
+      "expiresAt": 1793167578293
+    }
+  ]
 }
