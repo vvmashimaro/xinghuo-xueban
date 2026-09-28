@@ -608,6 +608,27 @@
       }
     },
 
+    /** Authenticated JSON API (Bearer token). */
+    api: async function (method, path, body) {
+      return _api(method, path, body);
+    },
+
+    /** Resolve mentor profile for logged-in mentor (never compares masked phones). */
+    getMentorForAuthUser: function (authUser) {
+      if (!authUser || authUser.role !== 'mentor') return null;
+      const mentorId = authUser.userId || (authUser.profile && authUser.profile.id);
+      if (mentorId) {
+        const byId = this.getMentorById(mentorId);
+        if (byId) return byId;
+      }
+      if (authUser.profile && authUser.profile.id) {
+        return _withMentorDefaults(authUser.profile);
+      }
+      const mentors = this.getMentors();
+      if (mentors && mentors.length === 1) return mentors[0];
+      return null;
+    },
+
     ready: function () {
       return _readyPromise;
     },
@@ -640,7 +661,10 @@
             // 普通用户从服务器拉取自己的数据
             const mentors = await _apiSafe('GET', '/api/mentors');
             const bookings = await _apiSafe('GET', '/api/bookings');
-            const assessments = await _apiSafe('GET', '/api/assessments');
+            let assessments = null;
+            if (user.role === 'parent') {
+              assessments = await _apiSafe('GET', '/api/assessments');
+            }
             
             if (mentors) _write(KEYS.mentors, mentors);
             if (bookings) _write(KEYS.bookings, bookings);
@@ -650,6 +674,13 @@
             if (user.role === 'parent') {
               const parents = await _apiSafe('GET', '/api/parents');
               if (parents) _write(KEYS.parents, parents);
+            }
+            
+            if (user.role === 'mentor') {
+              const session = this.getSession() || {};
+              const mentorId = user.userId || (user.profile && user.profile.id);
+              if (mentorId) session.mentorId = mentorId;
+              this.setSession(session);
             }
             
             _hydrated = true;

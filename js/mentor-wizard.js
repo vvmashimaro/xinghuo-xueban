@@ -118,9 +118,92 @@ function initMentorWizard() {
 /**
  * Inject L1 sub-step progress indicators and navigation
  */
+function hasPrebuiltL1WizardMarkup() {
+  return !!(
+    document.getElementById('l1SubTab1') &&
+    document.getElementById('l1-substep-1') &&
+    document.getElementById('l1-substep-4')
+  );
+}
+
+function hasPrebuiltL2WizardMarkup() {
+  return !!(
+    document.getElementById('l2-substep-1') &&
+    document.getElementById('l2-substep-3')
+  );
+}
+
+function resolveL1SubstepForElement(el) {
+  if (!el || el.nodeType !== 1) return null;
+  const explicit = el.getAttribute('data-l1-substep');
+  if (explicit) {
+    const n = parseInt(explicit, 10);
+    if (n >= 1 && n <= 4) return n;
+  }
+  const idMatch = (el.id || '').match(/^l1-substep-(\d)$/);
+  if (idMatch) return parseInt(idMatch[1], 10);
+  const nested = el.querySelector('[data-l1-substep]');
+  if (nested) {
+    const n = parseInt(nested.getAttribute('data-l1-substep'), 10);
+    if (n >= 1 && n <= 4) return n;
+  }
+  const html = el.outerHTML || '';
+  if (html.includes('id="realName"') || html.includes('id="phone"') || html.includes('id="idCard"') ||
+      html.includes('id="mentorSmsCode"')) {
+    return 1;
+  }
+  if (html.includes('id="provinceSelect"') || html.includes('id="universitySelect"') ||
+      html.includes('id="educationLevel"') || html.includes('id="chsiCode"') ||
+      html.includes('id="chsiResultPanel"') || html.includes('id="manualUniversityInput"') ||
+      html.includes('id="finalUniversityValue"')) {
+    return 2;
+  }
+  if (html.includes('id="bankName"') || html.includes('id="bankCardNumber"') || html.includes('id="bankAccountName"')) {
+    return 3;
+  }
+  if (html.includes('id="privacyAuthAgree"') || html.includes('id="l1ProgressPanel"')) {
+    return 4;
+  }
+  return null;
+}
+
+function resolveL2SubstepForElement(el) {
+  if (!el || el.nodeType !== 1) return null;
+  const explicit = el.getAttribute('data-l2-substep');
+  if (explicit) {
+    const n = parseInt(explicit, 10);
+    if (n >= 1 && n <= 3) return n;
+  }
+  const idMatch = (el.id || '').match(/^l2-substep-(\d)$/);
+  if (idMatch) return parseInt(idMatch[1], 10);
+  const nested = el.querySelector('[data-l2-substep]');
+  if (nested) {
+    const n = parseInt(nested.getAttribute('data-l2-substep'), 10);
+    if (n >= 1 && n <= 3) return n;
+  }
+  const html = el.outerHTML || '';
+  if (html.includes('name="subject"') || html.includes('id="customSubjectList"') || html.includes('id="customSubjectsList"')) {
+    return 1;
+  }
+  if (html.includes('id="hourlyRate"') || html.includes('id="scoreHighlight"') || html.includes('id="styleTagContainer"')) {
+    return 2;
+  }
+  if (html.includes('id="lectureUrl"') || html.includes('id="uploadedFilesList"') ||
+      html.includes('id="availabilitySection"') || html.includes('id="onboardAvailabilityPicker"') ||
+      html.includes('id="fileUploadInput"') || html.includes('id="certFileInput"')) {
+    return 3;
+  }
+  return null;
+}
+
 function injectL1SubStepUI() {
   const step1Card = document.getElementById('step1-card');
   if (!step1Card) return;
+
+  if (hasPrebuiltL1WizardMarkup()) {
+    organizeL1Fields();
+    return;
+  }
 
   // Find the header (first child with class border-b)
   const header = step1Card.querySelector('.border-b');
@@ -153,9 +236,14 @@ function organizeL1Fields() {
   const step1Card = document.getElementById('step1-card');
   if (!step1Card) return;
 
+  if (hasPrebuiltL1WizardMarkup()) {
+    addL1SubStepNavigationIfMissing();
+    return;
+  }
+
   // Get all direct children after the progress indicator
   const allChildren = Array.from(step1Card.children);
-  const progressIdx = allChildren.findIndex(el => el.querySelector('#l1SubTab1'));
+  const progressIdx = allChildren.findIndex(el => el.querySelector('#l1SubTab1') || el.id === 'l1SubTab1');
   if (progressIdx < 0) return;
 
   // Get content children BEFORE creating new containers
@@ -165,33 +253,14 @@ function organizeL1Fields() {
   const childrenToMove = [];
   contentChildren.forEach(child => {
     if (child && child.nodeType === 1 && child.parentNode === step1Card) {
-      const html = child.outerHTML || '';
-      const text = child.textContent || '';
-      let targetSubstep = 1; // default
-      
-      // Substep 1: Identity fields (name, phone, ID)
-      if (html.includes('id="realName"') || html.includes('id="phone"') || html.includes('id="idCard"') ||
-          text.includes('真实姓名') || text.includes('手机号码') || text.includes('身份证号')) {
-        targetSubstep = 1;
+      if ((child.id || '').match(/^l1-substep-\d$/)) {
+        const stepNum = parseInt(child.id.replace('l1-substep-', ''), 10);
+        childrenToMove.push({ child, targetSubstep: stepNum });
+        child.remove();
+        return;
       }
-      // Substep 2: University and CHSI (before bank section)
-      else if (html.includes('id="provinceSelect"') || html.includes('id="universitySelect"') || 
-               html.includes('id="educationLevel"') || html.includes('id="chsiCode"') || 
-               html.includes('id="chsiResultPanel"') || html.includes('id="manualUniversityInput"') ||
-               text.includes('就读') || text.includes('毕业高校') || text.includes('学信网') || text.includes('学历')) {
-        targetSubstep = 2;
-      }
-      // Substep 3: Bank account (after CHSI, before checkboxes)
-      else if (html.includes('id="bankName"') || html.includes('id="bankCardNumber"') || html.includes('id="bankAccountName"') ||
-               text.includes('银行') || text.includes('清算账户') || text.includes('托管')) {
-        targetSubstep = 3;
-      }
-      // Substep 4: Compliance checkboxes
-      else if (html.includes('id="privacyAuthAgree"') ||
-               text.includes('隐私授权') || text.includes('合规')) {
-        targetSubstep = 4;
-      }
-      
+      const resolved = resolveL1SubstepForElement(child);
+      const targetSubstep = resolved || 1;
       childrenToMove.push({ child, targetSubstep });
       child.remove(); // Detach from DOM
     }
@@ -221,12 +290,18 @@ function organizeL1Fields() {
 /**
  * Add navigation buttons to L1 substeps
  */
-function addL1SubStepNavigation() {
+function addL1SubStepNavigationIfMissing() {
   for (let i = 1; i <= 4; i++) {
     const container = document.getElementById(`l1-substep-${i}`);
     if (!container) continue;
+    if (container.querySelector('[data-l1-wizard-nav]')) continue;
+    addL1SubStepNavigationToContainer(i, container);
+  }
+}
 
+function addL1SubStepNavigationToContainer(i, container) {
     const navHTML = `
+      <div data-l1-wizard-nav="1" class="flex gap-2.5 pt-2">
       <div class="flex gap-2.5 pt-2">
         ${i > 1 ? `<button type="button" onclick="goToL1SubStep(${i - 1})" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">返回上一步</button>` : ''}
         ${i < 4 ? `<button type="button" onclick="goToL1SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
@@ -241,6 +316,13 @@ function addL1SubStepNavigation() {
     `;
     
     container.insertAdjacentHTML('beforeend', navHTML);
+}
+
+function addL1SubStepNavigation() {
+  for (let i = 1; i <= 4; i++) {
+    const container = document.getElementById(`l1-substep-${i}`);
+    if (!container) continue;
+    addL1SubStepNavigationToContainer(i, container);
   }
 }
 
@@ -250,6 +332,11 @@ function addL1SubStepNavigation() {
 function injectL2SubStepUI() {
   const step2Card = document.getElementById('step2-card');
   if (!step2Card) return;
+
+  if (hasPrebuiltL2WizardMarkup()) {
+    organizeL2Fields();
+    return;
+  }
 
   const header = step2Card.querySelector('.border-b');
   if (!header) return;
@@ -279,8 +366,13 @@ function organizeL2Fields() {
   const step2Card = document.getElementById('step2-card');
   if (!step2Card) return;
 
+  if (hasPrebuiltL2WizardMarkup()) {
+    addL2SubStepNavigationIfMissing();
+    return;
+  }
+
   const allChildren = Array.from(step2Card.children);
-  const progressIdx = allChildren.findIndex(el => el.querySelector('#l2SubTab1'));
+  const progressIdx = allChildren.findIndex(el => el.querySelector('#l2SubTab1') || el.id === 'l2SubTab1');
   if (progressIdx < 0) return;
 
   // Get content children BEFORE creating new containers
@@ -290,29 +382,14 @@ function organizeL2Fields() {
   const childrenToMove = [];
   contentChildren.forEach(child => {
     if (child && child.nodeType === 1 && child.parentNode === step2Card) {
-      const html = child.outerHTML || '';
-      const text = child.textContent || '';
-      let targetSubstep = 1; // default
-      
-      // Substep 1: Subjects and grades
-      if (html.includes('name="subject"') || html.includes('id="customSubjectsList"') ||
-          text.includes('授课科目') || text.includes('年级') || text.includes('科目') ||
-          (html.includes('type="checkbox"') && text.includes('数学'))) {
-        targetSubstep = 1;
+      if ((child.id || '').match(/^l2-substep-\d$/)) {
+        const stepNum = parseInt(child.id.replace('l2-substep-', ''), 10);
+        childrenToMove.push({ child, targetSubstep: stepNum });
+        child.remove();
+        return;
       }
-      // Substep 2: Rate and style
-      else if (html.includes('id="hourlyRate"') || html.includes('id="scoreHighlight"') || 
-               html.includes('id="styleTagContainer"') ||
-               text.includes('课时费') || text.includes('风格') || text.includes('时薪')) {
-        targetSubstep = 2;
-      }
-      // Substep 3: Lecture materials and availability
-      else if (html.includes('id="lectureUrl"') || html.includes('id="uploadedFilesList"') || 
-               html.includes('id="availabilitySection"') || html.includes('id="fileUploadInput"') ||
-               text.includes('试讲') || text.includes('素材') || text.includes('空闲时段') || text.includes('上传')) {
-        targetSubstep = 3;
-      }
-      
+      const resolved = resolveL2SubstepForElement(child);
+      const targetSubstep = resolved || 1;
       childrenToMove.push({ child, targetSubstep });
       child.remove(); // Detach from DOM
     }
@@ -338,16 +415,18 @@ function organizeL2Fields() {
   addL2SubStepNavigation();
 }
 
-/**
- * Add navigation buttons to L2 substeps
- */
-function addL2SubStepNavigation() {
+function addL2SubStepNavigationIfMissing() {
   for (let i = 1; i <= 3; i++) {
     const container = document.getElementById(`l2-substep-${i}`);
     if (!container) continue;
+    if (container.querySelector('[data-l2-wizard-nav]')) continue;
+    addL2SubStepNavigationToContainer(i, container);
+  }
+}
 
+function addL2SubStepNavigationToContainer(i, container) {
     const navHTML = `
-      <div class="flex gap-2.5 pt-2">
+      <div data-l2-wizard-nav="1" class="flex gap-2.5 pt-2">
         ${i > 1 ? `<button type="button" onclick="goToL2SubStep(${i - 1})" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">返回上一步</button>` : ''}
         ${i < 3 ? `<button type="button" onclick="goToL2SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
           <span>下一步：${L2_SUBSTEPS[i + 1].title}</span>
@@ -360,6 +439,16 @@ function addL2SubStepNavigation() {
     `;
     
     container.insertAdjacentHTML('beforeend', navHTML);
+}
+
+/**
+ * Add navigation buttons to L2 substeps
+ */
+function addL2SubStepNavigation() {
+  for (let i = 1; i <= 3; i++) {
+    const container = document.getElementById(`l2-substep-${i}`);
+    if (!container) continue;
+    addL2SubStepNavigationToContainer(i, container);
   }
 }
 
