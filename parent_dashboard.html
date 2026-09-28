@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>[data-warehouse-only].hidden,[data-warehouse-off].hidden,[data-contract-iot-clause].hidden,[data-contract-warehouse-clause].hidden,#bookingSuccessSimple.hidden,#bookingSuccessWarehouse.hidden{display:none!important}</style>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>星火学伴 - 家长/学员主控中心与导师智能匹配平台</title>
   <!-- Tailwind CSS CDN -->
@@ -461,8 +462,8 @@
             <i class="fa-solid fa-calendar-plus"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm" data-warehouse-only>预约辅导与智能隔音仓选座</h3>
-            <h3 class="font-bold text-sm hidden" data-warehouse-off>预约辅导与上课网点</h3>
+            <h3 class="font-bold text-sm hidden" data-warehouse-only>预约辅导与智能隔音仓选座</h3>
+            <h3 class="font-bold text-sm" data-warehouse-off>预约辅导与上课网点</h3>
             <p class="text-[10px] text-slate-400">单次 / 每周固定 · 费用提前冻结 · 结课后 48h 划拨</p>
           </div>
         </div>
@@ -594,11 +595,11 @@
 
         <!-- 线下上课网点 -->
         <div class="space-y-1.5">
-          <label class="block font-bold text-slate-700" data-booking-space-label>3. 专属智能隔音自习仓网点（免进陌生家庭隐患）</label>
+          <label class="block font-bold text-slate-700" data-booking-space-label>3. 线下上课网点</label>
           <select id="bookingSpaceSelect" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
-            <option value="青羊金沙文化微网点" selected>青羊金沙文化微网点 (4号线金沙博物馆站旁 · 01号独立隔音双人仓)</option>
-            <option value="高新大源中央微网点">高新大源中央微网点 (天府二街大源核心生活圈 · 03号讨论仓)</option>
-            <option value="武侯川大望江微网点">武侯川大望江微网点 (一环路南一段川大旁 · 02号智能互联仓)</option>
+            <option value="青羊金沙文化微网点" selected>青羊金沙文化微网点（地铁4号线金沙博物馆站附近）</option>
+            <option value="高新大源中央微网点">高新大源中央微网点（天府二街大源片区）</option>
+            <option value="武侯川大望江微网点">武侯川大望江微网点（川大望江校区附近）</option>
           </select>
         </div>
 
@@ -631,8 +632,8 @@
           <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-sm">—</strong></div>
         </div>
         <p class="text-[10px] text-slate-500 leading-relaxed border-t border-teal-100 pt-1.5">
-          <span data-warehouse-only>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
-          <span class="hidden" data-warehouse-off>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；导师结课确认后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
+          <span class="hidden" data-warehouse-only>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
+          <span data-warehouse-off>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；导师结课确认后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
         </p>
         <div class="flex gap-2 pt-1">
           <button type="button" onclick="hideEscrowSummary()" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">返回修改</button>
@@ -662,7 +663,7 @@
 
   <div id="podPasscodeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 transform transition-all duration-300 scale-95" id="podPasscodeContent">
-      <div id="bookingSuccessSimple" class="hidden text-center space-y-4">
+      <div id="bookingSuccessSimple" class="text-center space-y-4">
         <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
           <i class="fa-solid fa-circle-check"></i>
         </div>
@@ -673,7 +674,7 @@
         </button>
       </div>
 
-      <div id="bookingSuccessWarehouse" data-warehouse-only>
+      <div id="bookingSuccessWarehouse" class="hidden" data-warehouse-only>
       <div class="text-center space-y-1">
         <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
           <i class="fa-solid fa-door-open"></i>
@@ -851,11 +852,11 @@
         <p class="text-slate-800 font-bold">乙方（家长/学员）：<span id="contractParentName">刘女士</span></p>
         <p class="text-slate-800 font-bold">丙方（导师）：<span id="contractTutorName">张老师</span></p>
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-[11px]">
-          <p data-contract-iot-clause>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
-          <p class="hidden" data-warehouse-off>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</p>
-          <p data-warehouse-only>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
-          <p class="hidden" data-warehouse-off>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
-          <p data-contract-warehouse-clause>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
+          <p class="hidden" data-contract-iot-clause>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
+          <p data-warehouse-off>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</p>
+          <p class="hidden" data-warehouse-only>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+          <p data-warehouse-off>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+          <p class="hidden" data-contract-warehouse-clause>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
           <p>4. 开课前 2 小时可原路撤销；观察期内遇质量投诉，资金继续冻结并由平台协调处理。</p>
           <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>
         </div>

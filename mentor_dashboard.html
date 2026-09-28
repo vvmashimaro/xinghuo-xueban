@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>[data-warehouse-only].hidden,[data-warehouse-off].hidden,[data-contract-iot-clause].hidden,[data-contract-warehouse-clause].hidden,#bookingSuccessSimple.hidden,#bookingSuccessWarehouse.hidden{display:none!important}</style>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>星火学伴 - 导师工作台</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -219,8 +220,8 @@
             </div>
 
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5" data-warehouse-only>偏好教学仓（可多选）</label>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5 hidden" data-warehouse-off>偏好上课网点（可多选）</label>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5 hidden" data-warehouse-only>偏好教学仓（可多选）</label>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1.5" data-warehouse-off>偏好上课网点（可多选）</label>
               <div id="spaceCheckboxes" class="flex flex-wrap gap-2"></div>
             </div>
 
