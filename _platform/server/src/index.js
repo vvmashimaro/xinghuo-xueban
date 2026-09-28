@@ -11,12 +11,13 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const sms = require('./sms');
+const auth = require('./auth');
 const wechatPay = require('./wechat-pay');
 const wechatPhone = require('./wechat-phone');
 const phoneCrypto = require('./phone-crypto');
 
 const PORT = Number(process.env.PORT) || 8787;
-const HOST = '0.0.0.0';
+const HOST = process.env.HOST || '127.0.0.1';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
 
@@ -45,24 +46,8 @@ function fail(res, status, message) {
 }
 
 // Admin token 验证中间件（用于保护危险操作）
-function requireAdminToken(req, res, next) {
-  if (!isProduction) {
-    // 开发环境跳过验证
-    return next();
-  }
-  
-  const adminToken = process.env.ADMIN_TOKEN;
-  if (!adminToken) {
-    return fail(res, 500, '服务器未配置管理员令牌');
-  }
-  
-  const token = req.headers['x-admin-token'] || req.headers['authorization']?.replace('Bearer ', '');
-  if (token !== adminToken) {
-    return fail(res, 403, '需要管理员权限');
-  }
-  
-  next();
-}
+// 无论什么环境都需要管理员权限
+const requireAdminToken = auth.requireAdminToken;
 
 // 健康检查（公开）
 app.get('/api/health', (req, res) => {
@@ -87,7 +72,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/snapshot', (req, res) => {
+// 获取数据库快照（需要管理员权限）
+app.get('/api/snapshot', requireAdminToken, (req, res) => {
   db.seedIfEmpty();
   ok(res, db.snapshot());
 });
@@ -163,10 +149,155 @@ app.post('/api/auth/sms/verify', (req, res) => {
   }
 });
 
-/* ========== 微信手机号授权 ========== */
+/* ========== 登录 / 注册 ========== */
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { phone, role } = req.body || {};
+    
+    if (!phone) {
+      return fail(res, 400, '缺少手机号');
+    }
+    
+    if (!role || !['parent', 'mentor', 'admin'].includes(role)) {
+      return fail(res, 400, '角色参数无效');
+    }
+    
+    // 检查是否为管理员手机号
+    const isAdmin = auth.isAdminPhone(phone);
+    const actualRole = isAdmin ? 'admin' : role;
+    
+    // 查找或创建用户记录
+    let user;
+    if (actualRole === 'parent') {
+      user = db.getParentByPhone(phone);
+      if (!user) {
+        return fail(res, 404, '该手机号未注册，请先完成注册');
+      }
+    } else if (actualRole === 'mentor') {
+      user = db.getMentorByPhone(phone);
+      if (!user) {
+        return fail(res, 404, '该手机号未注册，请先完成注册');
+      }
+    } else if (actualRole === 'admin') {
+      // 管理员直接使用手机号作为标识
+      user = { id: 'ADMIN-' + phone, phone };
+    }
+    
+    // 创建会话令牌
+    const token = auth.createToken(user.id, actualRole, phone);
+    
+    ok(res, {
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        role: actualRole,
+        phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+      }
+    });
+  } catch (error) {
+    console.error('[Login Error]', error);
+    fail(res, 500, '登录失败');
+  }
+});
+
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { phone, role, profile } = req.body || {};
+    
+    if (!phone) {
+      return fail(res, 400, '缺少手机号');
+    }
+    
+    if (!role || !['parent', 'mentor'].includes(role)) {
+      return fail(res, 400, '角色参数无效');
+    }
+    
+    // 检查手机号是否已注册
+    let existing;
+    if (role === 'parent') {
+      existing = db.getParentByPhone(phone);
+      if (existing) {
+        return fail(res, 400, '该手机号已注册，请直接登录');
+      }
+    } else if (role === 'mentor') {
+      existing = db.getMentorByPhone(phone);
+      if (existing) {
+        return fail(res, 400, '该手机号已注册，请直接登录');
+      }
+    }
+    
+    // 创建用户记录
+    let user;
+    const profileData = Object.assign({ phone }, profile || {});
+    
+    if (role === 'parent') {
+      user = db.saveParent(profileData);
+    } else if (role === 'mentor') {
+      user = db.addMentor(profileData);
+    }
+    
+    // 创建会话令牌
+    const token = auth.createToken(user.id, role, phone);
+    
+    ok(res, {
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        role,
+        phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+      }
+    });
+  } catch (error) {
+    console.error('[Register Error]', error);
+    fail(res, 500, '注册失败');
+  }
+});
+
+app.post('/api/auth/logout', auth.requireAuth, (req, res) => {
+  try {
+    auth.revokeToken(req.token);
+    ok(res, { success: true });
+  } catch (error) {
+    console.error('[Logout Error]', error);
+    fail(res, 500, '登出失败');
+  }
+});
+
+app.get('/api/auth/me', auth.requireAuth, (req, res) => {
+  try {
+    const { userId, role, phone } = req.user;
+    
+    let user;
+    if (role === 'parent') {
+      user = db.getParents().find(p => p.id === userId);
+    } else if (role === 'mentor') {
+      user = db.getMentorById(userId);
+    } else if (role === 'admin') {
+      user = { id: userId, phone, role: 'admin' };
+    }
+    
+    if (!user && role !== 'admin') {
+      return fail(res, 404, '用户不存在');
+    }
+    
+    ok(res, {
+      userId: user.id,
+      role,
+      phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+      profile: user
+    });
+  } catch (error) {
+    console.error('[Get User Error]', error);
+    fail(res, 500, '查询失败');
+  }
+});
+
+/* ========== 微信手机号授权（小程序）========== */
 app.post('/api/wx/phone', async (req, res) => {
   try {
-    const { code, userId } = req.body || {};
+    const { code } = req.body || {};
     
     if (!code) {
       return fail(res, 400, '缺少 code 参数');
@@ -183,156 +314,7 @@ app.post('/api/wx/phone', async (req, res) => {
     });
   } catch (error) {
     console.error('[WeChat Phone Error]', error);
-    
-    // 记录拒绝授权的审计日志（如果有 userId）
-    if (req.body.userId) {
-      db.logPhoneAudit({
-        userId: req.body.userId,
-        action: 'authorize_deny',
-        source: 'wechat_auth',
-        phoneHash: '',
-        ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
-        ua: req.headers['user-agent'] || '',
-        success: false,
-        error: error.message
-      });
-    }
-    
     fail(res, 400, error.message || '获取手机号失败');
-  }
-});
-
-/* ========== 手机号绑定管理 ========== */
-app.post('/api/auth/phone/bind', async (req, res) => {
-  try {
-    const { userId, phone, source } = req.body || {};
-    
-    if (!userId || !phone) {
-      return fail(res, 400, '缺少 userId 或 phone');
-    }
-    
-    if (!phoneCrypto.isValidPhone(phone)) {
-      return fail(res, 400, '手机号格式不正确');
-    }
-    
-    const phoneCipher = phoneCrypto.encryptPhone(phone);
-    const phoneHash = phoneCrypto.hashPhone(phone);
-    
-    const result = db.bindPhone(userId, phoneCipher, phoneHash, source || 'sms_verify', {
-      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
-      ua: req.headers['user-agent'] || ''
-    });
-    
-    if (!result.ok) {
-      return fail(res, 400, result.error);
-    }
-    
-    ok(res, {
-      success: true,
-      masked: phoneCrypto.maskPhone(phone)
-    });
-  } catch (error) {
-    console.error('[Phone Bind Error]', error);
-    fail(res, 500, '绑定失败');
-  }
-});
-
-app.post('/api/auth/phone/unbind', (req, res) => {
-  try {
-    const { userId } = req.body || {};
-    
-    if (!userId) {
-      return fail(res, 400, '缺少 userId');
-    }
-    
-    const result = db.unbindPhone(userId, {
-      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
-      ua: req.headers['user-agent'] || ''
-    });
-    
-    if (!result.ok) {
-      return fail(res, 400, result.error);
-    }
-    
-    ok(res, { success: true });
-  } catch (error) {
-    console.error('[Phone Unbind Error]', error);
-    fail(res, 500, '解绑失败');
-  }
-});
-
-app.post('/api/auth/phone/cancel', (req, res) => {
-  try {
-    const { userId } = req.body || {};
-    
-    if (!userId) {
-      return fail(res, 400, '缺少 userId');
-    }
-    
-    const result = db.cancelPhone(userId, {
-      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
-      ua: req.headers['user-agent'] || ''
-    });
-    
-    if (!result.ok) {
-      return fail(res, 400, result.error);
-    }
-    
-    ok(res, { success: true });
-  } catch (error) {
-    console.error('[Phone Cancel Error]', error);
-    fail(res, 500, '注销失败');
-  }
-});
-
-app.get('/api/auth/me', (req, res) => {
-  try {
-    const userId = req.query.userId || req.headers['x-user-id'];
-    
-    if (!userId) {
-      return fail(res, 400, '缺少 userId');
-    }
-    
-    const user = db.getUserById(userId);
-    
-    if (!user) {
-      return fail(res, 404, '用户不存在');
-    }
-    
-    // 解密手机号并脱敏返回
-    let maskedPhone = '';
-    if (user.phoneCipher) {
-      try {
-        const phone = phoneCrypto.decryptPhone(user.phoneCipher);
-        maskedPhone = phoneCrypto.maskPhone(phone);
-      } catch (error) {
-        console.error('[Phone Decrypt Error]', error);
-      }
-    }
-    
-    ok(res, {
-      userId: user.id,
-      phone: maskedPhone,
-      phoneBoundAt: user.phoneBoundAt || '',
-      phoneSource: user.phoneSource || ''
-    });
-  } catch (error) {
-    console.error('[Get User Error]', error);
-    fail(res, 500, '查询失败');
-  }
-});
-
-app.post('/api/auth/phone/audit', (req, res) => {
-  try {
-    const entry = req.body || {};
-    entry.ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
-    entry.ua = req.headers['user-agent'] || '';
-    
-    db.logPhoneAudit(entry);
-    ok(res, { success: true });
-  } catch (error) {
-    console.error('[Audit Log Error]', error);
-    fail(res, 500, '记录失败');
   }
 });
 
@@ -447,29 +429,67 @@ app.get('/api/pay/orders/:outTradeNo', (req, res) => {
 });
 
 /* Mentors */
-app.get('/api/mentors', (req, res) => {
+app.get('/api/mentors', auth.requireAuth, (req, res) => {
   db.seedIfEmpty();
-  ok(res, db.getMentors());
+  
+  // 管理员可以看所有导师，家长可以看已审核的导师列表
+  if (req.user.role === 'admin') {
+    ok(res, db.getMentors());
+  } else if (req.user.role === 'parent') {
+    const mentors = db.getMentors().filter(m => m.status === 'approved');
+    ok(res, mentors);
+  } else if (req.user.role === 'mentor') {
+    // 导师只能看自己
+    const mentor = db.getMentorById(req.user.userId);
+    ok(res, mentor ? [mentor] : []);
+  } else {
+    fail(res, 403, '无权限');
+  }
 });
 
-app.post('/api/mentors', (req, res) => {
+app.post('/api/mentors', auth.requireAuth, (req, res) => {
+  // 只有导师角色可以创建导师资料（注册时调用）
+  if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
+    return fail(res, 403, '无权限');
+  }
+  
   const mentor = db.addMentor(req.body || {});
   ok(res, mentor);
 });
 
-app.get('/api/mentors/phone/:phone', (req, res) => {
+app.get('/api/mentors/phone/:phone', auth.requireAuth, (req, res) => {
+  // 只有管理员可以通过手机号查询
+  if (req.user.role !== 'admin') {
+    return fail(res, 403, '无权限');
+  }
+  
   const m = db.getMentorByPhone(req.params.phone);
   if (!m) return fail(res, 404, 'mentor not found');
   ok(res, m);
 });
 
-app.get('/api/mentors/:id', (req, res) => {
+app.get('/api/mentors/:id', auth.requireAuth, (req, res) => {
   const m = db.getMentorById(req.params.id);
   if (!m) return fail(res, 404, 'mentor not found');
+  
+  // 家长可以看已审核的导师，导师只能看自己，管理员可以看所有
+  if (req.user.role === 'parent' && m.status !== 'approved') {
+    return fail(res, 403, '无权限');
+  }
+  
+  if (req.user.role === 'mentor' && req.user.userId !== m.id) {
+    return fail(res, 403, '只能查看自己的资料');
+  }
+  
   ok(res, m);
 });
 
-app.patch('/api/mentors/:id', (req, res) => {
+app.patch('/api/mentors/:id', auth.requireAuth, (req, res) => {
+  // 只能修改自己的资料，或管理员可以修改任何人
+  if (req.user.role !== 'admin' && req.user.userId !== req.params.id) {
+    return fail(res, 403, '只能修改自己的资料');
+  }
+  
   const body = req.body || {};
   const options = body._options || {};
   const patch = Object.assign({}, body);
@@ -480,30 +500,89 @@ app.patch('/api/mentors/:id', (req, res) => {
 });
 
 /* Parents */
-app.get('/api/parents', (req, res) => {
+app.get('/api/parents', auth.requireAuth, (req, res) => {
   db.seedIfEmpty();
-  ok(res, db.getParents());
+  
+  // 只有管理员可以看所有家长
+  if (req.user.role === 'admin') {
+    ok(res, db.getParents());
+  } else if (req.user.role === 'parent') {
+    // 家长只能看自己
+    const parent = db.getParents().find(p => p.id === req.user.userId);
+    ok(res, parent ? [parent] : []);
+  } else {
+    fail(res, 403, '无权限');
+  }
 });
 
-app.post('/api/parents', (req, res) => {
+app.post('/api/parents', auth.requireAuth, (req, res) => {
+  // 只有家长角色可以创建家长资料（注册时调用）
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '无权限');
+  }
+  
   const parent = db.saveParent(req.body || {});
   ok(res, parent);
 });
 
-app.get('/api/parents/phone/:phone', (req, res) => {
+app.get('/api/parents/phone/:phone', auth.requireAuth, (req, res) => {
+  // 只有管理员可以通过手机号查询
+  if (req.user.role !== 'admin') {
+    return fail(res, 403, '无权限');
+  }
+  
   const p = db.getParentByPhone(req.params.phone);
   if (!p) return fail(res, 404, 'parent not found');
   ok(res, p);
 });
 
 /* Bookings */
-app.get('/api/bookings', (req, res) => {
+app.get('/api/bookings', auth.requireAuth, (req, res) => {
   db.seedIfEmpty();
-  ok(res, db.getBookings());
+  
+  const allBookings = db.getBookings();
+  
+  // 根据角色过滤预约
+  if (req.user.role === 'admin') {
+    ok(res, allBookings);
+  } else if (req.user.role === 'parent') {
+    // 家长只能看自己的预约
+    const parent = db.getParents().find(p => p.id === req.user.userId);
+    if (!parent) return fail(res, 404, '用户不存在');
+    
+    const myBookings = allBookings.filter(b => 
+      b.parentId === parent.id || b.parentPhone === parent.phone
+    );
+    ok(res, myBookings);
+  } else if (req.user.role === 'mentor') {
+    // 导师只能看自己的预约
+    const myBookings = allBookings.filter(b => 
+      b.mentorId === req.user.userId || b.tutorId === req.user.userId
+    );
+    ok(res, myBookings);
+  } else {
+    fail(res, 403, '无权限');
+  }
 });
 
-app.post('/api/bookings', async (req, res) => {
-  const booking = db.addBooking(req.body || {});
+app.post('/api/bookings', auth.requireAuth, async (req, res) => {
+  // 只有家长可以创建预约
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有家长可以创建预约');
+  }
+  
+  const bookingData = req.body || {};
+  
+  // 确保预约的 parentId 是当前用户
+  if (req.user.role === 'parent') {
+    bookingData.parentId = req.user.userId;
+    const parent = db.getParents().find(p => p.id === req.user.userId);
+    if (parent) {
+      bookingData.parentPhone = parent.phone;
+    }
+  }
+  
+  const booking = db.addBooking(bookingData);
   
   // 发送预约成功短信通知
   if (booking && booking.id && booking.parentPhone) {
@@ -523,20 +602,69 @@ app.post('/api/bookings', async (req, res) => {
   ok(res, booking);
 });
 
-app.patch('/api/bookings/:id', (req, res) => {
+app.patch('/api/bookings/:id', auth.requireAuth, (req, res) => {
+  const booking = db.getBookings().find(b => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+  
+  // 检查权限：家长和导师只能修改自己的预约，管理员可以修改所有
+  if (req.user.role !== 'admin') {
+    if (req.user.role === 'parent') {
+      const parent = db.getParents().find(p => p.id === req.user.userId);
+      if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
+        return fail(res, 403, '只能修改自己的预约');
+      }
+    } else if (req.user.role === 'mentor') {
+      if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
+        return fail(res, 403, '只能修改自己的预约');
+      }
+    }
+  }
+  
   const updated = db.updateBooking(req.params.id, req.body || {});
   if (!updated) return fail(res, 404, 'booking not found');
   ok(res, updated);
 });
 
-app.post('/api/bookings/:id/respond', (req, res) => {
+app.post('/api/bookings/:id/respond', auth.requireAuth, (req, res) => {
+  // 只有导师可以响应预约
+  if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有导师可以响应预约');
+  }
+  
+  const booking = db.getBookings().find(b => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+  
+  // 导师只能响应自己的预约
+  if (req.user.role === 'mentor') {
+    if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
+      return fail(res, 403, '只能响应自己的预约');
+    }
+  }
+  
   const updated = db.respondToBooking(req.params.id, req.body || {});
   if (!updated) return fail(res, 404, 'booking not found');
   ok(res, updated);
 });
 
 
-app.post('/api/bookings/:id/leave', (req, res) => {
+app.post('/api/bookings/:id/leave', auth.requireAuth, (req, res) => {
+  const booking = db.getBookings().find(b => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+  
+  // 检查权限
+  if (req.user.role !== 'admin') {
+    if (req.user.role === 'parent') {
+      const parent = db.getParents().find(p => p.id === req.user.userId);
+      if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
+        return fail(res, 403, '无权限');
+      }
+    } else if (req.user.role === 'mentor') {
+      if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
+        return fail(res, 403, '无权限');
+      }
+    }
+  }
+  
   const body = req.body || {};
   const sessionId = body.sessionId;
   const action = body.action || 'request';
@@ -554,12 +682,27 @@ app.post('/api/bookings/:id/leave', (req, res) => {
   ok(res, result);
 });
 
-app.post('/api/bookings/:id/complete', (req, res) => {
+app.post('/api/bookings/:id/complete', auth.requireAuth, (req, res) => {
+  // 只有导师可以完成课程
+  if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有导师可以完成课程');
+  }
+  
+  const booking = db.getBookings().find(b => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+  
+  // 导师只能完成自己的课程
+  if (req.user.role === 'mentor') {
+    if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
+      return fail(res, 403, '只能完成自己的课程');
+    }
+  }
+  
   const body = req.body || {};
   const result = db.completeSession(req.params.id, body.sessionId, {
     completedBy: body.completedBy || 'mentor',
     classSummary: body.classSummary || null,
-    mentorId: body.mentorId
+    mentorId: body.mentorId || req.user.userId
   });
   if (!result || result.ok === false) {
     return res.status(400).json(result || { ok: false, error: 'complete failed' });
@@ -567,58 +710,133 @@ app.post('/api/bookings/:id/complete', (req, res) => {
   ok(res, result);
 });
 
-app.post('/api/bookings/:id/summary', (req, res) => {
+app.post('/api/bookings/:id/summary', auth.requireAuth, (req, res) => {
+  // 只有导师可以提交课后小结
+  if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有导师可以提交课后小结');
+  }
+  
+  const booking = db.getBookings().find(b => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+  
+  // 导师只能提交自己的课后小结
+  if (req.user.role === 'mentor') {
+    if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
+      return fail(res, 403, '只能提交自己的课后小结');
+    }
+  }
+  
   const body = req.body || {};
-  const result = db.saveClassSummary(req.params.id, body.sessionId, body.classSummary || body, body.mentorId);
+  const result = db.saveClassSummary(req.params.id, body.sessionId, body.classSummary || body, body.mentorId || req.user.userId);
   if (!result || result.ok === false) {
     return res.status(400).json(result || { ok: false, error: 'summary failed' });
   }
   ok(res, result);
 });
 
-app.post('/api/mentors/:id/availability', (req, res) => {
+app.post('/api/mentors/:id/availability', auth.requireAuth, (req, res) => {
+  // 只能修改自己的可用时间，或管理员可以修改任何人
+  if (req.user.role !== 'admin' && req.user.userId !== req.params.id) {
+    return fail(res, 403, '只能修改自己的可用时间');
+  }
+  
   const updated = db.setMentorAvailability(req.params.id, (req.body && req.body.availability) || req.body || []);
   if (!updated) return fail(res, 404, 'mentor not found');
   ok(res, updated);
 });
 
-app.post('/api/bookings/process-escrow', (req, res) => {
+app.post('/api/bookings/process-escrow', auth.requireAuth, (req, res) => {
+  // 只有管理员可以处理托管释放
+  if (req.user.role !== 'admin') {
+    return fail(res, 403, '需要管理员权限');
+  }
+  
   ok(res, db.processEscrowReleases());
 });
 
 
 /* Assessments */
-app.get('/api/assessments', (req, res) => {
+app.get('/api/assessments', auth.requireAuth, (req, res) => {
   db.seedIfEmpty();
-  ok(res, db.getAssessments());
+  
+  const allAssessments = db.getAssessments();
+  
+  // 根据角色过滤
+  if (req.user.role === 'admin') {
+    ok(res, allAssessments);
+  } else if (req.user.role === 'parent') {
+    // 家长只能看自己的测评
+    const parent = db.getParents().find(p => p.id === req.user.userId);
+    if (!parent) return fail(res, 404, '用户不存在');
+    
+    const myAssessments = allAssessments.filter(a => 
+      a.parentId === parent.id || a.parentPhone === parent.phone
+    );
+    ok(res, myAssessments);
+  } else {
+    fail(res, 403, '无权限');
+  }
 });
 
-app.post('/api/assessments', (req, res) => {
-  const record = db.saveAssessment(req.body || {});
+app.post('/api/assessments', auth.requireAuth, (req, res) => {
+  // 只有家长可以创建测评
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有家长可以创建测评');
+  }
+  
+  const assessmentData = req.body || {};
+  
+  // 确保测评的 parentId 是当前用户
+  if (req.user.role === 'parent') {
+    assessmentData.parentId = req.user.userId;
+    const parent = db.getParents().find(p => p.id === req.user.userId);
+    if (parent) {
+      assessmentData.parentPhone = parent.phone;
+    }
+  }
+  
+  const record = db.saveAssessment(assessmentData);
   if (!record) return fail(res, 400, 'invalid assessment');
   ok(res, record);
 });
 
 /* Contracts */
-app.get('/api/contracts', (req, res) => {
+app.get('/api/contracts', auth.requireAuth, (req, res) => {
+  // 只有管理员可以看所有合约
+  if (req.user.role !== 'admin') {
+    return fail(res, 403, '需要管理员权限');
+  }
+  
   ok(res, db.getContracts());
 });
 
-app.post('/api/contracts', (req, res) => {
+app.post('/api/contracts', auth.requireAuth, (req, res) => {
+  // 只有管理员可以创建合约
+  if (req.user.role !== 'admin') {
+    return fail(res, 403, '需要管理员权限');
+  }
+  
   ok(res, db.saveContract(req.body || {}));
 });
 
-/* Session */
+/* Session - 已废弃，保留兼容 */
 app.get('/api/session', (req, res) => {
-  ok(res, db.getSession());
+  // 返回空对象，会话现在由令牌管理
+  ok(res, {});
 });
 
 app.put('/api/session', (req, res) => {
-  ok(res, db.setSession(req.body || {}));
+  // 不再更新，会话现在由令牌管理
+  ok(res, {});
 });
 
 /* Tutor match */
-app.post('/api/tutors/match', (req, res) => {
+app.post('/api/tutors/match', auth.requireAuth, (req, res) => {
+  // 只有家长和管理员可以匹配导师
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '只有家长可以匹配导师');
+  }
+  
   const tutors = db.matchTutors(req.body || {});
   ok(res, tutors);
 });

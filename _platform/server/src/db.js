@@ -7,9 +7,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const DB_PATH = path.join(DATA_DIR, 'db.json');
-const TMP_PATH = path.join(DATA_DIR, 'db.json.tmp');
+const DATA_DIR = process.env.DATABASE_PATH 
+  ? path.dirname(process.env.DATABASE_PATH)
+  : path.join(__dirname, '..', 'data');
+const DB_PATH = process.env.DATABASE_PATH || path.join(DATA_DIR, 'db.json');
+const TMP_PATH = DB_PATH + '.tmp';
 
 const DEFAULT_SLOTS = [
   '周六 09:00-11:00',
@@ -682,7 +684,6 @@ function emptySnapshot() {
     bookings: getSeedBookings(),
     contracts: [],
     assessments: [],
-    session: null,
     users: [],
     phoneAuditLogs: [],
     seeded: true
@@ -720,16 +721,25 @@ function load() {
     if (!state.users) state.users = [];
     if (!state.phoneAuditLogs) state.phoneAuditLogs = [];
     if (state.seeded == null) state.seeded = true;
+    
+    // 迁移：删除旧的共享 session 字段
+    let needMigration = false;
+    if (state.session !== undefined) {
+      delete state.session;
+      needMigration = true;
+      console.log('[db] Migration: Removed shared session field');
+    }
+    
     // patch mentor defaults
-    let need = false;
     state.mentors = state.mentors.map((m) => {
       if (!m.availableSlots || !m.availableSlots.length || !m.preferredSpaces) {
-        need = true;
+        needMigration = true;
         return withMentorDefaults(m);
       }
       return m;
     });
-    if (need) persist();
+    
+    if (needMigration) persist();
   } catch (e) {
     console.warn('[db] load fail, reseed', e.message);
     state = emptySnapshot();
@@ -751,7 +761,8 @@ function snapshot() {
     bookings: s.bookings.slice(),
     contracts: (s.contracts || []).slice(),
     assessments: (s.assessments || []).slice(),
-    session: s.session ? Object.assign({}, s.session) : null,
+    users: (s.users || []).slice(),
+    phoneAuditLogs: (s.phoneAuditLogs || []).slice(),
     seeded: !!s.seeded
   };
 }
@@ -763,8 +774,10 @@ function replaceSnapshot(body) {
   if (body.bookings) s.bookings = body.bookings;
   if (body.assessments) s.assessments = body.assessments;
   if (body.contracts) s.contracts = body.contracts;
-  if (body.session !== undefined) s.session = body.session;
+  if (body.users) s.users = body.users;
+  if (body.phoneAuditLogs) s.phoneAuditLogs = body.phoneAuditLogs;
   if (body.seeded !== undefined) s.seeded = !!body.seeded;
+  // 忽略旧的 session 字段（已迁移到基于令牌的认证）
   persist();
   return snapshot();
 }
@@ -845,11 +858,6 @@ function addMentor(mentor) {
   );
   const normalized = withMentorDefaults(record);
   s.mentors.unshift(normalized);
-  const session = s.session || {};
-  session.role = 'mentor';
-  session.mentorId = normalized.id;
-  session.phone = normalized.phone || session.phone;
-  s.session = session;
   persist();
   return normalized;
 }
@@ -963,11 +971,6 @@ function saveParent(profile) {
   } else {
     s.parents.unshift(record);
   }
-  const session = s.session || {};
-  session.role = 'parent';
-  session.parentId = record.id;
-  session.phone = record.phone;
-  s.session = session;
   persist();
   return record;
 }
@@ -1321,15 +1324,15 @@ function saveContract(contract) {
 }
 
 /* ---------- Session ---------- */
+// 旧的共享 session 已废弃，改用基于令牌的认证（见 auth.js）
+// 保留导出以兼容旧代码，但返回空对象
 function getSession() {
-  return getState().session;
+  return {};
 }
 
 function setSession(session) {
-  const s = getState();
-  s.session = session || {};
-  persist();
-  return s.session;
+  // 不再操作数据库，session 现在由 auth.js 管理
+  return {};
 }
 
 /* ---------- Matching ---------- */

@@ -13,7 +13,8 @@
     mentors: 'xh_mentors_v1',
     parents: 'xh_parents_v1',
     bookings: 'xh_bookings_v1',
-    session: 'xh_session_v1',
+    session: 'xh_session_v1', // 已废弃，保留兼容
+    authToken: 'xh_auth_token_v1',
     contracts: 'xh_contracts_v1',
     assessments: 'xh_assessments_v1',
     seeded: 'xh_seeded_v1',
@@ -466,11 +467,34 @@
       method: method,
       headers: { Accept: 'application/json' }
     };
+    
+    // 添加认证令牌
+    const token = _read(KEYS.authToken, null);
+    if (token) {
+      opts.headers['Authorization'] = 'Bearer ' + token;
+    }
+    
     if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
+    
     const resp = await fetch(url, opts);
+    
+    // 401 表示未登录或会话过期，清除令牌并跳转登录
+    if (resp.status === 401) {
+      _write(KEYS.authToken, null);
+      try { localStorage.removeItem(KEYS.authToken); } catch (e) {}
+      
+      // 如果当前不在登录页，跳转到登录页
+      if (typeof window !== 'undefined' && window.location && !window.location.pathname.includes('login')) {
+        console.warn('[StorageService] 会话过期，请重新登录');
+        window.location.href = '/login.html';
+      }
+      
+      throw new Error('未登录或会话已过期');
+    }
+    
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
       throw new Error('API ' + resp.status + ' ' + path + ' ' + text);
@@ -495,6 +519,91 @@
     SPACE_OPTIONS: SPACE_OPTIONS,
     DEFAULT_SLOTS: DEFAULT_SLOTS,
 
+    /* ---------- Authentication ---------- */
+    getAuthToken: function () {
+      return _read(KEYS.authToken, null);
+    },
+    
+    setAuthToken: function (token) {
+      return _write(KEYS.authToken, token);
+    },
+    
+    clearAuthToken: function () {
+      try { localStorage.removeItem(KEYS.authToken); } catch (e) {}
+    },
+    
+    isLoggedIn: function () {
+      return !!this.getAuthToken();
+    },
+    
+    login: async function (phone, code, role) {
+      try {
+        // 先验证短信
+        const verifyResult = await _api('POST', '/api/auth/sms/verify', { phone, code, scene: 'login' });
+        if (!verifyResult.success) {
+          return { success: false, error: verifyResult.error };
+        }
+        
+        // 登录
+        const loginResult = await _api('POST', '/api/auth/login', { phone, role });
+        if (loginResult.success && loginResult.token) {
+          this.setAuthToken(loginResult.token);
+          return { success: true, user: loginResult.user };
+        }
+        
+        return { success: false, error: '登录失败' };
+      } catch (error) {
+        console.error('[Login Error]', error);
+        return { success: false, error: error.message || '登录失败' };
+      }
+    },
+    
+    register: async function (phone, code, role, profile) {
+      try {
+        // 先验证短信
+        const verifyResult = await _api('POST', '/api/auth/sms/verify', { phone, code, scene: 'login' });
+        if (!verifyResult.success) {
+          return { success: false, error: verifyResult.error };
+        }
+        
+        // 注册
+        const registerResult = await _api('POST', '/api/auth/register', { phone, role, profile });
+        if (registerResult.success && registerResult.token) {
+          this.setAuthToken(registerResult.token);
+          return { success: true, user: registerResult.user };
+        }
+        
+        return { success: false, error: '注册失败' };
+      } catch (error) {
+        console.error('[Register Error]', error);
+        return { success: false, error: error.message || '注册失败' };
+      }
+    },
+    
+    logout: async function () {
+      try {
+        await _apiSafe('POST', '/api/auth/logout');
+        this.clearAuthToken();
+        this.clearSession();
+        return { success: true };
+      } catch (error) {
+        console.error('[Logout Error]', error);
+        this.clearAuthToken();
+        this.clearSession();
+        return { success: false, error: error.message };
+      }
+    },
+    
+    getCurrentUser: async function () {
+      try {
+        const result = await _api('GET', '/api/auth/me');
+        return result;
+      } catch (error) {
+        console.error('[Get Current User Error]', error);
+        return null;
+      }
+    },
+
     ready: function () {
       return _readyPromise;
     },
@@ -505,13 +614,36 @@
 
     hydrateFromServer: async function () {
       try {
-        const snap = await _api('GET', '/api/snapshot');
-        _applySnapshot(snap);
+        // 快照接口现在需要管理员权限，普通用户直接使用本地数据
+        // 只有登录状态下才尝试从服务器获取数据
+        if (!this.isLoggedIn()) {
+          console.log('[StorageService] No auth token, using local seed data');
+          StorageService.seedIfEmptyLocal();
+          _hydrated = true;
+          return null;
+        }
+        
+        // 尝试获取当前用户信息来验证令牌
+        try {
+          const user = await this.getCurrentUser();
+          if (user && user.role === 'admin') {
+            // 只有管理员可以拉取完整快照
+            const snap = await _api('GET', '/api/snapshot');
+            _applySnapshot(snap);
+            _hydrated = true;
+            return snap;
+          }
+        } catch (e) {
+          // 令牌无效或其他错误，使用本地数据
+          console.warn('[StorageService] Failed to verify user, using local data', e.message);
+        }
+        
+        // 非管理员用户使用本地数据
+        StorageService.seedIfEmptyLocal();
         _hydrated = true;
-        return snap;
+        return null;
       } catch (e) {
         console.warn('[StorageService] hydrate fail, local fallback', e.message || e);
-        _toastOnce('统一库暂不可用，已切换本地缓存（请确认已启动 server:8787）');
         StorageService.seedIfEmptyLocal();
         _hydrated = true;
         return null;
