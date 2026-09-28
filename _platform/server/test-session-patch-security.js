@@ -107,6 +107,9 @@ async function run() {
     Array.isArray(createRes.data.sessions) && createRes.data.sessions.length === 2,
     'expected 2 sessions on create'
   );
+  const sessionId1 = createRes.data.sessions[0].id;
+  const sessionId2 = createRes.data.sessions[1].id;
+  assert(sessionId1 && sessionId1 !== 'SES-SEC-1', 'sessions must use server-generated ids');
 
   const prepayRes = await request(
     'POST',
@@ -124,13 +127,21 @@ async function run() {
   assert(confirmRes.data && confirmRes.data.success, 'mock confirm failed');
   console.log('✓ Paid booking with sessions ready');
 
+  const acceptRes = await request(
+    'POST',
+    `/api/bookings/${bookingId}/respond`,
+    { accept: true },
+    mentorToken
+  );
+  assert(acceptRes.status === 200, 'mentor accept failed');
+
   const mentorHack = await request(
     'PATCH',
     `/api/bookings/${bookingId}`,
     {
       sessions: [
         {
-          id: 'SES-SEC-1',
+          id: sessionId1,
           status: 'completed',
           completedAt: new Date().toISOString(),
           completedBy: 'mentor',
@@ -138,7 +149,7 @@ async function run() {
           escrowStatus: 'released'
         },
         {
-          id: 'SES-SEC-2',
+          id: sessionId2,
           status: 'completed',
           releaseAt: '2020-01-01 00:00'
         }
@@ -148,7 +159,7 @@ async function run() {
     mentorToken
   );
   assert(mentorHack.status === 200, `mentor patch status ${mentorHack.status}`);
-  const s1 = mentorHack.data.sessions.find((s) => s.id === 'SES-SEC-1');
+  const s1 = mentorHack.data.sessions.find((s) => s.id === sessionId1);
   assert(s1 && s1.status === 'scheduled', `mentor cannot complete via PATCH, got ${s1 && s1.status}`);
   assert(!s1.releaseAt, 'mentor cannot set releaseAt via PATCH');
   console.log('✓ Mentor PATCH cannot mark sessions completed or set release');
@@ -161,7 +172,7 @@ async function run() {
       timeSlot: '周日 09:00-11:00',
       sessions: [
         {
-          id: 'SES-SEC-1',
+          id: sessionId1,
           status: 'leave_approved',
           leaveConfirmedAt: new Date().toISOString(),
           date: '2099-01-01',
@@ -185,48 +196,40 @@ async function run() {
     parentHack.data.sessions.length === 2,
     'parent cannot add sessions via PATCH'
   );
-  const s1p = parentHack.data.sessions.find((s) => s.id === 'SES-SEC-1');
+  const s1p = parentHack.data.sessions.find((s) => s.id === sessionId1);
   assert(s1p && s1p.status === 'scheduled', 'parent cannot confirm leave via PATCH');
   assert(s1p.date === '2026-10-10', 'parent cannot change session date via PATCH');
   console.log('✓ Parent PATCH cannot change schedule/sessions lifecycle after payment');
 
   const parentMsg = await request(
-    'PATCH',
-    `/api/bookings/${bookingId}`,
+    'POST',
+    `/api/bookings/${bookingId}/parent-message`,
     {
-      sessions: [
-        {
-          id: 'SES-SEC-1',
-          parentMessage: {
-            content: '请多布置错题',
-            createdAt: new Date().toISOString(),
-            parentId: 'PAR-TEST'
-          }
-        }
-      ]
+      sessionId: sessionId1,
+      parentMessage: { content: '请多布置错题' }
     },
     parentToken
   );
-  assert(parentMsg.status === 200, 'parent message patch failed');
-  const s1m = parentMsg.data.sessions.find((s) => s.id === 'SES-SEC-1');
+  assert(parentMsg.status === 200 && parentMsg.data.ok, 'parent message route failed');
+  const s1m = parentMsg.data.booking.sessions.find((s) => s.id === sessionId1);
   assert(
     s1m && s1m.parentMessage && s1m.parentMessage.content === '请多布置错题',
     'parentMessage should be saved via PATCH'
   );
-  console.log('✓ Parent can PATCH parentMessage on existing session');
+  console.log('✓ Parent can POST parentMessage on existing session');
 
   const completeRes = await request(
     'POST',
     `/api/bookings/${bookingId}/complete`,
     {
-      sessionId: 'SES-SEC-1',
+      sessionId: sessionId1,
       completedBy: 'mentor',
       classSummary: { content: '本节课完成', title: '小结' }
     },
     mentorToken
   );
   assert(completeRes.status === 200 && completeRes.data.ok, 'complete route failed');
-  const done = completeRes.data.booking.sessions.find((s) => s.id === 'SES-SEC-1');
+  const done = completeRes.data.booking.sessions.find((s) => s.id === sessionId1);
   assert(done && done.status === 'completed', 'complete route should mark session completed');
   assert(done && done.completedAt, 'complete route sets completedAt');
   console.log('✓ Dedicated complete route still works');

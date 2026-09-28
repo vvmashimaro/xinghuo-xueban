@@ -69,6 +69,10 @@ echo ""
 echo "=== Running session PATCH security tests ==="
 node test-session-patch-security.js
 
+echo ""
+echo "=== Running booking escrow hardening tests ==="
+node test-booking-escrow-hardening.js
+
 # Run miniprogram flow test
 echo ""
 echo "=== Running miniprogram flow test ==="

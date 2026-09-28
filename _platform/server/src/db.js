@@ -1017,10 +1017,10 @@ function addBooking(booking) {
     }
   }
   const clientFields = bookingFields.pickBookingCreateFields(booking);
-  let sessions = Array.isArray(clientFields.sessions) ? clientFields.sessions.slice() : [];
-  if (bookingType === 'trial' && sessions.length > 1) {
-    sessions = sessions.slice(0, 1);
-  }
+  const rawSessions = Array.isArray(clientFields.sessions) ? clientFields.sessions : [];
+  const maxSessions =
+    bookingType === 'trial' ? 1 : Math.max(1, parseInt(computed.sessionCount, 10) || rawSessions.length || 1);
+  let sessions = bookingFields.rebuildSessionsFromClientInput(rawSessions).slice(0, maxSessions);
   delete clientFields.sessions;
 
   const record = Object.assign(
@@ -1265,15 +1265,20 @@ function completeSession(bookingId, sessionId, meta) {
   const idx = s.bookings.findIndex((b) => b.id === bookingId);
   if (idx < 0) return { ok: false, error: '约课不存在' };
   const booking = Object.assign({}, s.bookings[idx]);
+  const bookingReady = bookingFields.assertBookingReadyForComplete(booking);
+  if (!bookingReady.ok) {
+    return bookingReady;
+  }
   if (!Array.isArray(booking.sessions)) booking.sessions = [];
   const sIdx = booking.sessions.findIndex((x) => x.id === sessionId);
   if (sIdx < 0) return { ok: false, error: '课次不存在' };
   const session = Object.assign({}, booking.sessions[sIdx]);
-  if (session.status === 'completed') {
-    return { ok: true, booking: booking, session: session, already: true };
+  const sessionReady = bookingFields.assertSessionReadyForComplete(session);
+  if (!sessionReady.ok) {
+    return sessionReady;
   }
-  if (session.status === 'leave_approved' || session.status === 'cancelled') {
-    return { ok: false, error: '已请假/取消的课次不可结课' };
+  if (sessionReady.already) {
+    return { ok: true, booking: booking, session: session, already: true };
   }
   session.status = 'completed';
   session.completedAt = _now();
@@ -1291,6 +1296,37 @@ function completeSession(bookingId, sessionId, meta) {
   if (booking.type === 'one_off' || booking.sessions.length === 1) {
     booking.completedAt = session.completedAt;
   }
+  s.bookings[idx] = Object.assign({}, booking, { updatedAt: _now() });
+  persist();
+  return { ok: true, booking: s.bookings[idx], session: session };
+}
+
+function saveParentMessage(bookingId, sessionId, message, parentId) {
+  const s = getState();
+  const idx = s.bookings.findIndex((b) => b.id === bookingId);
+  if (idx < 0) return { ok: false, error: '约课不存在' };
+  const booking = Object.assign({}, s.bookings[idx]);
+  if (!Array.isArray(booking.sessions)) return { ok: false, error: '无课次' };
+  const sIdx = booking.sessions.findIndex((x) => x.id === sessionId);
+  if (sIdx < 0) return { ok: false, error: '课次不存在' };
+  const session = Object.assign({}, booking.sessions[sIdx]);
+  const content =
+    typeof message === 'string'
+      ? message
+      : (message && (message.content || message.body)) || '';
+  const trimmed = String(content).trim();
+  if (!trimmed) {
+    return { ok: false, error: '请填写留言内容' };
+  }
+  if (trimmed.length > bookingFields.PARENT_MESSAGE_MAX_LEN) {
+    return { ok: false, error: '留言内容过长' };
+  }
+  session.parentMessage = {
+    content: trimmed,
+    createdAt: _now(),
+    parentId: parentId || booking.parentId || ''
+  };
+  booking.sessions[sIdx] = session;
   s.bookings[idx] = Object.assign({}, booking, { updatedAt: _now() });
   persist();
   return { ok: true, booking: s.bookings[idx], session: session };
@@ -1333,6 +1369,7 @@ function processEscrowReleases() {
   let changed = false;
   const now = new Date();
   s.bookings.forEach((b, bi) => {
+    if (!bookingFields.bookingEscrowReleaseAllowed(b)) return;
     if (!Array.isArray(b.sessions)) return;
     let sessChanged = false;
     const sessions = b.sessions.map((sess) => {
@@ -1830,6 +1867,7 @@ module.exports = {
   confirmSessionLeave,
   completeSession,
   saveClassSummary,
+  saveParentMessage,
   setMentorAvailability,
   processEscrowReleases,
   getContracts,
