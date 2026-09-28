@@ -540,7 +540,7 @@ app.post('/api/pay/wechat/notify', (req, res) => {
           paidAt: result.successTime,
           transactionId: result.transactionId,
           escrowStatus: 'frozen'
-        });
+        }, { trust: 'payment' });
       }
     }
     
@@ -623,7 +623,7 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
       transactionId: result.transactionId,
       escrowStatus: 'frozen',
       amount: payable.amountYuan
-    });
+    }, { trust: 'payment' });
     
     ok(res, result);
   } catch (error) {
@@ -872,7 +872,11 @@ app.patch('/api/bookings/:id', requireAuth, (req, res) => {
     }
   }
   
-  const updated = db.updateBooking(req.params.id, req.body || {});
+  const trust = req.user.role === 'admin' ? 'admin' : null;
+  const updated = db.updateBooking(req.params.id, req.body || {}, {
+    trust,
+    role: req.user.role
+  });
   if (!updated) return fail(res, 404, 'booking not found');
   ok(res, updated);
 });
