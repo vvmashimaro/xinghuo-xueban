@@ -15,7 +15,7 @@ const NEW_PARENT_PHONE = '139000092' + Math.floor(Math.random() * 100).toString(
 const NEW_MENTOR_PHONE = '139000089' + Math.floor(Math.random() * 100).toString().padStart(2, '0'); // 11 digits: 139000089 + 2
 const CODE = '888888';
 
-const ARTIFACTS_DIR = path.join(__dirname, '../../artifacts');
+const ARTIFACTS_DIR = '/opt/cursor/artifacts';
 
 if (!fs.existsSync(ARTIFACTS_DIR)) {
   fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
@@ -43,99 +43,101 @@ async function testNewParentRegistration(browser) {
     await page.goto(`${BASE_URL}/parent_register.html`, { waitUntil: 'networkidle0', timeout: 10000 });
     await delay(1000);
     
-    // Fill form data via JS
-    await page.evaluate((phone) => {
-      document.getElementById('parentName').value = '测试家长';
-      document.getElementById('parentPhone').value = phone;
-      document.getElementById('studentNickname').value = '小测';
-      const gradeSelect = document.getElementById('studentGrade');
-      if (gradeSelect) gradeSelect.selectedIndex = 4; // 初三
-    }, NEW_PARENT_PHONE);
+    // Step 1: Fill basic info and SMS
+    await page.type('#parentName', '测试家长');
+    await page.type('#parentPhone', NEW_PARENT_PHONE);
+    await page.type('#studentNickname', '小测');
+    await page.select('#studentGrade', '初三 (中考冲刺)');
     
-    // Send SMS via JS function call
-    await page.evaluate((code) => {
-      // Simulate SMS send
-      if (window.sendParentSMS) {
-        window.sendParentSMS();
-      } else if (typeof onSendParentSMS === 'function') {
-        onSendParentSMS();
-      }
-      // Fill code immediately
-      setTimeout(() => {
-        const codeInput = document.getElementById('parentSmsCode');
-        if (codeInput) codeInput.value = code;
-      }, 100);
-    }, CODE);
+    // Send SMS code
+    await page.click('#btnSendParentSms');
+    await delay(500);
     
-    await delay(2000);
+    // Enter SMS code
+    await page.type('#parentSmsCode', CODE);
+    await delay(500);
+    
     await screenshot(page, 'parent-register-step1');
     
-    // Set up subject plans directly via JS (bypass wizard UI)
-    await page.evaluate(() => {
-      // Directly set the subject plans object
-      if (typeof window.subjectPlans === 'undefined') {
-        window.subjectPlans = {};
-      }
-      
-      window.subjectPlans['数学'] = {
-        weakPoints: ['一次函数', '二次函数'],
-        pacing: '稳中求快 · 预习式推进',
-        pains: ['粗心大意']
-      };
-      
-      // Also check the subject checkbox
-      const mathRadio = document.querySelector('input[name="targetSubject"][value="数学"]');
-      if (mathRadio) {
-        mathRadio.checked = true;
-      }
-      
-      // Go to step 3
-      if (typeof goToStep === 'function') {
-        goToStep(3);
-      }
-    });
+    // Go to step 2
+    await page.click('button[onclick="goToStep(2)"]');
+    await delay(1000);
     
-    await delay(1500);
-    await screenshot(page, 'parent-register-step2-skip');
-    
-    // Select space, agree, and ensure form fields are set
-    await page.evaluate((phone, code) => {
-      const spaceRadio = document.querySelector('input[name="selectedSpace"]');
-      if (spaceRadio) spaceRadio.checked = true;
-      
-      const agreeCheck = document.getElementById('parentAgreementCheck');
-      if (agreeCheck) agreeCheck.checked = true;
-      
-      // Re-set phone and code to ensure they persist
-      document.getElementById('parentPhone').value = phone;
-      document.getElementById('parentSmsCode').value = code;
-    }, NEW_PARENT_PHONE, CODE);
-    
+    // Step 2: Select subject and configure via wizard
+    // Check the math subject
+    await page.click('input[name="targetSubject"][value="数学"]');
     await delay(500);
+    
+    // Click the subject's config button to open wizard
+    const configButton = await page.$('button[onclick*="openSubjectWizard"][onclick*="数学"]');
+    if (configButton) {
+      await configButton.click();
+      await delay(1000);
+      
+      // In the wizard modal, select weak points
+      const weakPoints = await page.$$('.wizard-topic-cb');
+      if (weakPoints.length >= 2) {
+        await weakPoints[0].click();
+        await weakPoints[1].click();
+      }
+      await delay(300);
+      
+      // Go to wizard step 2 (pacing)
+      await page.click('button[onclick="goToWizardStep(2)"]');
+      await delay(500);
+      
+      // Select pacing
+      const pacingRadio = await page.$('input[name="wizardPacing"]');
+      if (pacingRadio) {
+        await pacingRadio.click();
+      }
+      await delay(300);
+      
+      // Go to wizard step 3 (pains)
+      await page.click('button[onclick="goToWizardStep(3)"]');
+      await delay(500);
+      
+      // Select a pain tag
+      const painTag = await page.$('#wizardPainContainer > span');
+      if (painTag) {
+        await painTag.click();
+      }
+      await delay(300);
+      
+      // Finish wizard
+      await page.click('button[onclick="finishSubjectWizard()"]');
+      await delay(1000);
+    }
+    
+    await screenshot(page, 'parent-register-step2');
+    
+    // Go to step 3
+    await page.click('button[onclick="goToStep(3)"]');
+    await delay(1000);
+    
+    // Step 3: Select space and agree
+    const spaceRadio = await page.$('input[name="selectedSpace"]');
+    if (spaceRadio) {
+      await spaceRadio.click();
+    }
+    await delay(300);
+    
+    await page.click('#parentAgreementCheck');
+    await delay(500);
+    
     await screenshot(page, 'parent-register-step3');
     
-    // Submit and wait for navigation
+    // Submit
+    await page.click('#btnSubmitParent');
+    
+    // Wait for navigation to dashboard
     try {
-      // Start the submission
-      await page.evaluate(() => {
-        if (typeof handleParentSubmit === 'function') {
-          handleParentSubmit();
-        } else {
-          const submitBtn = document.getElementById('btnSubmitParent');
-          if (submitBtn) submitBtn.click();
-        }
-      });
-      
-      // Wait for navigation to dashboard (with timeout)
-      await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 5000 }).catch(() => {
-        // Navigation might have already happened or might not happen
-      });
-      
-      await delay(1000); // Extra delay for page to settle
+      await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 5000 });
     } catch (e) {
-      // Context might be destroyed if page navigated
-      console.log('  Note: Navigation occurred');
+      // May already have navigated
     }
+    
+    await delay(1000);
     
     const finalUrl = page.url();
     if (finalUrl.includes('parent_dashboard.html')) {
@@ -254,80 +256,103 @@ async function testDuplicatePhoneRegistration(browser) {
     await page.goto(`${BASE_URL}/parent_register.html`, { waitUntil: 'networkidle0', timeout: 10000 });
     await delay(1000);
     
-    // Fill form with existing phone via JS
-    await page.evaluate((phone) => {
-      document.getElementById('parentName').value = '重复家长';
-      document.getElementById('parentPhone').value = phone;
-      document.getElementById('studentNickname').value = '小重';
-      const gradeSelect = document.getElementById('studentGrade');
-      if (gradeSelect) gradeSelect.selectedIndex = 4;
-    }, PARENT_PHONE);
+    // Fill step 1 with existing phone
+    await page.type('#parentName', '重复家长');
+    await page.type('#parentPhone', PARENT_PHONE);
+    await page.type('#studentNickname', '小重');
+    await page.select('#studentGrade', '初三 (中考冲刺)');
     
-    // Send SMS
-    await page.evaluate((code) => {
-      if (window.sendParentSMS) window.sendParentSMS();
-      setTimeout(() => {
-        const codeInput = document.getElementById('parentSmsCode');
-        if (codeInput) codeInput.value = code;
-      }, 100);
-    }, CODE);
-    
-    await delay(2000);
-    
-    // Try to proceed and submit
-    await page.evaluate(() => {
-      if (typeof goToStep === 'function') goToStep(2);
-    });
-    await delay(1000);
-    
-    await page.evaluate(() => {
-      const mathRadio = document.querySelector('input[name="targetSubject"][value="数学"]');
-      if (mathRadio) mathRadio.checked = true;
-    });
+    // Send SMS code
+    await page.click('#btnSendParentSms');
+    await delay(500);
+    await page.type('#parentSmsCode', CODE);
     await delay(500);
     
-    await page.evaluate(() => {
-      if (typeof goToStep === 'function') goToStep(3);
-    });
+    // Go to step 2
+    await page.click('button[onclick="goToStep(2)"]');
     await delay(1000);
     
-    await page.evaluate(() => {
-      const agreeCheck = document.getElementById('parentAgreementCheck');
-      if (agreeCheck) agreeCheck.checked = true;
-    });
+    // Check math subject
+    await page.click('input[name="targetSubject"][value="数学"]');
     await delay(500);
     
-    // Set up dialog handler to catch alert
-    let alertMessage = '';
-    page.on('dialog', async dialog => {
-      alertMessage = dialog.message();
-      console.log('  Alert detected:', alertMessage);
-      await dialog.accept();
-    });
+    // Open wizard and quickly complete it
+    const configButton = await page.$('button[onclick*="openSubjectWizard"][onclick*="数学"]');
+    if (configButton) {
+      await configButton.click();
+      await delay(500);
+      
+      // Click first weak point
+      const weakPoint = await page.$('.wizard-topic-cb');
+      if (weakPoint) await weakPoint.click();
+      await delay(200);
+      
+      // Go to pacing step
+      await page.click('button[onclick="goToWizardStep(2)"]');
+      await delay(300);
+      
+      // Select pacing
+      const pacing = await page.$('input[name="wizardPacing"]');
+      if (pacing) await pacing.click();
+      await delay(200);
+      
+      // Go to pain step
+      await page.click('button[onclick="goToWizardStep(3)"]');
+      await delay(300);
+      
+      // Select pain
+      const pain = await page.$('#wizardPainContainer > span');
+      if (pain) await pain.click();
+      await delay(200);
+      
+      // Finish
+      await page.click('button[onclick="finishSubjectWizard()"]');
+      await delay(500);
+    }
+    
+    // Go to step 3
+    await page.click('button[onclick="goToStep(3)"]');
+    await delay(1000);
+    
+    // Select space and agree
+    const spaceRadio = await page.$('input[name="selectedSpace"]');
+    if (spaceRadio) await spaceRadio.click();
+    await delay(300);
+    
+    await page.click('#parentAgreementCheck');
+    await delay(500);
     
     // Submit
-    await page.evaluate(() => {
-      const submitBtn = document.getElementById('btnSubmitParent');
-      if (submitBtn) submitBtn.click();
-    });
+    await page.click('#btnSubmitParent');
+    await delay(3000); // Wait for error to appear
     
-    await delay(3000); // Wait for submission and error
     await screenshot(page, 'duplicate-phone-error');
     
-    // Check for error message in alert or page text
-    const pageText = await page.evaluate(() => document.body.innerText);
+    // Check for inline error element
+    const errorVisible = await page.evaluate(() => {
+      const errorDiv = document.getElementById('registrationError');
+      const errorText = document.getElementById('registrationErrorText');
+      if (!errorDiv || !errorText) return false;
+      if (errorDiv.classList.contains('hidden')) return false;
+      return errorText.innerText.includes('已注册') || errorText.innerText.includes('请直接登录');
+    });
+    
     const currentUrl = page.url();
     
-    if (alertMessage.includes('已注册') || alertMessage.includes('请直接登录') ||
-        pageText.includes('该手机号已注册') || pageText.includes('已注册') || pageText.includes('请直接登录')) {
-      console.log('  ✓ Duplicate phone error shown');
+    if (errorVisible) {
+      console.log('  ✓ Duplicate phone error displayed inline');
       console.log('  ✅ PASSED');
     } else if (currentUrl.includes('parent_register.html')) {
-      // If still on registration page and didn't redirect, check for toast
-      console.log('  ✓ Registration blocked (stayed on register page)');
-      console.log('  ✅ PASSED');
+      // Check if error is in page text (fallback)
+      const pageText = await page.evaluate(() => document.body.innerText);
+      if (pageText.includes('该手机号已注册') || pageText.includes('请直接登录')) {
+        console.log('  ✓ Duplicate phone error shown in page');
+        console.log('  ✅ PASSED');
+      } else {
+        throw new Error('Expected duplicate phone error to be visible');
+      }
     } else {
-      throw new Error('Expected duplicate phone error message or blocked registration');
+      throw new Error('Expected registration to be blocked');
     }
   } catch (error) {
     console.error('  ❌ FAILED -', error.message);
