@@ -1103,7 +1103,10 @@
 
     /* ---------- 分学科配置状态 ---------- */
     /** @type {Object.<string, {weakPoints:string[], pacing:string, pains:string[]}>} */
-    let subjectPlans = {};
+    if (typeof window.subjectPlans === 'undefined') {
+      window.subjectPlans = {};
+    }
+    let subjectPlans = window.subjectPlans; // Reference to window.subjectPlans for compatibility
     let wizardSubject = null;
     let wizardStep = 1;
     let wizardOpening = false; // 防止关闭时误触发
@@ -1720,7 +1723,9 @@
         goToStep(2);
         return;
       }
-      const missing = checkedSubjects.filter((s) => !subjectPlans[s]);
+      // Use window.subjectPlans to allow test injection
+      const plans = window.subjectPlans || subjectPlans || {};
+      const missing = checkedSubjects.filter((s) => !plans[s]);
       if (missing.length > 0) {
         showToast(`请先完成【${missing[0]}】的考点配置`, 'warning');
         goToStep(2);
@@ -1771,12 +1776,14 @@
         const budgetMax = parseInt(document.getElementById('budgetMaxRange')?.value || '180', 10);
         const budgetRate = Math.round((budgetMin + budgetMax) / 2);
 
+        // Use window.subjectPlans to allow test injection
+        const plans = window.subjectPlans || subjectPlans || {};
         const plansCopy = {};
-        Object.keys(subjectPlans).forEach((k) => {
+        Object.keys(plans).forEach((k) => {
           plansCopy[k] = {
-            weakPoints: (subjectPlans[k].weakPoints || []).slice(),
-            pacing: subjectPlans[k].pacing || '',
-            pains: (subjectPlans[k].pains || []).slice()
+            weakPoints: (plans[k].weakPoints || []).slice(),
+            pacing: plans[k].pacing || '',
+            pains: (plans[k].pains || []).slice()
           };
         });
 
