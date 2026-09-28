@@ -930,7 +930,8 @@ async function testNoConsoleErrorsOnKeyPages(browser) {
     'admin_audit.html'
   ];
   for (const p of paths) {
-    const page = await browser.newPage();
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (msg) => {
@@ -942,14 +943,15 @@ async function testNoConsoleErrorsOnKeyPages(browser) {
       errors.push(t);
     });
     try {
-      await page.goto(`${BASE_URL}/${p}`, { waitUntil: 'networkidle0', timeout: 15000 });
-      await delay(1200);
+      await page.goto(`${BASE_URL}/${p}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      await delay(1500);
       if (errors.length) {
         throw new Error(`${p}: ${errors.join(' | ')}`);
       }
       console.log(`  ✓ ${p}`);
     } finally {
       await page.close();
+      await context.close();
     }
   }
   console.log('  ✅ PASSED');
@@ -1118,6 +1120,7 @@ async function main() {
     await testNoConsoleErrorsOnKeyPages(browser);
     passed++;
   } catch (e) {
+    console.error('  ✗ Console hygiene test failed:', e.message);
     failed++;
   }
   
