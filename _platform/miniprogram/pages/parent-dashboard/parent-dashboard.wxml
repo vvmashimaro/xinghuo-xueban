@@ -127,8 +127,8 @@
 
   <view wx:if="{{tutors.length===0}}" class="card muted" style="text-align:center;">当前筛选条件下暂无匹配导师，请放宽时薪或切换网点。</view>
 
-  <!-- IoT 面板 -->
-  <view class="card">
+  <!-- IoT 面板（FEATURE_SMART_WAREHOUSE） -->
+  <view class="card" wx:if="{{featureSmartWarehouse}}">
     <view class="row-between">
       <view class="card-title" style="margin:0;">IoT 智能仓履约模拟</view>
       <text class="badge {{iotBadgeClass}}">{{iotBadge}}</text>
@@ -235,9 +235,10 @@
       <view class="agr-p">甲方（平台）：星火学伴</view>
       <view class="agr-p">乙方（家长/学员）：{{parentName}}</view>
       <view class="agr-p">丙方（导师）：{{bookingTutor.maskedName}}</view>
-      <view class="agr-p" style="margin-top:12rpx;">1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</view>
+      <view class="agr-p" style="margin-top:12rpx;" wx:if="{{featureSmartWarehouse}}">1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</view>
+      <view class="agr-p" style="margin-top:12rpx;" wx:else>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</view>
       <view class="agr-p">2. 单次课酬存入商业银行托管子账户锁定；课后 48 小时无异议自动按 92%/8% 划拨。</view>
-      <view class="agr-p">3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</view>
+      <view class="agr-p" wx:if="{{featureSmartWarehouse}}">3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</view>
       <view class="agr-tip">约课成功后状态为「待导师接单」(pending_accept)。</view>
     </scroll-view>
     <view class="modal-foot">

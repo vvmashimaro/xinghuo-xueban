@@ -1,20 +1,30 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
 
+const appConfig = require('../../utils/config');
+const warehouseOn = !!appConfig.FEATURE_SMART_WAREHOUSE;
+
 const ROLE_META = {
   mentor: {
     title: '青年导师端登录',
-    subtitle: '银行合约直达秒结 · 免押扫码开启智能教学仓'
+    subtitle: warehouseOn
+      ? '银行合约直达秒结 · 免押扫码开启智能教学仓'
+      : '银行合约直达秒结 · 阳光透明接单授课'
   },
   parent: {
     title: '家长 / 学员登录',
-    subtitle: '单次约课零预付 · 优选双一流学霸与合规微空间'
+    subtitle: warehouseOn
+      ? '单次约课零预付 · 优选双一流学霸与合规微空间'
+      : '单次约课零预付 · 优选双一流学霸导师'
   }
 };
 
 Page({
   data: {
     role: 'mentor',
+    heroSub: warehouseOn
+      ? '阳光课业辅导 · 智能微仓 · 银行合约资金托管'
+      : '阳光课业辅导 · 导师匹配 · 银行合约资金托管',
     roleTitle: ROLE_META.mentor.title,
     roleSubtitle: ROLE_META.mentor.subtitle,
     mobile: '',

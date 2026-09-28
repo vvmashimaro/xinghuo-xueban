@@ -157,7 +157,8 @@
             </span>
           </div>
           <span class="text-[10px] text-slate-400 font-medium tracking-wide block">
-            阳光课业辅导 · 智能微仓匹配 · 银行合约资金托管
+            <span data-warehouse-only>阳光课业辅导 · 智能微仓匹配 · 银行合约资金托管</span>
+            <span class="hidden" data-warehouse-off>阳光课业辅导 · 导师匹配 · 银行合约资金托管</span>
           </span>
         </div>
       </div>
@@ -538,8 +539,11 @@
                   <span class="w-2 h-4 bg-teal-600 rounded-sm"></span>
                   线下教学空间与导师选拔偏好
                 </h2>
-                <p class="text-[11px] text-slate-400 mt-0.5">
+                <p class="text-[11px] text-slate-400 mt-0.5" data-warehouse-only>
                   智能仓安全免押开锁 · 银行合约资金闭环直结
+                </p>
+                <p class="text-[11px] text-slate-400 mt-0.5 hidden" data-warehouse-off>
+                  选定上课网点与课酬预算 · 银行合约资金托管
                 </p>
               </div>
               <span class="text-[10px] bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded border border-teal-200">步骤 3/3</span>
@@ -991,7 +995,8 @@
         </div>
 
         <div class="bg-white/80 rounded-xl p-2 text-[11px] text-slate-600 flex items-center justify-between border border-teal-50">
-          <span>智能仓排期：<strong class="text-slate-900">本周六 10:00 (青羊金沙仓)</strong></span>
+          <span data-warehouse-only>智能仓排期：<strong class="text-slate-900">本周六 10:00 (青羊金沙仓)</strong></span>
+          <span class="hidden" data-warehouse-off>建议时段：<strong class="text-slate-900">本周六 10:00 · 青羊金沙网点</strong></span>
           <span class="text-emerald-600 font-medium">支持单次试听</span>
         </div>
       </div>
@@ -1027,6 +1032,7 @@
 
   <!-- ======================= 业务逻辑 JavaScript ======================= -->
     <script src="js/config.js"></script>
+    <script src="js/feature-flags.js"></script>
     <script src="js/storage-service.js"></script>
 
     <script>

@@ -495,7 +495,8 @@
           <i class="fa-solid fa-award"></i>
         </div>
         <h3 class="text-base font-black text-slate-900">导师已正式入库 · 授证授权成功</h3>
-        <p class="text-xs text-slate-500">已为导师生成专属档案序列号及智能教学仓门禁授信</p>
+        <p class="text-xs text-slate-500" data-warehouse-only>已为导师生成专属档案序列号及智能教学仓门禁授信</p>
+        <p class="text-xs text-slate-500 hidden" data-warehouse-off>已为导师生成专属档案序列号，可开始接单授课</p>
       </div>
 
       <!-- 电子凭证卡片 -->
@@ -529,7 +530,7 @@
           </div>
         </div>
 
-        <div class="pt-2 border-t border-teal-100 flex items-center justify-between text-[11px] text-teal-700">
+        <div class="pt-2 border-t border-teal-100 flex items-center justify-between text-[11px] text-teal-700" data-warehouse-only>
           <span>智能仓权限：<strong class="text-slate-900">免押开锁已激活</strong></span>
           <span class="font-mono text-slate-500">首期送30小时体验仓位</span>
         </div>
@@ -550,6 +551,7 @@
   </div>
 
     <script src="js/config.js"></script>
+    <script src="js/feature-flags.js"></script>
     <script src="js/storage-service.js"></script>
 
     <script>
@@ -815,7 +817,10 @@
     function applyCommentTemplate(type) {
       const textarea = document.getElementById('auditReviewComment');
       if (type === 1) {
-        textarea.value = `【教研复核合格】学籍及高分战绩核验无误，试讲板书整洁、思路清晰，予以核发星火金牌导师资格证及专属教学仓电子通行码。`;
+        const wh = window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled();
+        textarea.value = wh
+          ? `【教研复核合格】学籍及高分战绩核验无误，试讲板书整洁、思路清晰，予以核发星火金牌导师资格证及专属教学仓电子通行码。`
+          : `【教研复核合格】学籍及高分战绩核验无误，试讲板书整洁、思路清晰，予以核发星火金牌导师资格证，可开始接单授课。`;
       } else if (type === 2) {
         textarea.value = `【需补充试讲材料】请重新上传 5-10 分钟包含智能白板书写及核心考点压轴解法示范的完整视频，原网盘链接提取码受限。`;
       } else if (type === 3) {

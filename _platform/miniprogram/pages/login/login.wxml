@@ -1,7 +1,7 @@
 <view class="container">
   <view class="hero">
     <view class="hero-title">星火学伴</view>
-    <view class="hero-sub">阳光课业辅导 · 智能微仓 · 银行合约资金托管</view>
+    <view class="hero-sub">{{heroSub}}</view>
   </view>
 
   <view class="role-tabs">

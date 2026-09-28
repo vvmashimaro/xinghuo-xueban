@@ -1,5 +1,6 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
+const appConfig = require('../../utils/config');
 
 const BOOKING_STATUS = {
   pending_accept: { text: '待导师接单', badge: 'badge-pending' },
@@ -79,7 +80,14 @@ Page({
     iotCountdown: '--:--:--',
     iotBtnLabel: '模拟扫码开门 · 通电照明',
     iotBtnClass: 'btn-iot-idle',
-    iotBtnDisabled: false
+    iotBtnDisabled: false,
+    featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE
+  },
+
+  onLoad() {
+    this.setData({
+      featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE
+    });
   },
 
   async onShow() {
@@ -468,9 +476,15 @@ Page({
       iotLinkedBooking: (tutor.maskedName || '') + ' · ' + slot
     });
 
-    showToast('约课成功 · 托管已锁定，可关联 IoT 履约面板');
+    showToast(
+      this.data.featureSmartWarehouse
+        ? '约课成功 · 托管已锁定，可关联 IoT 履约面板'
+        : '约课成功，等待导师接单'
+    );
     this.reload();
-    this.setIoTState('idle');
+    if (this.data.featureSmartWarehouse) {
+      this.setIoTState('idle');
+    }
   },
 
   async handleWeChatPayment(bookingId, amount, tutorName, subject) {

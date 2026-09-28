@@ -33,6 +33,9 @@
     PAY_MODE: 'demo',
     
     // 允许演示验证码（仅在 SMS_MODE=demo 时生效）
-    ALLOW_DEMO_SMS: true
+    ALLOW_DEMO_SMS: true,
+
+    // 智能仓 / IoT 门禁（暂缓上线时保持 false）
+    FEATURE_SMART_WAREHOUSE: false
   };
 })();
