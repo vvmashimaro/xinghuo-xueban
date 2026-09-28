@@ -15,6 +15,7 @@ echo "✓ Test database created"
 # Set environment variables
 export NODE_ENV=development
 export SMS_PROVIDER=mock
+export SMS_COOLDOWN_MS=0
 export DATABASE_PATH="$(pwd)/data/db.test.json"
 export PORT=8787
 

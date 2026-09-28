@@ -276,9 +276,11 @@ ADMIN_MOCK_VERIFY=$(curl -s -X POST "$API_BASE/api/auth/sms/verify" \
   -H "Content-Type: application/json" \
   -d '{"phone":"13540012341","code":"888888","scene":"login"}')
 ADMIN_MOCK_ERROR=$(echo "$ADMIN_MOCK_VERIFY" | jq -r '.error // ""')
+ADMIN_MOCK_TICKET=$(echo "$ADMIN_MOCK_VERIFY" | jq -r '.ticket // ""')
+ADMIN_MOCK_SUCCESS=$(echo "$ADMIN_MOCK_VERIFY" | jq -r '.success // false')
 
-if [[ "$ADMIN_MOCK_ERROR" =~ "管理员请使用短信验证码登录" ]]; then
-  echo "✓ 管理员手机号正确拒绝 888888 验证码"
+if [[ "$ADMIN_MOCK_ERROR" =~ "管理员请使用短信验证码登录" ]] && [ "$ADMIN_MOCK_SUCCESS" != "true" ] && { [ -z "$ADMIN_MOCK_TICKET" ] || [ "$ADMIN_MOCK_TICKET" = "null" ]; }; then
+  echo "✓ 管理员手机号正确拒绝 888888（无 ticket）"
 else
   echo "✗ 错误：管理员手机号接受了 888888: $ADMIN_MOCK_VERIFY"
   exit 1
@@ -288,15 +290,18 @@ echo ""
 # 测试第一个管理员用真实验证码登录
 echo "[18] 测试第一个管理员 13540012341 用真实验证码登录..."
 
-# 发送SMS
+# 发送SMS（只读取本次发送后日志中的验证码）
+LOG_LINES_BEFORE=0
+if [ -f "/tmp/api-server.log" ]; then
+  LOG_LINES_BEFORE=$(wc -l < /tmp/api-server.log)
+fi
 curl -s -X POST "$API_BASE/api/auth/sms/send" \
   -H "Content-Type: application/json" \
   -d '{"phone":"13540012341","scene":"login"}' > /dev/null
 
-# 从服务器日志提取真实验证码
 sleep 1
 if [ -f "/tmp/api-server.log" ]; then
-  ADMIN1_CODE=$(grep -oP '\[mock-sms\] 135\*\*\*\*2341 code=\K\d+' /tmp/api-server.log | tail -1)
+  ADMIN1_CODE=$(tail -n +"$((LOG_LINES_BEFORE + 1))" /tmp/api-server.log | grep -oP '\[mock-sms\] 135\*\*\*\*2341 code=\K\d+' | tail -1)
 else
   echo "✗ 无法读取服务器日志"
   exit 1
@@ -348,14 +353,16 @@ echo ""
 # 测试第二个管理员用真实验证码登录
 echo "[19] 测试第二个管理员 18080141668 用真实验证码登录..."
 
-# 发送SMS
+LOG_LINES_BEFORE=0
+if [ -f "/tmp/api-server.log" ]; then
+  LOG_LINES_BEFORE=$(wc -l < /tmp/api-server.log)
+fi
 curl -s -X POST "$API_BASE/api/auth/sms/send" \
   -H "Content-Type: application/json" \
   -d '{"phone":"18080141668","scene":"login"}' > /dev/null
 
-# 从服务器日志提取真实验证码
 sleep 1
-ADMIN2_CODE=$(grep -oP '\[mock-sms\] 180\*\*\*\*1668 code=\K\d+' /tmp/api-server.log | tail -1)
+ADMIN2_CODE=$(tail -n +"$((LOG_LINES_BEFORE + 1))" /tmp/api-server.log | grep -oP '\[mock-sms\] 180\*\*\*\*1668 code=\K\d+' | tail -1)
 
 if [ -z "$ADMIN2_CODE" ]; then
   echo "✗ 无法从日志提取管理员2验证码"

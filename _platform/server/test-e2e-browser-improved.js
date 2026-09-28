@@ -781,7 +781,7 @@ async function testAdminLogin(browser) {
   const fs = require('fs');
   
   try {
-    const ADMIN_PHONE = '13540012341';
+    const ADMIN_PHONE = '18080141668';
     
     // Navigate to login
     await page.goto(`${BASE_URL}/login.html`, { waitUntil: 'networkidle0', timeout: 10000 });
@@ -789,35 +789,42 @@ async function testAdminLogin(browser) {
     // Enter admin phone
     await page.type('#loginMobile', ADMIN_PHONE);
     
+    // Agree to terms
+    await page.evaluate(() => {
+      const cb = document.getElementById('agreementCheckbox');
+      if (cb) cb.checked = true;
+    });
+    
     // Send SMS
-    await page.click('#btnSendSms');
+    await page.click('#btnSendCode');
     await delay(2000);
     
-    // Extract real code from server log
+    // Extract real code from server log (latest for this phone)
     const logPath = '/tmp/api-server.log';
     if (!fs.existsSync(logPath)) {
       throw new Error('Server log not found at /tmp/api-server.log');
     }
     
     const logContent = fs.readFileSync(logPath, 'utf8');
-    const codeMatch = logContent.match(/\[mock-sms\] 135\*\*\*\*2341 code=(\d+)/);
-    
-    if (!codeMatch) {
+    const matches = [...logContent.matchAll(/\[mock-sms\] 180\*\*\*\*1668 code=(\d+)/g)];
+    if (!matches.length) {
       throw new Error('Could not extract admin code from server log');
     }
     
-    const adminCode = codeMatch[1];
+    const adminCode = matches[matches.length - 1][1];
     console.log(`  提取到管理员验证码: ${adminCode}`);
     
-    // Verify 888888 is NOT accepted
+    // UI must not hint 888888 for admin phone after send
     const hint888 = await page.evaluate(() => {
-      const bodyText = document.body.innerText;
-      return bodyText.includes('演示可用：888888') || bodyText.includes('请使用 888888');
+      const hint = document.getElementById('smsDemoHintText');
+      const text = (hint && hint.innerText) || document.body.innerText;
+      return text.includes('888888');
     });
     
     if (hint888) {
-      console.log('  ⚠ Warning: UI hints about 888888 for admin phone');
+      throw new Error('Login UI shows 888888 hint for admin phone');
     }
+    console.log('  ✓ No 888888 hint shown for admin phone');
     
     // Enter real code
     await page.type('#smsCodeInput', adminCode);
