@@ -33,15 +33,11 @@ node static-server.js > /tmp/http-server.log 2>&1 &
 HTTP_PID=$!
 echo "✓ Static server started (PID: $HTTP_PID)"
 
-# Go back to server directory
-cd _platform/server
-
-# Wait for server to be ready
+# Wait for servers to be ready
 sleep 2
 
 echo ""
 echo "=== Running test suite ==="
-cd _platform/server
 
 # Function to cleanup on exit
 cleanup() {
