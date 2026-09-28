@@ -1,63 +1,6 @@
 {
   "mentors": [
     {
-      "id": "AP-MUKWSWTX-699",
-      "code": "CD-2026-8876",
-      "status": "pending",
-      "submitTime": "2026-09-28 07:11",
-      "evalGrade": "待教研评级",
-      "reviewComment": "",
-      "publicTeacherCompliance": true,
-      "customSubjects": [],
-      "proofFiles": [
-        {
-          "name": "全国数学联赛高中组四川省二等奖.pdf",
-          "size": "1.8MB",
-          "verified": true,
-          "tag": "学科竞赛"
-        },
-        {
-          "name": "大一在读成绩单与数学分析年级排名前5%.jpg",
-          "size": "2.4MB",
-          "verified": true,
-          "tag": "在校成绩"
-        }
-      ],
-      "styles": [
-        "引导启发解题",
-        "大题压轴模型归纳",
-        "基础漏洞重构",
-        "耐心督学陪读",
-        "错题本高效提分法"
-      ],
-      "subjects": [
-        "初中数学"
-      ],
-      "phone": "13900008916",
-      "realName": "测试导师",
-      "idCard": "510107199001011234",
-      "university": "四川大学",
-      "province": "四川",
-      "degree": "本科在读 (大二及以上)",
-      "chsiCode": "A98F72KL50198821",
-      "chsiStatus": "有效 (在籍)",
-      "chsiMajor": "学信网核验通过",
-      "hourlyRate": 120,
-      "rateDifficulty": "容易成交",
-      "rateTierNote": "预计 24 小时内匹配首个需求",
-      "scoreHighlight": "",
-      "lectureUrl": "https://example.com/demo",
-      "bankName": "招商银行",
-      "bankCardNumber": "6214830123456789",
-      "spacePreference": "青羊金沙文化微网点",
-      "availability": [],
-      "availableSlots": [],
-      "preferredSpaces": [
-        "青羊金沙文化微网点"
-      ],
-      "sensitiveChangePending": false
-    },
-    {
       "id": "AP-8801",
       "code": "CD-2026-8809",
       "realName": "张若愚",
@@ -981,31 +924,6 @@
   ],
   "bookings": [
     {
-      "id": "BK-MUKWTCBE-823",
-      "createdAt": "2026-09-28 07:12",
-      "status": "pending_accept",
-      "declineReason": "",
-      "mentorId": "AP-8802",
-      "tutorId": "AP-8802",
-      "type": "one_off",
-      "sessions": [],
-      "escrowStatus": "frozen",
-      "parentId": "PAR-DEMO-001",
-      "parentPhone": "13980889211",
-      "studentNickname": "乐乐同学",
-      "studentGrade": "初三 (中考冲刺)",
-      "subject": "数学",
-      "space": "青羊金沙文化微网点",
-      "schedule": "周六 14:00-16:00",
-      "amount": 300,
-      "hours": 2,
-      "paymentStatus": "paid",
-      "paymentMethod": "wechat",
-      "paidAt": "2026-09-28T07:12:00.416Z",
-      "transactionId": "MOCK-WX-1790579520416",
-      "updatedAt": "2026-09-28 07:12"
-    },
-    {
       "id": "BK-MUKWCZW2-362",
       "createdAt": "2026-09-28 06:59",
       "status": "pending_accept",
@@ -1811,30 +1729,6 @@
       "phone": "13880123456",
       "createdAt": 1790578784978,
       "expiresAt": 1793170784978
-    },
-    {
-      "tokenHash": "490e3804c111cb8d3bf055b4de3352c8ae23f9c57836085253dd42432f7d0576",
-      "userId": "AP-MUKWSWTX-699",
-      "role": "mentor",
-      "phone": "13900008916",
-      "createdAt": 1790579500342,
-      "expiresAt": 1793171500342
-    },
-    {
-      "tokenHash": "60c88bb210205f2a552e2aba5755eb03d5a41339e44201c93272330c0a64b858",
-      "userId": "PAR-DEMO-001",
-      "role": "parent",
-      "phone": "13980889211",
-      "createdAt": 1790579513869,
-      "expiresAt": 1793171513869
-    },
-    {
-      "tokenHash": "fff5f4c4a39cd0bc2daa416316815adf90e2cb0b262d80b780b2258bf6bd9ea9",
-      "userId": "AP-8802",
-      "role": "mentor",
-      "phone": "13880123456",
-      "createdAt": 1790579522641,
-      "expiresAt": 1793171522641
     }
   ]
 }

@@ -114,44 +114,28 @@ async function testNewParentRegistration(browser) {
     await delay(500);
     await screenshot(page, 'parent-register-step3');
     
-    // Capture console messages during submit
-    const consoleMessages = [];
-    page.on('console', msg => consoleMessages.push(msg.text()));
-    
-    // Submit via JS and wait for redirect
-    const submitResult = await page.evaluate(() => {
-      return new Promise(async (resolve) => {
-        let errorMsg = '';
-        
-        // Override showToast to capture errors
-        const originalToast = window.showToast;
-        window.showToast = (msg, type) => {
-          errorMsg += msg + '; ';
-          if (originalToast) originalToast(msg, type);
-        };
-        
-        // Call the form's submit handler
-        try {
-          if (typeof handleParentSubmit === 'function') {
-            await handleParentSubmit();
-          } else {
-            const submitBtn = document.getElementById('btnSubmitParent');
-            if (submitBtn) submitBtn.click();
-          }
-        } catch (e) {
-          errorMsg += 'Exception: ' + e.message + '; ';
+    // Submit and wait for navigation
+    try {
+      // Start the submission
+      await page.evaluate(() => {
+        if (typeof handleParentSubmit === 'function') {
+          handleParentSubmit();
+        } else {
+          const submitBtn = document.getElementById('btnSubmitParent');
+          if (submitBtn) submitBtn.click();
         }
-        
-        // Wait for redirect (2s delay + navigation time)
-        setTimeout(() => {
-          resolve({
-            url: window.location.href,
-            error: errorMsg,
-            hasSubjectPlans: typeof window.subjectPlans !== 'undefined' && Object.keys(window.subjectPlans).length > 0
-          });
-        }, 4000);
       });
-    });
+      
+      // Wait for navigation to dashboard (with timeout)
+      await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 5000 }).catch(() => {
+        // Navigation might have already happened or might not happen
+      });
+      
+      await delay(1000); // Extra delay for page to settle
+    } catch (e) {
+      // Context might be destroyed if page navigated
+      console.log('  Note: Navigation occurred');
+    }
     
     const finalUrl = page.url();
     if (finalUrl.includes('parent_dashboard.html')) {
@@ -160,7 +144,6 @@ async function testNewParentRegistration(browser) {
       console.log('  ✅ PASSED');
     } else {
       console.log('  Debug: Final URL:', finalUrl);
-      console.log('  Debug: Submit result:', JSON.stringify(submitResult));
       throw new Error(`Expected parent_dashboard.html, got ${finalUrl}`);
     }
   } catch (error) {
@@ -222,40 +205,37 @@ async function testNewMentorOnboarding(browser) {
     await delay(2000);
     await screenshot(page, 'mentor-onboard-filled');
     
-    // Submit via JS and wait for redirect
-    const submitResult = await page.evaluate(() => {
-      return new Promise((resolve) => {
+    // Submit and wait for navigation
+    try {
+      await page.evaluate(() => {
         if (typeof submitApplication === 'function') {
           submitApplication();
         } else {
           const submitBtn = document.querySelector('button[onclick*="submitApplication"]');
           if (submitBtn) submitBtn.click();
         }
-        
-        // Wait for redirect (2s delay + navigation time)
-        setTimeout(() => {
-          resolve({
-            url: window.location.href,
-            hasSuccess: document.body.innerText.includes('申请已提交') || 
-                       document.body.innerText.includes('等待审核') ||
-                       document.body.innerText.includes('入库档案已建立')
-          });
-        }, 4000);
       });
-    });
+      
+      // Wait for navigation to dashboard (with timeout)
+      await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 5000 }).catch(() => {
+        // Navigation might have already happened or might not happen
+      });
+      
+      await delay(1000); // Extra delay for page to settle
+    } catch (e) {
+      // Context might be destroyed if page navigated
+      console.log('  Note: Navigation occurred');
+    }
     
     const finalUrl = page.url();
-    if (submitResult.hasSuccess || finalUrl.includes('mentor_dashboard.html')) {
+    if (finalUrl.includes('mentor_dashboard.html')) {
       console.log('  ✓ Mentor application submitted');
-      if (finalUrl.includes('mentor_dashboard.html')) {
-        console.log('  ✓ Redirected to mentor dashboard');
-      }
+      console.log('  ✓ Redirected to mentor dashboard');
       await screenshot(page, 'mentor-onboard-success');
       console.log('  ✅ PASSED');
     } else {
       console.log('  Debug: Final URL:', finalUrl);
-      console.log('  Debug: Submit result:', JSON.stringify(submitResult));
-      throw new Error('Expected success message or redirect');
+      throw new Error('Expected redirect to mentor_dashboard.html');
     }
   } catch (error) {
     console.error('  ❌ FAILED -', error.message);
