@@ -934,7 +934,12 @@ async function testNoConsoleErrorsOnKeyPages(browser) {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
+      if (msg.type() !== 'error') return;
+      const t = msg.text();
+      // Expected when dashboards load without a session (hydrate 401)
+      if (/Failed to load resource/i.test(t) && /\b401\b/.test(t)) return;
+      if (/status of 401/i.test(t)) return;
+      errors.push(t);
     });
     try {
       await page.goto(`${BASE_URL}/${p}`, { waitUntil: 'networkidle0', timeout: 15000 });
