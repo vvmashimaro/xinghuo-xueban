@@ -1075,7 +1075,11 @@ function updateBooking(id, patch, options) {
   } else if (opts.trust === 'internal') {
     safePatch = Object.assign({}, safePatch);
   } else {
-    safePatch = bookingFields.filterClientBookingPatch(safePatch, opts.role || 'parent');
+    safePatch = bookingFields.filterClientBookingPatch(
+      safePatch,
+      opts.role || 'parent',
+      s.bookings[idx]
+    );
   }
 
   s.bookings[idx] = Object.assign({}, s.bookings[idx], safePatch, { updatedAt: _now() });
