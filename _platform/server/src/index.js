@@ -164,6 +164,12 @@ app.post('/api/auth/login', (req, res) => {
     
     // 检查是否为管理员手机号
     const isAdmin = auth.isAdminPhone(phone);
+    
+    // 如果用户请求 admin 角色但不在管理员白名单中，拒绝登录
+    if (role === 'admin' && !isAdmin) {
+      return fail(res, 403, '该手机号无管理员权限');
+    }
+    
     const actualRole = isAdmin ? 'admin' : role;
     
     // 查找或创建用户记录

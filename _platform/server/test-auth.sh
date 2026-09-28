@@ -113,16 +113,16 @@ echo ""
 
 # 测试 888888 不能获得管理员权限
 echo "[9] 测试 demo 验证码不能获得管理员权限..."
-ADMIN_ATTEMPT=$(curl -s -X POST "$API_BASE/api/auth/login" \
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"phone\":\"$PARENT_PHONE\",\"role\":\"admin\"}")
 
-ADMIN_ROLE=$(echo "$ADMIN_ATTEMPT" | jq -r '.user.role')
-if [ "$ADMIN_ROLE" = "admin" ]; then
-  echo "✗ 错误：普通手机号不应获得管理员权限"
+if [ "$HTTP_CODE" = "403" ]; then
+  echo "✓ 非管理员手机号无法获得管理员权限"
+else
+  echo "✗ 错误：应返回 403，实际返回 $HTTP_CODE"
   exit 1
 fi
-echo "✓ demo 验证码无法获得管理员权限"
 echo ""
 
 # 测试登出

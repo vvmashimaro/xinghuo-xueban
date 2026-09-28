@@ -1100,6 +1100,8 @@
     }
   ],
   "contracts": [],
-  "session": null,
-  "seeded": true
+  "seeded": true,
+  "assessments": [],
+  "users": [],
+  "phoneAuditLogs": []
 }
