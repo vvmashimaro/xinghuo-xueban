@@ -370,24 +370,54 @@ async function testDuplicatePhoneRegistration(browser) {
     });
     
     if (wizardVisible) {
-      // Click weak point via JS
-      await page.evaluate(() => {
-        const cb = document.querySelector('.wizard-topic-cb');
-        if (cb) cb.click();
-      });
-      await delay(300);
+      console.log('  ✓ Wizard opened');
+      // Click weak point
+      const weakPoints = await page.$$('.wizard-topic-cb');
+      if (weakPoints.length > 0) {
+        await weakPoints[0].click();
+        await delay(300);
+      }
       
-      // Click finish (wizard auto-advances to last step)
-      await page.evaluate(() => {
-        const finish = document.getElementById('btnWizardFinish');
-        if (finish && !finish.classList.contains('hidden')) finish.click();
-      });
+      // Click next button
+      await page.click('#btnWizardNext');
       await delay(500);
+      
+      // Check which button is visible now
+      const buttonState = await page.evaluate(() => {
+        const next = document.getElementById('btnWizardNext');
+        const finish = document.getElementById('btnWizardFinish');
+        return {
+          nextVisible: next && !next.classList.contains('hidden'),
+          finishVisible: finish && !finish.classList.contains('hidden')
+        };
+      });
+      console.log(`  Button state after next:`, buttonState);
+      
+      if (buttonState.finishVisible) {
+        // On last step, click finish
+        await page.click('#btnWizardFinish');
+        await delay(1000);
+        console.log('  ✓ Wizard finished');
+      }
+    } else {
+      console.log('  ⚠ Wizard did not open');
     }
     
+    // Check if on step 2 before trying to go to step 3
+    const currentStep = await page.evaluate(() => {
+      const step2 = document.getElementById('stepCard2');
+      const step3 = document.getElementById('stepCard3');
+      if (step2 && !step2.classList.contains('hidden')) return 2;
+      if (step3 && !step3.classList.contains('hidden')) return 3;
+      return 1;
+    });
+    console.log(`  Currently on step: ${currentStep}`);
+    
     // Go to step 3
-    await page.evaluate(() => goToStep(3));
-    await delay(1000);
+    if (currentStep < 3) {
+      await page.evaluate(() => goToStep(3));
+      await delay(1000);
+    }
     
     // Select space and agree
     await page.evaluate(() => {
@@ -408,29 +438,39 @@ async function testDuplicatePhoneRegistration(browser) {
     await screenshot(page, 'duplicate-phone-error');
     
     // Check for inline error element
-    const errorVisible = await page.evaluate(() => {
+    const errorInfo = await page.evaluate(() => {
       const errorDiv = document.getElementById('registrationError');
       const errorText = document.getElementById('registrationErrorText');
-      if (!errorDiv || !errorText) return false;
-      if (errorDiv.classList.contains('hidden')) return false;
-      return errorText.innerText.includes('已注册') || errorText.innerText.includes('请直接登录');
+      return {
+        exists: !!errorDiv && !!errorText,
+        hidden: errorDiv ? errorDiv.classList.contains('hidden') : true,
+        text: errorText ? errorText.innerText : '',
+        bodyText: document.body.innerText.substring(0, 500)
+      };
     });
     
+    console.log('  Error div info:', JSON.stringify(errorInfo, null, 2));
+    
     const currentUrl = page.url();
+    console.log('  Current URL:', currentUrl);
+    
+    const errorVisible = errorInfo.exists && !errorInfo.hidden && 
+      (errorInfo.text.includes('已注册') || errorInfo.text.includes('请直接登录'));
     
     if (errorVisible) {
       console.log('  ✓ Duplicate phone error displayed inline');
       console.log('  ✅ PASSED');
     } else if (currentUrl.includes('parent_register.html')) {
       // Check if error is in page text (fallback)
-      const pageText = await page.evaluate(() => document.body.innerText);
-      if (pageText.includes('该手机号已注册') || pageText.includes('请直接登录')) {
+      if (errorInfo.bodyText.includes('该手机号已注册') || errorInfo.bodyText.includes('请直接登录')) {
         console.log('  ✓ Duplicate phone error shown in page');
         console.log('  ✅ PASSED');
       } else {
+        console.log('  ⚠ Error not visible. Page stayed on register but no error shown.');
         throw new Error('Expected duplicate phone error to be visible');
       }
     } else {
+      console.log('  ⚠ Page navigated away unexpectedly');
       throw new Error('Expected registration to be blocked');
     }
   } catch (error) {
