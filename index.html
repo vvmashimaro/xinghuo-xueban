@@ -1953,6 +1953,7 @@
         const university = document.getElementById('finalUniversityValue').value.trim();
         const chsiCode = document.getElementById('chsiCode').value.trim();
         const bankCard = document.getElementById('bankCardNumber').value.trim();
+        const privacyAgree = document.getElementById('privacyAuthAgree').checked;
         const hint = document.getElementById('l1ValidationHint');
 
         if (!realName || !phone || !idCard) {
@@ -2267,6 +2268,7 @@
         bankCardNumber: document.getElementById('bankCardNumber')?.value || '',
         bankName: document.getElementById('bankName')?.value || '',
         privacyAuthAgree: !!document.getElementById('privacyAuthAgree')?.checked,
+        subjects: checkedSubjects,
         customSubjects: (typeof customSubjectList !== 'undefined' ? customSubjectList.slice() : []),
         hourlyRate: document.getElementById('hourlyRate')?.value || '',
         lectureUrl: document.getElementById('lectureUrl')?.value || '',
@@ -2340,6 +2342,8 @@
         if (draft.university) setVal('finalUniversityValue', draft.university);
         const privacy = document.getElementById('privacyAuthAgree');
         if (privacy) privacy.checked = !!draft.privacyAuthAgree;
+        if (Array.isArray(draft.customSubjects)) {
+          customSubjectList = draft.customSubjects.slice();
           if (typeof renderCustomSubjects === 'function') renderCustomSubjects();
         }
         const subjects = draft.subjects || [];
