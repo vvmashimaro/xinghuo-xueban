@@ -686,6 +686,7 @@ function emptySnapshot() {
     assessments: [],
     users: [],
     phoneAuditLogs: [],
+    authTokens: [],
     seeded: true
   };
 }
@@ -720,6 +721,7 @@ function load() {
     if (!state.assessments) state.assessments = [];
     if (!state.users) state.users = [];
     if (!state.phoneAuditLogs) state.phoneAuditLogs = [];
+    if (!state.authTokens) state.authTokens = [];
     if (state.seeded == null) state.seeded = true;
     
     // 迁移：删除旧的共享 session 字段
@@ -1682,6 +1684,56 @@ function getPhoneAuditLogs(userId, limit = 50) {
     .slice(0, limit);
 }
 
+/* ---------- Auth Tokens ---------- */
+/**
+ * 保存认证令牌
+ */
+function saveAuthToken(tokenData) {
+  const s = getState();
+  if (!s.authTokens) s.authTokens = [];
+  s.authTokens.push(tokenData);
+  persist();
+}
+
+/**
+ * 获取认证令牌
+ */
+function getAuthToken(tokenHash) {
+  const s = getState();
+  if (!s.authTokens) return null;
+  return s.authTokens.find((t) => t.tokenHash === tokenHash) || null;
+}
+
+/**
+ * 删除认证令牌
+ */
+function deleteAuthToken(tokenHash) {
+  const s = getState();
+  if (!s.authTokens) return false;
+  const idx = s.authTokens.findIndex((t) => t.tokenHash === tokenHash);
+  if (idx < 0) return false;
+  s.authTokens.splice(idx, 1);
+  persist();
+  return true;
+}
+
+/**
+ * 清理过期令牌
+ */
+function cleanupExpiredAuthTokens() {
+  const s = getState();
+  if (!s.authTokens) return 0;
+  const now = Date.now();
+  const before = s.authTokens.length;
+  s.authTokens = s.authTokens.filter((t) => t.expiresAt > now);
+  const cleaned = before - s.authTokens.length;
+  if (cleaned > 0) {
+    persist();
+    console.log(`[db] Cleaned ${cleaned} expired auth tokens`);
+  }
+  return cleaned;
+}
+
 // init on require
 load();
 
@@ -1733,5 +1785,9 @@ module.exports = {
   unbindPhone,
   cancelPhone,
   logPhoneAudit,
-  getPhoneAuditLogs
+  getPhoneAuditLogs,
+  saveAuthToken,
+  getAuthToken,
+  deleteAuthToken,
+  cleanupExpiredAuthTokens
 };

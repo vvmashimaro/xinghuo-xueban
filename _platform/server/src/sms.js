@@ -41,14 +41,24 @@ function checkSendCooldown(phone) {
 }
 
 /**
+ * 获取当前日期（Asia/Shanghai 时区）
+ */
+function getCurrentDate() {
+  const now = new Date();
+  // 转换为 Asia/Shanghai 时区（UTC+8）
+  const shanghaiTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  return shanghaiTime.toISOString().split('T')[0];
+}
+
+/**
  * 检查每日发送次数限制
  */
 function checkDailyLimit(phone) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getCurrentDate();
   const record = dailyCount.get(phone);
   
   if (!record || record.date !== today) {
-    dailyCount.set(phone, { count: 1, date: today });
+    // 新的一天，不增加计数，只检查
     return { ok: true };
   }
   
@@ -56,8 +66,21 @@ function checkDailyLimit(phone) {
     return { ok: false, error: '今日发送次数已达上限，请明天再试' };
   }
   
-  record.count += 1;
   return { ok: true };
+}
+
+/**
+ * 记录成功的发送（只有发送成功后才调用）
+ */
+function recordSuccessfulSend(phone) {
+  const today = getCurrentDate();
+  const record = dailyCount.get(phone);
+  
+  if (!record || record.date !== today) {
+    dailyCount.set(phone, { count: 1, date: today });
+  } else {
+    record.count += 1;
+  }
 }
 
 /**
@@ -262,8 +285,9 @@ async function sendSMS(phone, scene = 'login') {
         break;
     }
     
-    // 发送成功，记录冷却时间
+    // 发送成功，记录冷却时间和每日计数
     sendCooldown.set(phone, Date.now());
+    recordSuccessfulSend(phone);
     
     return { success: true, provider: result.provider, message: result.message };
   } catch (error) {
@@ -284,16 +308,26 @@ async function sendSMS(phone, scene = 'login') {
 
 /**
  * 验证短信验证码
+ * @param {string} phone - 手机号
+ * @param {string} code - 验证码
+ * @param {string} scene - 场景
+ * @param {object} auth - auth 模块（用于生成验证票据）
+ * @returns {object} { success, phone, scene, ticket, mock } or { success: false, error }
  */
-function verifySMS(phone, code, scene = 'login') {
+function verifySMS(phone, code, scene = 'login', auth = null) {
   if (!phone || !code) {
     return { success: false, error: '手机号和验证码不能为空' };
   }
   
   // Mock 万能验证码（仅在非生产环境）
+  // 注意：mock 验证码永远不能用于获取管理员权限
   if (!isProduction() && code === '888888') {
     console.log(`[SMS Verify] Mock 验证通过：${phone}`);
-    return { success: true, phone, scene, mock: true };
+    
+    // 生成验证票据
+    const ticket = auth ? auth.createVerificationTicket(phone) : null;
+    
+    return { success: true, phone, scene, mock: true, ticket };
   }
   
   // 生产环境禁止 mock 验证码
@@ -332,7 +366,10 @@ function verifySMS(phone, code, scene = 'login') {
   // 验证成功，删除验证码
   codeStore.delete(phone);
   
-  return { success: true, phone, scene };
+  // 生成验证票据
+  const ticket = auth ? auth.createVerificationTicket(phone) : null;
+  
+  return { success: true, phone, scene, ticket };
 }
 
 /**
