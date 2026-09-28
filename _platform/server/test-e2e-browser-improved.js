@@ -11,8 +11,8 @@ const path = require('path');
 const BASE_URL = 'http://127.0.0.1:8080';
 const API_BASE = 'http://127.0.0.1:8787';
 const PARENT_PHONE = '13980889211';
-const NEW_PARENT_PHONE = '13900009' + Math.floor(Math.random() * 100).toString().padStart(2, '0');
-const NEW_MENTOR_PHONE = '13900008' + Math.floor(Math.random() * 100).toString().padStart(2, '0');
+const NEW_PARENT_PHONE = '139000092' + Math.floor(Math.random() * 100).toString().padStart(2, '0'); // 11 digits: 139000092 + 2
+const NEW_MENTOR_PHONE = '139000089' + Math.floor(Math.random() * 100).toString().padStart(2, '0'); // 11 digits: 139000089 + 2
 const CODE = '888888';
 
 const ARTIFACTS_DIR = path.join(__dirname, '../../artifacts');
