@@ -568,6 +568,56 @@ const StorageService = {
     }
   },
 
+  async verifySMS(phone, code, scene) {
+    try {
+      const result = await _request('POST', '/api/auth/sms/verify', { phone, code, scene });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '验证失败' };
+    }
+  },
+
+  async register(ticket, role, profile) {
+    try {
+      const result = await _request('POST', '/api/auth/register', { ticket, role, profile });
+      if (result.success && result.token) {
+        // Store auth token
+        wx.setStorageSync(KEYS.authToken, result.token);
+        // Store user session
+        this.setSession({ userId: result.user.id, phone: result.user.phone, role: result.user.role });
+        // Store profile based on role
+        if (role === 'parent' && result.user.profile) {
+          this.saveParent(result.user.profile);
+        } else if (role === 'mentor' && result.user.profile) {
+          this.saveMentor(result.user.profile);
+        }
+      }
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '注册失败' };
+    }
+  },
+
+  async login(ticket) {
+    try {
+      const result = await _request('POST', '/api/auth/login', { ticket });
+      if (result.success && result.token) {
+        // Store auth token
+        wx.setStorageSync(KEYS.authToken, result.token);
+        // Store user session
+        this.setSession({ userId: result.user.id, phone: result.user.phone, role: result.user.role });
+      }
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '登录失败' };
+    }
+  },
+
+  isLoggedIn() {
+    const token = wx.getStorageSync(KEYS.authToken);
+    return !!token;
+  },
+
   async getWeChatPhone(code) {
     try {
       const result = await _request('POST', '/api/wx/phone', { code });
