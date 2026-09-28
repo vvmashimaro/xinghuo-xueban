@@ -1189,13 +1189,16 @@
       return list[idx];
     },
 
-    updateBooking: function (id, patch) {
+    updateBooking: function (id, patch, options) {
+      const opts = options || {};
       const list = this.getBookings();
       const idx = list.findIndex((b) => b.id === id);
       if (idx < 0) return null;
       list[idx] = Object.assign({}, list[idx], patch || {}, { updatedAt: _now() });
       this.saveBookings(list);
-      _apiSafe('PATCH', '/api/bookings/' + encodeURIComponent(id), patch || {});
+      if (opts.serverSync !== false) {
+        _apiSafe('PATCH', '/api/bookings/' + encodeURIComponent(id), patch || {});
+      }
       return list[idx];
     },
 
@@ -1310,7 +1313,7 @@
         booking.sessions[sIdx] = session;
         list[idx] = booking;
         this.saveBookings(list);
-        this.updateBooking(bookingId, { sessions: booking.sessions });
+        this.updateBooking(bookingId, { sessions: booking.sessions }, { serverSync: false });
         return { ok: false, error: '请假须提前一日确认（开课前满 24 小时）', tooLate: true, booking: booking };
       }
       session.status = 'leave_pending';
@@ -1319,7 +1322,7 @@
       booking.sessions[sIdx] = session;
       list[idx] = Object.assign({}, booking, { updatedAt: _now() });
       this.saveBookings(list);
-      this.updateBooking(bookingId, { sessions: booking.sessions, updatedAt: _now() });
+      this.updateBooking(bookingId, { sessions: booking.sessions, updatedAt: _now() }, { serverSync: false });
       _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/leave', {
         sessionId: sessionId, action: 'request', byRole: byRole || 'parent'
       });
@@ -1354,7 +1357,7 @@
             booking.sessions[sIdx] = session;
             list[idx] = booking;
             this.saveBookings(list);
-            this.updateBooking(bookingId, { sessions: booking.sessions });
+            this.updateBooking(bookingId, { sessions: booking.sessions }, { serverSync: false });
             return { ok: false, error: '已不足提前一日，无法批准请假', tooLate: true, booking: booking };
           }
         }
@@ -1365,7 +1368,7 @@
       booking.sessions[sIdx] = session;
       list[idx] = Object.assign({}, booking, { updatedAt: _now() });
       this.saveBookings(list);
-      this.updateBooking(bookingId, { sessions: booking.sessions });
+      this.updateBooking(bookingId, { sessions: booking.sessions }, { serverSync: false });
       _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/leave', {
         sessionId: sessionId, action: approve === false ? 'reject' : 'confirm'
       });
@@ -1414,7 +1417,11 @@
       }
       list[idx] = Object.assign({}, booking, { updatedAt: _now() });
       this.saveBookings(list);
-      this.updateBooking(bookingId, { sessions: booking.sessions, completedAt: booking.completedAt, updatedAt: _now() });
+      this.updateBooking(
+        bookingId,
+        { sessions: booking.sessions, completedAt: booking.completedAt, updatedAt: _now() },
+        { serverSync: false }
+      );
       _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/complete', {
         sessionId: sessionId,
         completedBy: session.completedBy,
@@ -1460,7 +1467,9 @@
       booking.sessions[sIdx] = session;
       list[idx] = Object.assign({}, booking, { updatedAt: _now() });
       this.saveBookings(list);
-      this.updateBooking(bookingId, { sessions: booking.sessions });
+      this.updateBooking(bookingId, {
+        sessions: [{ id: sessionId, classSummary: normalized }]
+      });
       _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/summary', {
         sessionId: sessionId,
         classSummary: normalized
@@ -1487,7 +1496,9 @@
       booking.sessions[sIdx] = session;
       list[idx] = Object.assign({}, booking, { updatedAt: _now() });
       this.saveBookings(list);
-      this.updateBooking(bookingId, { sessions: booking.sessions });
+      this.updateBooking(bookingId, {
+        sessions: [{ id: sessionId, parentMessage: session.parentMessage }]
+      });
       _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/parent-message', {
         sessionId: sessionId,
         parentMessage: session.parentMessage

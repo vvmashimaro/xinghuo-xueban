@@ -64,8 +64,7 @@ const PARENT_PATCH_ALLOW = new Set([
 ]);
 
 const MENTOR_PATCH_ALLOW = new Set([
-  'sessions',
-  'completedAt'
+  'sessions'
 ]);
 
 const PAYMENT_PATCH_ALLOW = new Set([
@@ -77,25 +76,8 @@ const PAYMENT_PATCH_ALLOW = new Set([
   'amount'
 ]);
 
-const SESSION_CLIENT_ALLOW = new Set([
-  'id',
-  'date',
-  'weekday',
-  'weekdayLabel',
-  'timeStart',
-  'timeEnd',
-  'timeLabel',
-  'status',
-  'leaveRequestedAt',
-  'leaveConfirmedAt',
-  'leaveRequestedBy',
-  'leaveDeadline',
-  'completedAt',
-  'releaseAt',
-  'completedBy',
-  'classSummary',
-  'parentMessage'
-]);
+const PARENT_SESSION_PATCH_KEYS = new Set(['parentMessage']);
+const MENTOR_SESSION_PATCH_KEYS = new Set(['classSummary']);
 
 function pickAllowed(obj, allowedSet) {
   const out = {};
@@ -116,14 +98,38 @@ function stripProtectedFields(obj) {
   return out;
 }
 
-function sanitizeClientSessions(sessions) {
-  if (!Array.isArray(sessions)) return sessions;
-  return sessions.map((sess) => {
-    if (!sess || typeof sess !== 'object') return sess;
-    const picked = pickAllowed(sess, SESSION_CLIENT_ALLOW);
-    delete picked.escrowStatus;
-    delete picked.amount;
-    return picked;
+function bookingIsPaid(booking) {
+  return !!(booking && booking.paymentStatus === 'paid');
+}
+
+/**
+ * Merge client session patches into existing sessions by id.
+ * Only parentMessage (parent) or classSummary (mentor). No add/remove, no lifecycle fields.
+ */
+function mergeClientSessionPatch(existingSessions, patchSessions, role) {
+  if (!Array.isArray(patchSessions)) return undefined;
+  const existing = Array.isArray(existingSessions) ? existingSessions : [];
+  const allowedKeys =
+    role === 'mentor' ? MENTOR_SESSION_PATCH_KEYS : PARENT_SESSION_PATCH_KEYS;
+  if (role !== 'mentor' && role !== 'parent') {
+    return existing.slice();
+  }
+
+  const patchById = new Map();
+  for (const s of patchSessions) {
+    if (s && s.id) patchById.set(String(s.id), s);
+  }
+
+  return existing.map((sess) => {
+    const patch = patchById.get(String(sess.id));
+    if (!patch) return sess;
+    const next = Object.assign({}, sess);
+    for (const key of allowedKeys) {
+      if (patch[key] !== undefined) {
+        next[key] = patch[key];
+      }
+    }
+    return next;
   });
 }
 
@@ -131,14 +137,25 @@ function pickBookingCreateFields(raw) {
   return pickAllowed(raw || {}, BOOKING_CREATE_ALLOW);
 }
 
-function filterClientBookingPatch(patch, role) {
+function filterClientBookingPatch(patch, role, existingBooking) {
   const allowed =
     role === 'mentor' ? MENTOR_PATCH_ALLOW : role === 'parent' ? PARENT_PATCH_ALLOW : new Set();
   let next = pickAllowed(patch || {}, allowed);
   next = stripProtectedFields(next);
-  if (next.sessions !== undefined) {
-    next.sessions = sanitizeClientSessions(next.sessions);
+
+  if (bookingIsPaid(existingBooking)) {
+    delete next.schedule;
+    delete next.timeSlot;
   }
+
+  if (next.sessions !== undefined) {
+    next.sessions = mergeClientSessionPatch(
+      existingBooking && existingBooking.sessions,
+      next.sessions,
+      role
+    );
+  }
+
   return next;
 }
 
@@ -158,6 +175,8 @@ module.exports = {
   filterClientBookingPatch,
   filterPaymentBookingPatch,
   filterAdminBookingPatch,
+  mergeClientSessionPatch,
+  bookingIsPaid,
   BOOKING_CREATE_ALLOW,
   BOOKING_PROTECTED
 };
