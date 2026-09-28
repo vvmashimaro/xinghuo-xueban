@@ -11,8 +11,14 @@
   // 自动检测 API_BASE
   let apiBase = 'http://127.0.0.1:8787';
   if (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
-    // 如果页面通过 http(s) 访问，默认使用同源 API
-    apiBase = window.location.origin;
+    const hostname = window.location.hostname;
+    // 本地开发环境：显式使用 API 端口
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      apiBase = `http://${hostname}:8787`;
+    } else {
+      // 生产/部署环境：使用同源 API (nginx 代理)
+      apiBase = window.location.origin;
+    }
   }
   
   window.XH_CONFIG = window.XH_CONFIG || {

@@ -566,8 +566,17 @@
               return;
             }
 
-            // Step 3: 登录成功，确定跳转目标
+            // Step 3: 登录成功，hydrate数据，确定跳转目标
             const user = loginResult.user;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>加载数据...</span>';
+            
+            // Hydrate from server to get latest data
+            try {
+              await StorageService.hydrateFromServer();
+            } catch (e) {
+              console.warn('Hydration failed, using local data:', e);
+            }
+            
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>登录成功，正在进入...</span>';
             const roleLabel = user.role === 'mentor' ? '导师工作台' : (user.role === 'admin' ? '管理审核台' : '预约中心');
             showToast(`欢迎回来！正在进入${roleLabel}...`);
