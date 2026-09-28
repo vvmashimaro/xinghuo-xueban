@@ -556,6 +556,71 @@ const StorageService = {
     if (!m) return [];
     if (Array.isArray(m.availability) && m.availability.length) return m.availability;
     return _parseSlotLabelToAvailability(m.availableSlots || []);
+  },
+
+  // Phone-related operations
+  async sendSMS(phone, scene) {
+    try {
+      const result = await _request('POST', '/api/auth/sms/send', { phone, scene });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '发送失败' };
+    }
+  },
+
+  async getWeChatPhone(code) {
+    try {
+      const result = await _request('POST', '/api/wx/phone', { code });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '获取手机号失败' };
+    }
+  },
+
+  async bindPhone(phone, source) {
+    try {
+      const result = await _request('POST', '/api/auth/phone/bind', { phone, source });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '绑定失败' };
+    }
+  },
+
+  async unbindPhone() {
+    try {
+      const result = await _request('POST', '/api/auth/phone/unbind', {});
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '解绑失败' };
+    }
+  },
+
+  async cancelAccount(reason) {
+    try {
+      const result = await _request('POST', '/api/auth/phone/cancel', { reason });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '注销失败' };
+    }
+  },
+
+  async getPhoneAuditStatus() {
+    try {
+      const result = await _request('GET', '/api/auth/phone/audit', null);
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '查询失败' };
+    }
+  },
+
+  async auditLog(action, source, success) {
+    try {
+      const result = await _request('POST', '/api/auth/phone/audit', { action, source, success });
+      return result;
+    } catch (e) {
+      console.warn('Audit log failed:', e);
+      return { success: false };
+    }
   }
 };
 
