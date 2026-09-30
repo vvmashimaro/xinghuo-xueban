@@ -79,9 +79,28 @@
   window.applySmartWarehouseGating = applySmartWarehouseGating;
   window.getLoginRoleSubtitle = getLoginRoleSubtitle;
 
+  async function hydrateFlagsFromServer() {
+    try {
+      const base = (window.XH_CONFIG && window.XH_CONFIG.API_BASE) || 'http://127.0.0.1:8787';
+      const res = await fetch(base + '/api/feature-flags');
+      if (!res.ok) return;
+      const flags = await res.json();
+      if (flags && window.XH_CONFIG && flags.FEATURE_SMART_WAREHOUSE != null) {
+        window.XH_CONFIG.FEATURE_SMART_WAREHOUSE = !!flags.FEATURE_SMART_WAREHOUSE;
+        applySmartWarehouseGating();
+      }
+    } catch (e) {
+      /* keep local default */
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applySmartWarehouseGating);
+    document.addEventListener('DOMContentLoaded', function () {
+      applySmartWarehouseGating();
+      hydrateFlagsFromServer();
+    });
   } else {
     applySmartWarehouseGating();
+    hydrateFlagsFromServer();
   }
 })();
