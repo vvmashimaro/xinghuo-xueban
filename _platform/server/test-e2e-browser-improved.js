@@ -1037,7 +1037,7 @@ async function testViewportNoHorizontalOverflow(browser) {
 }
 
 async function testAdminLogin(browser) {
-  console.log('\n[Test 10] Admin login with real code lands on admin_audit.html');
+  console.log('\n[Test 10] Admin login with real code lands on admin-saas console');
   const page = await browser.newPage();
   const fs = require('fs');
   
@@ -1097,10 +1097,10 @@ async function testAdminLogin(browser) {
     // Check landed on admin_audit.html
     const finalUrl = page.url();
     
-    if (finalUrl.includes('admin_audit.html')) {
-      console.log('  ✓ Admin logged in and landed on admin_audit.html');
+    if (finalUrl.includes('admin-saas')) {
+      console.log('  ✓ Admin logged in and landed on 星火运营中台 (admin-saas)');
     } else {
-      throw new Error(`Admin did not land on admin_audit.html, instead: ${finalUrl}`);
+      throw new Error(`Admin did not land on admin-saas, instead: ${finalUrl}`);
     }
     
     // Verify not redirected to registration or other pages

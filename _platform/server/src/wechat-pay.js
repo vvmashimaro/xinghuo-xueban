@@ -295,6 +295,29 @@ function handlePaymentNotify(body, headers) {
 /**
  * 查询订单状态
  */
+/**
+ * Mock / stub refund (real WeChat refund API TODO when config complete)
+ */
+function refundOrder(outTradeNo, reason) {
+  if (mockOrders.has(outTradeNo)) {
+    const order = mockOrders.get(outTradeNo);
+    if (order.status !== 'SUCCESS') {
+      return { success: false, error: '订单未支付，无法退款' };
+    }
+    order.status = 'REFUND';
+    order.refundTime = new Date().toISOString();
+    order.refundReason = reason || '';
+    console.log(`[WeChat Pay Mock] 退款成功: ${outTradeNo}`);
+    return { success: true, outTradeNo, mock: true };
+  }
+  if (!isConfigComplete()) {
+    return { success: true, outTradeNo, mock: true, message: 'Mock 退款（未配置微信支付）' };
+  }
+  // TODO: 调用微信支付退款 API
+  console.log(`[WeChat Pay] 退款占位: ${outTradeNo}`);
+  return { success: false, error: '真实微信退款接口尚未接入' };
+}
+
 function getOrderStatus(outTradeNo) {
   // Mock 订单
   if (mockOrders.has(outTradeNo)) {
@@ -329,5 +352,6 @@ module.exports = {
   isConfigComplete,
   isMockPayAllowed,
   registerMockOrder,
-  hydrateMockOrders
+  hydrateMockOrders,
+  refundOrder
 };

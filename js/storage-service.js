@@ -652,11 +652,20 @@
           const user = await this.getCurrentUser();
           
           if (user && user.role === 'admin') {
-            // 管理员拉取完整快照
-            const snap = await _api('GET', '/api/snapshot');
-            _applySnapshot(snap);
+            const mentors = await _apiSafe('GET', '/api/mentors');
+            const parents = await _apiSafe('GET', '/api/parents');
+            const bookings = await _apiSafe('GET', '/api/bookings');
+            const contracts = await _apiSafe('GET', '/api/contracts');
+            const assessments = await _apiSafe('GET', '/api/assessments');
+            const feedback = await _apiSafe('GET', '/api/feedback');
+            if (mentors) _write(KEYS.mentors, mentors);
+            if (parents) _write(KEYS.parents, parents);
+            if (bookings) _write(KEYS.bookings, bookings);
+            if (contracts) _write(KEYS.contracts, contracts);
+            if (assessments) _write(KEYS.assessments, assessments);
+            if (feedback && Array.isArray(feedback)) _write(KEYS.feedbackTickets, feedback);
             _hydrated = true;
-            return snap;
+            return { mentors, parents, bookings, contracts, assessments, feedback };
           } else if (user && (user.role === 'parent' || user.role === 'mentor')) {
             // 普通用户从服务器拉取自己的数据
             const mentors = await _apiSafe('GET', '/api/mentors');
@@ -666,6 +675,11 @@
               assessments = await _apiSafe('GET', '/api/assessments');
             }
             
+            const feedback = await _apiSafe('GET', '/api/feedback');
+            if (feedback && Array.isArray(feedback)) {
+              _write(KEYS.feedbackTickets, feedback);
+            }
+
             if (mentors) _write(KEYS.mentors, mentors);
             if (bookings) _write(KEYS.bookings, bookings);
             if (assessments) _write(KEYS.assessments, assessments);
@@ -887,7 +901,9 @@
     },
 
     getApprovedMentors: function () {
-      return this.getMentors().filter((m) => m.status === 'approved');
+      return this.getMentors().filter(
+        (m) => m.status === 'approved' && m.acceptingOrders !== false
+      );
     },
 
     /* ---------- Parents ---------- */

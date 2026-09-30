@@ -632,6 +632,51 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
   }
 });
 
+app.get('/api/pay/orders', requireAdmin, (req, res) => {
+  try {
+    const orders = db.listPayOrders(req.query || {});
+    ok(res, { orders, total: orders.length });
+  } catch (error) {
+    console.error('[List Pay Orders Error]', error);
+    fail(res, 500, '查询订单列表失败');
+  }
+});
+
+app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, (req, res) => {
+  try {
+    const { outTradeNo } = req.params;
+    const body = req.body || {};
+    const payOrder = db.getPayOrder(outTradeNo);
+    if (!payOrder) {
+      return fail(res, 404, '订单不存在');
+    }
+    const allowMockRefund =
+      wechatPay.isMockPayAllowed() &&
+      (!wechatPay.isConfigComplete() || payOrder.mock || sms.getProvider() === 'mock');
+    if (allowMockRefund) {
+      wechatPay.refundOrder(outTradeNo, body.reason);
+    } else if (wechatPay.isConfigComplete()) {
+      const wxResult = wechatPay.refundOrder(outTradeNo, body.reason);
+      if (!wxResult.success) {
+        return fail(res, 400, wxResult.error || '微信退款失败');
+      }
+    } else {
+      return fail(res, 400, '当前支付环境不支持退款');
+    }
+    const result = db.refundPayOrder(outTradeNo, {
+      reason: body.reason || '',
+      refundedBy: req.user.phone || req.user.userId || 'admin'
+    });
+    if (!result.ok) {
+      return fail(res, 400, result.error);
+    }
+    ok(res, result);
+  } catch (error) {
+    console.error('[Refund Error]', error);
+    fail(res, 500, error.message || '退款失败');
+  }
+});
+
 app.get('/api/pay/orders/:outTradeNo', requireAuth, (req, res) => {
   try {
     const { outTradeNo } = req.params;
@@ -672,7 +717,7 @@ app.get('/api/mentors', requireAuth, (req, res) => {
   } else if (req.user.role === 'parent') {
     // 家长可以看已审核的导师列表，但只返回公开信息（不含手机号等敏感字段）
     const mentors = db.getMentors()
-      .filter(m => m.status === 'approved')
+      .filter(m => m.status === 'approved' && m.acceptingOrders !== false)
       .map(publicMentorProfile);
     ok(res, mentors);
   } else if (req.user.role === 'mentor') {
@@ -1042,6 +1087,105 @@ app.post('/api/bookings/process-escrow', requireAuth, (req, res) => {
   }
   
   ok(res, db.processEscrowReleases());
+});
+
+/* ========== Feedback ========== */
+app.get('/api/feedback', requireAuth, (req, res) => {
+  try {
+    let tickets = db.getFeedbackTickets();
+    if (req.user.role === 'admin') {
+      return ok(res, tickets);
+    }
+    if (req.user.role === 'mentor') {
+      tickets = tickets.filter((t) => t.mentorId === req.user.userId);
+      return ok(res, tickets);
+    }
+    if (req.user.role === 'parent') {
+      tickets = tickets.filter(
+        (t) => t.parentId === req.user.userId || t.submitterId === req.user.userId
+      );
+      return ok(res, tickets);
+    }
+    return fail(res, 403, '无权限');
+  } catch (error) {
+    console.error('[Feedback List Error]', error);
+    fail(res, 500, '查询反馈失败');
+  }
+});
+
+function buildFeedbackCreateFromRequest(req) {
+  const body = req.body || {};
+  const title = String(body.title || '').trim();
+  const detail = String(body.detail || body.content || '').trim();
+  const payload = {
+    title,
+    detail,
+    type: body.type ? String(body.type).trim() : '功能问题',
+    bookingId: body.bookingId ? String(body.bookingId).trim() : '',
+    contact: body.contact ? String(body.contact).trim() : '',
+    submitterId: req.user.userId,
+    submitterRole: req.user.role
+  };
+
+  if (req.user.role === 'admin') {
+    if (body.mentorId) payload.mentorId = String(body.mentorId).trim();
+    if (body.parentId) payload.parentId = String(body.parentId).trim();
+    if (body.mentorName) payload.mentorName = String(body.mentorName).trim();
+  } else if (req.user.role === 'mentor') {
+    const mentor = db.getMentorById(req.user.userId);
+    payload.mentorId = req.user.userId;
+    payload.mentorName = mentor ? mentor.realName || '导师' : '导师';
+  } else if (req.user.role === 'parent') {
+    payload.parentId = req.user.userId;
+    const parent = db.getParents().find((p) => p.id === req.user.userId);
+    if (parent && !payload.contact) payload.contact = parent.phone || '';
+  }
+
+  return payload;
+}
+
+app.post('/api/feedback', requireAuth, (req, res) => {
+  try {
+    const payload = buildFeedbackCreateFromRequest(req);
+    if (!payload.title || !payload.detail) {
+      return fail(res, 400, '缺少标题或详细说明');
+    }
+    const record = db.addFeedbackTicket(payload);
+    ok(res, record);
+  } catch (error) {
+    console.error('[Feedback Create Error]', error);
+    fail(res, 500, '提交反馈失败');
+  }
+});
+
+app.patch('/api/feedback/:id', requireAdmin, (req, res) => {
+  try {
+    const updated = db.updateFeedbackTicket(req.params.id, req.body || {});
+    if (!updated) return fail(res, 404, '反馈不存在');
+    ok(res, updated);
+  } catch (error) {
+    console.error('[Feedback Update Error]', error);
+    fail(res, 500, '更新反馈失败');
+  }
+});
+
+/* ========== Feature flags ========== */
+app.get('/api/feature-flags', (req, res) => {
+  ok(res, db.getFeatureFlags());
+});
+
+app.get('/api/admin/feature-flags', requireAuth, (req, res) => {
+  ok(res, db.getFeatureFlags());
+});
+
+app.patch('/api/admin/feature-flags', requireAdmin, (req, res) => {
+  try {
+    const flags = db.updateFeatureFlags(req.body || {});
+    ok(res, flags);
+  } catch (error) {
+    console.error('[Feature Flags Error]', error);
+    fail(res, 500, '更新功能开关失败');
+  }
 });
 
 

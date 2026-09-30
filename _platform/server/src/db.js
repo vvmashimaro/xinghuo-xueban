@@ -99,6 +99,7 @@ function withMentorDefaults(m) {
   if (copy.bankName == null) copy.bankName = '招商银行';
   if (copy.bankCardNumber == null) copy.bankCardNumber = '';
   if (copy.sensitiveChangePending == null) copy.sensitiveChangePending = false;
+  if (copy.acceptingOrders == null) copy.acceptingOrders = true;
   return copy;
 }
 
@@ -688,6 +689,10 @@ function emptySnapshot() {
     contracts: [],
     payOrders: [],
     assessments: [],
+    feedbackTickets: [],
+    featureFlags: {
+      FEATURE_SMART_WAREHOUSE: false
+    },
     users: [],
     phoneAuditLogs: [],
     authTokens: [],
@@ -727,6 +732,13 @@ function load() {
     if (!state.users) state.users = [];
     if (!state.phoneAuditLogs) state.phoneAuditLogs = [];
     if (!state.authTokens) state.authTokens = [];
+    if (!state.feedbackTickets) state.feedbackTickets = [];
+    if (!state.featureFlags || typeof state.featureFlags !== 'object') {
+      state.featureFlags = { FEATURE_SMART_WAREHOUSE: false };
+    }
+    if (state.featureFlags.FEATURE_SMART_WAREHOUSE == null) {
+      state.featureFlags.FEATURE_SMART_WAREHOUSE = false;
+    }
     if (state.seeded == null) state.seeded = true;
     
     // 迁移：删除旧的共享 session 字段
@@ -994,6 +1006,12 @@ function addBooking(booking) {
   const mentor = mentorId ? getMentorById(mentorId) : null;
   if (bookingType !== 'trial' && !mentor) {
     return { ok: false, error: '导师不存在', code: 'MENTOR_NOT_FOUND' };
+  }
+  if (mentor && mentor.acceptingOrders === false) {
+    return { ok: false, error: '该导师暂不接收新订单', code: 'MENTOR_NOT_ACCEPTING' };
+  }
+  if (mentor && mentor.status !== 'approved' && bookingType !== 'trial') {
+    return { ok: false, error: '导师未通过审核，暂不可预约', code: 'MENTOR_NOT_APPROVED' };
   }
   const computed = pricing.computeBookingPricing(mentor, booking);
   if (computed.error) {
@@ -1428,6 +1446,175 @@ function savePayOrder(order) {
   return record;
 }
 
+function listPayOrders(filters) {
+  const q = filters || {};
+  let orders = getPayOrders();
+  if (q.status) {
+    const st = String(q.status).trim();
+    orders = orders.filter((o) => String(o.status || '') === st);
+  }
+  if (q.outTradeNo) {
+    const needle = String(q.outTradeNo).trim();
+    orders = orders.filter((o) => String(o.outTradeNo || '').indexOf(needle) >= 0);
+  }
+  if (q.bookingId) {
+    const bid = String(q.bookingId).trim();
+    orders = orders.filter((o) => String(o.bookingId || '') === bid);
+  }
+  if (q.from || q.to) {
+    const fromMs = q.from ? Date.parse(String(q.from)) : null;
+    const toMs = q.to ? Date.parse(String(q.to)) : null;
+    orders = orders.filter((o) => {
+      const t = Date.parse(o.successTime || o.createTime || '');
+      if (Number.isNaN(t)) return !q.from && !q.to;
+      if (fromMs && !Number.isNaN(fromMs) && t < fromMs) return false;
+      if (toMs && !Number.isNaN(toMs) && t > toMs) return false;
+      return true;
+    });
+  }
+  orders.sort((a, b) => {
+    const ta = Date.parse(a.createTime || '') || 0;
+    const tb = Date.parse(b.createTime || '') || 0;
+    return tb - ta;
+  });
+  const limit = Math.min(500, Math.max(1, parseInt(q.limit, 10) || 100));
+  return orders.slice(0, limit);
+}
+
+function refundPayOrder(outTradeNo, meta) {
+  const order = getPayOrder(outTradeNo);
+  if (!order) return { ok: false, error: '订单不存在' };
+  if (order.status === 'REFUND' || order.status === 'REFUNDED') {
+    return { ok: false, error: '订单已退款' };
+  }
+  if (order.status !== 'SUCCESS') {
+    return { ok: false, error: '仅已支付订单可退款' };
+  }
+  const refundTime = _now();
+  const updatedOrder = savePayOrder(
+    Object.assign({}, order, {
+      status: 'REFUND',
+      refundTime,
+      refundReason: (meta && meta.reason) || '',
+      refundedBy: (meta && meta.refundedBy) || 'admin'
+    })
+  );
+  let booking = null;
+  if (order.bookingId) {
+    booking = getBookings().find((b) => b.id === order.bookingId) || null;
+    if (booking) {
+      const escrowPatch =
+        booking.escrowStatus === 'released'
+          ? { escrowStatus: 'released' }
+          : { escrowStatus: 'refunded' };
+      booking = updateBooking(
+        booking.id,
+        Object.assign(
+          {
+            paymentStatus: 'refunded',
+            refundedAt: refundTime
+          },
+          escrowPatch
+        ),
+        { trust: 'admin' }
+      );
+    }
+  }
+  return { ok: true, order: updatedOrder, booking };
+}
+
+/* ---------- Feedback tickets ---------- */
+function getFeedbackTickets() {
+  return (getState().feedbackTickets || []).slice();
+}
+
+function getFeedbackTicketById(id) {
+  if (!id) return null;
+  return (getState().feedbackTickets || []).find((t) => t.id === id) || null;
+}
+
+const FEEDBACK_CREATE_FIELDS = [
+  'title',
+  'detail',
+  'type',
+  'bookingId',
+  'contact',
+  'mentorId',
+  'mentorName',
+  'parentId',
+  'submitterId',
+  'submitterRole'
+];
+
+function addFeedbackTicket(ticket) {
+  const s = getState();
+  if (!s.feedbackTickets) s.feedbackTickets = [];
+  const incoming = ticket || {};
+  const safe = {};
+  FEEDBACK_CREATE_FIELDS.forEach((key) => {
+    if (incoming[key] != null && incoming[key] !== '') {
+      safe[key] = incoming[key];
+    }
+  });
+  const record = Object.assign(
+    {
+      id: _uid('TK'),
+      createdAt: _now(),
+      status: '待处理',
+      handlerNote: '',
+      handledAt: '',
+      handledBy: ''
+    },
+    safe,
+    {
+      status: '待处理',
+      handlerNote: '',
+      handledAt: '',
+      handledBy: '',
+      updatedAt: _now()
+    }
+  );
+  s.feedbackTickets.unshift(record);
+  persist();
+  return record;
+}
+
+function updateFeedbackTicket(id, patch) {
+  const s = getState();
+  if (!s.feedbackTickets) s.feedbackTickets = [];
+  const idx = s.feedbackTickets.findIndex((t) => t.id === id);
+  if (idx < 0) return null;
+  s.feedbackTickets[idx] = Object.assign({}, s.feedbackTickets[idx], patch || {}, { updatedAt: _now() });
+  persist();
+  return s.feedbackTickets[idx];
+}
+
+/* ---------- Feature flags ---------- */
+const DEFAULT_FEATURE_FLAGS = {
+  FEATURE_SMART_WAREHOUSE: false
+};
+
+function getFeatureFlags() {
+  const s = getState();
+  return Object.assign({}, DEFAULT_FEATURE_FLAGS, s.featureFlags || {});
+}
+
+function updateFeatureFlags(patch) {
+  const s = getState();
+  if (!s.featureFlags || typeof s.featureFlags !== 'object') {
+    s.featureFlags = Object.assign({}, DEFAULT_FEATURE_FLAGS);
+  }
+  const next = Object.assign({}, s.featureFlags);
+  Object.keys(patch || {}).forEach((key) => {
+    if (key.indexOf('FEATURE_') === 0) {
+      next[key] = !!patch[key];
+    }
+  });
+  s.featureFlags = next;
+  persist();
+  return getFeatureFlags();
+}
+
 /* ---------- Session ---------- */
 // 旧的共享 session 已废弃，改用基于令牌的认证（见 auth.js）
 // 保留导出以兼容旧代码，但返回空对象
@@ -1524,13 +1711,15 @@ function mentorToTutorCard(mentor, parentProfile) {
 function matchTutors(parentProfile) {
   seedIfEmpty();
   const parent = parentProfile || getState().parents[0] || getSeedParent();
-  const approved = getState().mentors.filter((m) => m.status === 'approved');
+  const approved = getState().mentors.filter(
+    (m) => m.status === 'approved' && m.acceptingOrders !== false
+  );
   let tutors = approved.map((m) => mentorToTutorCard(m, parent));
   tutors.sort((a, b) => b.matchScore - a.matchScore);
   if (tutors.length === 0) {
     seedIfEmpty();
     tutors = getState()
-      .mentors.filter((m) => m.status === 'approved')
+      .mentors.filter((m) => m.status === 'approved' && m.acceptingOrders !== false)
       .map((m) => mentorToTutorCard(m, parent));
     tutors.sort((a, b) => b.matchScore - a.matchScore);
   }
@@ -1875,6 +2064,14 @@ module.exports = {
   getPayOrders,
   getPayOrder,
   savePayOrder,
+  listPayOrders,
+  refundPayOrder,
+  getFeedbackTickets,
+  getFeedbackTicketById,
+  addFeedbackTicket,
+  updateFeedbackTicket,
+  getFeatureFlags,
+  updateFeatureFlags,
   bookingAmountFen: pricing.bookingAmountFen,
   bookingAmountYuan: pricing.bookingAmountYuan,
   isBookingPayable: pricing.isBookingPayable,
