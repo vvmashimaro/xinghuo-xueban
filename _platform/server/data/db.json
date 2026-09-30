@@ -102,7 +102,9 @@
       "preferredSpaces": [
         "青羊金沙文化微网点"
       ],
-      "sensitiveChangePending": false
+      "sensitiveChangePending": false,
+      "acceptingOrders": true,
+      "updatedAt": "2026-09-30 01:51"
     },
     {
       "id": "AP-8802",
@@ -804,6 +806,99 @@
   ],
   "bookings": [
     {
+      "mentorId": "AP-8802",
+      "subject": "初中物理",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周日 09:00-11:00",
+      "timeSlot": "周日 09:00-11:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "id": "BK-MUNG8VXL-270",
+      "createdAt": "2026-09-30 01:51",
+      "status": "pending_accept",
+      "declineReason": "",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "paymentStatus": "refunded",
+      "amount": 220,
+      "hours": 2,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "refunded",
+      "paymentMethod": "wechat",
+      "paidAt": "2026-09-30T01:51:30.733Z",
+      "transactionId": "MOCK-WX-1790733090733",
+      "updatedAt": "2026-09-30 01:51",
+      "refundedAt": "2026-09-30 01:51"
+    },
+    {
+      "mentorId": "AP-8802",
+      "subject": "初中数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "timeSlot": "周六 14:00-16:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "id": "BK-MUNG8N6I-936",
+      "createdAt": "2026-09-30 01:51",
+      "status": "pending_accept",
+      "declineReason": "",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "paymentStatus": "unpaid",
+      "amount": 220,
+      "hours": 2,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "pending_payment"
+    },
+    {
+      "mentorId": "AP-8802",
+      "subject": "初中数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "timeSlot": "周六 14:00-16:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "id": "BK-MUNFV9R9-364",
+      "createdAt": "2026-09-30 01:40",
+      "status": "pending_accept",
+      "declineReason": "",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "paymentStatus": "unpaid",
+      "amount": 220,
+      "hours": 2,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "pending_payment"
+    },
+    {
+      "mentorId": "AP-8802",
+      "subject": "初中数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "周六 14:00-16:00",
+      "timeSlot": "周六 14:00-16:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "id": "BK-MUNFV7RP-735",
+      "createdAt": "2026-09-30 01:40",
+      "status": "pending_accept",
+      "declineReason": "",
+      "tutorId": "AP-8802",
+      "type": "one_off",
+      "sessions": [],
+      "paymentStatus": "unpaid",
+      "amount": 220,
+      "hours": 2,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "pending_payment"
+    },
+    {
       "id": "BK-SEED-001",
       "mentorId": "AP-8802",
       "tutorId": "AP-8802",
@@ -1100,10 +1195,90 @@
     }
   ],
   "contracts": [],
-  "session": null,
   "seeded": true,
   "assessments": [],
-  "authTokens": [],
+  "authTokens": [
+    {
+      "tokenHash": "055b0b4d8445ca14a0f0dcde75d586883e0c0907593eafdd64cb56ae2f8f5142",
+      "userId": "AP-8801",
+      "role": "mentor",
+      "phone": "18628009821",
+      "createdAt": 1790732452858,
+      "expiresAt": 1793324452858
+    },
+    {
+      "tokenHash": "ddd75b008313e744ae2c840b9a889820e67794a646c39d87a7103c4468221e09",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790732452862,
+      "expiresAt": 1793324452862
+    },
+    {
+      "tokenHash": "c241d7be010cab634aa58558efb08d4c5a4b8e05b47fe7d95841b9f4bcab7616",
+      "userId": "AP-8801",
+      "role": "mentor",
+      "phone": "18628009821",
+      "createdAt": 1790732452876,
+      "expiresAt": 1793324452876
+    },
+    {
+      "tokenHash": "ed7d8ffd985b1dd9243a0f24978e09c6eb858b2f8f4294c6d4b4c23133c2ef41",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790732455459,
+      "expiresAt": 1793324455459
+    },
+    {
+      "tokenHash": "fd0d1b588ad3697a363b37ce1fdc7e06d5781ffcd52a34ac6d94fd217561195b",
+      "userId": "AP-8801",
+      "role": "mentor",
+      "phone": "18628009821",
+      "createdAt": 1790733079366,
+      "expiresAt": 1793325079366
+    },
+    {
+      "tokenHash": "05b8817a904866615de5cc0bce5b98b8ca3851606b02b5528aeb44b6f3bfa749",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790733079370,
+      "expiresAt": 1793325079370
+    },
+    {
+      "tokenHash": "72d6d6ccb312d19fb1748f467b324c4dd6b08429a702d0721192913cae275c41",
+      "userId": "AP-8801",
+      "role": "mentor",
+      "phone": "18628009821",
+      "createdAt": 1790733079381,
+      "expiresAt": 1793325079381
+    },
+    {
+      "tokenHash": "7eb66dd2f50be90d885f55b7924f8c3962833808699303d163732d9c8ab1cf59",
+      "userId": "AP-8801",
+      "role": "mentor",
+      "phone": "18628009821",
+      "createdAt": 1790733090705,
+      "expiresAt": 1793325090705
+    },
+    {
+      "tokenHash": "1f08b0bee23096c6e7ce4b654b391ff51204642e03db606ce35e7ae6e8aa282f",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1790733090709,
+      "expiresAt": 1793325090709
+    },
+    {
+      "tokenHash": "ae5d8a735dfdc9ec9a3ca549b9a78dd1cd8a97e3ee75e401d012ac7b0f12cb63",
+      "userId": "ADMIN-test",
+      "role": "admin",
+      "phone": "13540012341",
+      "createdAt": 1790733090728,
+      "expiresAt": 1793325090728
+    }
+  ],
   "phoneAuditLogs": [],
   "users": [
     {
@@ -1116,5 +1291,124 @@
       "role": "admin",
       "createdAt": "2026-01-15 09:00"
     }
-  ]
+  ],
+  "payOrders": [
+    {
+      "outTradeNo": "BK-BK-MUNG8VXL-270-1790733090731",
+      "prepayId": "MOCK-PREPAY-1790733090731-WKRKROS0L",
+      "bookingId": "BK-MUNG8VXL-270",
+      "amount": 22000,
+      "amountYuan": 220,
+      "description": "test",
+      "status": "REFUND",
+      "mock": true,
+      "createTime": "2026-09-30T01:51:30.731Z",
+      "successTime": "2026-09-30T01:51:30.733Z",
+      "transactionId": "MOCK-WX-1790733090733",
+      "refundTime": "2026-09-30 01:51",
+      "refundReason": "test",
+      "refundedBy": "13540012341"
+    }
+  ],
+  "feedbackTickets": [
+    {
+      "id": "TK-MUNG8VX7-391",
+      "createdAt": "2026-09-30 01:51",
+      "status": "待处理",
+      "handlerNote": "",
+      "handledAt": "",
+      "handledBy": "",
+      "title": "inject",
+      "detail": "evil",
+      "type": "功能问题",
+      "contact": "13980889211",
+      "parentId": "PAR-DEMO-001",
+      "submitterId": "PAR-DEMO-001",
+      "submitterRole": "parent",
+      "updatedAt": "2026-09-30 01:51"
+    },
+    {
+      "id": "TK-MUNG8VX4-546",
+      "createdAt": "2026-09-30 01:51",
+      "status": "待处理",
+      "handlerNote": "",
+      "handledAt": "",
+      "handledBy": "",
+      "title": "smoke",
+      "detail": "ops console api",
+      "type": "功能问题",
+      "mentorId": "AP-8801",
+      "mentorName": "张若愚",
+      "submitterId": "AP-8801",
+      "submitterRole": "mentor",
+      "updatedAt": "2026-09-30 01:51"
+    },
+    {
+      "id": "TK-MUNG8N69-146",
+      "createdAt": "2026-09-30 01:51",
+      "status": "待处理",
+      "handlerNote": "",
+      "handledAt": "",
+      "handledBy": "",
+      "title": "inject",
+      "detail": "evil",
+      "type": "功能问题",
+      "contact": "13980889211",
+      "parentId": "PAR-DEMO-001",
+      "submitterId": "PAR-DEMO-001",
+      "submitterRole": "parent",
+      "updatedAt": "2026-09-30 01:51"
+    },
+    {
+      "id": "TK-MUNG8N67-649",
+      "createdAt": "2026-09-30 01:51",
+      "status": "待处理",
+      "handlerNote": "",
+      "handledAt": "",
+      "handledBy": "",
+      "title": "smoke",
+      "detail": "ops console api",
+      "type": "功能问题",
+      "mentorId": "AP-8801",
+      "mentorName": "张若愚",
+      "submitterId": "AP-8801",
+      "submitterRole": "mentor",
+      "updatedAt": "2026-09-30 01:51"
+    },
+    {
+      "id": "TK-MUNFV7RC-385",
+      "createdAt": "2026-09-30 01:40",
+      "status": "待处理",
+      "handlerNote": "",
+      "handledAt": "",
+      "handledBy": "",
+      "title": "inject",
+      "detail": "evil",
+      "type": "功能问题",
+      "contact": "13980889211",
+      "parentId": "PAR-DEMO-001",
+      "submitterId": "PAR-DEMO-001",
+      "submitterRole": "parent",
+      "updatedAt": "2026-09-30 01:40"
+    },
+    {
+      "id": "TK-MUNFV7R9-460",
+      "createdAt": "2026-09-30 01:40",
+      "status": "待处理",
+      "handlerNote": "",
+      "handledAt": "",
+      "handledBy": "",
+      "title": "smoke",
+      "detail": "ops console api",
+      "type": "功能问题",
+      "mentorId": "AP-8801",
+      "mentorName": "张若愚",
+      "submitterId": "AP-8801",
+      "submitterRole": "mentor",
+      "updatedAt": "2026-09-30 01:40"
+    }
+  ],
+  "featureFlags": {
+    "FEATURE_SMART_WAREHOUSE": false
+  }
 }

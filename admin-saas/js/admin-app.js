@@ -470,6 +470,11 @@
                 '<p class="text-sm mt-2">' +
                 esc(t.detail) +
                 '</p>' +
+                (t.handlerNote && String(t.handlerNote).trim()
+                  ? '<div class="mt-2 text-xs bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-blue-900"><span class="font-semibold">备注：</span>' +
+                    esc(t.handlerNote) +
+                    '</div>'
+                  : '') +
                 '<div class="flex flex-wrap gap-2 mt-3">' +
                 ['处理中', '已解决', '已驳回']
                   .map(

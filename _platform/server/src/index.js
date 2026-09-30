@@ -1113,20 +1113,40 @@ app.get('/api/feedback', requireAuth, (req, res) => {
   }
 });
 
+function buildFeedbackCreateFromRequest(req) {
+  const body = req.body || {};
+  const title = String(body.title || '').trim();
+  const detail = String(body.detail || body.content || '').trim();
+  const payload = {
+    title,
+    detail,
+    type: body.type ? String(body.type).trim() : '功能问题',
+    bookingId: body.bookingId ? String(body.bookingId).trim() : '',
+    contact: body.contact ? String(body.contact).trim() : '',
+    submitterId: req.user.userId,
+    submitterRole: req.user.role
+  };
+
+  if (req.user.role === 'admin') {
+    if (body.mentorId) payload.mentorId = String(body.mentorId).trim();
+    if (body.parentId) payload.parentId = String(body.parentId).trim();
+    if (body.mentorName) payload.mentorName = String(body.mentorName).trim();
+  } else if (req.user.role === 'mentor') {
+    const mentor = db.getMentorById(req.user.userId);
+    payload.mentorId = req.user.userId;
+    payload.mentorName = mentor ? mentor.realName || '导师' : '导师';
+  } else if (req.user.role === 'parent') {
+    payload.parentId = req.user.userId;
+    const parent = db.getParents().find((p) => p.id === req.user.userId);
+    if (parent && !payload.contact) payload.contact = parent.phone || '';
+  }
+
+  return payload;
+}
+
 app.post('/api/feedback', requireAuth, (req, res) => {
   try {
-    const body = req.body || {};
-    const payload = Object.assign({}, body);
-    if (req.user.role === 'mentor') {
-      const mentor = db.getMentorById(req.user.userId);
-      payload.mentorId = req.user.userId;
-      if (mentor && !payload.mentorName) payload.mentorName = mentor.realName || '导师';
-    } else if (req.user.role === 'parent') {
-      payload.parentId = req.user.userId;
-      payload.submitterId = req.user.userId;
-      const parent = db.getParents().find((p) => p.id === req.user.userId);
-      if (parent && !payload.contact) payload.contact = parent.phone || '';
-    }
+    const payload = buildFeedbackCreateFromRequest(req);
     if (!payload.title || !payload.detail) {
       return fail(res, 400, '缺少标题或详细说明');
     }

@@ -1533,21 +1533,46 @@ function getFeedbackTicketById(id) {
   return (getState().feedbackTickets || []).find((t) => t.id === id) || null;
 }
 
+const FEEDBACK_CREATE_FIELDS = [
+  'title',
+  'detail',
+  'type',
+  'bookingId',
+  'contact',
+  'mentorId',
+  'mentorName',
+  'parentId',
+  'submitterId',
+  'submitterRole'
+];
+
 function addFeedbackTicket(ticket) {
   const s = getState();
   if (!s.feedbackTickets) s.feedbackTickets = [];
   const incoming = ticket || {};
+  const safe = {};
+  FEEDBACK_CREATE_FIELDS.forEach((key) => {
+    if (incoming[key] != null && incoming[key] !== '') {
+      safe[key] = incoming[key];
+    }
+  });
   const record = Object.assign(
     {
-      id: incoming.id || _uid('TK'),
+      id: _uid('TK'),
       createdAt: _now(),
       status: '待处理',
       handlerNote: '',
       handledAt: '',
       handledBy: ''
     },
-    incoming,
-    { updatedAt: _now() }
+    safe,
+    {
+      status: '待处理',
+      handlerNote: '',
+      handledAt: '',
+      handledBy: '',
+      updatedAt: _now()
+    }
   );
   s.feedbackTickets.unshift(record);
   persist();
