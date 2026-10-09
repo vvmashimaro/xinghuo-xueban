@@ -11,7 +11,7 @@
 .step-dot.done { border-color: #FF5A2D; background: #FFE4D6; color: #E83A1F; }
 .step-line { flex: 1; height: 4rpx; background: #e2e8f0; margin: 0 8rpx 28rpx; }
 .step-line.fill { background: #FF5A2D; }
-.progress-box { background: #f8fafc; border-radius: 16rpx; padding: 20rpx; border: 1px solid #e2e8f0; }
+.progress-box { background: #fff8f0; border-radius: 16rpx; padding: 20rpx; border: 1px solid rgba(255, 192, 203, 0.45); }
 .bar-bg { height: 12rpx; background: #e2e8f0; border-radius: 999rpx; margin: 12rpx 0 16rpx; overflow: hidden; }
 .bar-fill { height: 100%; background: #FF5A2D; border-radius: 999rpx; }
 .checklist { display: flex; flex-wrap: wrap; gap: 8rpx 20rpx; }

@@ -84,11 +84,18 @@ S.resetDemoData();
 
 也可在开发者工具 → 存储 → 清空 Storage 后重新编译，会自动 `seedIfEmpty`。
 
-## 设计令牌
+## 设计令牌（Style C · 与 Web `css/xinghuo-tokens.css` 对齐）
 
-- Primary：`#FF5A2D`（teal-600）
-- Dark：`#0f172a`（slate-900）
+- Cream 底：`#FFF8F0`；主色：`#FF5A2D`；桃→薰衣草渐变：`#FFE4D6` → `#EDE4FF`
+- 官方 Logo：`images/logo-xinghuo.jpg`（与 Web `assets/logo-xinghuo.jpg` 同源）
+- 气泡卡片、软冲突提醒条、教学点仓位 chips、学科目录（含考研/艺体/初中体育）与家长主控筛选与 Web 语义一致
 - 反馈统一 `showToast` / `wx.showToast`，禁止 `wx.showModal` 当作 alert 阻塞流程（婉拒等原因用自定义弹层）
+
+### 测试说明（本 PR）
+
+- **视觉/UI 为主**：未改动 `utils/config.js` 中的 `API_BASE`、`FEATURE_SMART_WAREHOUSE`、SMS/支付模式。
+- 建议在微信开发者工具中走通：登录 → 学情建档（学科目录/年级）→ 家长主控（筛选、约课仓位、冲突强制约课 UI）→ 导师工作台。
+- 服务端回归：未修改 `_platform/server/`；约课/冲突/仓位仍走既有 API 契约。
 
 ## 说明与边界
 

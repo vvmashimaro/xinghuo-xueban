@@ -1,4 +1,11 @@
 <view class="container">
+  <view class="brand-header">
+    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
+    <view>
+      <view class="brand-title">星火学伴<text class="hub-badge">MENTOR</text></view>
+      <view class="brand-sub">青年导师认证与动态入库</view>
+    </view>
+  </view>
   <view class="hero">
     <view class="hero-title">导师认证与动态入库</view>
     <view class="hero-sub">L1 资质核验 → L2 能力画像 → 提交待审</view>

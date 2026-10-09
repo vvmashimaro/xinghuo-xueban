@@ -10,7 +10,7 @@
 }
 .plan-chip {
   display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
-  padding: 20rpx; background: #fff; border: 1px solid #e2e8f0; border-radius: 16rpx; margin-top: 12rpx;
+  padding: 20rpx; background: #fff8f0; border: 1px solid rgba(255, 192, 203, 0.45); border-radius: 16rpx; margin-top: 12rpx;
 }
 .budget-display { font-size: 40rpx; font-weight: 900; color: #E83A1F; margin-bottom: 8rpx; }
 .slider-row { display: flex; align-items: center; gap: 12rpx; margin-bottom: 8rpx; }
