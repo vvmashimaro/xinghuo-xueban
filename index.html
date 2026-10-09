@@ -710,6 +710,10 @@
                     <input type="checkbox" name="subject" value="初中全科答疑" onchange="onSubjectChanged()" class="hidden">
                     <span>初中全科答疑</span>
                   </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="初中体育" onchange="onSubjectChanged()" class="hidden">
+                    <span>初中体育</span>
+                  </label>
                 </div>
               </div>
 
@@ -779,7 +783,34 @@
                 </div>
               </div>
 
-              <!-- 5. 自选/特色科目（支持自由填报：艺考、特长、竞赛、小语种等） -->
+              <!-- 5. 艺体专项 -->
+              <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/70 space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <span class="w-1.5 h-3.5 bg-rose-500 rounded-full"></span>
+                  <span>艺体辅导</span>
+                  <span class="text-[10px] text-slate-400 font-normal">（体考 · 舞蹈/播音 · 音乐素养）</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="体育专项训练与中考体考" onchange="onSubjectChanged()" class="hidden">
+                    <span>中考体考/体育</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="舞蹈/播音艺考辅导" onchange="onSubjectChanged()" class="hidden">
+                    <span>舞蹈/播音</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="音乐素养与视唱练耳" onchange="onSubjectChanged()" class="hidden">
+                    <span>音乐素养</span>
+                  </label>
+                  <label class="subject-tag border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 flex items-center justify-center gap-1.5 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 font-medium">
+                    <input type="checkbox" name="subject" value="美术/音乐艺考文化课" onchange="onSubjectChanged()" class="hidden">
+                    <span>艺考文化课</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 6. 自选/特色科目（支持自由填报：艺考、特长、竞赛、小语种等） -->
               <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-teal-200/80 bg-teal-50/20 space-y-2.5">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2 text-xs font-bold text-teal-900">

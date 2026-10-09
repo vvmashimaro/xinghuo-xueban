@@ -875,7 +875,12 @@ app.post('/api/bookings', requireAuth, async (req, res) => {
   const booking = db.addBooking(bookingData);
 
   if (booking && booking.ok === false) {
-    return fail(res, 400, booking.error || '创建预约失败');
+    return res.status(400).json({
+      ok: false,
+      error: booking.error || '创建预约失败',
+      code: booking.code,
+      conflicts: booking.conflicts
+    });
   }
   if (!booking || !booking.id) {
     return fail(res, 400, '创建预约失败');
@@ -1167,6 +1172,18 @@ app.patch('/api/feedback/:id', requireAdmin, (req, res) => {
     console.error('[Feedback Update Error]', error);
     fail(res, 500, '更新反馈失败');
   }
+});
+
+/* ========== Subject catalog & teaching points ========== */
+const subjectCatalog = require('./subject-catalog');
+
+app.get('/api/subject-catalog', (req, res) => {
+  ok(res, subjectCatalog.getSubjectCatalog());
+});
+
+app.get('/api/teaching-points', requireAuth, (req, res) => {
+  db.seedIfEmpty();
+  ok(res, db.getTeachingPoints());
 });
 
 /* ========== Feature flags ========== */

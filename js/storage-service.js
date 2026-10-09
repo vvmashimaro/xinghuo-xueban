@@ -24,8 +24,8 @@
     feedbackTickets: 'xh_feedback_tickets_v1'
   };
 
-  const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
-  const GRADE_BANDS = ['小学', '初中', '高中'];
+  const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学', '体育'];
+  const GRADE_BANDS = ['小学', '初中', '高中', '考研', '艺体'];
 
   function normalizeAssessmentSubject(raw) {
     const s = String(raw || '').trim();
@@ -41,6 +41,8 @@
   function gradeBandFromGrade(gradeStr) {
     const g = String(gradeStr || '').trim();
     if (!g) return '初中';
+    if (/考研|研究生|统考公共课/.test(g)) return '考研';
+    if (/艺体|体育专项|舞蹈|音乐素养|体考/.test(g)) return '艺体';
     // 高中优先（含艺考文化课等）
     if (/高[一二三]|高中|艺考/.test(g)) return '高中';
     // 初中：初一–初三 / 七年级–九年级 / 中考
@@ -1064,7 +1066,12 @@
             return remote;
           }
           if (!remote || !remote.id) {
-            return { ok: false, error: '创建预约失败' };
+            return {
+              ok: false,
+              error: (remote && remote.error) || '创建预约失败',
+              code: remote && remote.code,
+              conflicts: remote && remote.conflicts
+            };
           }
           const normalized = Object.assign({}, remote);
           if (normalized.type === 'trial') {

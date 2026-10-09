@@ -247,6 +247,8 @@
             <button type="button" onclick="setSubjectFilter('化学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中化学</button>
             <button type="button" onclick="setSubjectFilter('语文', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">语文学科</button>
             <button type="button" onclick="setSubjectFilter('艺考', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">美术/音乐艺考文化课</button>
+            <button type="button" onclick="setSubjectFilter('考研', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">考研辅导</button>
+            <button type="button" onclick="setSubjectFilter('体育', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">体育/艺体</button>
           </div>
         </div>
 
@@ -596,11 +598,19 @@
         <!-- 线下上课网点 -->
         <div class="space-y-1.5">
           <label class="block font-bold text-slate-700" data-booking-space-label>3. 线下上课网点</label>
-          <select id="bookingSpaceSelect" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
+          <select id="bookingSpaceSelect" onchange="refreshBookingBoothOptions()" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
             <option value="青羊金沙文化微网点" selected>青羊金沙文化微网点（地铁4号线金沙博物馆站附近）</option>
             <option value="高新大源中央微网点">高新大源中央微网点（天府二街大源片区）</option>
             <option value="武侯川大望江微网点">武侯川大望江微网点（川大望江校区附近）</option>
           </select>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block font-bold text-slate-700">4. 教学点仓位（默认 3 个，系统自动避让占用）</label>
+          <select id="bookingBoothSelect" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
+            <option value="">系统自动分配空闲仓位</option>
+          </select>
+          <p class="text-[10px] text-slate-500">同一仓位在重叠时段不可重复预约；须与导师可约时间一致。</p>
         </div>
 
         <!-- 银行托管与资金安全承诺 -->
@@ -1016,6 +1026,24 @@
     </div>
   </div>
 
+  <!-- 学员多课程时间冲突确认 -->
+  <div id="timeConflictModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[70] flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-amber-100 bg-amber-50">
+        <h3 class="font-black text-sm text-amber-900 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i>上课时间冲突</h3>
+        <p class="text-[11px] text-amber-800/90 mt-1">该学员已有其他课程与所选时段重叠。</p>
+      </div>
+      <div class="px-5 py-4 text-xs text-slate-600 space-y-2">
+        <p id="timeConflictDetail" class="leading-relaxed"></p>
+        <p class="text-slate-500">您可返回修改时间，或强制约课（稍后自行调整日程）；强制约课后将在预约信息中持续提醒。</p>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button type="button" onclick="closeTimeConflictModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 cursor-pointer">返回修改</button>
+        <button type="button" onclick="confirmForceBookAfterConflict()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white cursor-pointer">强制约课</button>
+      </div>
+    </div>
+  </div>
+
 <script src="js/config.js"></script>
 <script src="js/feature-flags.js"></script>
   <script src="js/storage-service.js"></script>
@@ -1053,6 +1081,7 @@
 
     (async function bootParentDashboard() {
       await reloadTutorDatabase();
+      await loadTeachingPointsCache();
       if (typeof renderTopMatchedTutors === 'function') renderTopMatchedTutors();
       if (typeof renderTutorList === 'function') renderTutorList();
       if (typeof renderParentBookings === 'function') renderParentBookings();
@@ -1569,7 +1598,11 @@
         if (!timeStart) continue;
         const timeEnd = addHoursToTimeLabel(timeStart, hours);
         const timeLabel = timeStart + ' – ' + timeEnd;
-        candidates.push({ date: d, timeLabel: timeLabel, timeStart: timeStart, timeEnd: timeEnd, kind: kind });
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const da = String(d.getDate()).padStart(2, '0');
+        const isoDate = y + '-' + mo + '-' + da;
+        candidates.push({ date: d, isoDate: isoDate, timeLabel: timeLabel, timeStart: timeStart, timeEnd: timeEnd, kind: kind });
       }
       // 过滤已过去的时段（同日且结束时间已过）
       const usable = candidates.filter(c => {
@@ -1593,7 +1626,7 @@
         const checked = idx === matchedIdx ? 'checked' : '';
         return (
           '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
-            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-time-label="' + c.timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
+            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-date="' + c.isoDate + '" data-time-label="' + c.timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
             '<div class="font-bold">' + label + '</div>' +
             '<div class="text-[10px] text-slate-400">' + c.timeLabel + '</div>' +
           '</label>'
@@ -1627,6 +1660,7 @@
       if (typeOne) typeOne.checked = true;
       onBookingTypeChange();
       generateBookingDateSlots();
+      refreshBookingBoothOptions();
       hideEscrowSummary();
       updateBookingCost();
       window.__renewalSourceBookingId = null;
@@ -1725,6 +1759,58 @@
 
     let pendingBookingMeta = null;
     let iotCountdownTimer = null;
+    let TEACHING_POINTS_CACHE = [];
+    let pendingForceBookAfterConflict = false;
+
+    async function loadTeachingPointsCache() {
+      if (!window.StorageService || !StorageService.isLoggedIn()) return;
+      try {
+        const res = await fetch(((window.XH_CONFIG && window.XH_CONFIG.API_BASE) || 'http://127.0.0.1:8787') + '/api/teaching-points', {
+          headers: { Authorization: 'Bearer ' + (StorageService.getAuthToken && StorageService.getAuthToken()) }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) TEACHING_POINTS_CACHE = data;
+      } catch (_) {}
+    }
+
+    function refreshBookingBoothOptions() {
+      const space = document.getElementById('bookingSpaceSelect')?.value || '';
+      const sel = document.getElementById('bookingBoothSelect');
+      if (!sel) return;
+      const tp = TEACHING_POINTS_CACHE.find((p) => p.name === space) ||
+        TEACHING_POINTS_CACHE.find((p) => space && (space.indexOf(p.name) >= 0 || p.name.indexOf(space) >= 0));
+      const booths = (tp && tp.booths) || [
+        { id: '', label: '仓位1' },
+        { id: '', label: '仓位2' },
+        { id: '', label: '仓位3' }
+      ];
+      sel.innerHTML = '<option value="">系统自动分配空闲仓位</option>' +
+        booths.map((b) => '<option value="' + (b.id || '').replace(/"/g, '&quot;') + '">' + (b.label || '仓位') + '</option>').join('');
+    }
+
+    function openTimeConflictModal(message) {
+      const modal = document.getElementById('timeConflictModal');
+      const detail = document.getElementById('timeConflictDetail');
+      if (detail) detail.innerText = message || '与学员其他课程时间重叠。';
+      if (modal) {
+        modal.classList.remove('hidden');
+        requestAnimationFrame(function () { modal.classList.remove('opacity-0'); });
+      }
+    }
+
+    function closeTimeConflictModal() {
+      const modal = document.getElementById('timeConflictModal');
+      if (!modal) return;
+      modal.classList.add('opacity-0');
+      setTimeout(function () { modal.classList.add('hidden'); }, 200);
+      pendingForceBookAfterConflict = false;
+    }
+
+    function confirmForceBookAfterConflict() {
+      pendingForceBookAfterConflict = true;
+      closeTimeConflictModal();
+      confirmBookingSubmit();
+    }
 
     function collectBookingMeta() {
       let durationVal = document.querySelector('input[name="bookingDuration"]:checked')?.value || '2';
@@ -1767,6 +1853,18 @@
             dateChoice = dayPart + ' ' + timeLabel;
           }
         }
+        const sessionDate = dateRadio?.getAttribute('data-date') || '';
+        const timeEndOne = timeStart ? addHoursToTimeLabel(timeStart, hours) : '';
+        if (sessionDate && timeStart && type === 'one_off') {
+          const wd = new Date(sessionDate + 'T12:00:00').getDay();
+          sessions = [{
+            date: sessionDate,
+            weekday: wd,
+            timeStart: timeStart,
+            timeEnd: timeEndOne,
+            timeLabel: timeStart + '-' + timeEndOne
+          }];
+        }
       }
       if (type === 'trial') {
         hours = 1;
@@ -1776,9 +1874,14 @@
         sessions = [];
       }
       const timeEnd = timeStart ? addHoursToTimeLabel(timeStart, hours) : '';
+      const boothSelect = document.getElementById('bookingBoothSelect');
+      const boothId = boothSelect ? boothSelect.value : '';
+      const boothLabel = boothSelect && boothSelect.selectedOptions && boothSelect.selectedOptions[0]
+        ? boothSelect.selectedOptions[0].text
+        : '';
       return {
         hours, total, perSession, spaceName, dateChoice, timeLabel, tutor: selectedTutorForBooking,
-        type, weekday, timeStart, timeEnd, sessionCount, sessions
+        type, weekday, timeStart, timeEnd, sessionCount, sessions, boothId, boothLabel
       };
     }
 
@@ -2023,16 +2126,25 @@
               weekday: bookingType === 'weekly' ? meta.weekday : undefined,
               time: bookingType === 'weekly' ? meta.timeStart : undefined,
               sessionCount: bookingType === 'weekly' ? meta.sessionCount : 1,
-              sessions: bookingType === 'weekly' ? (meta.sessions || []) : [],
+              sessions: (meta.sessions && meta.sessions.length) ? meta.sessions : (bookingType === 'weekly' ? [] : []),
+              boothId: meta.boothId || undefined,
+              boothLabel: meta.boothLabel || undefined,
+              timeConflictForced: pendingForceBookAfterConflict || undefined,
               escrowStatus: bookingType === 'trial' ? 'waived' : 'pending_payment',
               perSessionAmount: bookingType === 'trial' ? 0 : (meta.perSession || total),
               sourceBookingId: window.__renewalSourceBookingId || undefined
             });
             window.__renewalSourceBookingId = null;
             if (createdBooking && createdBooking.ok === false) {
+              if (createdBooking.code === 'STUDENT_TIME_CONFLICT' && !pendingForceBookAfterConflict) {
+                openTimeConflictModal(createdBooking.error || '与学员其他课程时间冲突');
+                return;
+              }
               showToast(createdBooking.error || '试课预约失败', 'warning');
+              pendingForceBookAfterConflict = false;
               return;
             }
+            pendingForceBookAfterConflict = false;
             if (!createdBooking || !createdBooking.id) {
               showToast('预约创建失败，请稍后重试', 'error');
               return;
@@ -2848,7 +2960,9 @@
               '</div>' +
               '<div class="text-[11px] text-slate-500">' + (b.subject || '') + ' · ' + (b.studentGrade || '') + '</div>' +
               '<div class="text-[11px] text-slate-600"><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + (b.space || '—') +
+                (b.boothLabel ? (' · ' + b.boothLabel) : '') +
                 ' · <i class="fa-regular fa-clock text-teal-600 mx-1"></i>' + (b.schedule || b.timeSlot || '—') + '</div>' +
+              (b.hasTimeConflict ? '<div class="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (b.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程') + '</div>' : '') +
               reason +
             '</div>' +
             '<div class="text-right shrink-0">' +
