@@ -85,9 +85,18 @@ async function run() {
       tutorId: MENTOR_ID,
       tutorName: '测试导师',
       subject: '数学',
-      space: '测试网点',
-      schedule: '周六 14:00-16:00',
-      timeSlot: '周六 14:00-16:00',
+      space: '高新大源中央微网点',
+      schedule: '周三 19:00-21:00',
+      timeSlot: '周三 19:00-21:00',
+      sessions: [
+        {
+          date: '2030-07-10',
+          weekday: 3,
+          timeStart: '19:00',
+          timeEnd: '21:00',
+          timeLabel: '19:00-21:00'
+        }
+      ],
       amount: 0.01,
       total: 0.01,
       price: 1,

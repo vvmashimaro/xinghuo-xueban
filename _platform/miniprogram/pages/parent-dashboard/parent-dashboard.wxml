@@ -58,7 +58,8 @@
         <text style="font-weight:800;">{{item.tutorName}} · {{item.subject}}</text>
         <text class="badge {{item.statusBadge}}">{{item.statusText}}</text>
       </view>
-      <view class="muted">{{item.schedule}} · {{item.space}} · ¥{{item.amount}}</view>
+      <view class="muted">{{item.schedule}} · {{item.space}}{{item.boothLabel?' · '+item.boothLabel:''}} · ¥{{item.amount}}</view>
+      <view class="muted" wx:if="{{item.hasTimeConflict}}" style="color:#b45309;">⚠ {{item.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程'}}</view>
       <view class="muted" wx:if="{{item.declineReason}}">婉拒原因：{{item.declineReason}}</view>
     </view>
   </view>
@@ -180,6 +181,20 @@
     <view class="modal-foot">
       <button class="btn-ghost" bindtap="closePassport">关闭</button>
       <button class="btn-primary" bindtap="updateFromPassport">更新学情与考纲</button>
+    </view>
+  </view>
+</view>
+
+<view class="modal-mask" wx:if="{{timeConflictShow}}">
+  <view class="modal-panel">
+    <view class="modal-head"><view style="font-weight:900;">上课时间冲突</view></view>
+    <view class="modal-body">
+      <view class="muted">{{timeConflictMessage}}</view>
+      <view class="muted" style="margin-top:12rpx;">可返回修改时段，或强制约课（预约信息将持续提醒）。</view>
+    </view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closeTimeConflict">返回</button>
+      <button class="btn-primary" bindtap="forceBookAfterConflict">强制约课</button>
     </view>
   </view>
 </view>

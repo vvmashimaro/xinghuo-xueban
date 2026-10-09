@@ -6,6 +6,8 @@
 
 const pricing = require('./pricing');
 const bookingFields = require('./booking-fields');
+const subjectCatalog = require('./subject-catalog');
+const bookingSchedule = require('./booking-schedule');
 
 const fs = require('fs');
 const path = require('path');
@@ -29,6 +31,69 @@ const SPACE_OPTIONS = [
   '高新大源中央微网点',
   '武侯川大望江微网点'
 ];
+
+const DEFAULT_BOOTH_COUNT = 3;
+
+function _teachingPointSlug(index) {
+  return String(index + 1);
+}
+
+function buildBoothsForTeachingPoint(tpId, count) {
+  const n = Math.max(1, parseInt(count, 10) || DEFAULT_BOOTH_COUNT);
+  const booths = [];
+  for (let i = 1; i <= n; i += 1) {
+    booths.push({
+      id: tpId + '-B' + i,
+      label: '仓位' + i,
+      number: i
+    });
+  }
+  return booths;
+}
+
+function buildDefaultTeachingPoints(spaceNames) {
+  return (spaceNames || SPACE_OPTIONS).map((name, index) => {
+    const id = 'TP-' + _teachingPointSlug(index);
+    return {
+      id,
+      name,
+      boothCount: DEFAULT_BOOTH_COUNT,
+      booths: buildBoothsForTeachingPoint(id, DEFAULT_BOOTH_COUNT)
+    };
+  });
+}
+
+function ensureTeachingPoints(state) {
+  if (!state.teachingPoints || !state.teachingPoints.length) {
+    state.teachingPoints = buildDefaultTeachingPoints(SPACE_OPTIONS);
+    return true;
+  }
+  let changed = false;
+  const byName = {};
+  state.teachingPoints.forEach((tp) => {
+    if (tp && tp.name) byName[tp.name] = tp;
+  });
+  SPACE_OPTIONS.forEach((name, index) => {
+    if (!byName[name]) {
+      const id = 'TP-' + _teachingPointSlug(state.teachingPoints.length);
+      state.teachingPoints.push({
+        id,
+        name,
+        boothCount: DEFAULT_BOOTH_COUNT,
+        booths: buildBoothsForTeachingPoint(id, DEFAULT_BOOTH_COUNT)
+      });
+      changed = true;
+    } else if (!byName[name].booths || !byName[name].booths.length) {
+      byName[name].boothCount = DEFAULT_BOOTH_COUNT;
+      byName[name].booths = buildBoothsForTeachingPoint(
+        byName[name].id || 'TP-' + _teachingPointSlug(index),
+        DEFAULT_BOOTH_COUNT
+      );
+      changed = true;
+    }
+  });
+  return changed;
+}
 
 function _now() {
   const d = new Date();
@@ -690,6 +755,7 @@ function emptySnapshot() {
     payOrders: [],
     assessments: [],
     feedbackTickets: [],
+    teachingPoints: buildDefaultTeachingPoints(SPACE_OPTIONS),
     featureFlags: {
       FEATURE_SMART_WAREHOUSE: false
     },
@@ -740,9 +806,11 @@ function load() {
       state.featureFlags.FEATURE_SMART_WAREHOUSE = false;
     }
     if (state.seeded == null) state.seeded = true;
+    if (!state.teachingPoints) state.teachingPoints = [];
     
     // 迁移：删除旧的共享 session 字段
     let needMigration = false;
+    if (ensureTeachingPoints(state)) needMigration = true;
     if (state.session !== undefined) {
       delete state.session;
       needMigration = true;
@@ -827,6 +895,7 @@ function seedIfEmpty() {
     s.parents = [getSeedParent()];
     changed = true;
   }
+  if (ensureTeachingPoints(s)) changed = true;
   if (!s.assessments) {
     s.assessments = [];
   }
@@ -999,6 +1068,13 @@ function getBookings() {
   return getState().bookings.slice();
 }
 
+function getTeachingPoints() {
+  const s = getState();
+  ensureTeachingPoints(s);
+  if (ensureTeachingPoints(s)) persist();
+  return (s.teachingPoints || []).slice();
+}
+
 function addBooking(booking) {
   const s = getState();
   const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
@@ -1038,8 +1114,98 @@ function addBooking(booking) {
   const rawSessions = Array.isArray(clientFields.sessions) ? clientFields.sessions : [];
   const maxSessions =
     bookingType === 'trial' ? 1 : Math.max(1, parseInt(computed.sessionCount, 10) || rawSessions.length || 1);
-  let sessions = bookingFields.rebuildSessionsFromClientInput(rawSessions).slice(0, maxSessions);
+  const sessionSeed = Object.assign({}, booking || {}, clientFields, {
+    sessions: rawSessions,
+    hours: computed.hours,
+    sessionCount: computed.sessionCount
+  });
+  let sessions = bookingSchedule
+    .ensureSessionsForBooking(sessionSeed, bookingFields.rebuildSessionsFromClientInput, buildWeeklySessions)
+    .slice(0, maxSessions);
   delete clientFields.sessions;
+
+  if (mentor && bookingType !== 'trial' && sessions.length) {
+    const avail = bookingSchedule.assertMentorAvailability(mentor, sessions);
+    if (!avail.ok) {
+      return { ok: false, error: avail.error, code: avail.code };
+    }
+  }
+
+  ensureTeachingPoints(s);
+  const teachingPoint = bookingSchedule.teachingPointBySpaceName(
+    s.teachingPoints,
+    clientFields.space || booking.space
+  );
+  if (!teachingPoint && bookingType !== 'trial') {
+    return { ok: false, error: '未找到对应教学点', code: 'TEACHING_POINT_NOT_FOUND' };
+  }
+
+  let boothId = clientFields.boothId || booking.boothId || '';
+  let boothLabel = clientFields.boothLabel || booking.boothLabel || '';
+  const teachingPointId = teachingPoint ? teachingPoint.id : '';
+
+  if (teachingPoint && sessions.length) {
+    if (boothId) {
+      const booth = (teachingPoint.booths || []).find((b) => b.id === boothId);
+      if (!booth) {
+        return { ok: false, error: '仓位不存在', code: 'BOOTH_NOT_FOUND' };
+      }
+      boothLabel = booth.label || boothLabel;
+      const boothConflicts = bookingSchedule.findBoothConflicts(
+        s.bookings,
+        teachingPointId,
+        boothId,
+        sessions,
+        null
+      );
+      if (boothConflicts.length) {
+        return {
+          ok: false,
+          error: '该仓位在此时段已被占用，请选择其他仓位或调整时间',
+          code: 'BOOTH_CONFLICT',
+          conflicts: boothConflicts
+        };
+      }
+    } else {
+      const picked = bookingSchedule.pickAvailableBooth(teachingPoint, sessions, s.bookings, null);
+      if (!picked) {
+        return {
+          ok: false,
+          error: '该时段教学点仓位已满，请更换时间或网点',
+          code: 'BOOTH_FULL'
+        };
+      }
+      boothId = picked.id;
+      boothLabel = picked.label;
+    }
+  }
+
+  const studentKey = bookingSchedule.studentKeyFromBooking(
+    Object.assign({}, booking, clientFields, {
+      parentId: booking.parentId || clientFields.parentId,
+      parentPhone: booking.parentPhone || clientFields.parentPhone
+    })
+  );
+  const timeConflictForced =
+    booking.timeConflictForced === true || clientFields.timeConflictForced === true;
+  const studentConflicts = bookingSchedule.findStudentTimeConflicts(
+    sessions,
+    s.bookings,
+    studentKey,
+    null
+  );
+  if (studentConflicts.length && !timeConflictForced) {
+    return {
+      ok: false,
+      error: '与学员其他课程时间冲突，请调整时段或确认强制约课',
+      code: 'STUDENT_TIME_CONFLICT',
+      conflicts: studentConflicts
+    };
+  }
+  const hasTimeConflict = studentConflicts.length > 0 && timeConflictForced;
+  const timeConflictNote = hasTimeConflict
+    ? '与学员其他课程时间重叠，您已选择强制约课，请留意调整日程'
+    : '';
 
   const record = Object.assign(
     {},
@@ -1059,7 +1225,13 @@ function addBooking(booking) {
       sessionCount: computed.sessionCount,
       perSessionAmount: computed.perSessionAmount,
       escrowStatus: computed.escrowStatus,
-      trialLabel: computed.trialLabel
+      trialLabel: computed.trialLabel,
+      teachingPointId: teachingPointId,
+      boothId: boothId,
+      boothLabel: boothLabel,
+      timeConflictForced: !!timeConflictForced,
+      hasTimeConflict: !!hasTimeConflict,
+      timeConflictNote: timeConflictNote
     }
   );
   if (record.type === 'trial') {
@@ -1728,15 +1900,10 @@ function matchTutors(parentProfile) {
 
 
 /* ---------- Assessments ---------- */
-const ASSESSMENT_SUBJECTS = ['数学', '英语', '物理', '化学'];
+const ASSESSMENT_SUBJECTS = subjectCatalog.ASSESSMENT_SUBJECTS;
 
 function normalizeAssessmentSubject(raw) {
-  const s = String(raw || '').trim();
-  if (!s) return '';
-  for (const b of ASSESSMENT_SUBJECTS) {
-    if (s === b || s.indexOf(b) >= 0) return b;
-  }
-  return s;
+  return subjectCatalog.normalizeAssessmentSubject(raw);
 }
 
 function scoreToLevel(score) {
@@ -2032,6 +2199,9 @@ load();
 module.exports = {
   DEFAULT_SLOTS,
   SPACE_OPTIONS,
+  DEFAULT_BOOTH_COUNT,
+  buildDefaultTeachingPoints,
+  getTeachingPoints,
   DB_PATH,
   load,
   snapshot,

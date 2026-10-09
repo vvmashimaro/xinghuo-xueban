@@ -147,7 +147,7 @@ function _request(method, path, body) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
-          reject(new Error('API ' + res.statusCode + ' ' + path));
+          reject({ status: res.statusCode, data: res.data, message: 'API ' + res.statusCode + ' ' + path });
         }
       },
       fail(err) {
@@ -387,16 +387,17 @@ const StorageService = {
   async addBooking(booking) {
     try {
       const result = await _request('POST', '/api/bookings', booking);
-      if (result) {
+      if (result && result.id) {
         const list = this.getBookings();
         list.unshift(result);
         this.saveBookings(list);
         return result;
       }
-      return null;
+      return result && result.error ? result : null;
     } catch (e) {
       console.warn('Add booking failed:', e);
-      return null;
+      if (e && e.data) return e.data;
+      return { ok: false, error: (e && e.message) || '创建预约失败' };
     }
   },
 

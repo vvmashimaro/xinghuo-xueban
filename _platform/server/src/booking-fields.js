@@ -25,7 +25,14 @@ const BOOKING_CREATE_ALLOW = new Set([
   'note',
   'remark',
   'sourceBookingId',
-  'trialLabel'
+  'trialLabel',
+  'boothId',
+  'boothLabel',
+  'teachingPointId',
+  'sessionDate',
+  'timeConflictForced',
+  'hasTimeConflict',
+  'timeConflictNote'
 ]);
 
 const BOOKING_PROTECTED = new Set([

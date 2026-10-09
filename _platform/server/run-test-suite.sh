@@ -73,6 +73,10 @@ echo ""
 echo "=== Running booking escrow hardening tests ==="
 node test-booking-escrow-hardening.js
 
+echo ""
+echo "=== Running subjects / conflicts / booth tests ==="
+node test-subjects-conflicts-booths.js
+
 # Run miniprogram flow test
 echo ""
 echo "=== Running miniprogram flow test ==="

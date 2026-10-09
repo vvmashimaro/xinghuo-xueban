@@ -12,19 +12,21 @@ const MENTOR_ID = 'AP-8802';
 const SESSIONS = [
   {
     id: 'SES-SEC-1',
-    date: '2026-10-10',
-    timeStart: '14:00',
-    timeEnd: '16:00',
-    timeLabel: '14:00-16:00',
+    date: '2031-02-05',
+    weekday: 3,
+    timeStart: '19:00',
+    timeEnd: '21:00',
+    timeLabel: '19:00-21:00',
     status: 'scheduled',
     escrowStatus: 'frozen'
   },
   {
     id: 'SES-SEC-2',
-    date: '2026-10-17',
-    timeStart: '14:00',
-    timeEnd: '16:00',
-    timeLabel: '14:00-16:00',
+    date: '2031-02-12',
+    weekday: 3,
+    timeStart: '19:00',
+    timeEnd: '21:00',
+    timeLabel: '19:00-21:00',
     status: 'scheduled',
     escrowStatus: 'frozen'
   }
@@ -91,9 +93,9 @@ async function run() {
       mentorId: MENTOR_ID,
       tutorId: MENTOR_ID,
       subject: '数学',
-      space: '测试网点',
-      schedule: '周六 14:00-16:00',
-      timeSlot: '周六 14:00-16:00',
+      space: '高新大源中央微网点',
+      schedule: '周三 19:00-21:00',
+      timeSlot: '周三 19:00-21:00',
       hours: 2,
       type: 'weekly',
       sessionCount: 2,
@@ -198,7 +200,7 @@ async function run() {
   );
   const s1p = parentHack.data.sessions.find((s) => s.id === sessionId1);
   assert(s1p && s1p.status === 'scheduled', 'parent cannot confirm leave via PATCH');
-  assert(s1p.date === '2026-10-10', 'parent cannot change session date via PATCH');
+  assert(s1p.date === '2031-02-05', 'parent cannot change session date via PATCH');
   console.log('✓ Parent PATCH cannot change schedule/sessions lifecycle after payment');
 
   const parentMsg = await request(

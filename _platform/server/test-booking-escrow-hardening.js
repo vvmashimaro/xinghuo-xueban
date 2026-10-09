@@ -77,10 +77,11 @@ async function run() {
   const evilSessions = [
     {
       id: 'SES-EVIL',
-      date: '2026-11-01',
-      timeStart: '14:00',
-      timeEnd: '16:00',
-      timeLabel: '14:00-16:00',
+      date: '2031-01-08',
+      weekday: 3,
+      timeStart: '19:00',
+      timeEnd: '21:00',
+      timeLabel: '19:00-21:00',
       status: 'completed',
       completedAt: '2020-01-01T00:00:00.000Z',
       releaseAt: '2020-01-01 00:00',
@@ -95,8 +96,8 @@ async function run() {
     {
       mentorId: MENTOR_ID,
       subject: '数学',
-      space: '测试网点',
-      schedule: '周六 14:00-16:00',
+      space: '高新大源中央微网点',
+      schedule: '周三 19:00-21:00',
       hours: 2,
       type: 'weekly',
       sessionCount: 1,

@@ -66,6 +66,9 @@ Page({
     escrowShow: false,
     escrowAmount: '0.00',
     contractShow: false,
+    timeConflictShow: false,
+    timeConflictMessage: '',
+    pendingForceBook: false,
     passportShow: false,
     passportSubjects: [],
     passportPlans: [],
@@ -171,7 +174,7 @@ Page({
     (parent.subjects || []).forEach((s) => {
       if (filterSubjects.indexOf(s) < 0) filterSubjects.push(s);
     });
-    ['数学', '物理', '英语', '化学', '语文', '艺考'].forEach((s) => {
+    ['数学', '物理', '英语', '化学', '语文', '体育', '考研', '艺考'].forEach((s) => {
       if (filterSubjects.indexOf(s) < 0) filterSubjects.push(s);
     });
 
@@ -407,12 +410,39 @@ Page({
     this.setData({ contractShow: false });
   },
 
+  _sessionsFromSlot(slot, hours) {
+    const wdMap = { 周日: 0, 周一: 1, 周二: 2, 周三: 3, 周四: 4, 周五: 5, 周六: 6 };
+    const s = String(slot || '');
+    let weekday = '';
+    Object.keys(wdMap).forEach((name) => {
+      if (s.indexOf(name) >= 0) weekday = wdMap[name];
+    });
+    const m = s.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+    const timeStart = m ? m[1] : '14:00';
+    const timeEnd = m ? m[2] : timeStart;
+    return [{
+      weekday,
+      timeStart,
+      timeEnd,
+      timeLabel: timeStart + '-' + timeEnd
+    }];
+  },
+
+  closeTimeConflict() {
+    this.setData({ timeConflictShow: false, pendingForceBook: false });
+  },
+
+  forceBookAfterConflict() {
+    this.setData({ timeConflictShow: false, pendingForceBook: true }, () => this.confirmBook());
+  },
+
   async confirmBook() {
     const tutor = this.data.bookingTutor;
     const parent = this._parent || Storage.getCurrentParent();
     const hours = Number(this.data.hours) || 2;
     const space = this.data.spaces[this.data.spaceIndex];
     const slot = this.data.selectedSlot;
+    const sessions = this._sessionsFromSlot(slot, hours);
 
     const booking = await Storage.addBooking({
       mentorId: tutor.mentorId,
@@ -428,11 +458,22 @@ Page({
       schedule: slot,
       timeSlot: slot,
       hours,
+      sessions,
+      timeConflictForced: this.data.pendingForceBook || undefined,
       status: 'pending_accept'
     });
 
+    if (booking && booking.code === 'STUDENT_TIME_CONFLICT' && !this.data.pendingForceBook) {
+      this.setData({
+        timeConflictShow: true,
+        timeConflictMessage: booking.error || '与学员其他课程时间冲突'
+      });
+      return;
+    }
+    this.setData({ pendingForceBook: false });
+
     if (!booking || !booking.id) {
-      showToast('预约创建失败', 'error');
+      showToast((booking && booking.error) || '预约创建失败', 'error');
       return;
     }
 

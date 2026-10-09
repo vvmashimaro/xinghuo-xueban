@@ -392,6 +392,14 @@
                       <option value="小五 (小学应用题与奥数)">小五 (应用题与习惯塑造)</option>
                       <option value="小四及以下 (基础答疑辅导)">小四及以下 (作业清零习惯)</option>
                     </optgroup>
+                    <optgroup label="考研攻读">
+                      <option value="考研公共课冲刺 (英/数/政)">考研公共课冲刺 (英/数/政)</option>
+                      <option value="考研专业课一对一备考">考研专业课一对一备考</option>
+                    </optgroup>
+                    <optgroup label="艺体特长">
+                      <option value="艺体专项 · 中考体考/体育">艺体专项 · 中考体考/体育</option>
+                      <option value="艺体专项 · 舞蹈/播音艺考">艺体专项 · 舞蹈/播音艺考</option>
+                    </optgroup>
                     <optgroup label="特色方向">
                       <option value="高三艺考文化课冲刺">美术/音乐艺考文化课百日冲刺</option>
                       <option value="初高中竞赛与自招拔尖">数学/物理奥赛强基拔尖</option>
@@ -495,6 +503,11 @@
                   <input type="checkbox" name="targetSubject" value="语文" onchange="onSubjectToggle(this)" class="hidden">
                   <div class="font-bold">语文</div>
                   <div class="text-[10px] text-slate-400">文言文/阅读/作文</div>
+                </label>
+                <label class="border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 shadow-2xs">
+                  <input type="checkbox" name="targetSubject" value="体育" onchange="onSubjectToggle(this)" class="hidden">
+                  <div class="font-bold">体育</div>
+                  <div class="text-[10px] text-slate-400">体考/专项/体能</div>
                 </label>
                 <label class="border border-slate-200 rounded-xl py-2 px-1 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 shadow-2xs">
                   <input type="checkbox" name="targetSubject" value="全科陪读答疑" onchange="onSubjectToggle(this)" class="hidden">
@@ -1082,6 +1095,10 @@
           "中考文言文断句及词类活用实词", "现代文小说散文答题规范与主旨探究", "思辨性中考作文立意与构思升华", 
           "议论文论点论据论证方法归纳", "古诗词鉴赏炼字与修辞手法品析"
         ],
+        "体育": [
+          "中考体考项目动作规范与节奏", "耐力跑呼吸与配速分配", "立定跳远/实心球发力链训练",
+          "体能恢复与运动损伤预防", "考前模拟与心理调适"
+        ],
         "全科陪读答疑": [
           "错题本建立与知识盲区归纳", "每日校内作业自律限时督促", "预习习惯与思维导图梳理"
         ]
@@ -1112,6 +1129,16 @@
         "全科陪读答疑": [
           "高强复习时间管理与番茄工作法", "一轮总复习考纲考点穿线查漏", "模考心态调适与考前失误复盘"
         ]
+      },
+      postgrad: {
+        "数学": ["高数极限与导数基础", "线性代数矩阵运算", "概率统计常见分布"],
+        "英语": ["考研阅读长难句拆解", "写作模板与论证升级", "完形填空逻辑线索"],
+        "政治": ["马原唯物辩证法", "史纲时间轴梳理", "时政热点归纳"]
+      },
+      artsports: {
+        "体育": ["专项技术动作分解", "体能与爆发力训练", "体考模拟与节奏控制"],
+        "语文": ["艺考文化课阅读提速", "作文素材积累"],
+        "英语": ["艺考文化课词汇巩固", "基础语法填空"]
       },
       // 小学高年级大纲
       primary: {
@@ -1146,6 +1173,8 @@
     // 获取年级对应考纲分类
     function getSyllabusCategory(gradeText) {
       if (!gradeText || typeof gradeText !== 'string') return 'junior';
+      if (gradeText.includes('考研')) return 'postgrad';
+      if (gradeText.includes('艺体') || gradeText.includes('体考')) return 'artsports';
       if (gradeText.includes('高') || gradeText.includes('艺考') || gradeText.includes('竞赛')) return 'senior';
       if (gradeText.includes('小')) return 'primary';
       return 'junior';
