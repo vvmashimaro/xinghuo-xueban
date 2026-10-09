@@ -1,0 +1,67 @@
+/**
+ * 星火伴学 · Style C 全局设计令牌（Web）
+ * 与 _platform/miniprogram/app.wxss 语义对齐
+ */
+:root {
+  --xh-primary-deep: #e83a1f;
+  --xh-primary: #ff5a2d;
+  --xh-primary-mid: #ff8a3d;
+  --xh-primary-light: #ffc14d;
+  --xh-blush: #ffc0cb;
+  --xh-cream: #fff8f0;
+  --xh-grad-peach: #ffe4d6;
+  --xh-grad-lavender: #ede4ff;
+  --xh-success: #4ade80;
+  --xh-warning: #facc15;
+  --xh-error: #fda4af;
+  --xh-info: #c4b5fd;
+  --xh-text: #1e293b;
+  --xh-text-muted: #64748b;
+  --xh-surface: #ffffff;
+  --xh-shadow-soft: 0 8px 28px -6px rgba(232, 58, 31, 0.12), 0 4px 12px -4px rgba(15, 23, 42, 0.06);
+  --xh-radius-bubble: 1rem;
+  --xh-radius-card: 1.25rem;
+}
+
+.xh-shell-bg {
+  background: linear-gradient(
+    165deg,
+    var(--xh-grad-peach) 0%,
+    var(--xh-cream) 42%,
+    var(--xh-grad-lavender) 100%
+  );
+  background-attachment: fixed;
+}
+
+.xh-brand-logo {
+  object-fit: cover;
+  border-radius: var(--xh-radius-bubble);
+  box-shadow: var(--xh-shadow-soft);
+}
+
+.xh-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--xh-radius-card);
+  border: 1px solid rgba(255, 192, 203, 0.35);
+  box-shadow: var(--xh-shadow-soft);
+}
+
+.xh-btn-primary {
+  background: var(--xh-primary);
+  color: #fff;
+}
+.xh-btn-primary:hover {
+  background: var(--xh-primary-deep);
+}
+
+.xh-banner-warning {
+  background: #fef9c3;
+  border-color: var(--xh-warning);
+  color: #713f12;
+}
+
+.xh-banner-error {
+  background: #fff1f2;
+  border-color: var(--xh-error);
+  color: #9f1239;
+}

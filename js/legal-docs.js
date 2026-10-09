@@ -7,8 +7,8 @@
   'use strict';
 
   var DEMO_BANNER =
-    '<div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-[11px] text-teal-950 leading-relaxed">' +
-    '<i class="fa-solid fa-info-circle text-teal-600 mr-1"></i>' +
+    '<div class="bg-brand-50 border border-brand-200 rounded-xl p-3 text-[11px] text-brand-950 leading-relaxed">' +
+    '<i class="fa-solid fa-info-circle text-brand-600 mr-1"></i>' +
     '<strong>运营主体：</strong>成都励德科技发展有限公司。正式上线前请委托专业律师审定本文本。' +
     '</div>';
 
@@ -37,7 +37,7 @@
     '<p>4. 到课签到与课后核销是资金解冻的重要依据，用户应如实配合，不得虚假打卡。</p>' +
     '<p class="text-slate-800 font-bold">第五条 费用与资金托管</p>' +
     '<p>1. 课酬采用「一课一约、一课一消」：约课成功后对应课时费预先冻结；平台不设大额预存培训费包、不设资金池代收代付。</p>' +
-    '<p>2. 双方完成到课与课后核销后，课酬进入观察期：<strong class="text-teal-800">课后 48 小时内</strong>如无有效投诉或其他约定/法定冻结事由，系统自动解冻划拨。</p>' +
+    '<p>2. 双方完成到课与课后核销后，课酬进入观察期：<strong class="text-brand-800">课后 48 小时内</strong>如无有效投诉或其他约定/法定冻结事由，系统自动解冻划拨。</p>' +
     '<p>3. 划拨比例原则上为：<strong>导师实收 92%</strong>、<strong>平台技术与空间运营服务费 8%</strong>；如平台另行公示分成规则的，以届时公示为准。</p>' +
     '<p>4. 观察期内若存在有效投诉或争议，资金继续冻结，由平台客服协调；仍无法解决的，按争议条款处理。</p>' +
     '<p>5. 支付、退款、结算时效可能受银行或支付通道影响；非因平台过错导致的延迟，平台在法律允许范围内不承担责任。</p>' +
@@ -124,10 +124,10 @@
     wrap.setAttribute('aria-modal', 'true');
     wrap.innerHTML =
       '<div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="legalDocModalContent">' +
-      '  <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white shrink-0">' +
+      '  <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-brand-900 text-white shrink-0">' +
       '    <div class="min-w-0 pr-2">' +
       '      <h3 class="font-black text-sm truncate" id="legalDocModalTitle">法律文件</h3>' +
-      '      <p class="text-[10px] text-teal-200/90 mt-0.5 truncate" id="legalDocModalSubtitle"></p>' +
+      '      <p class="text-[10px] text-brand-200/90 mt-0.5 truncate" id="legalDocModalSubtitle"></p>' +
       '    </div>' +
       '    <button type="button" data-legal-close class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0" aria-label="关闭">' +
       '      <i class="fa-solid fa-xmark text-xs"></i>' +
@@ -136,7 +136,7 @@
       '  <div class="px-5 py-4 overflow-y-auto text-xs text-slate-600 space-y-3 leading-relaxed flex-1" id="legalDocModalBody"></div>' +
       '  <div class="px-5 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50 shrink-0">' +
       '    <button type="button" data-legal-close class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">关闭</button>' +
-      '    <button type="button" id="legalDocAgreeBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 cursor-pointer">已阅 · 关闭</button>' +
+      '    <button type="button" id="legalDocAgreeBtn" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-brand-600/20 cursor-pointer">已阅 · 关闭</button>' +
       '  </div>' +
       '</div>';
     document.body.appendChild(wrap);

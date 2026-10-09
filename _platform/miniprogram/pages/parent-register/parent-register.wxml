@@ -93,7 +93,7 @@
         <view class="success-icon">✓</view>
         <view>
           <text style="font-weight:600;">已授权手机号：</text>
-          <text style="color:#0d9488;font-family:monospace;">{{phoneMasked}}</text>
+          <text style="color:#FF5A2D;font-family:monospace;">{{phoneMasked}}</text>
         </view>
       </view>
     </view>
@@ -107,7 +107,7 @@
   <view class="card" wx:if="{{editMode && phone}}">
     <view class="card-title">联系手机号</view>
     <view class="phone-display">
-      <text style="color:#0d9488;font-family:monospace;font-size:32rpx;">{{phone}}</text>
+      <text style="color:#FF5A2D;font-family:monospace;font-size:32rpx;">{{phone}}</text>
       <text class="muted" style="margin-left:12rpx;">（登录账号，不可更改）</text>
     </view>
   </view>
@@ -143,12 +143,12 @@
     <view class="muted" style="margin-bottom:12rpx;">拖动下限与上限滑块，区间将用于匹配过滤</view>
     <view class="slider-row">
       <text class="muted">下限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMin}}" activeColor="#0d9488" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMin" bindchange="onBudgetMin" />
+      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMin}}" activeColor="#FF5A2D" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMin" bindchange="onBudgetMin" />
       <text class="val">{{budgetMin}}</text>
     </view>
     <view class="slider-row">
       <text class="muted">上限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMax}}" activeColor="#0d9488" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMax" bindchange="onBudgetMax" />
+      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMax}}" activeColor="#FF5A2D" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMax" bindchange="onBudgetMax" />
       <text class="val">{{budgetMax}}</text>
     </view>
   </view>
@@ -163,7 +163,7 @@
       <view class="check-box {{consent?'on':''}}">{{consent?'✓':''}}</view>
       <text>我已阅读并同意
         <text class="link" catchtap="openAgreement">《资金托管与服务协议》</text>
-        ，知晓课酬按单次托管锁定，课后 <text style="color:#0f766e;font-weight:800;">48 小时</text>无投诉或其他冻结事由则自动划拨至导师，不设大额预存消费包。
+        ，知晓课酬按单次托管锁定，课后 <text style="color:#E83A1F;font-weight:800;">48 小时</text>无投诉或其他冻结事由则自动划拨至导师，不设大额预存消费包。
       </text>
     </view>
   </view>
@@ -177,7 +177,7 @@
   <view class="modal-panel">
     <view class="modal-head">
       <view style="font-weight:900;">配置学科学情 · {{wizardSubject}}</view>
-      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">步骤 {{wizardStep}} / 3</view>
+      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">步骤 {{wizardStep}} / 3</view>
     </view>
     <view class="modal-body">
       <view class="wiz-dots">
@@ -201,7 +201,7 @@
         <view class="section-h">选择辅导推进节奏</view>
         <radio-group bindchange="onPacing">
           <label class="pace-row" wx:for="{{pacingOptions}}" wx:key="*this">
-            <radio value="{{item}}" checked="{{item===wizardPacing}}" color="#0d9488" />
+            <radio value="{{item}}" checked="{{item===wizardPacing}}" color="#FF5A2D" />
             <text>{{item}}</text>
           </label>
         </radio-group>
@@ -229,7 +229,7 @@
   <view class="modal-panel">
     <view class="modal-head">
       <view style="font-weight:900;">《星火学伴资金托管与服务协议》</view>
-      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">请完整阅读后勾选同意 · 银行存管专户前置要件</view>
+      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">请完整阅读后勾选同意 · 银行存管专户前置要件</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
       <block wx:for="{{agreementSections}}" wx:key="h">

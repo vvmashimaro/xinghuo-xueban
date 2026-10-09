@@ -1,4 +1,11 @@
 <view class="container">
+  <view class="brand-header">
+    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
+    <view>
+      <view class="brand-title">星火学伴</view>
+      <view class="brand-sub">导师工作台</view>
+    </view>
+  </view>
   <view class="hero">
     <view class="hero-title">{{mentorName}} 的工作台</view>
     <view class="hero-sub">{{university}} · {{code}}</view>
@@ -104,7 +111,7 @@
   <view class="modal-panel">
     <view class="modal-head">
       <view style="font-weight:900;">申请变更敏感信息</view>
-      <view style="font-size:20rpx;color:#99f6e4;">提交后状态回退为待审，需管理端复审</view>
+      <view style="font-size:20rpx;color:#FFC0CB;">提交后状态回退为待审，需管理端复审</view>
     </view>
     <view class="modal-body">
       <view class="field">

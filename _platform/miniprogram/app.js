@@ -10,7 +10,7 @@ App({
   },
   globalData: {
     brand: '星火学伴',
-    primary: '#0d9488'
+    primary: '#FF5A2D'
   },
   storage: StorageService
 });

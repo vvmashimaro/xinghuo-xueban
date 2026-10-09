@@ -7,24 +7,16 @@
   <title>星火运营中台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e' }
-          }
-        }
-      }
-    };
-  </script>
+    <link rel="stylesheet" href="../css/xinghuo-tokens.css">
+  <script src="../js/tailwind-brand.js"></script>
+  <script>tailwind.config = window.XH_TAILWIND_CONFIG;</script>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+<body class="xh-shell-bg text-slate-800 antialiased min-h-screen">
   <div class="flex min-h-screen">
-    <aside class="w-56 bg-slate-900 text-slate-200 flex flex-col shrink-0">
-      <div class="p-4 border-b border-slate-800">
+    <aside class="w-56 bg-gradient-to-b from-slate-800 via-slate-800 to-slate-900 text-slate-200 flex flex-col shrink-0 shadow-bubble border-r border-brand-blush/20">
+      <div class="p-4 border-b border-white/10">
         <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-xl bg-teal-500 text-slate-900 flex items-center justify-center font-black">星</div>
+          <img src="../assets/logo-xinghuo.jpg" alt="星火伴学" width="36" height="36" class="xh-brand-logo w-9 h-9 shrink-0" />
           <div>
             <div class="font-black text-white text-sm leading-tight">星火运营中台</div>
             <div class="text-[10px] text-slate-400">星火学伴 · 管理端</div>
@@ -32,17 +24,17 @@
         </div>
       </div>
       <nav class="flex-1 p-3 space-y-1 text-sm font-medium overflow-y-auto">
-        <a href="#dashboard" data-nav="dashboard" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">总览</a>
-        <a href="#audit" data-nav="audit" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">导师审核</a>
-        <a href="#parents" data-nav="parents" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">家长用户</a>
-        <a href="#mentors" data-nav="mentors" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">导师用户</a>
-        <a href="#bookings" data-nav="bookings" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">预约订单</a>
-        <a href="#teaching-points" data-nav="teaching-points" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">教学点仓位</a>
-        <a href="#contracts" data-nav="contracts" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">合约</a>
-        <a href="#assessments" data-nav="assessments" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">学情测评</a>
-        <a href="#payments" data-nav="payments" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">支付与退款</a>
-        <a href="#feedback" data-nav="feedback" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">反馈投诉</a>
-        <a href="#system" data-nav="system" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">系统开关</a>
+        <a href="#dashboard" data-nav="dashboard" class="block px-3 py-2 rounded-xl text-slate-300 hover:bg-white/10">总览</a>
+        <a href="#audit" data-nav="audit" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">导师审核</a>
+        <a href="#parents" data-nav="parents" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">家长用户</a>
+        <a href="#mentors" data-nav="mentors" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">导师用户</a>
+        <a href="#bookings" data-nav="bookings" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">预约订单</a>
+        <a href="#teaching-points" data-nav="teaching-points" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">教学点仓位</a>
+        <a href="#contracts" data-nav="contracts" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">合约</a>
+        <a href="#assessments" data-nav="assessments" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">学情测评</a>
+        <a href="#payments" data-nav="payments" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">支付与退款</a>
+        <a href="#feedback" data-nav="feedback" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">反馈投诉</a>
+        <a href="#system" data-nav="system" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-white/10">系统开关</a>
       </nav>
       <div class="p-3 border-t border-slate-800 text-xs">
         <div class="text-slate-400 mb-2" id="adminUserLabel">管理员</div>

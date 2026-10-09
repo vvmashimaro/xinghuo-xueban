@@ -74,7 +74,7 @@
             '<button type="button" data-subject-filter="' +
             esc(c.value) +
             '" class="text-xs px-2.5 py-1 rounded-lg ' +
-            (on ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700') +
+            (on ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700') +
             '">' +
             esc(c.label) +
             '</button>'
@@ -179,7 +179,7 @@
     window.location.hash = '#' + state.route;
     document.querySelectorAll('[data-nav]').forEach((el) => {
       const on = el.getAttribute('data-nav') === state.route;
-      el.classList.toggle('bg-teal-600', on);
+      el.classList.toggle('bg-brand-600', on);
       el.classList.toggle('text-white', on);
       el.classList.toggle('text-slate-300', !on);
     });
@@ -215,7 +215,7 @@
       '<div class="grid sm:grid-cols-3 gap-4">' +
       cardStat('待审核导师', pending, 'amber') +
       cardStat('待处理反馈', openFb, 'blue') +
-      cardStat('预约总数', state.bookings.length, 'teal') +
+      cardStat('预约总数', state.bookings.length, 'brand') +
       '</div>' +
       '<section class="bg-white rounded-2xl border border-slate-200 p-5">' +
       '<h2 class="font-bold text-slate-800 mb-3">最近预约</h2>' +
@@ -242,7 +242,12 @@
   }
 
   function cardStat(title, value, color) {
-    const bg = color === 'amber' ? 'bg-amber-50 text-amber-800' : color === 'blue' ? 'bg-blue-50 text-blue-800' : 'bg-teal-50 text-teal-800';
+    const bg =
+      color === 'amber'
+        ? 'bg-amber-50 text-amber-800'
+        : color === 'blue'
+          ? 'bg-blue-50 text-blue-800'
+          : 'bg-brand-50 text-brand-800';
     return (
       '<div class="rounded-2xl border border-slate-200 p-4 ' +
       bg +
@@ -265,7 +270,7 @@
           '<button type="button" data-pick-mentor="' +
           esc(m.id) +
           '" class="w-full text-left px-3 py-2 rounded-xl border text-sm ' +
-          (active ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:bg-slate-50') +
+          (active ? 'border-brand-500 bg-brand-50' : 'border-slate-200 hover:bg-slate-50') +
           '">' +
           '<div class="font-bold">' +
           esc(m.realName) +
@@ -298,7 +303,7 @@
         esc(sel.reviewComment || '') +
         '</textarea></div>' +
         '<div class="flex flex-wrap gap-2">' +
-        '<button type="button" data-audit="approved" class="px-4 py-2 rounded-xl bg-teal-600 text-white text-sm font-bold">通过入库</button>' +
+        '<button type="button" data-audit="approved" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-bold">通过入库</button>' +
         '<button type="button" data-audit="supplement" class="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-800 text-sm font-bold">待补材料</button>' +
         '<button type="button" data-audit="rejected" class="px-4 py-2 rounded-xl bg-rose-100 text-rose-800 text-sm font-bold">驳回</button>' +
         '<button type="button" data-toggle-accept="' +
@@ -409,7 +414,7 @@
             (m.acceptingOrders === false ? '暂停' : '正常') +
             '</td><td class="p-3"><button type="button" data-toggle-accept="' +
             esc(m.id) +
-            '" class="text-teal-700 text-xs font-bold">切换接单</button></td></tr>'
+            '" class="text-brand-700 text-xs font-bold">切换接单</button></td></tr>'
           );
         })
         .join('') +
@@ -564,7 +569,7 @@
             '" class="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center"/>' +
             '<button type="button" data-tp-save="' +
             esc(tp.id) +
-            '" class="text-xs font-bold bg-teal-600 text-white px-3 py-1.5 rounded-lg">保存</button>' +
+            '" class="text-xs font-bold bg-brand-600 text-white px-3 py-1.5 rounded-lg">保存</button>' +
             '</div></div>' +
             '<div class="flex flex-wrap gap-1">' +
             boothTags +
@@ -767,7 +772,7 @@
                   .join('') +
                 '<button type="button" data-fb-note="' +
                 esc(t.id) +
-                '" class="text-xs px-3 py-1.5 rounded-lg bg-teal-600 text-white">备注</button></div></div>'
+                '" class="text-xs px-3 py-1.5 rounded-lg bg-brand-600 text-white">备注</button></div></div>'
               );
             })
             .join('')
@@ -787,7 +792,7 @@
       '<input type="checkbox" id="flagWarehouse" ' +
       (wh ? 'checked' : '') +
       ' class="w-5 h-5"/></label>' +
-      '<button type="button" id="btnSaveFlags" class="mt-4 bg-teal-600 text-white px-4 py-2 rounded-xl text-sm font-bold">保存</button></div></div>'
+      '<button type="button" id="btnSaveFlags" class="mt-4 bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold">保存</button></div></div>'
     );
   }
 
