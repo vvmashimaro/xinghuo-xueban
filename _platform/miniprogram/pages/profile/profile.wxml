@@ -1,7 +1,14 @@
 <view class="container">
+  <view class="brand-header">
+    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
+    <view>
+      <view class="brand-title">星火学伴<text class="hub-badge">PROFILE</text></view>
+      <view class="brand-sub">{{parentName}} · {{studentNickname}}</view>
+    </view>
+  </view>
   <view class="hero">
     <view class="hero-title">个人中心</view>
-    <view class="hero-sub">{{parentName}} · {{studentNickname}}</view>
+    <view class="hero-sub">隐私与安全 · 学员画像快捷入口</view>
   </view>
 
   <!-- 手机号信息 -->

@@ -1,4 +1,11 @@
 <view class="container">
+  <view class="brand-header">
+    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
+    <view>
+      <view class="brand-title">星火学伴<text class="hub-badge">REGISTER</text></view>
+      <view class="brand-sub">阳光合规课辅 · 学情建档与考纲</view>
+    </view>
+  </view>
   <view class="hero">
     <view class="hero-title">{{heroTitle}}</view>
     <view class="hero-sub">{{heroSub}}</view>
@@ -42,7 +49,7 @@
     </view>
 
     <!-- 隐私政策阅读与同意 -->
-    <view class="check-row" bindtap="onTogglePrivacyRead" style="margin-bottom:16rpx;padding:16rpx;background:#f1f5f9;border-radius:8rpx;">
+    <view class="check-row panel-soft" bindtap="onTogglePrivacyRead" style="margin-bottom:16rpx;padding:16rpx;">
       <view class="check-box {{privacyRead?'on':''}}">{{privacyRead?'✓':''}}</view>
       <text>我已阅读并同意
         <text class="link" catchtap="goPrivacyPage">《个人信息保护政策》</text>
@@ -68,7 +75,7 @@
         </button>
         
         <!-- SMS 手动绑定表单 -->
-        <view wx:if="{{showSmsBinding}}" style="margin-top:16rpx;padding:16rpx;background:#f1f5f9;border-radius:8rpx;">
+        <view wx:if="{{showSmsBinding}}" class="panel-soft" style="margin-top:16rpx;padding:16rpx;">
           <view class="field">
             <text class="label">手机号</text>
             <input class="input" type="number" maxlength="11" placeholder="请输入手机号" value="{{smsPhone}}" bindinput="onSmsPhone" />
@@ -117,12 +124,18 @@
       <view class="card-title" style="margin:0;">目标学科</view>
       <text class="badge badge-teal">已配置 {{planCount}} 科 · {{topicCount}} 专题</text>
     </view>
-    <view class="muted" style="margin:12rpx 0 16rpx;">勾选学科后将打开三步配置向导（薄弱考点 → 推进节奏 → 学习痛点）</view>
-    <view class="chip-wrap">
-      <view wx:for="{{subjectOptionChips}}" wx:key="name"
-        class="chip {{item.on?'chip-on':''}}"
-        data-v="{{item.name}}" bindtap="onSubjectTap">{{item.name}}</view>
-    </view>
+    <view class="muted" style="margin:12rpx 0 16rpx;">勾选学科后将打开三步配置向导（薄弱考点 → 推进节奏 → 学习痛点）。年级【{{syllabusGradeShort}}】决定考点清单。</view>
+    <block wx:for="{{subjectCatalogGroups}}" wx:key="title" wx:for-item="group">
+      <view class="catalog-group-title">{{group.title}}</view>
+      <view class="subject-catalog-grid">
+        <view wx:for="{{group.tiles}}" wx:key="name" wx:for-item="tile"
+          class="subject-catalog-tile {{tile.on?'on':''}}"
+          data-v="{{tile.name}}" bindtap="onSubjectTap">
+          <view class="tile-name">{{tile.name}}</view>
+          <view class="tile-hint">{{tile.hint}}</view>
+        </view>
+      </view>
+    </block>
     <view wx:if="{{planChips.length===0}}" class="empty-hint">请勾选上方学科，系统将引导您配置薄弱考点与辅导策略</view>
     <view class="plan-chip" wx:for="{{planChips}}" wx:key="name">
       <view>

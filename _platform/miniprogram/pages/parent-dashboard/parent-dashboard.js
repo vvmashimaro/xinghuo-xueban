@@ -6,8 +6,36 @@ const BOOKING_STATUS = {
   pending_accept: { text: '待导师接单', badge: 'badge-pending' },
   escrow_locked: { text: '托管已锁', badge: 'badge-pending' },
   accepted: { text: '已接单', badge: 'badge-approved' },
+  completed: { text: '已完课', badge: 'badge-approved' },
   declined: { text: '已婉拒', badge: 'badge-rejected' }
 };
+
+const SUBJECT_FILTER_CHIPS = [
+  { value: '', label: '全部学科' },
+  { value: '数学', label: '初高中数学' },
+  { value: '物理', label: '初高中物理' },
+  { value: '英语', label: '中高考英语' },
+  { value: '化学', label: '初高中化学' },
+  { value: '语文', label: '语文学科' },
+  { value: '艺考', label: '艺考文化课' },
+  { value: '考研', label: '考研辅导' },
+  { value: '体育', label: '体育/艺体' }
+];
+
+const BOOKING_FILTER_TABS = [
+  { value: 'all', label: '全部' },
+  { value: 'pending', label: '待接单' },
+  { value: 'accepted', label: '已接单' },
+  { value: 'completed', label: '已完课' },
+  { value: 'declined', label: '已婉拒' }
+];
+
+const DEFAULT_BOOTHS = [
+  { id: '', label: '系统自动分配空闲仓位' },
+  { id: 'booth-1', label: '仓位 1' },
+  { id: 'booth-2', label: '仓位 2' },
+  { id: 'booth-3', label: '仓位 3' }
+];
 
 const SORT_OPTIONS = [
   { value: 'matchDesc', label: 'AI 学情契合度最高' },
@@ -37,7 +65,16 @@ Page({
     topTutors: [],
     myBookings: [],
     filterSubjects: [],
+    subjectFilterChips: [],
     subjectFilter: '',
+    bookingFilter: 'all',
+    bookingFilterTabs: BOOKING_FILTER_TABS,
+    filteredBookings: [],
+    matchEngineHint: '',
+    gradeBadge: '',
+    boothChips: [],
+    selectedBoothId: '',
+    selectedBoothLabel: '',
     spaceFilter: '',
     spaceFilterChips: [],
     searchKeyword: '',
@@ -170,13 +207,11 @@ Page({
       })
     );
 
-    const filterSubjects = [];
-    (parent.subjects || []).forEach((s) => {
-      if (filterSubjects.indexOf(s) < 0) filterSubjects.push(s);
-    });
-    ['数学', '物理', '英语', '化学', '语文', '体育', '考研', '艺考'].forEach((s) => {
-      if (filterSubjects.indexOf(s) < 0) filterSubjects.push(s);
-    });
+    const subjectFilterChips = SUBJECT_FILTER_CHIPS.map((c) => ({
+      value: c.value,
+      label: c.label,
+      on: (this.data.subjectFilter || '') === c.value
+    }));
 
     const spaceFilterChips = SPACE_FILTERS.map((f) => ({
       value: f.value,
@@ -195,6 +230,24 @@ Page({
       const st = BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' };
       return Object.assign({}, b, { statusText: st.text, statusBadge: st.badge });
     });
+
+    const bookingFilter = this.data.bookingFilter || 'all';
+    const filteredBookings = bookings.filter((b) => {
+      if (bookingFilter === 'all') return true;
+      if (bookingFilter === 'pending') {
+        return b.status === 'pending_accept' || b.status === 'escrow_locked';
+      }
+      if (bookingFilter === 'accepted') return b.status === 'accepted';
+      if (bookingFilter === 'completed') return b.status === 'completed';
+      if (bookingFilter === 'declined') return b.status === 'declined';
+      return true;
+    });
+
+    const subjects = parent.subjects || [];
+    const matchEngineHint = subjects.length
+      ? subjects.slice(0, 3).join('/') + (parent.targetGoal ? ' · ' + String(parent.targetGoal).slice(0, 24) : '')
+      : (parent.targetGoal || parent.studentGrade || '学情画像');
+    const gradeBadge = (parent.studentGrade || '').split(' ')[0] || '学员';
 
     // 冻结金额示意：取待接单/已接单金额合计的演示值
     let frozen = 0;
@@ -226,9 +279,12 @@ Page({
       tutors,
       topTutors,
       recallCount,
-      filterSubjects,
+      subjectFilterChips,
       spaceFilterChips,
       myBookings: bookings,
+      filteredBookings,
+      matchEngineHint,
+      gradeBadge,
       parentId: parent.id,
       parentPhone: parent.phone,
       phoneAuthorized,
@@ -248,6 +304,13 @@ Page({
   },
   setSubjectFilter(e) {
     this.setData({ subjectFilter: e.currentTarget.dataset.v || '' }, () => this.reload());
+  },
+  setBookingFilter(e) {
+    this.setData({ bookingFilter: e.currentTarget.dataset.v || 'all' }, () => this.reload());
+  },
+  onRecalculateMatch() {
+    showToast('正在重新算力匹配…');
+    this.reload();
   },
   setSpaceFilter(e) {
     this.setData({ spaceFilter: e.currentTarget.dataset.v || '' }, () => this.reload());
@@ -365,6 +428,12 @@ Page({
       spaceIndex = spaces.indexOf(this._parent.selectedSpace);
     }
     if (spaceIndex < 0) spaceIndex = 0;
+    const boothChips = DEFAULT_BOOTHS.map((b) => ({
+      id: b.id,
+      label: b.label,
+      on: b.id === '',
+      auto: !b.id
+    }));
     this.setData({
       bookingShow: true,
       bookingTutor: tutor,
@@ -373,8 +442,19 @@ Page({
       hours: 2,
       spaceIndex,
       escrowShow: false,
-      escrowAmount: (tutor.hourlyRate * 2).toFixed(2)
+      escrowAmount: (tutor.hourlyRate * 2).toFixed(2),
+      boothChips,
+      selectedBoothId: '',
+      selectedBoothLabel: DEFAULT_BOOTHS[0].label
     });
+  },
+  setBooth(e) {
+    const id = e.currentTarget.dataset.id || '';
+    const label = e.currentTarget.dataset.label || '';
+    const boothChips = (this.data.boothChips || []).map((b) =>
+      Object.assign({}, b, { on: b.id === id })
+    );
+    this.setData({ boothChips, selectedBoothId: id, selectedBoothLabel: label });
   },
 
   closeBooking() {
@@ -459,6 +539,8 @@ Page({
       timeSlot: slot,
       hours,
       sessions,
+      boothId: this.data.selectedBoothId || undefined,
+      boothLabel: this.data.selectedBoothLabel || undefined,
       timeConflictForced: this.data.pendingForceBook || undefined,
       status: 'pending_accept'
     });

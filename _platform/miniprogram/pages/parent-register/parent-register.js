@@ -3,10 +3,22 @@ const { showToast } = require('../../utils/toast');
 const appConfig = require('../../utils/config');
 const {
   getTopicsForSubject,
+  getSyllabusCategory,
   PAIN_OPTIONS,
   PACING_OPTIONS,
   AGREEMENT_TEXT
 } = require('../../utils/syllabus');
+
+const SUBJECT_TILES = [
+  { name: '数学', hint: '几何/函数/压轴' },
+  { name: '物理', hint: '电学/力学/模型' },
+  { name: '英语', hint: '长难句/完形/写作' },
+  { name: '化学', hint: '推断/酸碱盐实验' },
+  { name: '语文', hint: '文言文/阅读/作文' },
+  { name: '体育', hint: '体考/专项/体能' },
+  { name: '政治', hint: '马原/史纲/时政' },
+  { name: '全科陪读答疑', hint: '错题清零/自律' }
+];
 
 const BUDGET_GAP = 10;
 
@@ -22,13 +34,31 @@ Page({
     parentName: '',
     phone: '',
     studentNickname: '',
-    grades: ['小学五年级', '小学六年级', '初一', '初二', '初三 (中考冲刺)', '高一', '高二', '高三 (高考冲刺)', '艺考文化课冲刺'],
-    gradeIndex: 4,
+    grades: [
+      '初三 (中考冲刺)',
+      '初二 (代数与几何分水岭)',
+      '初一 (小初衔接)',
+      '高三 (高考总复习)',
+      '高二 (选科突破)',
+      '高一 (必修衔接)',
+      '小六 (小升初)',
+      '小五 (应用题)',
+      '小四及以下',
+      '考研公共课冲刺 (英/数/政)',
+      '考研专业课一对一备考',
+      '艺体专项 · 中考体考/体育',
+      '艺体专项 · 舞蹈/播音艺考',
+      '高三艺考文化课冲刺',
+      '初高中竞赛与自招拔尖'
+    ],
+    gradeIndex: 0,
+    syllabusGradeShort: '初三',
+    subjectCatalogGroups: [],
     districts: ['青羊区', '武侯区', '高新区', '锦江区', '成华区', '金牛区'],
     districtIndex: 0,
     spaces: Storage.SPACE_OPTIONS || ['青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'],
     spaceIndex: 0,
-    subjectOptions: ['数学', '物理', '英语', '化学', '语文', '全科陪读答疑'],
+    subjectOptions: SUBJECT_TILES.map((t) => t.name),
     subjectOptionChips: [],
     selectedSubjects: [],
     subjectPlans: {},
@@ -153,11 +183,40 @@ Page({
 
   refreshSubjectOptionChips() {
     const selected = this.data.selectedSubjects || [];
+    const grade = this.data.grades[this.data.gradeIndex] || '';
+    const category = getSyllabusCategory(grade);
+    const withOn = (tiles) =>
+      tiles.map((t) => ({
+        name: t.name,
+        hint: t.hint,
+        on: selected.indexOf(t.name) >= 0
+      }));
+
+    let groups = [];
+    if (category === 'postgrad') {
+      groups = [
+        { title: '考研攻读', tiles: withOn(SUBJECT_TILES.filter((t) => ['数学', '英语', '政治'].includes(t.name))) },
+        { title: '通用补强', tiles: withOn(SUBJECT_TILES.filter((t) => ['化学', '语文', '全科陪读答疑'].includes(t.name))) }
+      ];
+    } else if (category === 'artsports') {
+      groups = [
+        { title: '艺体特长', tiles: withOn(SUBJECT_TILES.filter((t) => ['体育', '语文', '英语'].includes(t.name))) },
+        { title: '文化课辅导', tiles: withOn(SUBJECT_TILES.filter((t) => ['数学', '全科陪读答疑'].includes(t.name))) }
+      ];
+    } else {
+      groups = [
+        { title: '目标学科（可多选）', tiles: withOn(SUBJECT_TILES.filter((t) => t.name !== '政治')) }
+      ];
+    }
+
+    const gradeShort = (grade.split(' ')[0] || grade).replace('·', '').slice(0, 8);
     this.setData({
       subjectOptionChips: (this.data.subjectOptions || []).map((name) => ({
         name,
         on: selected.indexOf(name) >= 0
-      }))
+      })),
+      subjectCatalogGroups: groups,
+      syllabusGradeShort: gradeShort
     });
   },
 
@@ -340,7 +399,9 @@ Page({
   
   /* ========== 原有功能 ========== */
   onGoal(e) { this.setData({ targetGoal: e.detail.value }); },
-  onGrade(e) { this.setData({ gradeIndex: Number(e.detail.value) }); },
+  onGrade(e) {
+    this.setData({ gradeIndex: Number(e.detail.value) }, () => this.refreshSubjectOptionChips());
+  },
   onDistrict(e) { this.setData({ districtIndex: Number(e.detail.value) }); },
   onSpace(e) { this.setData({ spaceIndex: Number(e.detail.value) }); },
   onToggleConsent() { this.setData({ consent: !this.data.consent }); },

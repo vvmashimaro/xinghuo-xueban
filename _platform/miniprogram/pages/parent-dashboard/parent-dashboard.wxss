@@ -11,10 +11,11 @@
 }
 .avatar.sm { width: 56rpx; height: 56rpx; border-radius: 14rpx; font-size: 24rpx; }
 .tutor-card { padding-bottom: 20rpx; }
-.tutor-top { border-color: #FFC0CB; box-shadow: 0 4rpx 20rpx rgba(13, 148, 136, 0.12); }
+.tutor-top { border-color: #FFC0CB; box-shadow: 0 4rpx 20rpx rgba(255, 90, 45, 0.14); }
 .bk-row {
-  margin-top: 14rpx; padding: 16rpx; background: #f8fafc;
-  border-radius: 14rpx; border: 1px solid #e2e8f0;
+  margin-top: 14rpx; padding: 16rpx; background: rgba(255, 255, 255, 0.9);
+  border-radius: 18rpx; border: 1px solid rgba(255, 192, 203, 0.45);
+  box-shadow: 0 4rpx 14rpx rgba(255, 90, 45, 0.06);
 }
 .slider-row { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
 .slider-row .val { width: 64rpx; text-align: right; font-weight: 700; color: #E83A1F; font-size: 24rpx; }
@@ -109,13 +110,14 @@
   text-decoration: underline;
 }
 
-.passport-hero {
+.passport-hero-brand {
   padding: 24rpx; border-radius: 18rpx;
-  background: linear-gradient(135deg, #0f172a, #134e4a);
-  margin-bottom: 16rpx; color: #fff;
+  background: linear-gradient(135deg, #fff8f0 0%, #ffe4d6 55%, #ede4ff 100%);
+  margin-bottom: 16rpx; color: #0f172a;
+  border: 1px solid rgba(255, 192, 203, 0.45);
 }
 .passport-plan {
-  padding: 16rpx; background: #f8fafc; border: 1px solid #e2e8f0;
+  padding: 16rpx; background: #fff8f0; border: 1px solid #ffc0cb;
   border-radius: 14rpx; margin-bottom: 12rpx; font-size: 24rpx;
 }
 .passport-panel .modal-body { padding-bottom: 8rpx; }

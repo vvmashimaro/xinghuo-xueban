@@ -2,13 +2,13 @@
   <view class="brand-header">
     <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
     <view>
-      <view class="brand-title">星火学伴</view>
-      <view class="brand-sub">导师工作台</view>
+      <view class="brand-title">星火学伴<text class="hub-badge">MENTOR-HUB</text></view>
+      <view class="brand-sub">{{mentorName}} · {{university}}</view>
     </view>
   </view>
   <view class="hero">
-    <view class="hero-title">{{mentorName}} 的工作台</view>
-    <view class="hero-sub">{{university}} · {{code}}</view>
+    <view class="hero-title">导师工作台</view>
+    <view class="hero-sub">审核进度 · 资料维护 · 约课申请箱 · {{code}}</view>
   </view>
 
   <view class="banner {{bannerClass}}" wx:if="{{bannerText}}">{{bannerText}}</view>

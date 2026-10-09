@@ -1,6 +1,13 @@
 <view class="container">
+  <view class="brand-header">
+    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
+    <view>
+      <view class="brand-title">星火学伴<text class="hub-badge">ADMIN</text></view>
+      <view class="brand-sub">管理端综合质审台</view>
+    </view>
+  </view>
   <view class="hero">
-    <view class="hero-title">管理端综合质审台</view>
+    <view class="hero-title">导师案卷质审</view>
     <view class="hero-sub">学信网核验 · 试讲量规 · 电子工牌</view>
   </view>
 

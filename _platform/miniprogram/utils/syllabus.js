@@ -20,11 +20,23 @@ const SYLLABUS_DATABASE = {
     '语文': ['小学文言文言短文启蒙与字词', '阅读理解段落抓主旨及修辞手法', '记叙文真情实感细节描写构思', '修改病句与词语近反义词积累'],
     '英语': ['小升初核心词汇与短语运用', '一般现在时与现在进行时时态对比', '日常情景交际对话与阅读简答', '看图写话及基础英文句子规范'],
     '全科陪读答疑': ['课后作业自主完成习惯培养', '书写工整与做题粗心马虎纠正', '校内知识点错题当日清零']
+  },
+  postgrad: {
+    '数学': ['高数极限与导数基础', '线性代数矩阵运算', '概率统计常见分布'],
+    '英语': ['考研阅读长难句拆解', '写作模板与论证升级', '完形填空逻辑线索'],
+    '政治': ['马原唯物辩证法', '史纲时间轴梳理', '时政热点归纳']
+  },
+  artsports: {
+    '体育': ['专项技术动作分解', '体能与爆发力训练', '体考模拟与节奏控制'],
+    '语文': ['艺考文化课阅读提速', '作文素材积累'],
+    '英语': ['艺考文化课词汇巩固', '基础语法填空']
   }
 };
 
 function getSyllabusCategory(gradeText) {
   if (!gradeText || typeof gradeText !== 'string') return 'junior';
+  if (gradeText.includes('考研')) return 'postgrad';
+  if (gradeText.includes('艺体') || gradeText.includes('体考')) return 'artsports';
   if (gradeText.includes('高') || gradeText.includes('艺考') || gradeText.includes('竞赛')) return 'senior';
   if (gradeText.includes('小')) return 'primary';
   return 'junior';
