@@ -6,18 +6,18 @@
 }
 .avatar {
   width: 72rpx; height: 72rpx; border-radius: 18rpx;
-  background: #0d9488; color: #fff; font-weight: 900;
+  background: #FF5A2D; color: #fff; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
 }
 .avatar.sm { width: 56rpx; height: 56rpx; border-radius: 14rpx; font-size: 24rpx; }
 .tutor-card { padding-bottom: 20rpx; }
-.tutor-top { border-color: #99f6e4; box-shadow: 0 4rpx 20rpx rgba(13, 148, 136, 0.12); }
+.tutor-top { border-color: #FFC0CB; box-shadow: 0 4rpx 20rpx rgba(13, 148, 136, 0.12); }
 .bk-row {
   margin-top: 14rpx; padding: 16rpx; background: #f8fafc;
   border-radius: 14rpx; border: 1px solid #e2e8f0;
 }
 .slider-row { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
-.slider-row .val { width: 64rpx; text-align: right; font-weight: 700; color: #0f766e; font-size: 24rpx; }
+.slider-row .val { width: 64rpx; text-align: right; font-weight: 700; color: #E83A1F; font-size: 24rpx; }
 .iot-grid { display: flex; gap: 12rpx; margin-top: 16rpx; }
 .iot-cell {
   flex: 1; text-align: center; padding: 16rpx 8rpx;
@@ -35,16 +35,16 @@
   margin-right: 8rpx;
 }
 .escrow-box {
-  margin-top: 20rpx; padding: 20rpx; background: #f0fdfa;
-  border: 1px solid #99f6e4; border-radius: 16rpx; font-size: 24rpx;
+  margin-top: 20rpx; padding: 20rpx; background: #FFF8F0;
+  border: 1px solid #FFC0CB; border-radius: 16rpx; font-size: 24rpx;
 }
 .agr-p { font-size: 22rpx; color: #475569; line-height: 1.6; margin-bottom: 6rpx; }
 .agr-tip {
-  margin-top: 16rpx; padding: 14rpx; background: #f0fdfa; border: 1px solid #99f6e4;
+  margin-top: 16rpx; padding: 14rpx; background: #FFF8F0; border: 1px solid #FFC0CB;
   border-radius: 12rpx; font-size: 22rpx; color: #134e4a;
 }
 .btn-iot-idle {
-  background: #0d9488; color: #fff; border-radius: 20rpx; font-weight: 700; font-size: 26rpx; padding: 20rpx; border: none;
+  background: #FF5A2D; color: #fff; border-radius: 20rpx; font-weight: 700; font-size: 26rpx; padding: 20rpx; border: none;
 }
 .btn-iot-idle::after { border: none; }
 .btn-iot-opened {
@@ -60,13 +60,13 @@
   display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 24rpx;
 }
 .action-btn {
-  flex: 1; min-width: 28%; background: #f0fdfa; color: #0f766e;
-  border: 1px solid #99f6e4; border-radius: 16rpx; font-size: 22rpx; font-weight: 700;
+  flex: 1; min-width: 28%; background: #FFF8F0; color: #E83A1F;
+  border: 1px solid #FFC0CB; border-radius: 16rpx; font-size: 22rpx; font-weight: 700;
   padding: 16rpx 12rpx; line-height: 1.3;
 }
 .action-btn::after { border: none; }
 .action-btn.action-primary {
-  background: #0d9488; color: #fff; border-color: #0d9488;
+  background: #FF5A2D; color: #fff; border-color: #FF5A2D;
 }
 .action-btn.action-muted {
   background: #f8fafc; color: #64748b; border-color: #e2e8f0;
@@ -82,7 +82,7 @@
 .top-card {
   display: inline-block; vertical-align: top;
   width: 280rpx; margin-right: 16rpx; padding: 20rpx;
-  background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 18rpx;
+  background: #FFF8F0; border: 1px solid #FFC0CB; border-radius: 18rpx;
   white-space: normal;
 }
 
@@ -105,7 +105,7 @@
 }
 
 .lecture-link {
-  margin-top: 10rpx; color: #0f766e; font-size: 22rpx; font-weight: 700;
+  margin-top: 10rpx; color: #E83A1F; font-size: 22rpx; font-weight: 700;
   text-decoration: underline;
 }
 

@@ -214,11 +214,11 @@ function injectL1SubStepUI() {
     <div class="flex items-center justify-between text-xs mt-4 pt-4 border-t border-slate-100">
       ${Object.keys(L1_SUBSTEPS).map(i => `
         <button type="button" onclick="goToL1SubStep(${i})" id="l1SubTab${i}" 
-          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-teal-700' : 'text-slate-400'} cursor-pointer transition-colors">
-          <span id="l1SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-[10px] font-bold transition-all">${i}</span>
+          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-brand-700' : 'text-slate-400'} cursor-pointer transition-colors">
+          <span id="l1SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-[10px] font-bold transition-all">${i}</span>
           <span class="hidden sm:inline">${L1_SUBSTEPS[i].title}</span>
         </button>
-        ${i < 4 ? '<div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l1SubProgress' + i + '" class="h-full bg-teal-600 transition-all w-0"></div></div>' : ''}
+        ${i < 4 ? '<div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l1SubProgress' + i + '" class="h-full bg-brand-600 transition-all w-0"></div></div>' : ''}
       `).join('')}
     </div>
   `;
@@ -317,10 +317,10 @@ function addL1SubStepNavigationToContainer(i, container) {
     const navHTML = `
       <div data-l1-wizard-nav="1" class="flex gap-2.5 pt-2">
         ${i > 1 ? `<button type="button" onclick="goToL1SubStep(${i - 1})" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">返回上一步</button>` : ''}
-        ${i < 4 ? `<button type="button" onclick="goToL1SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+        ${i < 4 ? `<button type="button" onclick="goToL1SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-brand-600/20 flex items-center justify-center gap-2 cursor-pointer">
           <span>下一步：${L1_SUBSTEPS[i + 1].title}</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
-        </button>` : `<button type="button" onclick="completeL1AndGoToL2()" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+        </button>` : `<button type="button" onclick="completeL1AndGoToL2()" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-700 hover:to-blue-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2 cursor-pointer">
           <i class="fa-solid fa-check text-xs"></i>
           <span>完成 L1，进入 L2 能力画像</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -358,11 +358,11 @@ function injectL2SubStepUI() {
     <div class="flex items-center justify-between text-xs mt-4 pt-4 border-t border-slate-100">
       ${Object.keys(L2_SUBSTEPS).map(i => `
         <button type="button" onclick="goToL2SubStep(${i})" id="l2SubTab${i}" 
-          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-teal-700' : 'text-slate-400'} cursor-pointer transition-colors">
-          <span id="l2SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-[10px] font-bold transition-all">${i}</span>
+          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-brand-700' : 'text-slate-400'} cursor-pointer transition-colors">
+          <span id="l2SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-[10px] font-bold transition-all">${i}</span>
           <span class="hidden sm:inline">${L2_SUBSTEPS[i].title}</span>
         </button>
-        ${i < 3 ? '<div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l2SubProgress' + i + '" class="h-full bg-teal-600 transition-all w-0"></div></div>' : ''}
+        ${i < 3 ? '<div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l2SubProgress' + i + '" class="h-full bg-brand-600 transition-all w-0"></div></div>' : ''}
       `).join('')}
     </div>
   `;
@@ -442,7 +442,7 @@ function addL2SubStepNavigationToContainer(i, container) {
     const navHTML = `
       <div data-l2-wizard-nav="1" class="flex gap-2.5 pt-2">
         ${i > 1 ? `<button type="button" onclick="goToL2SubStep(${i - 1})" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">返回上一步</button>` : ''}
-        ${i < 3 ? `<button type="button" onclick="goToL2SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+        ${i < 3 ? `<button type="button" onclick="goToL2SubStep(${i + 1})" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md shadow-brand-600/20 flex items-center justify-center gap-2 cursor-pointer">
           <span>下一步：${L2_SUBSTEPS[i + 1].title}</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>` : `<button type="button" onclick="completeL2AndSubmit()" class="${i > 1 ? 'w-2/3' : 'w-full'} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer">
@@ -488,10 +488,10 @@ function goToL1SubStep(step) {
     if (i < step) {
       // Completed step
       if (tab) {
-        tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
+        tab.className = 'flex items-center gap-1.5 font-bold text-brand-700 cursor-pointer transition-colors';
       }
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold transition-all';
         icon.innerHTML = '<i class="fa-solid fa-check"></i>';
       }
       const progress = document.getElementById(`l1SubProgress${i}`);
@@ -499,10 +499,10 @@ function goToL1SubStep(step) {
     } else if (i === step) {
       // Current step
       if (tab) {
-        tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
+        tab.className = 'flex items-center gap-1.5 font-bold text-brand-700 cursor-pointer transition-colors';
       }
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px] font-bold transition-all';
         icon.textContent = i;
       }
     } else {
@@ -545,18 +545,18 @@ function goToL2SubStep(step) {
     
     if (i < step) {
       // Completed
-      if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
+      if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-brand-700 cursor-pointer transition-colors';
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold transition-all';
         icon.innerHTML = '<i class="fa-solid fa-check"></i>';
       }
       const progress = document.getElementById(`l2SubProgress${i}`);
       if (progress) progress.style.width = '100%';
     } else if (i === step) {
       // Current
-      if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
+      if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-brand-700 cursor-pointer transition-colors';
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px] font-bold transition-all';
         icon.textContent = i;
       }
     } else {

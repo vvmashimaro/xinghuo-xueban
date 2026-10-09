@@ -10,26 +10,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdfa',
-              100: '#ccfbf1',
-              200: '#99f6e4',
-              500: '#14b8a6',
-              600: '#0d9488',
-              700: '#0f766e',
-              800: '#115e59',
-              900: '#134e4a',
-            }
-          }
-        }
-      }
-    }
-  </script>
+    <link rel="stylesheet" href="css/xinghuo-tokens.css">
+  <script src="js/tailwind-brand.js"></script>
+  <script>tailwind.config = window.XH_TAILWIND_CONFIG;</script>
   <style>
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -45,11 +28,11 @@
     }
     .card-hover-effect:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 28px -6px rgba(15, 118, 110, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 12px 28px -6px rgba(255, 90, 45, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.04);
     }
 
     .shimmer-badge {
-      background: linear-gradient(90deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.35) 50%, rgba(20, 184, 166, 0.15) 100%);
+      background: linear-gradient(90deg, rgba(255, 90, 45, 0.12) 0%, rgba(255, 138, 61, 0.28) 50%, rgba(255, 90, 45, 0.12) 100%);
       background-size: 200% 100%;
       animation: shimmer 2.2s infinite;
     }
@@ -78,28 +61,26 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
+<body class="xh-shell-bg text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-brand-100 selection:text-brand-900 overflow-x-hidden max-w-[100vw]">
 
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
       <!-- 品牌标识与当前学员身份卡 -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-teal-600/20 shrink-0">
-          <i class="fa-solid fa-graduation-cap"></i>
-        </div>
+        <img src="assets/logo-xinghuo.jpg" alt="星火伴学" width="40" height="40" class="xh-brand-logo w-10 h-10 shrink-0 ring-2 ring-white/70" />
         <div>
           <div class="flex items-center gap-2">
             <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
-            <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">
+            <span class="text-[10px] bg-brand-50 text-brand-800 font-bold px-1.5 py-0.5 rounded border border-brand-200 font-mono">
               PARENT-HUB
             </span>
           </div>
           <!-- 快捷学情档案切换 -->
           <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-            <i class="fa-solid fa-circle-user text-teal-600 text-[11px]"></i>
+            <i class="fa-solid fa-circle-user text-brand-600 text-[11px]"></i>
             <span class="font-bold text-slate-800" id="headerStudentName">乐乐同学</span>
             <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 rounded font-medium" id="headerGradeBadge">初三 · 中考冲刺</span>
-            <button type="button" onclick="openPassportDrawer()" class="text-teal-700 hover:text-teal-900 font-medium text-[11px] underline ml-1 cursor-pointer">
+            <button type="button" onclick="openPassportDrawer()" class="text-brand-700 hover:text-brand-900 font-medium text-[11px] underline ml-1 cursor-pointer">
               查阅学情护照
             </button>
           </div>
@@ -110,7 +91,7 @@
       <div class="flex items-center gap-2.5 sm:gap-4">
         <!-- 银行托管账户资金小微模块 -->
         <div class="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 text-xs">
-          <div class="w-7 h-7 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-xs">
+          <div class="w-7 h-7 rounded-xl bg-brand-100 text-brand-800 flex items-center justify-center text-xs">
             <i class="fa-solid fa-building-columns"></i>
           </div>
           <div>
@@ -123,14 +104,14 @@
         </div>
 
         <!-- 页面跳转工具 -->
-        <button type="button" onclick="safeNavigate('assessment.html', '学生学科测评')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
-          <i class="fa-solid fa-clipboard-check text-teal-600 text-xs"></i>
+        <button type="button" onclick="safeNavigate('assessment.html', '学生学科测评')" class="text-xs text-slate-600 hover:text-brand-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-clipboard-check text-brand-600 text-xs"></i>
           <span class="hidden sm:inline">学科测评</span>
           <span class="sm:hidden">测评</span>
         </button>
 
-        <button type="button" onclick="safeNavigate('parent_register.html', '学情重构档案')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
-          <i class="fa-solid fa-sliders text-teal-600 text-xs"></i>
+        <button type="button" onclick="safeNavigate('parent_register.html', '学情重构档案')" class="text-xs text-slate-600 hover:text-brand-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-sliders text-brand-600 text-xs"></i>
           <span class="hidden sm:inline">重配学情与考纲</span>
           <span class="sm:hidden">改学情</span>
         </button>
@@ -142,15 +123,15 @@
     </div>
   </header>
 
-  <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
-    <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-brand-950 text-white px-4 py-5 sm:py-6 border-b border-brand-900/40 relative overflow-hidden">
+    <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto relative z-10 space-y-4">
 
       <!-- AI 算力匹配状态头 -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-400/30 mb-1.5">
-            <i class="fa-solid fa-wand-magic-sparkles text-teal-400 text-xs"></i>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 text-xs font-semibold border border-brand-400/30 mb-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-brand-400 text-xs"></i>
             <span>星火算力匹配引擎 · 基于【初三中考/几何动点/随堂查缺补漏】</span>
           </div>
           <h1 class="text-lg sm:text-xl md:text-2xl font-black tracking-tight leading-tight">
@@ -159,7 +140,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button type="button" onclick="recalculateMatch()" class="text-xs bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+          <button type="button" onclick="recalculateMatch()" class="text-xs bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-md shadow-brand-600/20 flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-rotate text-xs" id="recalcSpinIcon"></i>
             <span>重新算力匹配</span>
           </button>
@@ -180,15 +161,15 @@
     <section id="parentBookingsSection" class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-3">
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-check text-teal-600"></i>
+          <i class="fa-solid fa-calendar-check text-brand-600"></i>
           我的约课
         </h2>
-        <button type="button" onclick="renderParentBookings()" class="text-[11px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg cursor-pointer">
+        <button type="button" onclick="renderParentBookings()" class="text-[11px] font-bold text-brand-700 hover:text-brand-900 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2.5 py-1 rounded-lg cursor-pointer">
           刷新状态
         </button>
       </div>
       <div class="flex flex-wrap gap-1.5" id="parentBookingFilterBar">
-        <button type="button" data-filter="all" onclick="setParentBookingFilter('all', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
+        <button type="button" data-filter="all" onclick="setParentBookingFilter('all', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-brand-600 text-white border-brand-600 cursor-pointer">全部</button>
         <button type="button" data-filter="pending" onclick="setParentBookingFilter('pending', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
         <button type="button" data-filter="accepted" onclick="setParentBookingFilter('accepted', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
         <button type="button" data-filter="completed" onclick="setParentBookingFilter('completed', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
@@ -216,13 +197,13 @@
       <div class="flex flex-col sm:flex-row gap-2.5">
         <div class="relative flex-1">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-          <input type="text" id="mainSearchInput" oninput="applyFilterAndSearch()" placeholder="搜索导师姓名、川大/电子科大、初中数学压轴模型、电学实验、艺考文化课..." class="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium transition">
+          <input type="text" id="mainSearchInput" oninput="applyFilterAndSearch()" placeholder="搜索导师姓名、川大/电子科大、初中数学压轴模型、电学实验、艺考文化课..." class="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium transition">
           <button type="button" onclick="clearSearchInput()" id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
             <i class="fa-solid fa-circle-xmark text-sm"></i>
           </button>
         </div>
 
-        <button type="button" onclick="applyFilterAndSearch()" class="bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+        <button type="button" onclick="applyFilterAndSearch()" class="bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-md shadow-brand-600/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer">
           <i class="fa-solid fa-magnifying-glass text-xs"></i>
           <span>全域检索</span>
         </button>
@@ -240,7 +221,7 @@
         <div class="flex items-start sm:items-center gap-2">
           <span class="text-slate-400 font-bold shrink-0 w-16 text-[11px]">学科方向：</span>
           <div class="flex flex-wrap gap-1.5" id="subjectFilterGroup">
-            <button type="button" onclick="setSubjectFilter('all', this)" class="filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer">全部学科</button>
+            <button type="button" onclick="setSubjectFilter('all', this)" class="filter-chip px-2.5 py-1 rounded-lg font-bold bg-brand-600 text-white transition cursor-pointer">全部学科</button>
             <button type="button" onclick="setSubjectFilter('数学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中数学</button>
             <button type="button" onclick="setSubjectFilter('物理', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中物理</button>
             <button type="button" onclick="setSubjectFilter('英语', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">中高考英语</button>
@@ -279,9 +260,9 @@
           <!-- 时薪区间过滤（与家长建档 budgetMin/Max 对齐，可再收窄） -->
           <div class="flex flex-wrap items-center gap-2">
             <span class="text-slate-400 font-medium">时薪预算区间：</span>
-            <span class="font-mono font-bold text-teal-700">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">180</span>/h</span>
-            <input type="range" id="rateMinFilter" min="70" max="260" step="10" value="80" oninput="onMinRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="下限">
-            <input type="range" id="rateRangeFilter" min="70" max="260" step="10" value="180" oninput="onMaxRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="上限">
+            <span class="font-mono font-bold text-brand-700">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">180</span>/h</span>
+            <input type="range" id="rateMinFilter" min="70" max="260" step="10" value="80" oninput="onMinRateFilterChange(this.value)" class="w-24 sm:w-28 accent-brand-600 cursor-pointer" title="下限">
+            <input type="range" id="rateRangeFilter" min="70" max="260" step="10" value="180" oninput="onMaxRateFilterChange(this.value)" class="w-24 sm:w-28 accent-brand-600 cursor-pointer" title="上限">
           </div>
         </div>
 
@@ -293,9 +274,9 @@
       <!-- 状态与检索结果计数横条 -->
       <div class="flex items-center justify-between text-xs px-1">
         <div class="flex items-center gap-2 font-bold text-slate-800">
-          <i class="fa-solid fa-list text-teal-600"></i>
+          <i class="fa-solid fa-list text-brand-600"></i>
           <span>可约双一流导师库</span>
-          <span class="text-[11px] font-mono text-slate-400">（共 <strong id="tutorCountBadge" class="text-teal-700">6</strong> 位符合条件）</span>
+          <span class="text-[11px] font-mono text-slate-400">（共 <strong id="tutorCountBadge" class="text-brand-700">6</strong> 位符合条件）</span>
         </div>
         <div class="flex items-center gap-2 text-[11px] text-slate-400">
           <i class="fa-solid fa-shield-check text-emerald-600"></i>
@@ -315,15 +296,15 @@
     <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="tutorModalContent">
       
       <!-- 弹窗顶栏 -->
-      <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 p-4 text-white flex items-center justify-between shrink-0">
+      <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-brand-950 p-4 text-white flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center text-sm border border-teal-400/30">
+          <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-300 flex items-center justify-center text-sm border border-brand-400/30">
             <i class="fa-solid fa-id-card-clip"></i>
           </div>
           <div>
             <h3 class="font-bold text-sm leading-tight flex items-center gap-1.5">
               <span id="modalTutorName">张老师</span>
-              <span class="text-[10px] bg-teal-500/30 text-teal-300 px-1.5 py-0.2 rounded font-mono" id="modalTutorCode">CD-2026-8809</span>
+              <span class="text-[10px] bg-brand-500/30 text-brand-300 px-1.5 py-0.2 rounded font-mono" id="modalTutorCode">CD-2026-8809</span>
             </h3>
             <div class="text-[10px] text-slate-300">官方实名存证已备案 · 试讲教研综合评分 4.9/5.0</div>
           </div>
@@ -339,23 +320,23 @@
         <!-- 导师核心卡 -->
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0" id="modalTutorAvatar">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-700 to-brand-500 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0" id="modalTutorAvatar">
               张
             </div>
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-base font-black text-slate-900" id="modalDetailName">张老师</span>
                 <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">学信网在籍有效</span>
-                <span class="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.2 rounded font-mono" id="modalRatingScore">5.0 ★</span>
+                <span class="text-[10px] bg-brand-50 text-brand-800 border border-brand-200 px-1.5 py-0.2 rounded font-mono" id="modalRatingScore">5.0 ★</span>
               </div>
               <div class="text-slate-600 mt-1" id="modalUniversityAndDegree">四川大学 · 应用数学硕士在读</div>
-              <div class="text-[11px] text-slate-400 mt-0.5">授课累计：<span class="text-teal-700 font-bold" id="modalTotalHours">142</span> 课时 · 0 差评违约记录</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">授课累计：<span class="text-brand-700 font-bold" id="modalTotalHours">142</span> 课时 · 0 差评违约记录</div>
             </div>
           </div>
 
           <div class="text-right sm:border-l sm:border-slate-200 sm:pl-4">
             <span class="text-[10px] text-slate-400 block">课酬直划费率</span>
-            <div class="text-xl font-black text-teal-700 font-mono">
+            <div class="text-xl font-black text-brand-700 font-mono">
               ¥<span id="modalHourlyRate">135</span><span class="text-xs font-normal text-slate-500"> /h</span>
             </div>
             <span class="text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">一课一消 · 零大额预存</span>
@@ -366,10 +347,10 @@
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
             <span class="font-bold text-slate-800 flex items-center gap-1.5">
-              <i class="fa-solid fa-circle-play text-teal-600"></i>
+              <i class="fa-solid fa-circle-play text-brand-600"></i>
               <span>5-10分钟真题实景试讲视频（板书与解题思路复核）</span>
             </span>
-            <span class="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+            <span class="text-[10px] text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
               教研组全流程打分合格
             </span>
           </div>
@@ -386,7 +367,7 @@
 
             <!-- 视频中央播放按钮 -->
             <div class="absolute inset-0 flex items-center justify-center">
-              <button type="button" onclick="simulatePlayVideo()" id="btnPlayTrialVideo" class="w-14 h-14 rounded-full bg-teal-600/90 hover:bg-teal-600 active:scale-95 text-white flex items-center justify-center text-xl shadow-lg transition cursor-pointer">
+              <button type="button" onclick="simulatePlayVideo()" id="btnPlayTrialVideo" class="w-14 h-14 rounded-full bg-brand-600/90 hover:bg-brand-600 active:scale-95 text-white flex items-center justify-center text-xl shadow-lg transition cursor-pointer">
                 <i class="fa-solid fa-play ml-1" id="trialPlayIcon"></i>
               </button>
             </div>
@@ -394,7 +375,7 @@
             <!-- 底部板书亮点 -->
             <div class="bg-black/60 backdrop-blur-xs -mx-4 -mb-4 p-2.5 px-4 flex items-center justify-between text-[11px] text-slate-300">
               <span>核心提炼：三步建系法 + 韦达定理联立速解技巧</span>
-              <span class="text-teal-400 font-medium cursor-pointer" onclick="showToast('已调阅试讲板书讲义 PDF')">查阅教案课件</span>
+              <span class="text-brand-400 font-medium cursor-pointer" onclick="showToast('已调阅试讲板书讲义 PDF')">查阅教案课件</span>
             </div>
           </div>
         </div>
@@ -420,15 +401,15 @@
         </div>
 
         <!-- 智能微空间排期选择提示 -->
-        <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200/80 text-[11px] text-teal-950 flex items-center justify-between">
+        <div class="bg-brand-50/70 p-3 rounded-xl border border-brand-200/80 text-[11px] text-brand-950 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <i class="fa-solid fa-cube text-teal-700 text-sm"></i>
+            <i class="fa-solid fa-cube text-brand-700 text-sm"></i>
             <div>
               <div class="font-bold">线下教学专属智能自习仓</div>
               <div class="text-slate-500 text-[10px]">成都市青羊金沙、武侯望江、高新大源微网点均可自由排期</div>
             </div>
           </div>
-          <span class="text-[10px] bg-teal-600 text-white px-2 py-0.5 rounded font-bold">支持单次试听</span>
+          <span class="text-[10px] bg-brand-600 text-white px-2 py-0.5 rounded font-bold">支持单次试听</span>
         </div>
 
       </div>
@@ -444,7 +425,7 @@
           <button type="button" onclick="closeTutorDetailModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">
             稍后选择
           </button>
-          <button type="button" onclick="openBookingDrawerFromModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+          <button type="button" onclick="openBookingDrawerFromModal()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-brand-600/20 flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-calendar-check text-xs"></i>
             <span>立即预约该导师</span>
           </button>
@@ -460,7 +441,7 @@
       <!-- 约课抽屉顶栏 -->
       <div class="bg-slate-900 p-4 text-white flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center text-sm border border-teal-400/30">
+          <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-300 flex items-center justify-center text-sm border border-brand-400/30">
             <i class="fa-solid fa-calendar-plus"></i>
           </div>
           <div>
@@ -478,9 +459,9 @@
       <div class="p-5 overflow-y-auto space-y-4 text-xs flex-1">
         
         <!-- 所选导师简况条 -->
-        <div class="bg-teal-50/60 p-3 rounded-xl border border-teal-200/80 flex items-center justify-between">
+        <div class="bg-brand-50/60 p-3 rounded-xl border border-brand-200/80 flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-teal-700 text-white font-bold flex items-center justify-center" id="bookingTutorAvatar">
+            <div class="w-9 h-9 rounded-xl bg-brand-700 text-white font-bold flex items-center justify-center" id="bookingTutorAvatar">
               张
             </div>
             <div>
@@ -489,7 +470,7 @@
             </div>
           </div>
           <div class="text-right">
-            <div class="font-bold text-teal-700 font-mono" id="bookingTutorRate">¥135/h</div>
+            <div class="font-bold text-brand-700 font-mono" id="bookingTutorRate">¥135/h</div>
             <span class="text-[9px] text-slate-400">单次约</span>
           </div>
         </div>
@@ -499,19 +480,19 @@
         <div class="space-y-1.5">
           <label class="block font-bold text-slate-700">0. 约课模式</label>
           <div class="grid grid-cols-3 gap-2">
-            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-brand-500 transition has-[:checked]:bg-brand-50 has-[:checked]:border-brand-600 has-[:checked]:text-brand-900">
               <input type="radio" name="bookingType" value="trial" class="hidden" onchange="onBookingTypeChange()">
-              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-gift text-teal-600"></i>试课</span>
+              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-gift text-brand-600"></i>试课</span>
               <span class="text-[9px] text-emerald-700 font-medium leading-tight">首次试课 · 1小时免费</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-brand-500 transition has-[:checked]:bg-brand-50 has-[:checked]:border-brand-600 has-[:checked]:text-brand-900">
               <input type="radio" name="bookingType" value="one_off" checked class="hidden" onchange="onBookingTypeChange()">
-              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-day text-teal-600"></i>单次约课</span>
+              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-day text-brand-600"></i>单次约课</span>
               <span class="text-[9px] text-slate-500 font-medium leading-tight">适合特定知识点巩固答疑</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-brand-500 transition has-[:checked]:bg-brand-50 has-[:checked]:border-brand-600 has-[:checked]:text-brand-900">
               <input type="radio" name="bookingType" value="weekly" class="hidden" onchange="onBookingTypeChange()">
-              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-week text-teal-600"></i>每周固定</span>
+              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-week text-brand-600"></i>每周固定</span>
               <span class="text-[9px] text-slate-500 font-medium leading-tight">适合系统学习、强化</span>
             </label>
           </div>
@@ -522,9 +503,9 @@
         </div>
 
         <!-- 每周固定配置（默认隐藏） -->
-        <div id="weeklyBookingPanel" class="space-y-3 hidden rounded-xl border border-teal-100 bg-teal-50/40 p-3">
-          <div class="text-[11px] text-teal-900 font-bold flex items-center gap-1.5">
-            <i class="fa-solid fa-repeat text-teal-600"></i>
+        <div id="weeklyBookingPanel" class="space-y-3 hidden rounded-xl border border-brand-100 bg-brand-50/40 p-3">
+          <div class="text-[11px] text-brand-900 font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-repeat text-brand-600"></i>
             每周固定档期 · 费用按课次包提前冻结
           </div>
           <div class="grid grid-cols-2 gap-2">
@@ -562,12 +543,12 @@
               </select>
             </div>
             <div class="flex items-end">
-              <div class="w-full text-[10px] text-slate-500 leading-relaxed bg-white/70 border border-teal-100 rounded-xl px-2.5 py-2">
-                请假须<strong class="text-teal-800">提前一日</strong>确认；结课后 48 小时无投诉自动划拨导师。
+              <div class="w-full text-[10px] text-slate-500 leading-relaxed bg-white/70 border border-brand-100 rounded-xl px-2.5 py-2">
+                请假须<strong class="text-brand-800">提前一日</strong>确认；结课后 48 小时无投诉自动划拨导师。
               </div>
             </div>
           </div>
-          <div id="mentorAvailabilityHints" class="hidden text-[10px] text-teal-800 bg-white/80 border border-teal-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
+          <div id="mentorAvailabilityHints" class="hidden text-[10px] text-brand-800 bg-white/80 border border-brand-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
         </div>
 
         <!-- 辅导日期与时段选择 -->
@@ -582,15 +563,15 @@
         <div class="space-y-1.5" id="bookingDurationPanel">
           <label class="block font-bold text-slate-700">2. 单次辅导时长</label>
           <div class="grid grid-cols-2 gap-2">
-            <label id="durLabel2h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label id="durLabel2h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-brand-500 transition has-[:checked]:bg-brand-50 has-[:checked]:border-brand-600 has-[:checked]:text-brand-900">
               <input type="radio" name="bookingDuration" value="2" checked class="hidden" onchange="onBookingDurationChange()">
               <span class="font-bold">2 小时 (推荐·专题突破)</span>
-              <span class="text-teal-700 font-mono font-bold" id="labelCost2h">¥270</span>
+              <span class="text-brand-700 font-mono font-bold" id="labelCost2h">¥270</span>
             </label>
-            <label id="durLabel1h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label id="durLabel1h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-brand-500 transition has-[:checked]:bg-brand-50 has-[:checked]:border-brand-600 has-[:checked]:text-brand-900">
               <input type="radio" name="bookingDuration" value="1" class="hidden" onchange="onBookingDurationChange()">
               <span class="font-bold">1 小时 (体验试听/答疑)</span>
-              <span class="text-teal-700 font-mono font-bold" id="labelCost1h">¥135</span>
+              <span class="text-brand-700 font-mono font-bold" id="labelCost1h">¥135</span>
             </label>
           </div>
         </div>
@@ -617,37 +598,37 @@
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1">
           <div class="flex items-center justify-between font-bold text-slate-800">
             <span class="flex items-center gap-1">
-              <i class="fa-solid fa-lock text-teal-600"></i>
+              <i class="fa-solid fa-lock text-brand-600"></i>
               <span>银行智能合约冻结保障</span>
             </span>
-            <span class="text-teal-700 font-mono" id="confirmLockAmount">¥270.00</span>
+            <span class="text-brand-700 font-mono" id="confirmLockAmount">¥270.00</span>
           </div>
           <p class="text-slate-500 text-[10px] leading-relaxed">
-            支付款项将暂存于您的招商银行存管子专户中（单次或每周系列课次费用<strong class="text-teal-800">提前冻结</strong>）。每次结课后进入 <strong class="text-teal-800">48 小时</strong> 解冻观察期，期满无投诉则按 92% 导师 / 8% 平台自动划拨；每周固定课请假须提前一日确认。
+            支付款项将暂存于您的招商银行存管子专户中（单次或每周系列课次费用<strong class="text-brand-800">提前冻结</strong>）。每次结课后进入 <strong class="text-brand-800">48 小时</strong> 解冻观察期，期满无投诉则按 92% 导师 / 8% 平台自动划拨；每周固定课请假须提前一日确认。
           </p>
         </div>
 
       </div>
 
       <!-- 托管锁定前摘要 -->
-      <div id="escrowLockSummary" class="mx-4 mb-2 p-3 rounded-xl border border-teal-200 bg-teal-50/70 text-[11px] space-y-1.5 hidden">
-        <div class="font-black text-teal-900 flex items-center gap-1.5">
-          <i class="fa-solid fa-receipt text-teal-600"></i>
+      <div id="escrowLockSummary" class="mx-4 mb-2 p-3 rounded-xl border border-brand-200 bg-brand-50/70 text-[11px] space-y-1.5 hidden">
+        <div class="font-black text-brand-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-receipt text-brand-600"></i>
           <span>银行托管锁定摘要（请确认后继续）</span>
         </div>
         <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-700">
           <div>课时时长：<strong id="escrowSumDuration" class="text-slate-900">—</strong></div>
           <div>预约时段：<strong id="escrowSumDate" class="text-slate-900">—</strong></div>
           <div class="col-span-2">教学空间：<strong id="escrowSumSpace" class="text-slate-900">—</strong></div>
-          <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-sm">—</strong></div>
+          <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-brand-800 font-mono text-sm">—</strong></div>
         </div>
-        <p class="text-[10px] text-slate-500 leading-relaxed border-t border-teal-100 pt-1.5">
+        <p class="text-[10px] text-slate-500 leading-relaxed border-t border-brand-100 pt-1.5">
           <span class="hidden" data-warehouse-only>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
           <span data-warehouse-off>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；导师结课确认后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
         </p>
         <div class="flex gap-2 pt-1">
           <button type="button" onclick="hideEscrowSummary()" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">返回修改</button>
-          <button type="button" onclick="proceedAfterEscrowSummary()" id="btnEscrowProceed" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer">确认摘要 · 签署协议</button>
+          <button type="button" onclick="proceedAfterEscrowSummary()" id="btnEscrowProceed" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer">确认摘要 · 签署协议</button>
         </div>
       </div>
 
@@ -655,13 +636,13 @@
       <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
         <div>
           <span class="text-slate-400 text-[10px] block">合约托管总额</span>
-          <span class="text-lg font-black text-teal-700 font-mono" id="finalBookingCost">¥270.00</span>
+          <span class="text-lg font-black text-brand-700 font-mono" id="finalBookingCost">¥270.00</span>
         </div>
         <div class="flex gap-2">
           <button type="button" onclick="closeBookingDrawer()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">
             取消
           </button>
-          <button type="button" onclick="showEscrowSummaryBeforeLock()" id="btnConfirmBooking" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+          <button type="button" onclick="showEscrowSummaryBeforeLock()" id="btnConfirmBooking" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-brand-600/20 flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-file-signature text-xs"></i>
             <span>确认摘要 · 锁定托管</span>
           </button>
@@ -694,9 +675,9 @@
       </div>
 
       <!-- 电子通行证 -->
-      <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white rounded-2xl p-4 space-y-3 border border-teal-800/40 relative">
-        <div class="flex items-center justify-between border-b border-teal-800/50 pb-2">
-          <div class="flex items-center gap-1.5 text-xs font-bold text-teal-300">
+      <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-brand-950 text-white rounded-2xl p-4 space-y-3 border border-brand-800/40 relative">
+        <div class="flex items-center justify-between border-b border-brand-800/50 pb-2">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-brand-300">
             <i class="fa-solid fa-qrcode"></i>
             <span>智能隔音微仓通行码</span>
           </div>
@@ -709,7 +690,7 @@
           <!-- 动态二维码占位图 -->
           <div class="w-32 h-32 bg-white rounded-xl p-2 flex flex-col items-center justify-center shadow-md">
             <div class="w-full h-full bg-slate-900 rounded-lg flex flex-col items-center justify-center text-white space-y-1">
-              <i class="fa-solid fa-qrcode text-4xl text-teal-400"></i>
+              <i class="fa-solid fa-qrcode text-4xl text-brand-400"></i>
               <span class="text-[8px] font-mono text-slate-400 tracking-wider">动态防伪刷新</span>
             </div>
           </div>
@@ -720,14 +701,14 @@
           <div class="text-xl font-black font-mono tracking-widest text-amber-400" id="passcodeDisplay">890214</div>
         </div>
 
-        <div class="pt-2 border-t border-teal-800/40 text-[10px] text-slate-300 space-y-1">
+        <div class="pt-2 border-t border-brand-800/40 text-[10px] text-slate-300 space-y-1">
           <div class="flex justify-between">
             <span>网点仓位：</span>
             <span class="font-bold text-white" id="passcodeSpaceName">青羊金沙文化微网点-01仓</span>
           </div>
           <div class="flex justify-between">
             <span>排期时段：</span>
-            <span class="font-mono text-teal-300" id="passcodeScheduleTime">本周六 10:00 - 12:00</span>
+            <span class="font-mono text-brand-300" id="passcodeScheduleTime">本周六 10:00 - 12:00</span>
           </div>
         </div>
       </div>
@@ -735,7 +716,7 @@
       <!-- IoT 状态面板 -->
       <div id="iotStatusPanel" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 space-y-2">
         <div class="flex items-center justify-between text-xs">
-          <span class="font-black text-slate-800 flex items-center gap-1.5"><i class="fa-solid fa-microchip text-teal-600"></i>IoT 教学仓联动</span>
+          <span class="font-black text-slate-800 flex items-center gap-1.5"><i class="fa-solid fa-microchip text-brand-600"></i>IoT 教学仓联动</span>
           <span id="iotStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">STANDBY</span>
         </div>
         <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
@@ -756,7 +737,7 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <button type="button" onclick="simulateIoTScanOpen()" id="btnIoTScan" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-teal-600/20">
+        <button type="button" onclick="simulateIoTScanOpen()" id="btnIoTScan" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-brand-600/20">
           <i class="fa-solid fa-qrcode"></i>
           <span>模拟扫码开门 · 通电照明</span>
         </button>
@@ -771,7 +752,7 @@
   <!-- 支付方式选择 -->
   <div id="paymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="paymentMethodContent">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-teal-600 text-white">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-brand-600 text-white">
         <div>
           <h3 class="font-black text-sm">选择支付方式</h3>
           <p class="text-[10px] text-blue-100/90 mt-0.5">托管资金将冻结至课程完成</p>
@@ -781,9 +762,9 @@
       
       <div class="px-5 py-4 space-y-3">
         <!-- 金额摘要 -->
-        <div class="rounded-xl border border-teal-100 bg-teal-50/50 p-3 text-center">
+        <div class="rounded-xl border border-brand-100 bg-brand-50/50 p-3 text-center">
           <div class="text-[10px] text-slate-500 mb-1">托管金额</div>
-          <div class="text-2xl font-black text-teal-700 font-mono" id="paymentAmountDisplay">¥0.00</div>
+          <div class="text-2xl font-black text-brand-700 font-mono" id="paymentAmountDisplay">¥0.00</div>
         </div>
 
         <!-- 支付方式选项 -->
@@ -817,8 +798,8 @@
           <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 opacity-50 cursor-not-allowed">
             <input type="radio" name="paymentMethod" value="银行卡" disabled class="w-4 h-4 text-slate-400">
             <div class="flex items-center gap-2.5 flex-1">
-              <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                <i class="fa-solid fa-credit-card text-lg"></i>
+              <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-building-columns"></i>
               </div>
               <div>
                 <div class="text-sm font-bold text-slate-500">银行卡 / 网银</div>
@@ -829,7 +810,7 @@
         </div>
 
         <p class="text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
-          <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>
+          <i class="fa-solid fa-shield-halved text-brand-600 mr-1"></i>
           托管资金由合作银行专户锁定，导师下课确认后48小时内自动划拨。
         </p>
       </div>
@@ -838,7 +819,7 @@
         <button type="button" onclick="closePaymentMethodModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">
           取消
         </button>
-        <button type="button" onclick="confirmPaymentMethod()" class="text-xs font-bold px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">
+        <button type="button" onclick="confirmPaymentMethod()" class="text-xs font-bold px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white cursor-pointer">
           <i class="fa-solid fa-check mr-1"></i>确认支付方式
         </button>
       </div>
@@ -848,10 +829,10 @@
   <!-- 三方托管服务居间协议 E-Contract -->
   <div id="eContractModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="eContractContent">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-brand-900 text-white">
         <div>
           <h3 class="font-black text-sm">《三方托管服务居间协议》</h3>
-          <p class="text-[10px] text-teal-200/90 mt-0.5">在线签署 · 银行智能合约存管前置要件</p>
+          <p class="text-[10px] text-brand-200/90 mt-0.5">在线签署 · 银行智能合约存管前置要件</p>
         </div>
         <button type="button" onclick="closeEContractModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer">
           <i class="fa-solid fa-xmark text-xs"></i>
@@ -871,17 +852,17 @@
           <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>
         </div>
         <label class="flex items-start gap-2 cursor-pointer select-none">
-          <input type="checkbox" id="eContractAgreeCheck" class="mt-0.5 w-3.5 h-3.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+          <input type="checkbox" id="eContractAgreeCheck" class="mt-0.5 w-3.5 h-3.5 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
           <span class="text-[11px] text-slate-700">我已阅读并同意签署本协议，授权银行智能合约锁定本次课酬托管资金。</span>
         </label>
         <div>
           <label class="text-[10px] text-slate-500 font-medium">电子签名（输入姓名确认）</label>
-          <input type="text" id="eContractSignName" placeholder="请输入家长姓名作为电子签" class="mt-1 w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
+          <input type="text" id="eContractSignName" placeholder="请输入家长姓名作为电子签" class="mt-1 w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
         </div>
       </div>
       <div class="px-5 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
         <button type="button" onclick="closeEContractModal()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">取消</button>
-        <button type="button" onclick="confirmEContractAndBook()" id="btnSignContract" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+        <button type="button" onclick="confirmEContractAndBook()" id="btnSignContract" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-brand-600/20 flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-pen-fancy text-xs"></i>
           <span>确认签署并锁定托管</span>
         </button>
@@ -893,7 +874,7 @@
     <div class="bg-white w-full max-w-md h-full shadow-2xl p-5 overflow-y-auto space-y-4 transform transition-all duration-300 translate-x-full" id="passportDrawerContent">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+          <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-800 flex items-center justify-center font-bold text-xs">
             护
           </div>
           <div>
@@ -907,14 +888,14 @@
       </div>
 
       <!-- 护照卡片内容 -->
-      <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 p-4 rounded-2xl space-y-3 shadow-sm border border-teal-100">
+      <div class="bg-gradient-to-br from-brand-50 via-slate-50 to-cyan-50 text-slate-800 p-4 rounded-2xl space-y-3 shadow-sm border border-brand-100">
         <div class="flex items-center justify-between text-xs">
-          <span class="font-bold text-teal-800">乐乐同学 (初三中考)</span>
-          <span class="text-[10px] bg-white/80 text-slate-600 px-2 py-0.5 rounded font-mono border border-teal-100">成都市 · 青羊区</span>
+          <span class="font-bold text-brand-800">乐乐同学 (初三中考)</span>
+          <span class="text-[10px] bg-white/80 text-slate-600 px-2 py-0.5 rounded font-mono border border-brand-100">成都市 · 青羊区</span>
         </div>
         <div class="text-[11px] text-slate-600 space-y-1">
           <div>目标科目：<span class="text-slate-900 font-bold">数学 (压轴题) / 物理 (动态电路)</span></div>
-          <div>推进模式：<span class="text-teal-700 font-medium">紧贴校内进度 · 随堂查漏补缺</span></div>
+          <div>推进模式：<span class="text-brand-700 font-medium">紧贴校内进度 · 随堂查漏补缺</span></div>
           <div>期望课酬：<span class="text-amber-600 font-bold font-mono">¥100–160/小时</span></div>
         </div>
       </div>
@@ -923,14 +904,14 @@
       <div class="space-y-2 text-xs">
         <div class="font-bold text-slate-800">已标注薄弱大纲考点（导师重点备课）：</div>
         <div class="flex flex-wrap gap-1.5" id="passportSyllabusChips">
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">二次函数图象性质与最值求法</span>
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">圆的切线性质与辅助线综合证明</span>
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">动态电路欧姆定律综合计算</span>
+          <span class="bg-brand-50 text-brand-900 border border-brand-200 px-2 py-1 rounded-md text-[11px]">二次函数图象性质与最值求法</span>
+          <span class="bg-brand-50 text-brand-900 border border-brand-200 px-2 py-1 rounded-md text-[11px]">圆的切线性质与辅助线综合证明</span>
+          <span class="bg-brand-50 text-brand-900 border border-brand-200 px-2 py-1 rounded-md text-[11px]">动态电路欧姆定律综合计算</span>
         </div>
       </div>
 
       <div class="pt-3">
-        <button type="button" onclick="safeNavigate('parent_register.html', '重新配置考点')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
+        <button type="button" onclick="safeNavigate('parent_register.html', '重新配置考点')" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
           更新学情与考纲目标
         </button>
       </div>
@@ -955,7 +936,7 @@
       </div>
       <div class="flex gap-2 pt-1">
         <button type="button" onclick="dismissAssessmentGate()" class="flex-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">稍后前往</button>
-        <button type="button" onclick="goAssessmentFromGate()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-2 rounded-xl text-xs cursor-pointer inline-flex items-center justify-center gap-1">
+        <button type="button" onclick="goAssessmentFromGate()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold px-3 py-2 rounded-xl text-xs cursor-pointer inline-flex items-center justify-center gap-1">
           <i class="fa-solid fa-arrow-right"></i>立即测评
         </button>
       </div>
@@ -963,7 +944,7 @@
   </div>
 
 <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
-    <i class="fa-solid fa-circle-check text-teal-400 text-sm" id="toastIcon"></i>
+    <i class="fa-solid fa-circle-check text-brand-400 text-sm" id="toastIcon"></i>
     <span id="toastMessage">已完成操作</span>
   </div>
 
@@ -980,14 +961,14 @@
   <div id="classSummaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform max-h-[90vh] overflow-y-auto" id="classSummaryModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>课后互动</h3>
+        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-brand-600"></i>课后互动</h3>
         <button type="button" onclick="closeClassSummaryModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       
       <!-- 导师课后小结 -->
       <div class="px-5 py-4 space-y-3 text-xs text-slate-600 border-b border-slate-100">
         <div class="flex items-center gap-2 mb-2">
-          <i class="fa-solid fa-chalkboard-user text-teal-600"></i>
+          <i class="fa-solid fa-chalkboard-user text-brand-600"></i>
           <span class="font-bold text-slate-800">导师课后小结</span>
         </div>
         <div id="classSummaryMeta" class="text-[11px] text-slate-400"></div>
@@ -1021,7 +1002,7 @@
 
       <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2 sticky bottom-0 bg-white z-10">
         <button type="button" onclick="closeClassSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">关闭</button>
-        <button type="button" id="classSummaryRenewBtn" onclick="renewFromSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">一键续课</button>
+        <button type="button" id="classSummaryRenewBtn" onclick="renewFromSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white cursor-pointer">一键续课</button>
       </div>
     </div>
   </div>
@@ -1029,8 +1010,8 @@
   <!-- 学员多课程时间冲突确认 -->
   <div id="timeConflictModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[70] flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
-      <div class="px-5 py-4 border-b border-amber-100 bg-amber-50">
-        <h3 class="font-black text-sm text-amber-900 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i>上课时间冲突</h3>
+      <div class="px-5 py-4 border-b border-xh-warning/60 bg-xh-warning/20">
+        <h3 class="font-black text-sm text-amber-950 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i>上课时间冲突</h3>
         <p class="text-[11px] text-amber-800/90 mt-1">该学员已有其他课程与所选时段重叠。</p>
       </div>
       <div class="px-5 py-4 text-xs text-slate-600 space-y-2">
@@ -1111,13 +1092,13 @@
           <div>
             <div class="flex items-start justify-between gap-2 mb-2">
               <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-teal-600 text-white font-black text-base flex items-center justify-center border border-teal-300/40 shadow-sm shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-brand-600 text-white font-black text-base flex items-center justify-center border border-brand-300/40 shadow-sm shrink-0">
                   ${tutor.avatarLetter}
                 </div>
                 <div>
                   <div class="flex items-center gap-1.5">
                     <span class="font-black text-sm text-white">${tutor.maskedName}</span>
-                    <span class="text-[9px] bg-teal-500/30 text-teal-200 px-1.5 py-0.2 rounded font-mono">${tutor.degreeShort}</span>
+                    <span class="text-[9px] bg-brand-500/30 text-brand-200 px-1.5 py-0.2 rounded font-mono">${tutor.degreeShort}</span>
                   </div>
                   <div class="text-[10px] text-slate-300 mt-0.5 truncate max-w-[150px]">
                     ${tutor.scoreHighlight}
@@ -1133,7 +1114,7 @@
             <!-- 考点匹配微胶囊 -->
             <div class="flex flex-wrap gap-1 mb-2.5">
               ${tutor.syllabusTopics.slice(0, 2).map(topic => `
-                <span class="text-[9px] bg-black/30 text-teal-200 border border-white/10 px-1.5 py-0.5 rounded truncate max-w-[140px]">
+                <span class="text-[9px] bg-black/30 text-brand-200 border border-white/10 px-1.5 py-0.5 rounded truncate max-w-[140px]">
                   ${topic}
                 </span>
               `).join('')}
@@ -1142,13 +1123,13 @@
 
           <div class="flex items-center justify-between pt-2 border-t border-white/10">
             <span class="text-[10px] text-slate-300 truncate max-w-[130px]">
-              <i class="fa-solid fa-cube text-teal-400 mr-1"></i>${tutor.space.split('微网点')[0]}
+              <i class="fa-solid fa-cube text-brand-400 mr-1"></i>${tutor.space.split('微网点')[0]}
             </span>
             <div class="flex gap-1.5">
               <button type="button" onclick="openTutorDetail('${tutor.id}')" class="text-[10px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg transition font-medium cursor-pointer">
                 试讲视频
               </button>
-              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="text-[10px] bg-teal-500 hover:bg-teal-400 text-slate-950 px-2.5 py-1 rounded-lg font-bold transition shadow-xs cursor-pointer">
+              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="text-[10px] bg-brand-500 hover:bg-brand-400 text-slate-950 px-2.5 py-1 rounded-lg font-bold transition shadow-xs cursor-pointer">
                 约仓试听
               </button>
             </div>
@@ -1234,7 +1215,7 @@
             <p class="text-xs text-slate-400 max-w-sm mx-auto">
               建议放宽时薪预算区间，或切换空间网点尝试更宽泛的匹配方案
             </p>
-            <button type="button" onclick="resetAllFilters()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">
+            <button type="button" onclick="resetAllFilters()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">
               一键重置筛选条件
             </button>
           </div>
@@ -1253,7 +1234,7 @@
             <!-- 顶栏：头像、姓名、高校与契合度 -->
             <div class="flex items-start justify-between gap-2.5">
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-700 to-brand-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
                   ${tutor.avatarLetter}
                 </div>
                 <div>
@@ -1271,10 +1252,10 @@
 
               <!-- 价格与契合度 -->
               <div class="text-right shrink-0">
-                <div class="text-base font-black text-teal-700 font-mono">
+                <div class="text-base font-black text-brand-700 font-mono">
                   ¥${tutor.hourlyRate}<span class="text-[10px] font-normal text-slate-500">/h</span>
                 </div>
-                <span class="text-[9px] text-teal-700 bg-teal-50 border border-teal-200 font-bold px-1.5 py-0.2 rounded font-mono">
+                <span class="text-[9px] text-brand-700 bg-brand-50 border border-brand-200 font-bold px-1.5 py-0.2 rounded font-mono">
                   ${tutor.matchScore}% 契合
                 </span>
               </div>
@@ -1294,7 +1275,7 @@
               <span class="text-[10px] text-slate-400 block mb-1">主辅考纲重点：</span>
               <div class="flex flex-wrap gap-1">
                 ${tutor.syllabusTopics.map(topic => `
-                  <span class="text-[10px] bg-teal-50/80 text-teal-900 border border-teal-200/80 px-2 py-0.5 rounded font-medium truncate max-w-[150px]" title="${topic}">
+                  <span class="text-[10px] bg-brand-50/80 text-brand-900 border border-brand-200/80 px-2 py-0.5 rounded font-medium truncate max-w-[150px]" title="${topic}">
                     ${topic}
                   </span>
                 `).join('')}
@@ -1314,16 +1295,16 @@
           <!-- 底栏：网点空间与操作按钮 -->
           <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
             <div class="text-[11px] text-slate-500 truncate mr-1">
-              <i class="fa-solid fa-location-dot text-teal-600 mr-1 text-[10px]"></i>
+              <i class="fa-solid fa-location-dot text-brand-600 mr-1 text-[10px]"></i>
               <span class="truncate">${tutor.space.split('微网点')[0]}</span>
             </div>
 
             <div class="flex items-center gap-1.5 shrink-0">
               <button type="button" onclick="openTutorDetail('${tutor.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1">
-                <i class="fa-solid fa-circle-play text-teal-600 text-[10px]"></i>
+                <i class="fa-solid fa-circle-play text-brand-600 text-[10px]"></i>
                 <span>试讲视频</span>
               </button>
-              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-1 cursor-pointer">
+              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-1 cursor-pointer">
                 <span>约仓试听</span>
                 <i class="fa-solid fa-angle-right text-[10px]"></i>
               </button>
@@ -1344,7 +1325,7 @@
         el.className = "filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer";
       });
       if (btn) {
-        btn.className = "filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer";
+        btn.className = "filter-chip px-2.5 py-1 rounded-lg font-bold bg-brand-600 text-white transition cursor-pointer";
       }
       applyFilterAndSearch();
     }
@@ -1463,7 +1444,7 @@
       const syllabusContainer = document.getElementById('modalSyllabusTags');
       if (syllabusContainer) {
         syllabusContainer.innerHTML = tutor.syllabusTopics.map(t => `
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-0.5 rounded text-[11px] font-medium">${t}</span>
+          <span class="bg-brand-50 text-brand-900 border border-brand-200 px-2 py-0.5 rounded text-[11px] font-medium">${t}</span>
         `).join('');
       }
 
@@ -1625,7 +1606,7 @@
         const value = label + ' ' + c.timeLabel;
         const checked = idx === matchedIdx ? 'checked' : '';
         return (
-          '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
+          '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-brand-500 transition has-[:checked]:bg-brand-50 has-[:checked]:border-brand-600 has-[:checked]:text-brand-900">' +
             '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-date="' + c.isoDate + '" data-time-label="' + c.timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
             '<div class="font-bold">' + label + '</div>' +
             '<div class="text-[10px] text-slate-400">' + c.timeLabel + '</div>' +
@@ -2280,7 +2261,7 @@
       }
       const msg = document.getElementById('assessmentGateMessage');
       if (msg) {
-        msg.innerHTML = '请在试课前自行完成「<strong class="text-teal-800">' + sub + '</strong>」测评，以便老师了解真实水平。';
+        msg.innerHTML = '请在试课前自行完成「<strong class="text-brand-800">' + sub + '</strong>」测评，以便老师了解真实水平。';
       }
       const modal = document.getElementById('assessmentGateModal');
       const content = document.getElementById('assessmentGateContent');
@@ -2323,7 +2304,7 @@
         btn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>已收课断电</span>';
       } else {
         btn.disabled = false;
-        btn.className = 'w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-teal-600/20';
+        btn.className = 'w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-brand-600/20';
         btn.innerHTML = '<i class="fa-solid fa-qrcode"></i><span>模拟扫码开门 · 通电照明</span>';
       }
     }
@@ -2416,7 +2397,7 @@
       }
       const passportCard = document.querySelector('#passportDrawerContent .bg-gradient-to-br');
       if (passportCard) {
-        const title = passportCard.querySelector('.font-bold.text-teal-800') || passportCard.querySelector('.font-bold.text-teal-300');
+        const title = passportCard.querySelector('.font-bold.text-brand-800') || passportCard.querySelector('.font-bold.text-brand-300');
         if (title) {
           const gradeShort = (parent.studentGrade || '').split(' ')[0] || '在读';
           title.innerText = (parent.studentNickname || '学员') + ' (' + gradeShort + ')';
@@ -2433,7 +2414,7 @@
           const bMax = parent.budgetMax != null ? parent.budgetMax : (parent.budgetRate || 130) + 30;
           block.innerHTML =
             '<div>目标科目：<span class="text-slate-900 font-bold">' + subjects + '</span></div>' +
-            '<div>推进模式：<span class="text-teal-700 font-medium">' + pacing + '</span></div>' +
+            '<div>推进模式：<span class="text-brand-700 font-medium">' + pacing + '</span></div>' +
             '<div>期望课酬：<span class="text-amber-600 font-bold font-mono">¥' + bMin + '–' + bMax + '/小时</span></div>';
         }
       }
@@ -2487,7 +2468,7 @@
         }
         if (topics.length) {
           topicWrap.innerHTML = topics.slice(0, 8).map(function (t) {
-            return '<span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">' + t + '</span>';
+            return '<span class="bg-brand-50 text-brand-900 border border-brand-200 px-2 py-1 rounded-md text-[11px]">' + t + '</span>';
           }).join('');
         }
       }
@@ -2540,7 +2521,7 @@
       } else if (type === 'warning') {
         toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
       } else {
-        toastIcon.className = "fa-solid fa-circle-check text-teal-400 text-sm";
+        toastIcon.className = "fa-solid fa-circle-check text-brand-400 text-sm";
       }
 
       toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
@@ -2582,7 +2563,7 @@
       document.getElementById('classSummaryTitle').innerText = (summary && summary.title) || '课后小结';
       const tags = (summary && summary.tags) || [];
       document.getElementById('classSummaryTags').innerHTML = tags.map(function(t) {
-        return '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">' + t + '</span>';
+        return '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-brand-50 text-brand-800 border-brand-200">' + t + '</span>';
       }).join('');
       document.getElementById('classSummaryBody').innerText = (summary && summary.content) || '（暂无内容）';
       document.getElementById('classSummaryTime').innerText = (summary && summary.createdAt) ? ('填写于 ' + summary.createdAt) : '';
@@ -2733,10 +2714,10 @@
         return;
       }
       box.classList.remove('hidden');
-      box.innerHTML = '<div class="font-bold text-teal-900 mb-1"><i class="fa-regular fa-calendar-check mr-1"></i>导师可约提示（点击填入）</div>' +
+      box.innerHTML = '<div class="font-bold text-brand-900 mb-1"><i class="fa-regular fa-calendar-check mr-1"></i>导师可约提示（点击填入）</div>' +
         '<div class="flex flex-wrap gap-1.5">' +
         hints.map(function(h) {
-          return '<button type="button" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 cursor-pointer" onclick="applyAvailabilityHint(' + h.weekday + ',\'' + h.timeStart + '\')">' +
+          return '<button type="button" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-brand-200 bg-brand-50 text-brand-800 cursor-pointer" onclick="applyAvailabilityHint(' + h.weekday + ',\'' + h.timeStart + '\')">' +
             h.label + '</button>';
         }).join('') + '</div>';
     }
@@ -2782,7 +2763,7 @@
       Array.prototype.forEach.call(document.querySelectorAll('.parent-bk-filter'), function (el) {
         const on = el.getAttribute('data-filter') === parentBookingFilter;
         el.className = 'parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
-          (on ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50');
+          (on ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50');
       });
       renderParentBookings();
     }
@@ -2838,12 +2819,12 @@
           ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
           : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
         const sumBtn = s.classSummary
-          ? '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
+          ? '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-brand-800 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
           : '<span class="text-[10px] text-slate-400">暂无小结</span>';
         const typePill = b.type === 'trial'
           ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课</span>'
           : (b.type === 'weekly'
-            ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+            ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-brand-50 text-brand-800 border-brand-200">每周</span>'
             : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         return '<div class="rounded-xl border border-emerald-100 bg-white p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
@@ -2854,7 +2835,7 @@
                 '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
               '</div>' +
               '<div class="text-[11px] text-slate-500">' + escapeParentHtml(b.subject || '') + ' · ' + escapeParentHtml(b.studentNickname || '') + '</div>' +
-              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
+              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-brand-600 mr-1"></i>' +
                 escapeParentHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</div>' +
             '</div>' +
             '<div class="flex flex-col items-end gap-1.5 shrink-0">' + escrow + sumBtn + '</div>' +
@@ -2908,7 +2889,7 @@
         const typePill = isTrial
           ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
           : (isWeekly
-            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-brand-50 text-brand-800 border-brand-200">每周固定</span>'
             : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         const hasCompleted = (b.sessions || []).some(function(s) { return s.status === 'completed'; });
         const canRenew = b.status === 'accepted' || hasCompleted;
@@ -2922,7 +2903,7 @@
         let sessionsHtml = '';
         if (Array.isArray(b.sessions) && b.sessions.length) {
           sessionsHtml = '<div class="mt-2 space-y-1.5 border-t border-slate-100 pt-2">' +
-            (isWeekly ? '<div class="text-[10px] font-bold text-teal-800 mb-1">每周系列课次</div>' : '') +
+            (isWeekly ? '<div class="text-[10px] font-bold text-brand-800 mb-1">每周系列课次</div>' : '') +
             b.sessions.map(function(s) {
               const sb = sessionStatusBadge(s.status);
               const canLeave = (b.status === 'accepted' || b.status === 'pending_accept') &&
@@ -2932,7 +2913,7 @@
                 acts += '<button type="button" onclick="requestLeaveForSession(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">申请请假</button>';
               }
               if (s.classSummary) {
-                acts += '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>';
+                acts += '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-brand-800 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>';
               }
               const escrow = s.escrowStatus === 'released'
                 ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
@@ -2947,7 +2928,7 @@
             }).join('') + '</div>';
         }
         const renewBtn = canRenew
-          ? '<div class="mt-2"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button></div>'
+          ? '<div class="mt-2"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-brand-600 hover:bg-brand-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-brand-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button></div>'
           : '';
         return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
@@ -2959,14 +2940,14 @@
                 (b.sourceBookingId ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-800 border-violet-200">续课</span>' : '') +
               '</div>' +
               '<div class="text-[11px] text-slate-500">' + (b.subject || '') + ' · ' + (b.studentGrade || '') + '</div>' +
-              '<div class="text-[11px] text-slate-600"><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + (b.space || '—') +
+              '<div class="text-[11px] text-slate-600"><i class="fa-solid fa-location-dot text-brand-600 mr-1"></i>' + (b.space || '—') +
                 (b.boothLabel ? (' · ' + b.boothLabel) : '') +
-                ' · <i class="fa-regular fa-clock text-teal-600 mx-1"></i>' + (b.schedule || b.timeSlot || '—') + '</div>' +
+                ' · <i class="fa-regular fa-clock text-brand-600 mx-1"></i>' + (b.schedule || b.timeSlot || '—') + '</div>' +
               (b.hasTimeConflict ? '<div class="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (b.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程') + '</div>' : '') +
               reason +
             '</div>' +
             '<div class="text-right shrink-0">' +
-              '<div class="font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
+              '<div class="font-black text-brand-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
               '<div class="text-[10px] text-slate-400">' + (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包提前冻结' : '单次冻结')) + '</div>' +
               '<div class="text-[10px] text-slate-400">' + (b.createdAt || '') + '</div>' +
             '</div>' +

@@ -86,7 +86,7 @@ S.resetDemoData();
 
 ## 设计令牌
 
-- Primary：`#0d9488`（teal-600）
+- Primary：`#FF5A2D`（teal-600）
 - Dark：`#0f172a`（slate-900）
 - 反馈统一 `showToast` / `wx.showToast`，禁止 `wx.showModal` 当作 alert 阻塞流程（婉拒等原因用自定义弹层）
 

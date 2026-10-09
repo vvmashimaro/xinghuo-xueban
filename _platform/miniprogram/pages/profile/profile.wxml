@@ -67,7 +67,7 @@
         解绑后您将无法接收课程通知，但账号信息不会被删除。
       </view>
       <view class="muted">
-        当前绑定手机号：<text style="font-family:monospace;color:#0f766e;">{{phoneMasked}}</text>
+        当前绑定手机号：<text style="font-family:monospace;color:#E83A1F;">{{phoneMasked}}</text>
       </view>
     </view>
     <view class="modal-foot">

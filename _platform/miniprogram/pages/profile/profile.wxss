@@ -11,7 +11,7 @@
 .phone-number {
   font-size: 36rpx;
   font-weight: 900;
-  color: #0f766e;
+  color: #E83A1F;
   font-family: monospace;
 }
 

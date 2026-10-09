@@ -15,12 +15,12 @@
   color: #64748b;
 }
 .role-tab.on {
-  background: #f0fdfa;
-  border-color: #14b8a6;
-  color: #0f766e;
+  background: #FFF8F0;
+  border-color: #FF5A2D;
+  color: #E83A1F;
 }
 .link {
-  color: #0f766e;
+  color: #E83A1F;
   text-decoration: underline;
   font-weight: 600;
 }

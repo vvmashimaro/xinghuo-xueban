@@ -6,36 +6,26 @@
   <title>星火学伴 · 学生学科测评</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 50:'#f0fdfa', 100:'#ccfbf1', 500:'#14b8a6', 600:'#0d9488', 700:'#0f766e', 800:'#115e59', 900:'#134e4a' }
-          }
-        }
-      }
-    }
-  </script>
+    <link rel="stylesheet" href="css/xinghuo-tokens.css">
+  <script src="js/tailwind-brand.js"></script>
+  <script>tailwind.config = window.XH_TAILWIND_CONFIG;</script>
   <style>
     .glass-nav { background: rgba(255,255,255,0.86); backdrop-filter: blur(14px); }
-    .q-opt:has(input:checked) { border-color: #0d9488; background: #f0fdfa; }
+    .q-opt:has(input:checked) { border-color: #FF5A2D; background: #FFF8F0; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
     <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
       <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
-          <i class="fa-solid fa-clipboard-check"></i>
-        </div>
+        <img src="assets/logo-xinghuo.jpg" alt="星火伴学" width="40" height="40" class="xh-brand-logo w-10 h-10 shrink-0 ring-2 ring-white/70" />
         <div>
           <div class="font-black text-slate-900 text-sm leading-none">学生学科测评</div>
           <div class="text-[10px] text-slate-500 mt-0.5">约 8–12 题 · 体现真实水平 · 结果仅导师可见</div>
         </div>
       </div>
-      <button type="button" onclick="goDashboard()" class="text-xs text-slate-600 hover:text-teal-800 bg-white border border-slate-200 px-3 py-1.5 rounded-xl font-medium cursor-pointer">
-        <i class="fa-solid fa-arrow-left mr-1 text-teal-600"></i>返回主控台
+      <button type="button" onclick="goDashboard()" class="text-xs text-slate-600 hover:text-brand-800 bg-white border border-slate-200 px-3 py-1.5 rounded-xl font-medium cursor-pointer">
+        <i class="fa-solid fa-arrow-left mr-1 text-brand-600"></i>返回主控台
       </button>
     </div>
   </header>
@@ -57,7 +47,7 @@
         <span id="studentHint" class="text-[11px] text-slate-500">学员：—</span>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="subjectTabs"></div>
-      <div id="priorResult" class="hidden text-[12px] rounded-xl border border-teal-100 bg-teal-50/70 px-3 py-2 text-teal-900"></div>
+      <div id="priorResult" class="hidden text-[12px] rounded-xl border border-brand-100 bg-brand-50/70 px-3 py-2 text-brand-900"></div>
     </section>
 
     <section id="quizPanel" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 hidden">
@@ -66,33 +56,33 @@
         <span class="text-[11px] text-slate-400" id="quizProgress">0 / 0</span>
       </div>
       <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div id="quizBar" class="h-full bg-teal-600 w-0 transition-all"></div>
+        <div id="quizBar" class="h-full bg-brand-600 w-0 transition-all"></div>
       </div>
       <div id="questionsBox" class="space-y-4"></div>
       <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
         <p class="text-[11px] text-slate-400">请独立完成；结果将写入学情档案供试课/正式课参考。</p>
-        <button type="button" id="btnSubmitQuiz" onclick="submitQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-teal-600/20 cursor-pointer inline-flex items-center gap-1.5">
+        <button type="button" id="btnSubmitQuiz" onclick="submitQuiz()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-brand-600/20 cursor-pointer inline-flex items-center gap-1.5">
           <i class="fa-solid fa-paper-plane"></i>提交测评
         </button>
       </div>
     </section>
 
-    <section id="resultPanel" class="hidden bg-white rounded-2xl border border-teal-200 shadow-sm p-5 space-y-3 text-center">
-      <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-2xl">
+    <section id="resultPanel" class="hidden bg-white rounded-2xl border border-brand-200 shadow-sm p-5 space-y-3 text-center">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-brand-50 text-brand-700 border border-brand-200 flex items-center justify-center text-2xl">
         <i class="fa-solid fa-award"></i>
       </div>
       <h2 class="text-lg font-black text-slate-900">测评完成</h2>
-      <p class="text-sm text-slate-600"><span id="resultSubject"></span> · 得分 <strong id="resultScore" class="text-teal-700 font-mono text-xl">0</strong> · 等级 <strong id="resultLevel" class="text-teal-800"></strong></p>
+      <p class="text-sm text-slate-600"><span id="resultSubject"></span> · 得分 <strong id="resultScore" class="text-brand-700 font-mono text-xl">0</strong> · 等级 <strong id="resultLevel" class="text-brand-800"></strong></p>
       <p class="text-[12px] text-slate-400" id="resultTime"></p>
       <div class="flex gap-2 justify-center pt-1">
         <button type="button" onclick="restartQuiz()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">再测一次</button>
-        <button type="button" onclick="goDashboard()" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">返回主控台约课</button>
+        <button type="button" onclick="goDashboard()" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white cursor-pointer">返回主控台约课</button>
       </div>
     </section>
   </main>
 
   <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 border border-white/10">
-    <i class="fa-solid fa-circle-info text-teal-400" id="toastIcon"></i>
+    <i class="fa-solid fa-circle-info text-brand-400" id="toastIcon"></i>
     <span id="toastMessage">ok</span>
   </div>
 
@@ -260,7 +250,7 @@
       msg.textContent = message;
       if (type === 'warning') icon.className = 'fa-solid fa-triangle-exclamation text-amber-400';
       else if (type === 'error') icon.className = 'fa-solid fa-circle-xmark text-rose-400';
-      else icon.className = 'fa-solid fa-circle-check text-teal-400';
+      else icon.className = 'fa-solid fa-circle-check text-brand-400';
       toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => {
@@ -325,7 +315,7 @@
         const active = s === currentSubject;
         const done = CURRENT_PARENT && StorageService.hasAssessment(CURRENT_PARENT.id || CURRENT_PARENT.phone, s);
         return '<button type="button" onclick="selectSubject(\'' + s + '\')" class="rounded-xl border px-3 py-2.5 text-sm font-bold transition cursor-pointer ' +
-          (active ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-600/20' : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400') + '">' +
+          (active ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-600/20' : 'bg-white text-slate-700 border-slate-200 hover:border-brand-400') + '">' +
           s + (done ? ' <span class="text-[10px] opacity-80">✓</span>' : '') + '</button>';
       }).join('');
     }
@@ -365,12 +355,12 @@
       }
       box.innerHTML = qs.map((item, i) => {
         const opts = item.options.map((opt, j) =>
-          '<label class="q-opt flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2 text-[13px] cursor-pointer hover:border-teal-400 transition">' +
-            '<input type="radio" name="q' + i + '" value="' + j + '" class="accent-teal-600" onchange="updateProgress()">' +
+          '<label class="q-opt flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2 text-[13px] cursor-pointer hover:border-brand-400 transition">' +
+            '<input type="radio" name="q' + i + '" value="' + j + '" class="accent-brand-600" onchange="updateProgress()">' +
             '<span>' + opt + '</span></label>'
         ).join('');
         return '<div class="space-y-2" data-qi="' + i + '">' +
-          '<div class="text-[13px] font-bold text-slate-800"><span class="text-teal-700 mr-1">' + (i + 1) + '.</span>' + item.q + '</div>' +
+          '<div class="text-[13px] font-bold text-slate-800"><span class="text-brand-700 mr-1">' + (i + 1) + '.</span>' + item.q + '</div>' +
           '<div class="grid sm:grid-cols-2 gap-1.5">' + opts + '</div></div>';
       }).join('');
     }

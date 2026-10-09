@@ -1,8 +1,15 @@
 <view class="container">
+  <view class="brand-header">
+    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
+    <view>
+      <view class="brand-title">星火学伴</view>
+      <view class="brand-sub">家长主控 · 智能匹配</view>
+    </view>
+  </view>
   <view class="hero">
     <view class="hero-title">你好，{{parentName}}</view>
     <view class="hero-sub">{{studentNickname}} · {{studentGrade}} · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
-    <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#5eead4;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
+    <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#FF8A3D;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
   </view>
 
   <!-- 快捷操作：画像更改 / 学情护照 / 个人中心 / 退出 -->
@@ -88,12 +95,12 @@
     </view>
     <view class="slider-row">
       <text class="muted">时薪下限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{filterMin}}" activeColor="#0d9488" bindchange="onFilterMin" />
+      <slider style="flex:1;" min="70" max="240" step="5" value="{{filterMin}}" activeColor="#FF5A2D" bindchange="onFilterMin" />
       <text class="val">{{filterMin}}</text>
     </view>
     <view class="slider-row">
       <text class="muted">时薪上限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{filterMax}}" activeColor="#0d9488" bindchange="onFilterMax" />
+      <slider style="flex:1;" min="70" max="240" step="5" value="{{filterMax}}" activeColor="#FF5A2D" bindchange="onFilterMax" />
       <text class="val">{{filterMax}}</text>
     </view>
     <button class="btn-ghost" style="width:100%;margin-top:12rpx;" bindtap="resetFilters">重置筛选条件</button>
@@ -112,7 +119,7 @@
         </view>
       </view>
       <view style="text-align:right;">
-        <view style="color:#0f766e;font-weight:900;">¥{{item.hourlyRate}}/h</view>
+        <view style="color:#E83A1F;font-weight:900;">¥{{item.hourlyRate}}/h</view>
         <view class="muted">{{item.matchScore}}% 契合</view>
       </view>
     </view>
@@ -160,11 +167,11 @@
   <view class="modal-panel passport-panel">
     <view class="modal-head">
       <view style="font-weight:900;">孩子 AI 学情电子护照</view>
-      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">SPK-PASSPORT-2026</view>
+      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">SPK-PASSPORT-2026</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
       <view class="passport-hero">
-        <view style="font-weight:800;color:#5eead4;">{{studentNickname}} · {{studentGrade}}</view>
+        <view style="font-weight:800;color:#FF8A3D;">{{studentNickname}} · {{studentGrade}}</view>
         <view class="muted" style="color:#94a3b8;margin-top:6rpx;">{{cityDistrict}} · {{passportSpace}}</view>
         <view class="muted" style="color:#cbd5e1;margin-top:8rpx;">期望课酬 {{passportBudget}}</view>
       </view>
@@ -204,20 +211,20 @@
   <view class="modal-panel">
     <view class="modal-head">
       <view style="font-weight:900;">预约 · {{bookingTutor.maskedName}}</view>
-      <view style="font-size:20rpx;color:#99f6e4;">¥{{bookingTutor.hourlyRate}}/h · {{bookingTutor.subjects[0]}}</view>
+      <view style="font-size:20rpx;color:#FFC0CB;">¥{{bookingTutor.hourlyRate}}/h · {{bookingTutor.subjects[0]}}</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
       <view class="section-h">选择时段</view>
       <radio-group bindchange="onSlot">
         <label class="pace-row" wx:for="{{slots}}" wx:key="value">
-          <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#0d9488" />
+          <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#FF5A2D" />
           <text>{{item.label}}</text>
         </label>
       </radio-group>
       <view class="section-h">课时</view>
       <radio-group bindchange="onHours">
-        <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#0d9488" /><text>2 小时（推荐）</text></label>
-        <label class="pace-row"><radio value="1" checked="{{hours===1}}" color="#0d9488" /><text>1 小时</text></label>
+        <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#FF5A2D" /><text>2 小时（推荐）</text></label>
+        <label class="pace-row"><radio value="1" checked="{{hours===1}}" color="#FF5A2D" /><text>1 小时</text></label>
       </radio-group>
       <view class="section-h">教学空间</view>
       <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onBookSpace">
@@ -225,7 +232,7 @@
       </picker>
 
       <view class="escrow-box" wx:if="{{escrowShow}}">
-        <view style="font-weight:800;color:#0f766e;">托管锁定摘要</view>
+        <view style="font-weight:800;color:#E83A1F;">托管锁定摘要</view>
         <view class="muted">课时：{{hours}} 小时 · 时段：{{selectedSlot}}</view>
         <view class="muted">空间：{{spaces[spaceIndex]}}</view>
         <view style="font-weight:900;margin-top:8rpx;">锁定金额 ¥{{escrowAmount}}</view>
@@ -268,7 +275,7 @@
   <view class="modal-panel">
     <view class="modal-head">
       <view style="font-weight:900;">预约前需要授权手机号</view>
-      <view style="font-size:20rpx;color:#99f6e4;margin-top:4rpx;">用于课程预约确认和通知</view>
+      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">用于课程预约确认和通知</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
       <view class="muted" style="margin-bottom:16rpx;">

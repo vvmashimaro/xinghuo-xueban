@@ -1,16 +1,28 @@
-/* 星火学伴 · 全局设计令牌 (teal / slate) */
+/* 星火伴学 · Style C 全局设计令牌 */
 page {
-  --color-primary: #0d9488;
-  --color-primary-dark: #0f766e;
+  --color-primary-deep: #e83a1f;
+  --color-primary: #ff5a2d;
+  --color-primary-mid: #ff8a3d;
+  --color-primary-light: #ffc14d;
+  --color-blush: #ffc0cb;
+  --color-cream: #fff8f0;
+  --color-grad-peach: #ffe4d6;
+  --color-grad-lavender: #ede4ff;
   --color-slate-900: #0f172a;
   --color-slate-800: #1e293b;
   --color-slate-500: #64748b;
-  --color-surface: #f8fafc;
-  --color-surface-2: #f1f5f9;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  background: var(--color-surface);
+  --color-surface: #fff8f0;
+  --color-surface-2: #ffe4d6;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-danger: #fda4af;
+  --color-info: #c4b5fd;
+  background: linear-gradient(
+    165deg,
+    var(--color-grad-peach) 0%,
+    var(--color-cream) 45%,
+    var(--color-grad-lavender) 100%
+  );
   color: var(--color-slate-800);
   font-size: 28rpx;
   line-height: 1.5;
@@ -23,18 +35,41 @@ view, text, button, input, textarea, picker, label, scroll-view {
   box-sizing: border-box;
 }
 
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+.brand-logo {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 90, 45, 0.2);
+}
+.brand-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: var(--color-slate-900);
+}
+.brand-sub {
+  font-size: 22rpx;
+  color: var(--color-slate-500);
+  margin-top: 6rpx;
+}
+
 .container {
   padding: 24rpx 28rpx 48rpx;
   min-height: 100vh;
 }
 
 .card {
-  background: #fff;
-  border-radius: 24rpx;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 28rpx;
+  border: 1px solid rgba(255, 192, 203, 0.35);
   padding: 28rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8rpx 28rpx rgba(255, 90, 45, 0.08);
 }
 
 .card-title {
@@ -52,24 +87,26 @@ view, text, button, input, textarea, picker, label, scroll-view {
 .btn-primary {
   background: var(--color-primary);
   color: #fff;
-  border-radius: 20rpx;
+  border-radius: 22rpx;
   font-weight: 700;
   font-size: 28rpx;
   padding: 22rpx 32rpx;
   border: none;
   line-height: 1.4;
+  box-shadow: 0 6rpx 16rpx rgba(255, 90, 45, 0.25);
 }
 .btn-primary::after { border: none; }
 .btn-primary[disabled] {
-  background: #99f6e4;
+  background: #ffc0cb;
   color: #fff;
+  box-shadow: none;
 }
 
 .btn-ghost {
-  background: #f0fdfa;
-  color: var(--color-primary-dark);
-  border: 1px solid #99f6e4;
-  border-radius: 16rpx;
+  background: #fff8f0;
+  color: var(--color-primary-deep);
+  border: 1px solid var(--color-blush);
+  border-radius: 18rpx;
   font-size: 24rpx;
   font-weight: 700;
   padding: 16rpx 24rpx;
@@ -79,9 +116,9 @@ view, text, button, input, textarea, picker, label, scroll-view {
 
 .btn-danger {
   background: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
-  border-radius: 16rpx;
+  color: #9f1239;
+  border: 1px solid var(--color-danger);
+  border-radius: 18rpx;
   font-size: 24rpx;
   font-weight: 700;
   padding: 16rpx 24rpx;
@@ -94,8 +131,8 @@ view, text, button, input, textarea, picker, label, scroll-view {
   height: auto;
   line-height: 1.45;
   background: #fff;
-  border: 1px solid #cbd5e1;
-  border-radius: 16rpx;
+  border: 1px solid #e2e8f0;
+  border-radius: 18rpx;
   padding: 20rpx 24rpx;
   font-size: 28rpx;
   color: var(--color-slate-800);
@@ -104,7 +141,6 @@ view, text, button, input, textarea, picker, label, scroll-view {
   position: relative;
   z-index: auto;
 }
-/* picker 等用 view.input 时垂直居中 */
 view.input {
   display: flex;
   align-items: center;
@@ -147,39 +183,63 @@ textarea {
   border-radius: 999rpx;
   border: 1px solid transparent;
 }
-.badge-pending { background: #fef3c7; color: #b45309; border-color: #fde68a; }
-.badge-approved { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
-.badge-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
-.badge-supplement { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
-.badge-teal { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
+.badge-pending { background: #fef9c3; color: #854d0e; border-color: var(--color-warning); }
+.badge-approved { background: #dcfce7; color: #166534; border-color: var(--color-success); }
+.badge-rejected { background: #fff1f2; color: #9f1239; border-color: var(--color-danger); }
+.badge-supplement { background: #ede9fe; color: #5b21b6; border-color: var(--color-info); }
+.badge-teal,
+.badge-brand {
+  background: #fff8f0;
+  color: var(--color-primary-deep);
+  border-color: var(--color-blush);
+}
 
 .chip {
   display: inline-flex;
   align-items: center;
   padding: 10rpx 18rpx;
-  border-radius: 12rpx;
+  border-radius: 14rpx;
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  background: #fff;
   color: #475569;
   font-size: 22rpx;
   margin: 0 12rpx 12rpx 0;
 }
 .chip-on {
-  background: #f0fdfa;
-  border-color: #5eead4;
-  color: #0f766e;
+  background: #fff8f0;
+  border-color: var(--color-primary-mid);
+  color: var(--color-primary-deep);
   font-weight: 700;
 }
 
 .hero {
-  background: linear-gradient(135deg, #0f172a 0%, #134e4a 100%);
-  color: #fff;
-  border-radius: 24rpx;
-  padding: 36rpx 32rpx;
+  background: linear-gradient(135deg, #fff8f0 0%, #ffe4d6 55%, #ede4ff 100%);
+  color: var(--color-slate-900);
+  border-radius: 28rpx;
+  padding: 28rpx 32rpx;
   margin-bottom: 24rpx;
+  border: 1px solid rgba(255, 192, 203, 0.4);
+  box-shadow: 0 8rpx 24rpx rgba(255, 90, 45, 0.1);
 }
 .hero-title { font-size: 36rpx; font-weight: 900; }
-.hero-sub { font-size: 22rpx; color: #99f6e4; margin-top: 8rpx; }
+.hero-sub { font-size: 22rpx; color: var(--color-slate-500); margin-top: 8rpx; }
+
+.banner-warning {
+  background: #fef9c3;
+  border: 1px solid var(--color-warning);
+  color: #713f12;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  font-size: 24rpx;
+}
+.banner-error {
+  background: #fff1f2;
+  border: 1px solid var(--color-danger);
+  color: #9f1239;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  font-size: 24rpx;
+}
 
 .row-between {
   display: flex;
@@ -199,7 +259,7 @@ textarea {
 .modal-mask {
   position: fixed;
   left: 0; right: 0; top: 0; bottom: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.45);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -208,7 +268,7 @@ textarea {
 }
 .modal-panel {
   background: #fff;
-  border-radius: 28rpx;
+  border-radius: 32rpx;
   width: 100%;
   max-height: 88vh;
   overflow: visible;
@@ -216,12 +276,14 @@ textarea {
   flex-direction: column;
   position: relative;
   z-index: 1001;
+  border: 1px solid rgba(255, 192, 203, 0.35);
 }
 .modal-head {
   padding: 28rpx 32rpx;
-  background: linear-gradient(90deg, #0f172a, #134e4a);
+  background: linear-gradient(90deg, #ff8a3d, #ff5a2d);
   color: #fff;
   flex-shrink: 0;
+  border-radius: 32rpx 32rpx 0 0;
 }
 .modal-body {
   padding: 28rpx 32rpx;
@@ -232,7 +294,7 @@ textarea {
 .modal-foot {
   padding: 20rpx 32rpx;
   border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  background: #fff8f0;
   display: flex;
   justify-content: flex-end;
   gap: 16rpx;
@@ -253,7 +315,7 @@ textarea {
 .check-box {
   width: 48rpx;
   height: 48rpx;
-  border-radius: 8rpx;
+  border-radius: 10rpx;
   border: 2rpx solid #94a3b8;
   flex-shrink: 0;
   margin-top: 2rpx;
@@ -272,8 +334,8 @@ textarea {
   bottom: -8rpx;
 }
 .check-box.on {
-  background: #0d9488;
-  border-color: #0d9488;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
   font-size: 24rpx;
   font-weight: 800;
