@@ -49,6 +49,17 @@
     patchFeatureFlags: (patch) => request('PATCH', '/api/admin/feature-flags', patch),
     listFeedback: () => request('GET', '/api/feedback'),
     patchFeedback: (id, patch) => request('PATCH', '/api/feedback/' + encodeURIComponent(id), patch),
-    processEscrow: () => request('POST', '/api/bookings/process-escrow', {})
+    processEscrow: () => request('POST', '/api/bookings/process-escrow', {}),
+    getSubjectCatalog: () => request('GET', '/api/subject-catalog'),
+    listTeachingPoints: () => request('GET', '/api/admin/teaching-points'),
+    patchTeachingPoint: (id, patch) =>
+      request('PATCH', '/api/admin/teaching-points/' + encodeURIComponent(id), patch),
+    getTeachingPointOccupancy: (id, query) => {
+      const qs = new URLSearchParams(query || {}).toString();
+      return request(
+        'GET',
+        '/api/admin/teaching-points/' + encodeURIComponent(id) + '/occupancy' + (qs ? '?' + qs : '')
+      );
+    }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

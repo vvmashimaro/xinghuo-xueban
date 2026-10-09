@@ -1186,6 +1186,39 @@ app.get('/api/teaching-points', requireAuth, (req, res) => {
   ok(res, db.getTeachingPoints());
 });
 
+app.get('/api/admin/teaching-points', requireAdmin, (req, res) => {
+  db.seedIfEmpty();
+  ok(res, db.getTeachingPoints());
+});
+
+app.patch('/api/admin/teaching-points/:id', requireAdmin, (req, res) => {
+  db.seedIfEmpty();
+  const body = req.body || {};
+  const boothCount = body.boothCount != null ? body.boothCount : body.booth_count;
+  const result = db.updateTeachingPointBoothCount(req.params.id, boothCount);
+  if (result && result.ok === false) {
+    return res.status(400).json({
+      ok: false,
+      error: result.error,
+      code: result.code,
+      bookingIds: result.bookingIds
+    });
+  }
+  ok(res, result.teachingPoint);
+});
+
+app.get('/api/admin/teaching-points/:id/occupancy', requireAdmin, (req, res) => {
+  db.seedIfEmpty();
+  const result = db.getTeachingPointOccupancy(req.params.id, {
+    date: req.query.date,
+    weekday: req.query.weekday
+  });
+  if (result && result.ok === false) {
+    return fail(res, 404, result.error || '教学点不存在');
+  }
+  ok(res, result);
+});
+
 /* ========== Feature flags ========== */
 app.get('/api/feature-flags', (req, res) => {
   ok(res, db.getFeatureFlags());

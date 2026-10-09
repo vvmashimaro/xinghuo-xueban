@@ -77,6 +77,10 @@ echo ""
 echo "=== Running subjects / conflicts / booth tests ==="
 node test-subjects-conflicts-booths.js
 
+echo ""
+echo "=== Running admin teaching-point API tests ==="
+node test-admin-teaching-points.js
+
 # Run miniprogram flow test
 echo ""
 echo "=== Running miniprogram flow test ==="
