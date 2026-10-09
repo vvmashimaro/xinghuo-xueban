@@ -24,8 +24,83 @@
     selectedMentorId: null,
     auditFilter: 'pending',
     feedbackFilter: 'all',
+    bookingListFilter: 'all',
+    subjectTagFilter: '',
+    subjectCatalog: null,
+    teachingPoints: [],
+    tpOccupancyDate: '',
+    tpOccupancyTpId: '',
+    tpOccupancy: null,
     adminLabel: '管理员'
   };
+
+  function todayIso() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function subjectCatalogChips() {
+    const cat = state.subjectCatalog || {};
+    const chips = [];
+    (cat.topLevelGradeBands || []).forEach((g) => chips.push({ label: g, value: g }));
+    (cat.parentTargetSubjects || []).forEach((s) => {
+      if (chips.some((c) => c.value === s)) return;
+      chips.push({ label: s, value: s });
+    });
+    (cat.mentorSubjectOptions || []).slice(0, 8).forEach((s) => {
+      if (chips.length > 16) return;
+      if (chips.some((c) => c.value === s)) return;
+      chips.push({ label: s, value: s });
+    });
+    return chips;
+  }
+
+  function subjectFilterBarHtml() {
+    const chips = subjectCatalogChips();
+    if (!chips.length) {
+      return '<p class="text-xs text-slate-400">学科目录加载中…</p>';
+    }
+    return (
+      '<div class="flex flex-wrap gap-2 items-center">' +
+      '<span class="text-xs text-slate-500 font-bold">学科筛选（目录）：</span>' +
+      '<button type="button" data-subject-filter="" class="text-xs px-2.5 py-1 rounded-lg ' +
+      (!state.subjectTagFilter ? 'bg-slate-900 text-white' : 'bg-slate-100') +
+      '">全部</button>' +
+      chips
+        .map((c) => {
+          const on = state.subjectTagFilter === c.value;
+          return (
+            '<button type="button" data-subject-filter="' +
+            esc(c.value) +
+            '" class="text-xs px-2.5 py-1 rounded-lg ' +
+            (on ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700') +
+            '">' +
+            esc(c.label) +
+            '</button>'
+          );
+        })
+        .join('') +
+      '</div>'
+    );
+  }
+
+  function matchesSubjectTag(text, tag) {
+    if (!tag) return true;
+    return String(text || '').toLowerCase().indexOf(String(tag).toLowerCase()) >= 0;
+  }
+
+  function bookingConflictBadge(b) {
+    if (!b || !b.hasTimeConflict) return '';
+    const note = b.timeConflictNote || '与学员其他课程时间冲突';
+    return (
+      '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-900" title="' +
+      esc(note) +
+      '">' +
+      (b.timeConflictForced ? '强制约课' : '时间冲突') +
+      '</span>'
+    );
+  }
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -79,6 +154,20 @@
     } catch (e) {
       state.flags = { FEATURE_SMART_WAREHOUSE: false };
     }
+    try {
+      state.subjectCatalog = await AdminApi.getSubjectCatalog();
+    } catch (e) {
+      state.subjectCatalog = null;
+    }
+    try {
+      state.teachingPoints = await AdminApi.listTeachingPoints();
+    } catch (e) {
+      state.teachingPoints = [];
+    }
+    if (!state.tpOccupancyDate) state.tpOccupancyDate = todayIso();
+    if (!state.tpOccupancyTpId && state.teachingPoints[0]) {
+      state.tpOccupancyTpId = state.teachingPoints[0].id;
+    }
   }
 
   function setRoute(route) {
@@ -106,6 +195,7 @@
     else if (r === 'parents') main.innerHTML = renderParents();
     else if (r === 'mentors') main.innerHTML = renderMentorsList();
     else if (r === 'bookings') main.innerHTML = renderBookings();
+    else if (r === 'teaching-points') main.innerHTML = renderTeachingPoints();
     else if (r === 'contracts') main.innerHTML = renderContracts();
     else if (r === 'assessments') main.innerHTML = renderAssessments();
     else if (r === 'payments') main.innerHTML = renderPayments();
@@ -141,6 +231,7 @@
                 esc(b.subject) +
                 '</span><span class="text-slate-500">' +
                 esc(b.status) +
+                (b.hasTimeConflict ? ' · <span class="text-amber-700">冲突</span>' : '') +
                 '</span></li>'
             )
             .join('') +
@@ -252,14 +343,23 @@
   function renderParents() {
     const q = document.getElementById('parentSearch');
     const needle = (q && q.value) || '';
-    const rows = state.parents.filter((p) => !needle || String(p.phone || '').indexOf(needle) >= 0 || String(p.parentName || '').indexOf(needle) >= 0);
+    const tag = state.subjectTagFilter;
+    const rows = state.parents.filter((p) => {
+      if (needle && String(p.phone || '').indexOf(needle) < 0 && String(p.parentName || '').indexOf(needle) < 0) {
+        return false;
+      }
+      if (!tag) return true;
+      const subs = (p.subjects || []).join(' ');
+      return matchesSubjectTag(subs + ' ' + (p.studentGrade || ''), tag);
+    });
     return (
       '<div class="space-y-4"><h1 class="text-2xl font-black">家长用户</h1>' +
+      subjectFilterBarHtml() +
       '<input id="parentSearch" placeholder="手机号 / 姓名" class="border border-slate-300 rounded-xl px-3 py-2 text-sm w-full max-w-xs" value="' +
       esc(needle) +
       '"/>' +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学员</th></tr></thead><tbody>' +
+      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学员</th><th class="text-left p-3">目标学科</th></tr></thead><tbody>' +
       rows
         .map(
           (p) =>
@@ -271,6 +371,8 @@
             esc(p.studentNickname) +
             ' / ' +
             esc(p.studentGrade) +
+            '</td><td class="p-3 text-xs text-slate-600">' +
+            esc((p.subjects || []).join('、') || '—') +
             '</td></tr>'
         )
         .join('') +
@@ -281,15 +383,26 @@
   function renderMentorsList() {
     return (
       '<div class="space-y-4"><h1 class="text-2xl font-black">导师用户</h1>' +
+      subjectFilterBarHtml() +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
+      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
       state.mentors
+        .filter((m) => {
+          const tag = state.subjectTagFilter;
+          if (!tag) return true;
+          const subs = (m.subjects || []).concat(m.customSubjects || []).join(' ');
+          return matchesSubjectTag(subs, tag);
+        })
         .map((m) => {
           return (
             '<tr class="border-t border-slate-100"><td class="p-3 font-medium">' +
             esc(m.realName) +
             '</td><td class="p-3 font-mono">' +
             esc(m.phone) +
+            '</td><td class="p-3 text-xs max-w-[200px] truncate" title="' +
+            esc((m.subjects || []).join('、')) +
+            '">' +
+            esc((m.subjects || []).slice(0, 3).join('、') || '—') +
             '</td><td class="p-3">' +
             esc(STATUS_LABEL[m.status] || m.status) +
             '</td><td class="p-3">' +
@@ -305,32 +418,196 @@
   }
 
   function renderBookings() {
+    const filters = [
+      { id: 'all', label: '全部预约' },
+      { id: 'conflict', label: '仅时间冲突/强制约课' }
+    ]
+      .map((f) => {
+        const on = state.bookingListFilter === f.id;
+        return (
+          '<button type="button" data-booking-filter="' +
+          f.id +
+          '" class="text-xs px-3 py-1.5 rounded-lg ' +
+          (on ? 'bg-amber-600 text-white' : 'bg-slate-100') +
+          '">' +
+          f.label +
+          '</button>'
+        );
+      })
+      .join('');
+    const list = state.bookings.filter((b) => {
+      if (state.bookingListFilter === 'conflict') return !!b.hasTimeConflict;
+      if (state.subjectTagFilter) return matchesSubjectTag(b.subject, state.subjectTagFilter);
+      return true;
+    });
     return (
       '<div class="space-y-4"><div class="flex flex-wrap items-center justify-between gap-3">' +
       '<h1 class="text-2xl font-black">预约订单</h1>' +
       '<button type="button" id="btnProcessEscrow" class="text-sm bg-slate-900 text-white px-4 py-2 rounded-xl font-bold">执行托管释放扫描</button></div>' +
+      subjectFilterBarHtml() +
+      '<div class="flex flex-wrap gap-2">' +
+      filters +
+      '</div>' +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto">' +
-      '<table class="w-full text-sm min-w-[640px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
-      '<th class="text-left p-3">ID</th><th class="text-left p-3">学科</th><th class="text-left p-3">导师</th><th class="text-left p-3">状态</th><th class="text-left p-3">支付</th><th class="text-left p-3">托管</th></tr></thead><tbody>' +
-      state.bookings
+      '<table class="w-full text-sm min-w-[960px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
+      '<th class="text-left p-3">ID</th><th class="text-left p-3">学科</th><th class="text-left p-3">导师</th><th class="text-left p-3">教学点/仓位</th><th class="text-left p-3">冲突</th><th class="text-left p-3">状态</th><th class="text-left p-3">支付</th><th class="text-left p-3">托管</th></tr></thead><tbody>' +
+      (list.length
+        ? list
+            .map(
+              (b) =>
+                '<tr class="border-t border-slate-100' +
+                (b.hasTimeConflict ? ' bg-amber-50/40' : '') +
+                '"><td class="p-3 font-mono text-xs">' +
+                esc(b.id) +
+                '</td><td class="p-3">' +
+                esc(b.subject) +
+                '</td><td class="p-3">' +
+                esc(b.tutorName) +
+                '</td><td class="p-3 text-xs">' +
+                esc(b.space || '—') +
+                (b.boothLabel ? '<br><span class="text-slate-500">' + esc(b.boothLabel) + '</span>' : '') +
+                '</td><td class="p-3">' +
+                (b.hasTimeConflict
+                  ? bookingConflictBadge(b) +
+                    '<div class="text-[10px] text-amber-800 mt-1 max-w-[180px]">' +
+                    esc(b.timeConflictNote || '') +
+                    '</div>'
+                  : '—') +
+                '</td><td class="p-3">' +
+                esc(b.status) +
+                '</td><td class="p-3">' +
+                esc(b.paymentStatus || '—') +
+                '</td><td class="p-3">' +
+                esc(b.escrowStatus || '—') +
+                '</td></tr>'
+            )
+            .join('')
+        : '<tr><td colspan="8" class="p-6 text-center text-slate-400">暂无符合条件的预约</td></tr>') +
+      '</tbody></table></div></div>'
+    );
+  }
+
+  function renderTeachingPoints() {
+    const tps = state.teachingPoints || [];
+    const selId = state.tpOccupancyTpId || (tps[0] && tps[0].id) || '';
+    const occ = state.tpOccupancy;
+    let occHtml =
+      '<p class="text-sm text-slate-400">选择教学点与日期后点击「查询占用」</p>';
+    if (occ && occ.booths) {
+      occHtml =
+        '<div class="text-xs text-slate-500 mb-2">日期：' +
+        esc(occ.date || state.tpOccupancyDate) +
+        ' · ' +
+        esc(occ.teachingPointName) +
+        '</div>' +
+        '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">' +
+        occ.booths
+          .map((b) => {
+            const items = (b.bookings || [])
+              .map(
+                (x) =>
+                  '<li class="border-t border-slate-100 pt-1 mt-1">' +
+                  esc(x.timeLabel || x.timeStart + '-' + x.timeEnd) +
+                  ' · ' +
+                  esc(x.tutorName) +
+                  ' · ' +
+                  esc(x.subject) +
+                  (x.hasTimeConflict ? ' <span class="text-amber-700">冲突</span>' : '') +
+                  '<div class="font-mono text-[10px] text-slate-400">' +
+                  esc(x.bookingId) +
+                  '</div></li>'
+              )
+              .join('');
+            return (
+              '<div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50">' +
+              '<div class="font-bold text-slate-800">' +
+              esc(b.label) +
+              '</div>' +
+              (items ? '<ul class="text-xs mt-2">' + items + '</ul>' : '<p class="text-xs text-emerald-700 mt-2">空闲</p>') +
+              '</div>'
+            );
+          })
+          .join('') +
+        '</div>';
+      if (occ.unassigned && occ.unassigned.length) {
+        occHtml +=
+          '<div class="mt-3 text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-xl p-3">未分配仓位预约：' +
+          occ.unassigned.length +
+          ' 笔（请协助家长选仓或改期）</div>';
+      }
+    }
+    return (
+      '<div class="space-y-6">' +
+      '<h1 class="text-2xl font-black">教学点仓位管理</h1>' +
+      '<p class="text-sm text-slate-500">默认每网点 3 个编号仓位；缩减仓位前须确保无有效预约占用将被移除的仓位。智能仓 IoT 功能保持关闭。</p>' +
+      '<div class="space-y-4">' +
+      tps
+        .map((tp) => {
+          const count = (tp.booths && tp.booths.length) || tp.boothCount || 3;
+          const boothTags = (tp.booths || [])
+            .map((b) => '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">' + esc(b.label) + '</span>')
+            .join(' ');
+          return (
+            '<div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">' +
+            '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div><div class="font-bold text-slate-900">' +
+            esc(tp.name) +
+            '</div><div class="text-xs text-slate-500 font-mono">' +
+            esc(tp.id) +
+            '</div></div>' +
+            '<div class="flex items-center gap-2 text-sm">' +
+            '<label class="text-slate-600">仓位数</label>' +
+            '<input type="number" min="1" max="24" value="' +
+            count +
+            '" data-tp-count="' +
+            esc(tp.id) +
+            '" class="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center"/>' +
+            '<button type="button" data-tp-save="' +
+            esc(tp.id) +
+            '" class="text-xs font-bold bg-teal-600 text-white px-3 py-1.5 rounded-lg">保存</button>' +
+            '</div></div>' +
+            '<div class="flex flex-wrap gap-1">' +
+            boothTags +
+            '</div></div>'
+          );
+        })
+        .join('') +
+      '</div>' +
+      '<section class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">' +
+      '<h2 class="font-bold text-slate-800">仓位占用一览</h2>' +
+      '<div class="flex flex-wrap gap-2 items-end text-sm">' +
+      '<div><label class="block text-xs text-slate-500 mb-1">教学点</label><select id="tpOccSelect" class="border border-slate-300 rounded-xl px-3 py-2">' +
+      tps
         .map(
-          (b) =>
-            '<tr class="border-t border-slate-100"><td class="p-3 font-mono text-xs">' +
-            esc(b.id) +
-            '</td><td class="p-3">' +
-            esc(b.subject) +
-            '</td><td class="p-3">' +
-            esc(b.tutorName) +
-            '</td><td class="p-3">' +
-            esc(b.status) +
-            '</td><td class="p-3">' +
-            esc(b.paymentStatus || '—') +
-            '</td><td class="p-3">' +
-            esc(b.escrowStatus || '—') +
-            '</td></tr>'
+          (tp) =>
+            '<option value="' +
+            esc(tp.id) +
+            '" ' +
+            (tp.id === selId ? 'selected' : '') +
+            '>' +
+            esc(tp.name) +
+            '</option>'
         )
         .join('') +
-      '</tbody></table></div></div>'
+      '</select></div>' +
+      '<div><label class="block text-xs text-slate-500 mb-1">日期</label><input type="date" id="tpOccDate" value="' +
+      esc(state.tpOccupancyDate || todayIso()) +
+      '" class="border border-slate-300 rounded-xl px-3 py-2"/></div>' +
+      '<button type="button" id="btnTpOccupancy" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold">查询占用</button>' +
+      '</div>' +
+      '<div id="tpOccWrap">' +
+      occHtml +
+      '</div></section>' +
+      '<section class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-600">' +
+      '<div class="font-bold text-slate-800 mb-1">学科目录（API）</div>' +
+      (state.subjectCatalog
+        ? '<div>学段：' +
+          esc((state.subjectCatalog.topLevelGradeBands || []).join('、')) +
+          '</div><div class="mt-1">测评学科：' +
+          esc((state.subjectCatalog.assessmentSubjects || []).join('、')) +
+          '</div>'
+        : '加载失败') +
+      '</section></div>'
     );
   }
 
@@ -642,6 +919,66 @@
       });
     });
     if (state.route === 'payments') loadPayOrders();
+
+    document.querySelectorAll('[data-subject-filter]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.subjectTagFilter = btn.getAttribute('data-subject-filter') || '';
+        renderMain();
+      });
+    });
+    document.querySelectorAll('[data-booking-filter]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.bookingListFilter = btn.getAttribute('data-booking-filter') || 'all';
+        renderMain();
+      });
+    });
+    document.querySelectorAll('[data-tp-save]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-tp-save');
+        const input = document.querySelector('[data-tp-count="' + id + '"]');
+        const count = input ? parseInt(input.value, 10) : 3;
+        try {
+          await AdminApi.patchTeachingPoint(id, { boothCount: count });
+          await reloadCore();
+          toast('仓位数量已更新');
+          renderMain();
+        } catch (e) {
+          toast((e.data && e.data.error) || e.message || '保存失败', 'error');
+        }
+      });
+    });
+    const occBtn = document.getElementById('btnTpOccupancy');
+    if (occBtn) {
+      occBtn.addEventListener('click', () => loadTeachingPointOccupancy());
+    }
+    const tpSel = document.getElementById('tpOccSelect');
+    if (tpSel) {
+      tpSel.addEventListener('change', () => {
+        state.tpOccupancyTpId = tpSel.value;
+      });
+    }
+    const tpDate = document.getElementById('tpOccDate');
+    if (tpDate) {
+      tpDate.addEventListener('change', () => {
+        state.tpOccupancyDate = tpDate.value;
+      });
+    }
+  }
+
+  async function loadTeachingPointOccupancy() {
+    const sel = document.getElementById('tpOccSelect');
+    const dateEl = document.getElementById('tpOccDate');
+    const id = (sel && sel.value) || state.tpOccupancyTpId;
+    const date = (dateEl && dateEl.value) || state.tpOccupancyDate || todayIso();
+    if (!id) return;
+    state.tpOccupancyTpId = id;
+    state.tpOccupancyDate = date;
+    try {
+      state.tpOccupancy = await AdminApi.getTeachingPointOccupancy(id, { date });
+      renderMain();
+    } catch (e) {
+      toast(e.message || '查询占用失败', 'error');
+    }
   }
 
   async function init() {

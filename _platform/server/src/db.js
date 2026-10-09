@@ -1075,6 +1075,132 @@ function getTeachingPoints() {
   return (s.teachingPoints || []).slice();
 }
 
+function getTeachingPointById(id) {
+  const s = getState();
+  ensureTeachingPoints(s);
+  return (s.teachingPoints || []).find((tp) => tp.id === id) || null;
+}
+
+function bookingUsesTeachingPoint(booking, tp) {
+  if (!booking || !tp) return false;
+  if (booking.teachingPointId && booking.teachingPointId === tp.id) return true;
+  const space = String(booking.space || '').trim();
+  return space && (space === tp.name || space.indexOf(tp.name) >= 0 || tp.name.indexOf(space) >= 0);
+}
+
+function updateTeachingPointBoothCount(teachingPointId, boothCount) {
+  const s = getState();
+  ensureTeachingPoints(s);
+  const idx = (s.teachingPoints || []).findIndex((tp) => tp.id === teachingPointId);
+  if (idx < 0) {
+    return { ok: false, error: '教学点不存在', code: 'TEACHING_POINT_NOT_FOUND' };
+  }
+  const tp = Object.assign({}, s.teachingPoints[idx]);
+  const newCount = Math.max(1, Math.min(24, parseInt(boothCount, 10) || DEFAULT_BOOTH_COUNT));
+  const oldBooths = tp.booths || [];
+  const oldCount = oldBooths.length || tp.boothCount || DEFAULT_BOOTH_COUNT;
+  if (newCount < oldCount) {
+    const removedIds = oldBooths.slice(newCount).map((b) => b.id);
+    const blocked = (s.bookings || []).filter((b) => {
+      if (!bookingSchedule.bookingIsActive(b)) return false;
+      if (!bookingUsesTeachingPoint(b, tp)) return false;
+      return removedIds.includes(b.boothId);
+    });
+    if (blocked.length) {
+      return {
+        ok: false,
+        error:
+          '无法减少仓位数：仍有有效预约占用将被移除的仓位（请先改期、取消或迁移到其他仓位）',
+        code: 'BOOTH_SHRINK_BLOCKED',
+        bookingIds: blocked.map((b) => b.id)
+      };
+    }
+  }
+  tp.boothCount = newCount;
+  tp.booths = buildBoothsForTeachingPoint(tp.id, newCount);
+  tp.updatedAt = _now();
+  s.teachingPoints[idx] = tp;
+  persist();
+  return { ok: true, teachingPoint: tp };
+}
+
+function sessionMatchesOccupancyQuery(session, query) {
+  if (!session) return false;
+  const date = query && query.date ? String(query.date).slice(0, 10) : '';
+  const weekday = query && query.weekday != null && query.weekday !== '' ? parseInt(query.weekday, 10) : NaN;
+  if (date) {
+    if (session.date) return session.date === date;
+    if (!isNaN(weekday) && session.weekday != null && session.weekday !== '') {
+      return parseInt(session.weekday, 10) === weekday;
+    }
+    return false;
+  }
+  if (!isNaN(weekday)) {
+    let wd = session.weekday;
+    if ((wd == null || wd === '') && session.date) {
+      wd = new Date(session.date + 'T12:00:00').getDay();
+    }
+    return parseInt(wd, 10) === weekday;
+  }
+  return true;
+}
+
+function getTeachingPointOccupancy(teachingPointId, query) {
+  const s = getState();
+  ensureTeachingPoints(s);
+  const tp = getTeachingPointById(teachingPointId);
+  if (!tp) {
+    return { ok: false, error: '教学点不存在', code: 'TEACHING_POINT_NOT_FOUND' };
+  }
+  const q = query || {};
+  const booths = (tp.booths || []).map((b) => ({
+    boothId: b.id,
+    label: b.label,
+    number: b.number,
+    bookings: []
+  }));
+  const boothById = {};
+  booths.forEach((b) => {
+    boothById[b.boothId] = b;
+  });
+  const unassigned = [];
+
+  (s.bookings || []).forEach((b) => {
+    if (!bookingSchedule.bookingIsActive(b)) return;
+    if (!bookingUsesTeachingPoint(b, tp)) return;
+    const flat = bookingSchedule.flattenBookingSessions(b);
+    flat.forEach((sess) => {
+      if (!sessionMatchesOccupancyQuery(sess, q)) return;
+      const entry = {
+        bookingId: b.id,
+        subject: b.subject,
+        tutorName: b.tutorName,
+        studentNickname: b.studentNickname,
+        timeStart: sess.timeStart,
+        timeEnd: sess.timeEnd,
+        timeLabel: sess.timeLabel,
+        hasTimeConflict: !!b.hasTimeConflict,
+        timeConflictForced: !!b.timeConflictForced
+      };
+      if (b.boothId && boothById[b.boothId]) {
+        boothById[b.boothId].bookings.push(entry);
+      } else {
+        unassigned.push(Object.assign({ boothId: b.boothId || '', boothLabel: b.boothLabel || '' }, entry));
+      }
+    });
+  });
+
+  return {
+    ok: true,
+    teachingPointId: tp.id,
+    teachingPointName: tp.name,
+    date: q.date || '',
+    weekday: q.weekday != null && q.weekday !== '' ? parseInt(q.weekday, 10) : '',
+    booths: booths,
+    unassigned: unassigned
+  };
+}
+
 function addBooking(booking) {
   const s = getState();
   const mentorId = (booking && (booking.mentorId || booking.tutorId)) || '';
@@ -2202,6 +2328,9 @@ module.exports = {
   DEFAULT_BOOTH_COUNT,
   buildDefaultTeachingPoints,
   getTeachingPoints,
+  getTeachingPointById,
+  updateTeachingPointBoothCount,
+  getTeachingPointOccupancy,
   DB_PATH,
   load,
   snapshot,
