@@ -25,7 +25,10 @@ view, text, button, input, textarea, picker, scroll-view {
 .shell {
   position: relative;
   min-height: 100vh;
-  padding-bottom: 48rpx;
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(48rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 .shell-glow {
   position: fixed;
@@ -49,7 +52,7 @@ view, text, button, input, textarea, picker, scroll-view {
 .page-inner {
   position: relative;
   z-index: 1;
-  padding: 24rpx 28rpx 40rpx;
+  padding: 32rpx 28rpx 40rpx;
 }
 
 .top-bar {
@@ -150,11 +153,16 @@ view, text, button, input, textarea, picker, scroll-view {
 }
 .input {
   width: 100%;
+  min-height: 88rpx;
   background: rgba(255, 255, 255, 0.88);
   border-radius: 20rpx;
-  padding: 22rpx 24rpx;
-  font-size: 28rpx;
+  padding: 26rpx 28rpx;
+  font-size: 30rpx;
+  line-height: 1.55;
   border: 1px solid rgba(255, 192, 203, 0.25);
+}
+textarea.input {
+  min-height: 140rpx;
 }
 .input-placeholder { color: #94a3b8; }
 .row-flex { display: flex; align-items: center; gap: 16rpx; }

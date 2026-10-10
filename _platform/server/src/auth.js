@@ -5,6 +5,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { isDemoAdminPhone } = require('./demo-accounts');
 
 // Verification tickets (short-lived, in-memory)
 // { ticketHash: { phone, issuedAt, expiresAt } }
@@ -45,7 +46,9 @@ function isAdminPhone(phone) {
     list = DEFAULT_ADMIN_PHONES;
   }
   
-  return list.includes(String(phone).trim());
+  const normalized = String(phone).trim();
+  if (list.includes(normalized)) return true;
+  return isDemoAdminPhone(normalized);
 }
 
 /**

@@ -16,12 +16,62 @@
 
     <view class="xh-card" wx:if="{{step===1}}">
       <view class="xh-card-title">L1 身份与清算账户</view>
-      <view class="field"><text class="label">真实姓名</text><input class="input" value="{{form.realName}}" data-k="realName" bindinput="onField" /></view>
-      <view class="field"><text class="label">手机号</text><input class="input" type="number" maxlength="11" value="{{form.phone}}" data-k="phone" bindinput="onField" /></view>
-      <view class="field"><text class="label">身份证号</text><input class="input" value="{{form.idCard}}" data-k="idCard" bindinput="onField" /></view>
-      <view class="field"><text class="label">高校</text><input class="input" value="{{form.university}}" data-k="university" bindinput="onField" /></view>
-      <view class="field"><text class="label">学信网验证码</text><input class="input" value="{{form.chsiCode}}" data-k="chsiCode" bindinput="onField" /></view>
-      <view class="field"><text class="label">银行卡号</text><input class="input" value="{{form.bankCard}}" data-k="bankCard" bindinput="onField" /></view>
+      <view class="field">
+        <text class="label">真实姓名</text>
+        <input class="input" value="{{form.realName}}" data-k="realName" bindinput="onField" placeholder="与身份证一致" placeholder-class="input-placeholder" />
+      </view>
+      <view class="field">
+        <text class="label">手机号</text>
+        <input class="input" type="number" maxlength="11" value="{{form.phone}}" data-k="phone" bindinput="onField" placeholder="11 位手机号" placeholder-class="input-placeholder" />
+      </view>
+      <view class="field">
+        <text class="label">身份证号</text>
+        <input class="input" value="{{form.idCard}}" data-k="idCard" bindinput="onField" placeholder="18 位身份证号" placeholder-class="input-placeholder" />
+      </view>
+      <view class="field">
+        <text class="label">就读/毕业高校</text>
+        <picker mode="selector" range="{{universities}}" value="{{universityIndex}}" bindchange="onUniversityPick">
+          <view class="input picker-value">{{universities[universityIndex]}}</view>
+        </picker>
+        <input wx:if="{{showUniversityManual}}" class="input" style="margin-top:16rpx;" value="{{universityManual}}" bindinput="onUniversityManual" placeholder="请输入高校全称" placeholder-class="input-placeholder" />
+      </view>
+      <view class="field">
+        <text class="label">学历阶段</text>
+        <picker mode="selector" range="{{degrees}}" value="{{degreeIndex}}" bindchange="onDegree">
+          <view class="input picker-value">{{degrees[degreeIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="label-row">
+          <text class="label">学信网在线验证码</text>
+          <text class="label-optional">选填</text>
+        </view>
+        <view class="row-flex">
+          <input class="input" value="{{form.chsiCode}}" data-k="chsiCode" bindinput="onField" placeholder="16 位验证码（可稍后补充）" placeholder-class="input-placeholder" />
+          <button class="btn-ghost btn-compact" bindtap="openChsiQuery">学信网查询</button>
+        </view>
+      </view>
+      <view class="field">
+        <text class="label">就读/毕业证明</text>
+        <text class="muted field-hint">学生证、毕业证、成绩单等（可先存本地，提交后待审）</text>
+        <view class="proof-grid">
+          <view wx:for="{{proofFiles}}" wx:key="path" class="proof-thumb-wrap">
+            <image class="proof-thumb" src="{{item.path}}" mode="aspectFill" />
+            <view class="proof-remove" data-idx="{{index}}" bindtap="removeProof">×</view>
+          </view>
+          <view class="proof-add" bindtap="chooseProof">+ 上传</view>
+        </view>
+      </view>
+      <view class="field">
+        <text class="label">开户银行</text>
+        <picker mode="selector" range="{{banks}}" value="{{bankIndex}}" bindchange="onBank">
+          <view class="input picker-value">{{banks[bankIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">银行卡号</text>
+        <input class="input" type="number" value="{{form.bankCard}}" data-k="bankCard" bindinput="onField" placeholder="银联借记卡 16–19 位" placeholder-class="input-placeholder" />
+      </view>
       <view class="check-row" bindtap="togglePrivacy">
         <view class="check-box {{form.privacy?'on':''}}">{{form.privacy?'✓':''}}</view>
         <text class="muted">同意个人信息保护与法定核查授权</text>
@@ -32,19 +82,29 @@
     <view class="xh-card" wx:if="{{step===2}}">
       <view class="xh-card-title">L2 学科与试讲</view>
       <view class="muted" style="margin-bottom:12rpx;">擅长学科（可多选）</view>
-      <scroll-view scroll-x class="chip-scroll">
-        <view wx:for="{{subjectOptions}}" wx:key="*this" class="chip {{form.subjectsMap[item]?'on':''}}" data-s="{{item}}" bindtap="toggleSubject">{{item}}</view>
+      <scroll-view scroll-x class="chip-scroll" enable-flex>
+        <view wx:for="{{subjectChips}}" wx:key="name" class="chip {{item.on?'on':''}}" data-v="{{item.name}}" bindtap="toggleSubject">{{item.name}}</view>
       </scroll-view>
-      <view class="field"><text class="label">期望时薪（元/时）</text><input class="input" type="number" value="{{form.hourlyRate}}" data-k="hourlyRate" bindinput="onField" /></view>
-      <view class="field"><text class="label">试讲链接</text><input class="input" value="{{form.lectureUrl}}" data-k="lectureUrl" bindinput="onField" placeholder="视频或网盘链接" placeholder-class="input-placeholder" /></view>
+      <view class="field">
+        <text class="label">成绩亮点（选填）</text>
+        <textarea class="input textarea-input" value="{{form.scoreHighlight}}" data-k="scoreHighlight" bindinput="onField" placeholder="例：高考数学 145 分" placeholder-class="input-placeholder" auto-height />
+      </view>
+      <view class="field">
+        <text class="label">期望时薪（元/时）</text>
+        <input class="input" type="number" value="{{form.hourlyRate}}" data-k="hourlyRate" bindinput="onField" />
+      </view>
+      <view class="field">
+        <text class="label">试讲链接</text>
+        <input class="input" value="{{form.lectureUrl}}" data-k="lectureUrl" bindinput="onField" placeholder="视频或网盘链接" placeholder-class="input-placeholder" />
+      </view>
       <view class="field">
         <text class="label">偏好网点</text>
         <picker mode="selector" range="{{spaces}}" value="{{form.spaceIndex}}" bindchange="onSpace">
-          <view class="input">{{spaces[form.spaceIndex]}}</view>
+          <view class="input picker-value">{{spaces[form.spaceIndex]}}</view>
         </picker>
       </view>
       <button class="btn-ghost" style="width:100%;margin-bottom:12rpx;" bindtap="backL1">返回 L1</button>
-      <button class="btn-primary" style="width:100%;" bindtap="submit">提交审核</button>
+      <button class="btn-primary" style="width:100%;" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">提交审核</button>
     </view>
   </view>
 </view>
