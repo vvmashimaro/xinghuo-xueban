@@ -77,7 +77,7 @@ Page({
     if (this.data.smsCooldown > 0) return;
     const result = await Storage.sendSMS(mobile, 'login');
     if (result.success) {
-      showToast(result.provider === 'mock' ? '已发送（演示 888888）' : '验证码已发送');
+      showToast(result.provider === 'mock' ? '验证码已发送' : '验证码已发送');
       this._startCooldown();
     } else {
       showToast(result.error || '发送失败', 'error');

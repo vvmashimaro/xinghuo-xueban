@@ -8,6 +8,7 @@ const pricing = require('./pricing');
 const bookingFields = require('./booking-fields');
 const subjectCatalog = require('./subject-catalog');
 const bookingSchedule = require('./booking-schedule');
+const demoAccounts = require('./demo-accounts');
 
 const fs = require('fs');
 const path = require('path');
@@ -875,6 +876,31 @@ function reset() {
   return snapshot();
 }
 
+function patchDemoAccounts() {
+  const s = getState();
+  let changed = false;
+  demoAccounts.DEMO_PARENT_PROFILES.forEach((profile) => {
+    if (!getParentByPhone(profile.phone)) {
+      s.parents.push(Object.assign({}, profile));
+      changed = true;
+    }
+  });
+  demoAccounts.DEMO_MENTOR_PROFILES.forEach((profile) => {
+    if (!getMentorByPhone(profile.phone)) {
+      s.mentors.unshift(withMentorDefaults(profile));
+      changed = true;
+    }
+  });
+  if (!s.demoMeta) {
+    s.demoMeta = {
+      smsCode: demoAccounts.DEMO_SMS_CODE,
+      accountsDoc: 'See demo-accounts.js / PR for phone list'
+    };
+    changed = true;
+  }
+  return changed;
+}
+
 function seedIfEmpty() {
   const s = getState();
   let changed = false;
@@ -907,6 +933,7 @@ function seedIfEmpty() {
     s.seeded = true;
     changed = true;
   }
+  if (patchDemoAccounts()) changed = true;
   if (changed) persist();
   return snapshot();
 }

@@ -1,1 +1,74 @@
-/* uses global tokens */
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+.label-optional {
+  font-size: 20rpx;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.field-hint {
+  display: block;
+  margin-bottom: 12rpx;
+  font-size: 22rpx;
+}
+.picker-value {
+  line-height: 1.5;
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+}
+.btn-compact {
+  flex-shrink: 0;
+  padding: 18rpx 20rpx;
+  font-size: 22rpx;
+  white-space: nowrap;
+}
+.proof-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.proof-thumb-wrap {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+}
+.proof-thumb {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 16rpx;
+  border: 1px solid rgba(255, 192, 203, 0.4);
+}
+.proof-remove {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #e83a1f;
+  color: #fff;
+  font-size: 28rpx;
+  text-align: center;
+  line-height: 40rpx;
+}
+.proof-add {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 16rpx;
+  border: 2rpx dashed rgba(255, 90, 45, 0.45);
+  color: var(--xh-primary);
+  font-weight: 700;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.textarea-input {
+  min-height: 120rpx;
+  padding-top: 24rpx;
+  padding-bottom: 24rpx;
+}

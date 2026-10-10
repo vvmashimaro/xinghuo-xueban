@@ -255,10 +255,10 @@ Page({
     }
 
     if (!Storage.isLoggedIn()) {
-      showToast('请先短信验证手机号', 'warning');
+      await Storage.sendSMS(payload.phone, 'register');
       const verify = await Storage.verifySMS(payload.phone, '888888', 'register');
       if (!verify.success || !verify.ticket) {
-        showToast('请先在登录页获取验证码', 'warning');
+        showToast(verify.error || '短信验证失败，请返回登录页获取验证码', 'warning');
         return;
       }
       const reg = await Storage.register(verify.ticket, 'parent', payload);
