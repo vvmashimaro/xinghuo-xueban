@@ -1,4 +1,4 @@
 {
-  "navigationBarTitleText": "统一登录 · 星火学伴",
-  "usingComponents": {}
+  "navigationBarTitleText": "登录",
+  "navigationStyle": "custom"
 }

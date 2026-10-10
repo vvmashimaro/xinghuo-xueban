@@ -3,133 +3,45 @@ const { showToast } = require('../../utils/toast');
 
 Page({
   data: {
-    parentName: '',
-    studentNickname: '',
-    phoneAuthorized: false,
     phoneMasked: '',
-    phoneBoundAt: '',
-    confirmUnbindShow: false,
-    confirmCancelShow: false
+    roleLabel: '用户'
   },
 
   onShow() {
-    this.reload();
-  },
-
-  reload() {
-    const parent = Storage.getCurrentParent();
-    if (!parent) {
-      showToast('请先登录', 'warning');
+    if (!Storage.isLoggedIn()) {
       wx.reLaunch({ url: '/pages/login/login' });
       return;
     }
-
-    const phone = parent.phone || '';
-    const phoneAuthorized = !!phone;
-    const phoneMasked = phone ? (phone.slice(0, 3) + '****' + phone.slice(7)) : '';
-
-    this.setData({
-      parentName: parent.parentName || '家长',
-      studentNickname: parent.studentNickname || '',
-      phoneAuthorized,
-      phoneMasked,
-      phoneBoundAt: parent.phoneBoundAt || '',
-      parentId: parent.id
-    });
-
-    this._parent = parent;
+    const session = Storage.getSession() || {};
+    const phone = session.phone || '';
+    const masked = phone ? phone.slice(0, 3) + '****' + phone.slice(7) : '';
+    const roleLabel = session.role === 'parent' ? '家长端' : session.role === 'mentor' ? '导师端' : '用户';
+    this.setData({ phoneMasked: masked, roleLabel });
   },
 
-  goPrivacyPage() {
-    wx.navigateTo({ url: '/pages/privacy/privacy' });
-  },
-
-  goEditProfile() {
-    wx.navigateTo({ url: '/pages/parent-register/parent-register?mode=edit' });
-  },
-
-  showUnbindConfirm() {
-    this.setData({ confirmUnbindShow: true });
-  },
-
-  hideUnbindConfirm() {
-    this.setData({ confirmUnbindShow: false });
-  },
-
-  async onUnbindPhone() {
-    try {
-      if (!Storage.isLoggedIn()) {
-        showToast('用户信息不完整', 'error');
-        return;
-      }
-
-      const result = await Storage.unbindPhone();
-
-      if (result.success) {
-        // Update local storage
-        const parent = this._parent || Storage.getCurrentParent();
-        if (parent) {
-          parent.phone = '';
-          parent.phoneUnboundAt = new Date().toISOString();
-          Storage.saveParent(parent);
-        }
-
-        this.setData({
-          phoneAuthorized: false,
-          phoneMasked: '',
-          confirmUnbindShow: false
-        });
-
-        showToast('手机号已解绑');
-      } else {
-        showToast(result.error || '解绑失败', 'error');
-      }
-    } catch (error) {
-      console.error('[Unbind Phone Error]', error);
-      showToast('解绑失败，请稍后重试', 'error');
+  async unbind() {
+    const result = await Storage.unbindPhone();
+    if (result.success) {
+      showToast('已解绑');
+      this.onShow();
+    } else {
+      showToast(result.error || '解绑失败', 'error');
     }
   },
 
-  showCancelConfirm() {
-    this.setData({ confirmCancelShow: true });
+  async logout() {
+    await Storage.logout();
+    wx.reLaunch({ url: '/pages/login/login' });
   },
 
-  hideCancelConfirm() {
-    this.setData({ confirmCancelShow: false });
-  },
-
-  async onCancelAccount() {
-    try {
-      if (!Storage.isLoggedIn()) {
-        showToast('用户信息不完整', 'error');
-        return;
-      }
-
-      const result = await Storage.cancelAccount('用户主动注销');
-
-      if (result.success) {
-        showToast('账号已注销，正在退出...');
-        
-        // Clear all local data
-        Storage.clearSession();
-        
-        setTimeout(() => {
-          wx.reLaunch({ url: '/pages/login/login' });
-        }, 1500);
-      } else {
-        showToast(result.error || '注销失败', 'error');
-      }
-    } catch (error) {
-      console.error('[Cancel Account Error]', error);
-      showToast('注销失败，请稍后重试', 'error');
+  async cancel() {
+    const result = await Storage.cancelAccount('用户主动注销');
+    if (result.success) {
+      Storage.clearSession();
+      showToast('账户已注销');
+      wx.reLaunch({ url: '/pages/login/login' });
+    } else {
+      showToast(result.error || '注销失败', 'error');
     }
-  },
-
-  goBack() {
-    wx.navigateBack({
-      fail: () => {
-        wx.reLaunch({ url: '/pages/parent-dashboard/parent-dashboard' });
-      }
-    });
   }
 });

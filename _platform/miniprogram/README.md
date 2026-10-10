@@ -1,104 +1,37 @@
-# 星火伴学o2o · 微信小程序
+# 星火学伴 · 微信小程序（Greenfield）
 
-**小程序 AppID**: `wx5a978366a03285cb`  
-**注册名称**: 星火伴学o2o
+**AppID**: `wx5a978366a03285cb`
 
-将静态站 `xinghuo-xueban/` 的前端闭环移植为原生微信小程序（wxml / wxss / js / json），数据层使用 `wx.setStorageSync`，键名与种子数据与 Web 版 `js/storage-service.js` 对齐。
+本小程序为 **从零重建** 的 Style C 原生实现（非旧版换肤）。业务数据 **只** 走 `utils/storage.js` → `https://www.sparkles.com.cn/api/*`（与 Web `js/storage-service.js` 一致）。
 
-## 目录结构
+详细架构见 [ARCHITECTURE.md](./ARCHITECTURE.md)。
 
-```
-xinghuo-xueban-miniprogram/
-├── app.js / app.json / app.wxss
-├── project.config.json          # compileType: miniprogram，appid: wx5a978366a03285cb
-├── sitemap.json
-├── utils/
-│   ├── storage.js               # StorageService 移植
-│   ├── toast.js                 # 统一 wx.showToast（禁用 alert）
-│   └── syllabus.js              # 分年级考纲考点库
-├── pages/
-│   ├── login/                   # 多角色登录
-│   ├── mentor-onboard/          # 导师 L1/L2 建档
-│   ├── admin-audit/             # 管理审核
-│   ├── parent-register/         # 学情建档与注册 / 学员画像更改（edit 预填）
-│   ├── parent-dashboard/        # 匹配约课 / 画像·护照 / 搜索筛选 / 托管 / IoT
-│   └── mentor-dashboard/        # 审核状态 / 资料 / 申请箱
-└── README.md
-```
+## 微信开发者工具
 
-## 如何用微信开发者工具打开
+1. 导入目录：`_platform/miniprogram/`
+2. AppID：`wx5a978366a03285cb`
+3. **本地联调**：
+   - 启动 `_platform/server`（`http://127.0.0.1:8787`）
+   - 临时修改 `utils/config.js` 的 `API_BASE` 为局域网地址
+   - **详情 → 本地设置 → 勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」**
+4. **生产**：`API_BASE` 保持 `https://www.sparkles.com.cn`，并在小程序后台配置 request 合法域名。
 
-1. 安装并打开 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
-2. 选择 **导入项目** / **打开项目**
-3. 目录指向本文件夹 `xinghuo-xueban-miniprogram/`
-4. AppID：已配置为 `wx5a978366a03285cb`（星火伴学o2o 正式小程序）
-5. 后端服务 / 云开发：**不需要**。本演示纯前端本地存储。
-6. 在模拟器中从「登录」页开始走完整闭环。
+## 配置
 
-> **注**：真机支付、真实短信、真实 IoT 需配置生产环境后端 API。
-
-## 演示账号
-
-| 角色 | 手机号 | 验证码 | 说明 |
-| --- | --- | --- | --- |
-| 已入库导师 | `13880123456` | `888888` | 李思源 · 申请箱含待接单种子约课 |
-| 演示家长 | `13980889211` | `888888` | 刘女士 / 乐乐同学 |
-| 新导师 | 任意未登记号 | `888888` | 登录后进入 L1/L2 建档 |
-| 管理端 | 切换「管理审核」角色 | — | 直接进入质审台 |
-
-登录页协议勾选框 **默认未勾选**，需手动勾选后登录。
-
-## 推荐演示路径
-
-1. **登录** → 导师 `13880123456` + `888888` → 导师工作台 → 约课申请箱接单/婉拒  
-2. **首次家长登录（新手机号）** → 家长角色 + 任意未登记号 + `888888` → Toast「首次登录，请先完善学员学情建档」→ **学情建档与注册**（`parent-register?mode=create`）→ 完成建档后进入主控  
-3. **回访家长登录** → 家长 `13980889211` + `888888` → Toast「欢迎回来」→ **家长主控** → 顶部「**学员画像更改**」进入预填编辑（`?mode=edit`）→「保存画像并返回主控」；亦可「查阅学情护照」→「更新学情与考纲」  
-4. **家长主控** → 搜索 / 学科芯片 / **网点空间**芯片 / 契合度·时薪排序 →「我的约课」状态；预约 → 托管摘要 → 电子协议 48h → `pending_accept`；约课后可关联 IoT 面板  
-5. **管理审核** → 筛选待初审 → 核准/否决（展示案卷 id + 手机尾号）  
-6. **新导师建档** → L1 进度清单 → L2 → 提交 pending → 工作台看待审  
-7. **IoT** → 家长主控「模拟扫码开门」→ 按钮变为「已开门 · 灯光已通」→ 倒计时至 20:30（或演示 15s）→「已收课断电」
-
-## 存储键映射（与 Web 一致）
-
-| 键 | 含义 |
+| 键 | 值 |
 | --- | --- |
-| `xh_mentors_v1` | 导师案卷 |
-| `xh_parents_v1` | 家长档案 |
-| `xh_bookings_v1` | 约课（含 `mentorId` / `pending_accept`） |
-| `xh_contracts_v1` | 电子协议 |
-| `xh_session_v1` | 当前会话角色 |
-| `xh_seeded_v1` | 是否已种子化 |
+| `API_BASE` | `https://www.sparkles.com.cn` |
+| `FEATURE_SMART_WAREHOUSE` | `false` |
+| `SMS_MODE` / `PAY_MODE` | `demo` |
 
-主要 API：`seedIfEmpty` / `resetDemoData` / `addMentor` / `updateMentor` / `updateMentorProfile` / `getTutorListForParent` / `saveParent`（及别名 `addParent`）/ `addBooking` / `respondToBooking` / `getCurrentMentor` / `normalizeParentProfile` 等。
+## 页面一览
 
-## 重置演示数据
+`login` · `parent-register` · `parent-dashboard` · `mentor-onboard` · `mentor-dashboard` · `profile` · `privacy`
 
-在任意页面的调试器 Console 中执行（需先 `require` 或在管理端点击「重置演示数据」按钮）：
+## 测试
 
-```js
-const S = require('../../utils/storage'); // 路径以当前页为准，或在管理端点按钮
-S.resetDemoData();
+```bash
+cd _platform/server && node test-miniprogram-flow.js
 ```
 
-管理端质审台底部提供 **重置演示数据** 按钮，最方便。
-
-也可在开发者工具 → 存储 → 清空 Storage 后重新编译，会自动 `seedIfEmpty`。
-
-## 设计令牌（Style C · 与 Web `css/xinghuo-tokens.css` 对齐）
-
-- Cream 底：`#FFF8F0`；主色：`#FF5A2D`；桃→薰衣草渐变：`#FFE4D6` → `#EDE4FF`
-- 官方 Logo：`images/logo-xinghuo.jpg`（与 Web `assets/logo-xinghuo.jpg` 同源）
-- 气泡卡片、软冲突提醒条、教学点仓位 chips、学科目录（含考研/艺体/初中体育）与家长主控筛选与 Web 语义一致
-- 反馈统一 `showToast` / `wx.showToast`，禁止 `wx.showModal` 当作 alert 阻塞流程（婉拒等原因用自定义弹层）
-
-### 测试说明（本 PR）
-
-- **视觉/UI 为主**：未改动 `utils/config.js` 中的 `API_BASE`、`FEATURE_SMART_WAREHOUSE`、SMS/支付模式。
-- 建议在微信开发者工具中走通：登录 → 学情建档（学科目录/年级）→ 家长主控（筛选、约课仓位、冲突强制约课 UI）→ 导师工作台。
-- 服务端回归：未修改 `_platform/server/`；约课/冲突/仓位仍走既有 API 契约。
-
-## 说明与边界
-
-- 无真实支付、短信网关、学信网接口、IoT 硬件；均为模拟器可走通的前端逻辑。
-- 未使用 Tailwind CDN；样式为原生 wxss + CSS 变量。
-- `app.json` 未启用 tabBar，登录后按角色 `reLaunch` / `navigateTo`。
+（需本机 API 已启动；不修改服务端密钥。）

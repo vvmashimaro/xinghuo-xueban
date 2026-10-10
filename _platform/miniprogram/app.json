@@ -9,10 +9,10 @@
     "pages/profile/profile"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#0f172a",
-    "navigationBarTitleText": "星火伴学o2o",
+    "navigationBarBackgroundColor": "#FF5A2D",
+    "navigationBarTitleText": "星火学伴",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f8fafc",
+    "backgroundColor": "#FFF8F0",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

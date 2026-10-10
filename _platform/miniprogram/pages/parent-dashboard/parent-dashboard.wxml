@@ -1,359 +1,108 @@
-<view class="container">
-  <view class="brand-header">
-    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
-    <view>
-      <view class="brand-title">星火学伴<text class="hub-badge">PARENT-HUB</text></view>
-      <view class="brand-sub">{{studentNickname}}<text class="grade-pill">{{gradeBadge}}</text> · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
-    </view>
-  </view>
-
-  <view class="hero-engine">
-    <view class="engine-pill">星火算力匹配引擎 · {{matchEngineHint}}</view>
-    <view class="engine-title">已为您精准召回 <text style="color:#FF8A3D;">{{recallCount}}</text> 位契合度 &gt; 95% 的金牌学霸导师</view>
-    <view class="engine-actions">
-      <button class="btn-engine" size="mini" bindtap="onRecalculateMatch">重新算力匹配</button>
-    </view>
-  </view>
-
-  <view class="section-label">快捷入口</view>
-  <view class="action-row">
-    <button class="action-btn action-primary" bindtap="goEditProfile">学员画像更改</button>
-    <button class="action-btn" bindtap="openPassport">查阅学情护照</button>
-    <button class="action-btn" bindtap="goProfile">个人中心</button>
-    <button class="action-btn action-muted" bindtap="goLogin">退出登录</button>
-  </view>
-
-  <!-- 托管钱包示意 -->
-  <view class="card wallet-card">
-    <view class="row-between">
-      <view>
-        <view class="muted">招商银行合约存管专户（演示）</view>
-        <view class="wallet-bal">可用 ¥{{walletAvailable}} <text class="wallet-frozen">(冻结 ¥{{walletFrozen}})</text></view>
-      </view>
-      <text class="badge badge-teal">一课一消</text>
-    </view>
-  </view>
-
-  <!-- 推荐导师 -->
-  <view class="card" wx:if="{{topTutors.length>0}}">
-    <view class="row-between">
-      <view class="card-title" style="margin:0;">推荐导师</view>
-      <text class="badge badge-teal">契合度 ≥ 95%</text>
-    </view>
-    <scroll-view scroll-x class="top-strip" enable-flex>
-      <view class="top-card" wx:for="{{topTutors}}" wx:key="mentorId">
-        <view class="flex-row gap-8">
-          <view class="avatar sm">{{item.avatarLetter}}</view>
-          <view>
-            <view style="font-weight:900;">{{item.maskedName}}</view>
-            <view class="muted">{{item.university}}</view>
-          </view>
-        </view>
-        <view class="muted" style="margin-top:8rpx;">{{item.matchScore}}% · ¥{{item.hourlyRate}}/h</view>
-        <view class="muted">{{item.syllabusText}}</view>
-        <button class="btn-primary" size="mini" style="margin-top:10rpx;" data-id="{{item.mentorId}}" bindtap="openBooking">预约</button>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 我的约课 -->
-  <view class="card">
-    <view class="row-between">
-      <view class="card-title" style="margin:0;">我的约课</view>
-      <text class="badge badge-teal">{{myBookings.length}} 单</text>
-    </view>
-    <view class="filter-bar">
-      <view wx:for="{{bookingFilterTabs}}" wx:key="value"
-        class="filter-tab {{bookingFilter===item.value?'on':''}}"
-        data-v="{{item.value}}" bindtap="setBookingFilter">{{item.label}}</view>
-    </view>
-    <view wx:if="{{myBookings.length===0}}" class="muted" style="margin-top:12rpx;">暂无约课记录，预约导师后将显示接单状态。</view>
-    <view wx:if="{{myBookings.length>0 && filteredBookings.length===0}}" class="muted" style="margin-top:12rpx;">当前筛选下暂无约课，请切换状态标签。</view>
-    <view class="bk-row" wx:for="{{filteredBookings}}" wx:key="id">
-      <view class="row-between">
-        <text style="font-weight:800;">{{item.tutorName}} · {{item.subject}}</text>
-        <text class="badge {{item.statusBadge}}">{{item.statusText}}</text>
-      </view>
-      <view class="muted">{{item.schedule}} · {{item.space}}{{item.boothLabel?' · '+item.boothLabel:''}} · ¥{{item.amount}}</view>
-      <view class="conflict-banner" wx:if="{{item.hasTimeConflict}}">⚠ {{item.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程'}}{{item.timeConflictForced?'（强制约课）':''}}</view>
-      <view class="muted" wx:if="{{item.declineReason}}">婉拒原因：{{item.declineReason}}</view>
-    </view>
-  </view>
-
-  <!-- 筛选：搜索 + 学科 + 网点 + 排序 -->
-  <view class="card">
-    <view class="section-h">筛选与匹配</view>
-    <view class="search-row">
-      <input class="input search-input" placeholder="搜索导师姓名 / 高校 / 学科" placeholder-class="input-placeholder" value="{{searchKeyword}}" bindinput="onSearchInput" />
-      <button class="btn-ghost" size="mini" wx:if="{{searchKeyword}}" bindtap="clearSearch">清除</button>
-    </view>
-    <view class="chip-label-row">
-      <text class="chip-label-key">学科方向</text>
-      <view class="chip-wrap" style="flex:1;">
-        <view class="chip {{item.on?'chip-on':''}}" wx:for="{{subjectFilterChips}}" wx:key="value" data-v="{{item.value}}" bindtap="setSubjectFilter">{{item.label}}</view>
-      </view>
-    </view>
-    <view class="chip-label-row">
-      <text class="chip-label-key">空间网点</text>
-      <view class="chip-wrap" style="flex:1;">
-        <view class="chip {{item.on?'chip-on':''}}" wx:for="{{spaceFilterChips}}" wx:key="value" data-v="{{item.value}}" bindtap="setSpaceFilter">{{item.label}}</view>
-      </view>
-    </view>
-    <view class="sort-row">
-      <text class="muted">排序</text>
-      <picker mode="selector" range="{{sortOptions}}" value="{{sortIndex}}" bindchange="onSortChange">
-        <view class="input sort-picker">{{sortOptions[sortIndex]}}</view>
-      </picker>
-    </view>
-    <view class="slider-row">
-      <text class="muted">时薪下限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{filterMin}}" activeColor="#FF5A2D" bindchange="onFilterMin" />
-      <text class="val">{{filterMin}}</text>
-    </view>
-    <view class="slider-row">
-      <text class="muted">时薪上限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{filterMax}}" activeColor="#FF5A2D" bindchange="onFilterMax" />
-      <text class="val">{{filterMax}}</text>
-    </view>
-    <button class="btn-ghost" style="width:100%;margin-top:12rpx;" bindtap="resetFilters">重置筛选条件</button>
-  </view>
-
-  <!-- 导师列表 -->
-  <view class="card tutor-card {{item.isTopMatch?'tutor-top':''}}" wx:for="{{tutors}}" wx:key="mentorId">
-    <view class="row-between">
-      <view class="flex-row gap-8">
-        <view class="avatar">{{item.avatarLetter}}</view>
+<view class="shell">
+  <view class="shell-glow shell-glow-tr"></view>
+  <view class="shell-glow shell-glow-bl"></view>
+  <scroll-view class="page-inner" scroll-y style="height:100vh;" wx:if="{{ready}}">
+    <view class="top-bar">
+      <view class="brand-block">
+        <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
         <view>
-          <view style="font-weight:900;">{{item.maskedName}}
-            <text class="badge badge-teal" wx:if="{{item.isTopMatch}}">{{item.tagBadge}}</text>
-          </view>
-          <view class="muted">{{item.university}} · {{item.degreeShort}}</view>
+          <view class="brand-name">家长主控<text class="brand-tag">MATCH</text></view>
+          <view class="brand-desc">{{studentNickname}} · {{gradeBadge}} · {{cityDistrict}}</view>
         </view>
       </view>
-      <view style="text-align:right;">
-        <view style="color:#E83A1F;font-weight:900;">¥{{item.hourlyRate}}/h</view>
-        <view class="muted">{{item.matchScore}}% 契合</view>
-      </view>
+      <text class="btn-link" bindtap="goProfile">账户</text>
     </view>
-    <view class="muted" style="margin-top:10rpx;">{{item.scoreHighlight}}</view>
-    <view class="chip-wrap" style="margin-top:10rpx;">
-      <text class="chip" wx:for="{{item.subjects}}" wx:for-item="s" wx:key="*this">{{s}}</text>
-    </view>
-    <view class="muted">推荐考点：{{item.syllabusText}}</view>
-    <view class="muted">网点：{{item.space}}</view>
-    <view wx:if="{{item.hasLecture}}" class="lecture-link" data-url="{{item.lectureUrl}}" bindtap="openLecture">试讲网盘 › 点击复制链接</view>
-    <button class="btn-primary" style="width:100%;margin-top:16rpx;" data-id="{{item.mentorId}}" bindtap="openBooking">预约该导师</button>
-  </view>
 
-  <view wx:if="{{tutors.length===0}}" class="card muted" style="text-align:center;">当前筛选条件下暂无匹配导师，请放宽时薪或切换网点。</view>
+    <view class="hub-row">
+      <view class="hub-chip {{hubTab==='match'?'on':''}}" data-tab="match" bindtap="setHub">智能匹配</view>
+      <view class="hub-chip {{hubTab==='bookings'?'on':''}}" data-tab="bookings" bindtap="setHub">我的约课</view>
+      <view class="hub-chip" bindtap="goEdit">学员画像</view>
+    </view>
 
-  <!-- IoT 面板（FEATURE_SMART_WAREHOUSE） -->
-  <view class="card" wx:if="{{featureSmartWarehouse}}">
-    <view class="row-between">
-      <view class="card-title" style="margin:0;">IoT 智能仓履约模拟</view>
-      <text class="badge {{iotBadgeClass}}">{{iotBadge}}</text>
-    </view>
-    <view class="muted" style="margin-top:8rpx;" wx:if="{{iotLinkedBooking}}">关联约课：{{iotLinkedBooking}}</view>
-    <view class="muted" style="margin-top:8rpx;" wx:else>约课成功后可关联本面板扫码开门</view>
-    <view class="iot-grid">
-      <view class="iot-cell">
-        <view>{{iotDoorText}}</view>
-        <view class="muted">门禁</view>
-      </view>
-      <view class="iot-cell">
-        <view>{{iotLightText}}</view>
-        <view class="muted">灯光</view>
-      </view>
-      <view class="iot-cell">
-        <view style="font-family:monospace;">{{iotCountdown}}</view>
-        <view class="muted">距 20:30 断电</view>
-      </view>
-    </view>
-    <view class="muted" style="margin:12rpx 0;">系统将在 20:30 强制断电通风停机，保障合规收课。</view>
-    <button class="{{iotBtnClass}}" style="width:100%;" disabled="{{iotBtnDisabled}}" bindtap="simulateIoT">{{iotBtnLabel}}</button>
-  </view>
-</view>
+    <view class="engine-pill">星火算力匹配 · {{matchHint}}</view>
 
-<!-- 学情护照 -->
-<view class="modal-mask" wx:if="{{passportShow}}">
-  <view class="modal-panel passport-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">孩子 AI 学情电子护照</view>
-      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">SPK-PASSPORT-2026</view>
-    </view>
-    <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
-      <view class="passport-hero passport-hero-brand">
-        <view style="font-weight:800;color:#FF8A3D;">{{studentNickname}} · {{studentGrade}}</view>
-        <view class="muted" style="color:#94a3b8;margin-top:6rpx;">{{cityDistrict}} · {{passportSpace}}</view>
-        <view class="muted" style="color:#cbd5e1;margin-top:8rpx;">期望课酬 {{passportBudget}}</view>
-      </view>
-      <view class="section-h">分科学情</view>
-      <view class="passport-plan" wx:for="{{passportPlans}}" wx:key="name">
-        <view style="font-weight:900;">{{item.name}}</view>
-        <view class="muted">薄弱考点：{{item.weakPoints}}</view>
-        <view class="muted">推进节奏：{{item.pacing}}</view>
-        <view class="muted">学习痛点：{{item.pains}}</view>
-      </view>
-      <view class="section-h" wx:if="{{passportGoal}}">学情目标</view>
-      <view class="muted" wx:if="{{passportGoal}}">{{passportGoal}}</view>
-    </scroll-view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closePassport">关闭</button>
-      <button class="btn-primary" bindtap="updateFromPassport">更新学情与考纲</button>
-    </view>
-  </view>
-</view>
-
-<view class="modal-mask" wx:if="{{timeConflictShow}}">
-  <view class="modal-panel">
-    <view class="modal-head"><view style="font-weight:900;">上课时间冲突</view></view>
-    <view class="modal-body">
-      <view class="banner-warning">{{timeConflictMessage}}</view>
-      <view class="muted" style="margin-top:12rpx;">可返回修改时段或教学点仓位，或选择强制约课（列表将持续以软提醒展示）。</view>
-    </view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeTimeConflict">返回</button>
-      <button class="btn-primary" bindtap="forceBookAfterConflict">强制约课</button>
-    </view>
-  </view>
-</view>
-
-<!-- 约课抽屉 -->
-<view class="modal-mask" wx:if="{{bookingShow}}">
-  <view class="modal-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">预约 · {{bookingTutor.maskedName}}</view>
-      <view style="font-size:20rpx;color:#FFC0CB;">¥{{bookingTutor.hourlyRate}}/h · {{bookingTutor.subjects[0]}}</view>
-    </view>
-    <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
-      <view class="section-h">选择时段</view>
-      <radio-group bindchange="onSlot">
-        <label class="pace-row" wx:for="{{slots}}" wx:key="value">
-          <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#FF5A2D" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
-      <view class="section-h">课时</view>
-      <radio-group bindchange="onHours">
-        <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#FF5A2D" /><text>2 小时（推荐）</text></label>
-        <label class="pace-row"><radio value="1" checked="{{hours===1}}" color="#FF5A2D" /><text>1 小时</text></label>
-      </radio-group>
-      <view class="section-h">教学空间</view>
-      <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onBookSpace">
-        <view class="input">{{spaces[spaceIndex]}}</view>
-      </picker>
-
-      <view class="section-h">教学点仓位</view>
-      <view class="muted" style="margin-bottom:8rpx;">同一仓位在重叠时段不可重复预约；留空则由系统自动分配空闲仓位。</view>
-      <view class="chip-wrap">
-        <view wx:for="{{boothChips}}" wx:key="id"
-          class="booth-chip {{item.auto?'booth-auto':''}} {{item.on?'on':''}}"
-          data-id="{{item.id}}" data-label="{{item.label}}" bindtap="setBooth">{{item.label}}</view>
+    <block wx:if="{{hubTab==='match'}}">
+      <view class="xh-card">
+        <input class="input" placeholder="搜索导师 / 学校 / 学科" value="{{keyword}}" bindinput="onKeyword" />
+        <scroll-view scroll-x class="chip-scroll" style="margin-top:16rpx;">
+          <view wx:for="{{subjectChips}}" wx:key="value" class="chip {{item.on?'on':''}}" data-v="{{item.value}}" bindtap="setSubject">{{item.label}}</view>
+        </scroll-view>
+        <scroll-view scroll-x class="chip-scroll">
+          <view wx:for="{{spaceChips}}" wx:key="value" class="chip {{item.on?'on':''}}" data-v="{{item.value}}" bindtap="setSpace">{{item.label}}</view>
+        </scroll-view>
+        <picker mode="selector" range="{{sortLabels}}" value="{{sortIndex}}" bindchange="onSort">
+          <view class="input" style="margin-top:12rpx;">排序：{{sortLabels[sortIndex]}}</view>
+        </picker>
       </view>
 
-      <view class="escrow-box" wx:if="{{escrowShow}}">
-        <view style="font-weight:800;color:#E83A1F;">托管锁定摘要</view>
-        <view class="muted">课时：{{hours}} 小时 · 时段：{{selectedSlot}}</view>
-        <view class="muted">空间：{{spaces[spaceIndex]}}</view>
-        <view style="font-weight:900;margin-top:8rpx;">锁定金额 ¥{{escrowAmount}}</view>
-        <view class="muted">课后 48 小时无异议自动解冻：导师 92% / 平台 8%</view>
-      </view>
-    </scroll-view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeBooking">取消</button>
-      <button class="btn-ghost" wx:if="{{!escrowShow}}" bindtap="showEscrow">生成托管摘要</button>
-      <button class="btn-primary" wx:if="{{escrowShow}}" bindtap="openContract">签署电子协议并锁资</button>
-    </view>
-  </view>
-</view>
-
-<!-- 电子合同 -->
-<view class="modal-mask" wx:if="{{contractShow}}">
-  <view class="modal-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">三方托管服务居间协议</view>
-    </view>
-    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
-      <view class="agr-p">甲方（平台）：星火学伴</view>
-      <view class="agr-p">乙方（家长/学员）：{{parentName}}</view>
-      <view class="agr-p">丙方（导师）：{{bookingTutor.maskedName}}</view>
-      <view class="agr-p" style="margin-top:12rpx;" wx:if="{{featureSmartWarehouse}}">1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</view>
-      <view class="agr-p" style="margin-top:12rpx;" wx:else>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</view>
-      <view class="agr-p">2. 单次课酬存入商业银行托管子账户锁定；课后 48 小时无异议自动按 92%/8% 划拨。</view>
-      <view class="agr-p" wx:if="{{featureSmartWarehouse}}">3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</view>
-      <view class="agr-tip">约课成功后状态为「待导师接单」(pending_accept)。</view>
-    </scroll-view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeContract">返回</button>
-      <button class="btn-primary" bindtap="confirmBook">确认签署并完成约课</button>
-    </view>
-  </view>
-</view>
-
-<!-- Phone Authorization Modal (for Booking) -->
-<view class="modal-mask" wx:if="{{phoneAuthShow}}">
-  <view class="modal-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">预约前需要授权手机号</view>
-      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">用于课程预约确认和通知</view>
-    </view>
-    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
-      <view class="muted" style="margin-bottom:16rpx;">
-        手机号仅用于：预约1对1线下伴学、课程联系通知。不会用于营销推广或出售给第三方。
-      </view>
-
-      <!-- 隐私政策阅读与同意 -->
-      <view class="check-row panel-soft" bindtap="onTogglePrivacyRead" style="margin-bottom:16rpx;padding:16rpx;">
-        <view class="check-box {{privacyRead?'on':''}}">{{privacyRead?'✓':''}}</view>
-        <text>我已阅读并同意
-          <text class="link" catchtap="goPrivacyPage">《个人信息保护政策》</text>
-        </text>
-      </view>
-
-      <!-- 授权区域（需先同意隐私政策） -->
-      <view wx:if="{{privacyRead}}">
-        <view class="muted" style="margin-bottom:12rpx;">请选择授权方式：</view>
-        
-        <!-- 微信一键授权 -->
-        <button class="btn-primary" style="width:100%;margin-bottom:12rpx;" 
-                open-type="getPhoneNumber" 
-                bindgetphonenumber="onWechatPhoneAuth">
-          微信授权手机号（推荐）
-        </button>
-        
-        <!-- SMS 手动绑定选项 -->
-        <view class="muted" style="text-align:center;margin:16rpx 0;">或</view>
-        <button class="btn-ghost" style="width:100%;" bindtap="onShowSmsBinding">
-          手动输入手机号验证
-        </button>
-        
-        <!-- SMS 手动绑定表单 -->
-        <view wx:if="{{showSmsBinding}}" class="panel-soft" style="margin-top:16rpx;padding:16rpx;">
-          <view class="field">
-            <text class="label">手机号</text>
-            <input class="input" type="number" maxlength="11" placeholder="请输入手机号" value="{{smsPhone}}" bindinput="onSmsPhone" />
+      <view wx:for="{{tutors}}" wx:key="mentorId" class="xh-card tutor-card">
+        <view class="tutor-head">
+          <view class="tutor-avatar">{{item.avatarLetter}}</view>
+          <view class="tutor-meta">
+            <view class="tutor-name">{{item.maskedName}} <text class="tutor-badge">{{item.tagBadge}}</text></view>
+            <view class="muted">{{item.degreeShort}} · ¥{{item.hourlyRate}}/时</view>
+            <view class="muted">{{item.syllabusText}}</view>
           </view>
-          <view class="field">
-            <text class="label">短信验证码</text>
-            <view class="flex-row gap-8">
-              <input class="input" style="flex:1;" type="number" maxlength="6" placeholder="6位验证码" value="{{smsCode}}" bindinput="onSmsCode" />
-              <button class="btn-ghost" style="white-space:nowrap;" bindtap="onSendSmsCode" disabled="{{smsCooldown>0}}">
-                {{smsCooldown>0 ? smsCooldown+'s' : '获取验证码'}}
-              </button>
-            </view>
-          </view>
-          <button class="btn-primary" style="width:100%;margin-top:12rpx;" bindtap="onVerifySmsCode">
-            验证并绑定
-          </button>
+          <view class="match-pct">{{item.matchScore}}%</view>
         </view>
+        <button class="btn-primary" style="width:100%;margin-top:16rpx;" data-id="{{item.mentorId}}" bindtap="openBook">预约试课 / 正课</button>
       </view>
+      <view wx:if="{{!tutors.length}}" class="muted" style="text-align:center;padding:40rpx;">暂无符合筛选的导师</view>
+    </block>
 
-      <view wx:if="{{!privacyRead}}" class="muted" style="text-align:center;padding:32rpx 0;color:#94a3b8;">
-        请先阅读并同意隐私政策
+    <block wx:if="{{hubTab==='bookings'}}">
+      <scroll-view scroll-x class="chip-scroll">
+        <view wx:for="{{bookingTabs}}" wx:key="value" class="chip {{item.on?'on':''}}" data-v="{{item.value}}" bindtap="setBookingTab">{{item.label}}</view>
+      </scroll-view>
+      <view wx:for="{{bookings}}" wx:key="id" class="xh-card">
+        <view style="display:flex;justify-content:space-between;align-items:center;">
+          <text style="font-weight:800;">{{item.tutorName}} · {{item.subject}}</text>
+          <text class="{{item.statusBadge}}">{{item.statusText}}</text>
+        </view>
+        <view class="muted" style="margin-top:8rpx;">{{item.schedule}} · {{item.space}}</view>
+        <view class="conflict-banner" wx:if="{{item.hasTimeConflict}}">⚠ 时间冲突{{item.timeConflictForced?'（已强制约课）':''}}</view>
       </view>
-    </scroll-view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closePhoneAuth">取消</button>
+    </block>
+  </scroll-view>
+
+  <view class="modal-mask" wx:if="{{bookShow}}" bindtap="closeBook">
+    <view class="modal-panel" catchtap="noop">
+      <view class="modal-title">预约 · {{bookTutor.maskedName}}</view>
+      <view class="field">
+        <text class="label">时段</text>
+        <picker mode="selector" range="{{slotLabels}}" bindchange="onSlot">
+          <view class="input">{{slotLabels[slotIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">课时（小时）</text>
+        <picker mode="selector" range="{{hourOptions}}" value="{{hourIndex}}" bindchange="onHours">
+          <view class="input">{{hourOptions[hourIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">教学网点</text>
+        <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onBookSpace">
+          <view class="input">{{spaces[spaceIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">仓位选择</text>
+        <scroll-view scroll-x class="chip-scroll">
+          <view wx:for="{{boothChips}}" wx:key="id" class="chip {{item.on?'on':''}}" data-id="{{item.id}}" data-label="{{item.label}}" bindtap="setBooth">{{item.label}}</view>
+        </scroll-view>
+      </view>
+      <view class="muted">托管预估 ¥{{escrowAmount}}</view>
+      <button class="btn-primary" style="width:100%;margin-top:20rpx;" bindtap="confirmBook">确认约课并托管锁定</button>
+    </view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{conflictShow}}" bindtap="closeConflict">
+    <view class="modal-panel" catchtap="noop">
+      <view class="modal-title">时间冲突提醒</view>
+      <view class="conflict-banner" style="margin-bottom:20rpx;">{{conflictMsg}}</view>
+      <button class="btn-ghost" style="width:100%;margin-bottom:12rpx;" bindtap="closeConflict">返回调整</button>
+      <button class="btn-primary" style="width:100%;" bindtap="forceBook">强制约课</button>
     </view>
   </view>
 </view>
