@@ -180,7 +180,7 @@ Page({
       }
 
       // Step 2: 使用票据登录
-      const loginResult = await Storage.login(ticket, role);
+      const loginResult = await Storage.login(ticket, role, mobile);
 
       if (!loginResult.success) {
         this.setData({ submitting: false });

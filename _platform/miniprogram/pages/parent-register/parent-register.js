@@ -92,6 +92,15 @@ Page({
   async onLoad(options) {
     if (Storage.ready) await Storage.ready();
     Storage.seedIfEmpty();
+    const catalog = await Storage.fetchSubjectCatalog();
+    if (catalog && Array.isArray(catalog.parentTargetSubjects) && catalog.parentTargetSubjects.length) {
+      const tiles = catalog.parentTargetSubjects.map((name) => {
+        const hit = SUBJECT_TILES.find((t) => t.name === name);
+        return hit || { name, hint: '学科辅导' };
+      });
+      this.setData({ subjectOptions: tiles.map((t) => t.name) });
+      this._catalogTiles = tiles;
+    }
     const opts = options || {};
     const session = Storage.getSession() || {};
     const modeHint = (opts.mode || '').toLowerCase();

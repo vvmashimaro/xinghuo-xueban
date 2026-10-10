@@ -2,7 +2,7 @@
   <view class="brand-header">
     <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
     <view>
-      <view class="brand-title">星火学伴<text class="hub-badge">AUTH</text></view>
+      <view class="brand-title">星火学伴<text class="hub-badge">Style C</text></view>
       <view class="brand-sub">{{heroSub}}</view>
     </view>
   </view>

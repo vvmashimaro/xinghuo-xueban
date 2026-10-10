@@ -30,13 +30,6 @@ const BOOKING_FILTER_TABS = [
   { value: 'declined', label: '已婉拒' }
 ];
 
-const DEFAULT_BOOTHS = [
-  { id: '', label: '系统自动分配空闲仓位' },
-  { id: 'booth-1', label: '仓位 1' },
-  { id: 'booth-2', label: '仓位 2' },
-  { id: 'booth-3', label: '仓位 3' }
-];
-
 const SORT_OPTIONS = [
   { value: 'matchDesc', label: 'AI 学情契合度最高' },
   { value: 'rateAsc', label: '课酬时薪从低到高' },
@@ -141,6 +134,9 @@ Page({
 
   async reload() {
     if (Storage.ready) await Storage.ready();
+    if (Storage.isLoggedIn()) {
+      await Storage.fetchTeachingPoints();
+    }
     Storage.seedIfEmpty();
     const parent = Storage.getCurrentParent();
     if (!parent) {
@@ -428,7 +424,9 @@ Page({
       spaceIndex = spaces.indexOf(this._parent.selectedSpace);
     }
     if (spaceIndex < 0) spaceIndex = 0;
-    const boothChips = DEFAULT_BOOTHS.map((b) => ({
+    const space = spaces[spaceIndex] || spaces[0];
+    const boothOptions = Storage.getBoothOptionsForSpace(space);
+    const boothChips = boothOptions.map((b) => ({
       id: b.id,
       label: b.label,
       on: b.id === '',
@@ -445,7 +443,7 @@ Page({
       escrowAmount: (tutor.hourlyRate * 2).toFixed(2),
       boothChips,
       selectedBoothId: '',
-      selectedBoothLabel: DEFAULT_BOOTHS[0].label
+      selectedBoothLabel: boothOptions[0].label
     });
   },
   setBooth(e) {
@@ -545,7 +543,11 @@ Page({
       status: 'pending_accept'
     });
 
-    if (booking && booking.code === 'STUDENT_TIME_CONFLICT' && !this.data.pendingForceBook) {
+    if (
+      booking &&
+      !this.data.pendingForceBook &&
+      (booking.code === 'STUDENT_TIME_CONFLICT' || (booking.ok === false && booking.code === 'STUDENT_TIME_CONFLICT'))
+    ) {
       this.setData({
         timeConflictShow: true,
         timeConflictMessage: booking.error || '与学员其他课程时间冲突'
