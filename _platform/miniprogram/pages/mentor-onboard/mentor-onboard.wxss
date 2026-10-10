@@ -72,3 +72,33 @@
   padding-top: 24rpx;
   padding-bottom: 24rpx;
 }
+.uni-pickers {
+  display: flex;
+  gap: 16rpx;
+}
+.uni-col {
+  flex: 1;
+  min-width: 0;
+}
+.chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+.chip-wrap .chip {
+  margin-right: 0;
+  white-space: normal;
+  max-width: 100%;
+  line-height: 1.35;
+}
+.style-add-row {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.style-add-input {
+  flex: 1;
+  min-width: 0;
+}

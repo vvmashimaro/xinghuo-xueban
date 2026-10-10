@@ -1,6 +1,83 @@
 {
   "mentors": [
     {
+      "id": "AP-DEMO-003",
+      "code": "CD-2026-DEMO3",
+      "realName": "陈演示",
+      "phone": "13880123458",
+      "idCard": "510105200401011234",
+      "university": "西南交通大学",
+      "province": "四川",
+      "degree": "本科在读 (大二)",
+      "chsiCode": "",
+      "chsiStatus": "未提供（选填）",
+      "publicTeacherCompliance": true,
+      "subjects": [
+        "初中数学"
+      ],
+      "hourlyRate": 100,
+      "scoreHighlight": "演示导师账号",
+      "styles": [
+        "引导启发解题"
+      ],
+      "proofFiles": [],
+      "lectureUrl": "https://example.com/demo-mentor-lecture",
+      "status": "pending",
+      "evalGrade": "待教研评级",
+      "bankName": "招商银行",
+      "bankCardNumber": "6214830188909999",
+      "spacePreference": "武侯川大望江微网点",
+      "availability": [
+        {
+          "weekday": 0,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 3,
+          "ranges": [
+            {
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        },
+        {
+          "weekday": 6,
+          "ranges": [
+            {
+              "start": "09:00",
+              "end": "11:00"
+            },
+            {
+              "start": "14:00",
+              "end": "16:00"
+            }
+          ]
+        }
+      ],
+      "availableSlots": [
+        "周六 09:00-11:00",
+        "周六 14:00-16:00",
+        "周日 09:00-11:00",
+        "周日 19:00-21:00",
+        "周三 19:00-21:00"
+      ],
+      "preferredSpaces": [
+        "武侯川大望江微网点"
+      ],
+      "sensitiveChangePending": false,
+      "acceptingOrders": true
+    },
+    {
       "id": "AP-8801",
       "code": "CD-2026-8809",
       "realName": "张若愚",
@@ -802,6 +879,48 @@
       ],
       "createdAt": "2026-09-10 09:00",
       "updatedAt": "2026-09-10 09:00"
+    },
+    {
+      "id": "PAR-DEMO-002",
+      "parentName": "王先生",
+      "parentRole": "爸爸",
+      "phone": "13980889222",
+      "studentNickname": "小宇",
+      "studentGrade": "高二",
+      "cityDistrict": "高新区",
+      "subjects": [
+        "数学",
+        "英语"
+      ],
+      "subjectPlans": {
+        "数学": {
+          "weakPoints": [
+            "函数与导数"
+          ],
+          "pacing": "培优拔高",
+          "pains": []
+        },
+        "英语": {
+          "weakPoints": [
+            "阅读理解"
+          ],
+          "pacing": "查缺补漏",
+          "pains": []
+        }
+      },
+      "syllabusTopics": [
+        "函数与导数",
+        "阅读理解"
+      ],
+      "pacingMode": "培优拔高",
+      "budgetMin": 90,
+      "budgetMax": 150,
+      "budgetRate": 120,
+      "selectedSpace": "高新大源中央微网点",
+      "targetGoal": "高二数学英语同步提升",
+      "painTags": [],
+      "createdAt": "2026-10-01 10:00",
+      "updatedAt": "2026-10-01 10:00"
     }
   ],
   "bookings": [
@@ -1277,6 +1396,38 @@
       "phone": "13540012341",
       "createdAt": 1790733090728,
       "expiresAt": 1793325090728
+    },
+    {
+      "tokenHash": "2e544cb82eaf8b8c40ffe4a79acb836535ec4a739d8b83b88af58908fea3ca15",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1791602751105,
+      "expiresAt": 1794194751105
+    },
+    {
+      "tokenHash": "957bb47c011fa5a7bed916a2bd22a2a811b1c05cd950b5252333db1d242b405f",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1791602751206,
+      "expiresAt": 1794194751206
+    },
+    {
+      "tokenHash": "1e3efcf2b773290ec0b04c2e3741e4e87715b3e81817ecaeeb91e6014643b3e4",
+      "userId": "PAR-DEMO-001",
+      "role": "parent",
+      "phone": "13980889211",
+      "createdAt": 1791602751276,
+      "expiresAt": 1794194751276
+    },
+    {
+      "tokenHash": "38ef9dc2fa99c2393dfee70414ef3accacdbd912df0e94d4b8df59a251f8bec8",
+      "userId": "AP-8802",
+      "role": "mentor",
+      "phone": "13880123456",
+      "createdAt": 1791602751301,
+      "expiresAt": 1794194751301
     }
   ],
   "phoneAuditLogs": [],
@@ -1410,5 +1561,77 @@
   ],
   "featureFlags": {
     "FEATURE_SMART_WAREHOUSE": false
+  },
+  "teachingPoints": [
+    {
+      "id": "TP-1",
+      "name": "青羊金沙文化微网点",
+      "boothCount": 3,
+      "booths": [
+        {
+          "id": "TP-1-B1",
+          "label": "仓位1",
+          "number": 1
+        },
+        {
+          "id": "TP-1-B2",
+          "label": "仓位2",
+          "number": 2
+        },
+        {
+          "id": "TP-1-B3",
+          "label": "仓位3",
+          "number": 3
+        }
+      ]
+    },
+    {
+      "id": "TP-2",
+      "name": "高新大源中央微网点",
+      "boothCount": 3,
+      "booths": [
+        {
+          "id": "TP-2-B1",
+          "label": "仓位1",
+          "number": 1
+        },
+        {
+          "id": "TP-2-B2",
+          "label": "仓位2",
+          "number": 2
+        },
+        {
+          "id": "TP-2-B3",
+          "label": "仓位3",
+          "number": 3
+        }
+      ]
+    },
+    {
+      "id": "TP-3",
+      "name": "武侯川大望江微网点",
+      "boothCount": 3,
+      "booths": [
+        {
+          "id": "TP-3-B1",
+          "label": "仓位1",
+          "number": 1
+        },
+        {
+          "id": "TP-3-B2",
+          "label": "仓位2",
+          "number": 2
+        },
+        {
+          "id": "TP-3-B3",
+          "label": "仓位3",
+          "number": 3
+        }
+      ]
+    }
+  ],
+  "demoMeta": {
+    "smsCode": "888888",
+    "accountsDoc": "See demo-accounts.js / PR for phone list"
   }
 }

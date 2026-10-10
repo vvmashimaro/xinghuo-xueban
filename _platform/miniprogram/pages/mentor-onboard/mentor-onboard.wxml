@@ -30,9 +30,14 @@
       </view>
       <view class="field">
         <text class="label">就读/毕业高校</text>
-        <picker mode="selector" range="{{universities}}" value="{{universityIndex}}" bindchange="onUniversityPick">
-          <view class="input picker-value">{{universities[universityIndex]}}</view>
-        </picker>
+        <view class="uni-pickers">
+          <picker mode="selector" range="{{provinces}}" value="{{provinceIndex}}" bindchange="onProvincePick">
+            <view class="input picker-value uni-col">{{provinces[provinceIndex]}}</view>
+          </picker>
+          <picker mode="selector" range="{{schools}}" value="{{schoolIndex}}" bindchange="onSchoolPick">
+            <view class="input picker-value uni-col">{{schools[schoolIndex]}}</view>
+          </picker>
+        </view>
         <input wx:if="{{showUniversityManual}}" class="input" style="margin-top:16rpx;" value="{{universityManual}}" bindinput="onUniversityManual" placeholder="请输入高校全称" placeholder-class="input-placeholder" />
       </view>
       <view class="field">
@@ -82,9 +87,17 @@
     <view class="xh-card" wx:if="{{step===2}}">
       <view class="xh-card-title">L2 学科与试讲</view>
       <view class="muted" style="margin-bottom:12rpx;">擅长学科（可多选）</view>
-      <scroll-view scroll-x class="chip-scroll" enable-flex>
+      <view class="chip-wrap">
         <view wx:for="{{subjectChips}}" wx:key="name" class="chip {{item.on?'on':''}}" data-v="{{item.name}}" bindtap="toggleSubject">{{item.name}}</view>
-      </scroll-view>
+      </view>
+      <view class="muted" style="margin:20rpx 0 12rpx;">教学风格标签（可多选，可自定义）</view>
+      <view class="chip-wrap">
+        <view wx:for="{{styleChips}}" wx:key="name" class="chip {{item.on?'on':''}}" data-v="{{item.name}}" bindtap="toggleStyle">{{item.name}}</view>
+      </view>
+      <view class="style-add-row">
+        <input class="input style-add-input" value="{{customStyleInput}}" bindinput="onCustomStyleInput" placeholder="自定义风格，如：考前心理疏导" placeholder-class="input-placeholder" />
+        <button class="btn-ghost btn-compact" bindtap="addCustomStyle">添加</button>
+      </view>
       <view class="field">
         <text class="label">成绩亮点（选填）</text>
         <textarea class="input textarea-input" value="{{form.scoreHighlight}}" data-k="scoreHighlight" bindinput="onField" placeholder="例：高考数学 145 分" placeholder-class="input-placeholder" auto-height />

@@ -109,17 +109,31 @@ Page({
       }
       const loginResult = await Storage.login(verify.ticket, role, mobile);
       if (!loginResult.success) {
-        showToast(loginResult.error || '登录失败', 'error');
+        const err = loginResult.error || '';
+        if (err.indexOf('未注册') >= 0) {
+          const q = encodeURIComponent(mobile);
+          const dest = role === 'mentor'
+            ? `/pages/mentor-onboard/mentor-onboard?phone=${q}`
+            : `/pages/parent-register/parent-register?mode=create&phone=${q}`;
+          showToast('请先完成建档', 'warning');
+          wx.reLaunch({ url: dest });
+          return;
+        }
+        showToast(err || '登录失败', 'error');
         return;
       }
       await Storage.hydrateFromServer();
       let url = '/pages/login/login';
       if (role === 'mentor') {
         const mentor = Storage.getCurrentMentor();
-        url = mentor && mentor.status === 'approved'
+        url = mentor
           ? '/pages/mentor-dashboard/mentor-dashboard'
           : '/pages/mentor-onboard/mentor-onboard';
-        showToast(mentor && mentor.status === 'approved' ? '欢迎回来' : '请完成导师建档');
+        if (mentor && mentor.status === 'pending') {
+          showToast('已登录，审核中可在工作台查看状态');
+        } else {
+          showToast(mentor ? '欢迎回来' : '请完成导师建档');
+        }
       } else {
         const parent = Storage.getCurrentParent();
         url = parent

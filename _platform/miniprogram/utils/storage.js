@@ -284,10 +284,11 @@ const StorageService = {
         this.setAuthToken(result.token);
         const phone = (profile && profile.phone) || (result.user && result.user.phone) || '';
         this.setSession(_sessionFromAuth(role, result.user.id, phone));
-        if (role === 'parent' && result.user && result.user.profile) {
-          this.saveParent(result.user.profile);
-        } else if (role === 'mentor' && result.user && result.user.profile) {
-          this.addMentor(result.user.profile);
+        const savedProfile = (result.user && result.user.profile) || profile;
+        if (role === 'parent' && savedProfile) {
+          this.saveParent(savedProfile);
+        } else if (role === 'mentor' && savedProfile) {
+          this.addMentor(savedProfile);
         }
         await this.hydrateFromServer();
       }
@@ -591,7 +592,6 @@ const StorageService = {
     if (!found && _cachedMe && _cachedMe.profile && _cachedMe.role === 'parent') {
       found = _cachedMe.profile;
     }
-    if (!found) found = list[0] || null;
     return found ? this.normalizeParentProfile(found) : null;
   },
 

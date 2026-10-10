@@ -278,7 +278,8 @@ app.post('/api/auth/register', (req, res) => {
       user: {
         id: user.id,
         role,
-        phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+        phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+        profile: user
       }
     });
   } catch (error) {

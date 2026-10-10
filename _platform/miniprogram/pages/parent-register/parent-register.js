@@ -41,9 +41,7 @@ Page({
     budgetMax: 180,
     targetGoal: '',
     consent: false,
-    wizardShow: false,
-    wizardSubject: '',
-    wizardTopics: []
+    subjectTopicSections: []
   },
 
   async onLoad(options) {
@@ -52,8 +50,11 @@ Page({
     await Storage.fetchSubjectCatalog();
     const mode = (options.mode || '').toLowerCase();
     const session = Storage.getSession() || {};
-    if (session.phone && mode === 'create') {
-      this.setData({ phone: session.phone, phoneReadonly: !!Storage.isLoggedIn() });
+    const queryPhone = (options.phone || '').trim();
+    const sessionPhone = (session.phone || '').trim();
+    const phone = queryPhone || sessionPhone;
+    if (phone && mode === 'create') {
+      this.setData({ phone, phoneReadonly: !!Storage.isLoggedIn() || !!queryPhone });
     }
     if (mode === 'edit') {
       const parent = Storage.getCurrentParent();
@@ -62,6 +63,7 @@ Page({
       this.fillParent(Storage.getCurrentParent(), false);
     }
     this.refreshSubjectGroups();
+    this.refreshSubjectTopicSections();
   },
 
   fillParent(parent, edit) {
@@ -92,6 +94,8 @@ Page({
       budgetMax: Number(parent.budgetMax) || 180,
       targetGoal: parent.targetGoal || '',
       consent: true
+    }, () => {
+      this.refreshSubjectTopicSections();
     });
   },
 
@@ -119,8 +123,22 @@ Page({
     } else {
       groups = [{ title: '目标学科（可多选）', tiles: withOn(tileNames.filter((n) => n !== '政治')) }];
     }
-    const wizardSubject = selected[0] || '';
-    this.setData({ subjectGroups: groups, wizardSubject });
+    this.setData({ subjectGroups: groups });
+  },
+
+  refreshSubjectTopicSections() {
+    const grade = this.data.grades[this.data.gradeIndex] || '';
+    const selected = this.data.selectedSubjects || [];
+    const plans = this.data.subjectPlans || {};
+    const sections = selected.map((subject) => {
+      const topics = getTopicsForSubject(subject, grade).slice(0, 16);
+      const weak = (plans[subject] && plans[subject].weakPoints) || [];
+      return {
+        subject,
+        topics: topics.map((name) => ({ name, on: weak.indexOf(name) >= 0 }))
+      };
+    });
+    this.setData({ subjectTopicSections: sections });
   },
 
   onParentName(e) { this.setData({ parentName: e.detail.value }); },
@@ -128,7 +146,10 @@ Page({
   onNickname(e) { this.setData({ studentNickname: e.detail.value }); },
   onGoal(e) { this.setData({ targetGoal: e.detail.value }); },
   onGrade(e) {
-    this.setData({ gradeIndex: Number(e.detail.value) }, () => this.refreshSubjectGroups());
+    this.setData({ gradeIndex: Number(e.detail.value) }, () => {
+      this.refreshSubjectGroups();
+      this.refreshSubjectTopicSections();
+    });
   },
   onDistrict(e) { this.setData({ districtIndex: Number(e.detail.value) }); },
   onSpace(e) { this.setData({ spaceIndex: Number(e.detail.value) }); },
@@ -160,53 +181,39 @@ Page({
         plans[name] = { weakPoints: [], pacing: PACING_OPTIONS[0], pains: [] };
       }
     }
-    this.setData({ selectedSubjects: selected, subjectPlans: plans, wizardSubject: selected[0] || '' }, () => this.refreshSubjectGroups());
-  },
-
-  openWizard() {
-    const subject = this.data.wizardSubject;
-    if (!subject) {
-      showToast('请先选择学科', 'warning');
-      return;
-    }
-    const grade = this.data.grades[this.data.gradeIndex];
-    const topics = getTopicsForSubject(subject, grade).slice(0, 12);
-    const plan = (this.data.subjectPlans[subject] || {}).weakPoints || [];
-    this.setData({
-      wizardShow: true,
-      wizardTopics: topics.map((t) => ({ name: t, on: plan.indexOf(t) >= 0 }))
+    this.setData({ selectedSubjects: selected, subjectPlans: plans }, () => {
+      this.refreshSubjectGroups();
+      this.refreshSubjectTopicSections();
     });
   },
 
-  closeWizard() { this.setData({ wizardShow: false }); },
-  noop() {},
-  onTopic(e) {
-    const v = e.currentTarget.dataset.v;
-    const wizardTopics = this.data.wizardTopics.map((t) =>
-      t.name === v ? { name: t.name, on: !t.on } : t
-    );
-    this.setData({ wizardTopics });
-  },
-
-  saveWizard() {
-    const subject = this.data.wizardSubject;
-    const weakPoints = this.data.wizardTopics.filter((t) => t.on).map((t) => t.name);
+  onInlineTopic(e) {
+    const subject = e.currentTarget.dataset.subject;
+    const topicName = e.currentTarget.dataset.v;
     const plans = Object.assign({}, this.data.subjectPlans);
-    plans[subject] = Object.assign({}, plans[subject] || {}, {
-      weakPoints,
-      pacing: (plans[subject] && plans[subject].pacing) || PACING_OPTIONS[0],
-      pains: (plans[subject] && plans[subject].pains) || []
+    const plan = Object.assign({}, plans[subject] || {
+      weakPoints: [],
+      pacing: PACING_OPTIONS[0],
+      pains: []
     });
-    this.setData({ subjectPlans: plans, wizardShow: false });
-    showToast('已保存「' + subject + '」学情计划');
+    const weak = (plan.weakPoints || []).slice();
+    const idx = weak.indexOf(topicName);
+    if (idx >= 0) weak.splice(idx, 1);
+    else weak.push(topicName);
+    plan.weakPoints = weak;
+    plans[subject] = plan;
+    this.setData({ subjectPlans: plans }, () => this.refreshSubjectTopicSections());
   },
 
   buildPayload() {
     const plans = this.data.subjectPlans;
-    const subjects = Object.keys(plans).length ? Object.keys(plans) : this.data.selectedSubjects;
+    const subjects = (this.data.selectedSubjects && this.data.selectedSubjects.length)
+      ? this.data.selectedSubjects.slice()
+      : Object.keys(plans);
     const syllabusTopics = [];
     subjects.forEach((s) => {
-      (plans[s].weakPoints || []).forEach((t) => {
+      const plan = plans[s] || {};
+      (plan.weakPoints || []).forEach((t) => {
         if (syllabusTopics.indexOf(t) < 0) syllabusTopics.push(t);
       });
     });
@@ -242,6 +249,13 @@ Page({
       showToast('请至少选择一门学科', 'warning');
       return;
     }
+    const plans = Object.assign({}, payload.subjectPlans || {});
+    payload.subjects.forEach((s) => {
+      if (!plans[s]) {
+        plans[s] = { weakPoints: [], pacing: PACING_OPTIONS[0], pains: [] };
+      }
+    });
+    payload.subjectPlans = plans;
     if (!this.data.consent) {
       showToast('请勾选服务协议', 'warning');
       return;
@@ -270,8 +284,17 @@ Page({
       return;
     }
 
-    Storage.saveParent(payload);
+    const saved = Storage.saveParent(payload);
+    if (!saved) {
+      showToast('保存失败，请重试', 'error');
+      return;
+    }
     await Storage.hydrateFromServer();
+    const parent = Storage.getCurrentParent();
+    if (!parent) {
+      showToast('建档已保存，正在同步…', 'warning');
+      await Storage.hydrateFromServer();
+    }
     wx.reLaunch({ url: '/pages/parent-dashboard/parent-dashboard' });
   },
 

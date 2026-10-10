@@ -62,7 +62,23 @@
           </view>
         </view>
       </block>
-      <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="openWizard" wx:if="{{wizardSubject}}">配置「{{wizardSubject}}」考纲弱项</button>
+      <block wx:if="{{subjectTopicSections.length}}">
+        <view class="muted" style="margin:24rpx 0 8rpx;font-weight:800;">已选学科 · 关联考点（点选可多选，再次点击取消）</view>
+        <block wx:for="{{subjectTopicSections}}" wx:key="subject" wx:for-item="section">
+          <view class="topic-section-title">{{section.subject}}</view>
+          <view class="chip-wrap">
+            <view
+              wx:for="{{section.topics}}"
+              wx:for-item="topic"
+              wx:key="name"
+              class="chip {{topic.on?'on':''}}"
+              data-subject="{{section.subject}}"
+              data-v="{{topic.name}}"
+              bindtap="onInlineTopic"
+            >{{topic.name}}</view>
+          </view>
+        </block>
+      </block>
     </view>
 
     <view class="xh-card">
@@ -93,15 +109,4 @@
     </view>
   </scroll-view>
 
-  <view class="modal-mask" wx:if="{{wizardShow}}" bindtap="closeWizard">
-    <view class="modal-panel" catchtap="noop">
-      <view class="modal-title">{{wizardSubject}} · 弱项考点</view>
-      <scroll-view scroll-y style="max-height:50vh;">
-        <view class="chip-scroll">
-          <view wx:for="{{wizardTopics}}" wx:key="*this" class="chip {{item.on?'on':''}}" data-v="{{item.name}}" bindtap="onTopic">{{item.name}}</view>
-        </view>
-      </scroll-view>
-      <button class="btn-primary" style="width:100%;margin-top:20rpx;" bindtap="saveWizard">保存该科计划</button>
-    </view>
-  </view>
 </view>

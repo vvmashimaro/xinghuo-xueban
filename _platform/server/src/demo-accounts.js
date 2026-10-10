@@ -9,6 +9,10 @@ const DEMO_SMS_CODE = '888888';
 /** 仅开发环境视为管理员的演示手机号 */
 const DEMO_ADMIN_PHONES_DEV = ['13900001111'];
 
+/** 演示家长 / 导师手机号（非生产环境可用统一验证码 DEMO_SMS_CODE） */
+const DEMO_PARENT_PHONES = ['13980889211', '13980889222'];
+const DEMO_MENTOR_PHONES = ['13880123456', '13880123458'];
+
 const DEMO_PARENT_PROFILES = [
   {
     id: 'PAR-DEMO-002',
@@ -68,10 +72,18 @@ function isDemoAdminPhone(phone) {
   return DEMO_ADMIN_PHONES_DEV.includes(String(phone || '').trim());
 }
 
+function isDemoAccountPhone(phone) {
+  const p = String(phone || '').trim();
+  return DEMO_PARENT_PHONES.includes(p) || DEMO_MENTOR_PHONES.includes(p);
+}
+
 module.exports = {
   DEMO_SMS_CODE,
   DEMO_ADMIN_PHONES_DEV,
+  DEMO_PARENT_PHONES,
+  DEMO_MENTOR_PHONES,
   DEMO_PARENT_PROFILES,
   DEMO_MENTOR_PROFILES,
-  isDemoAdminPhone
+  isDemoAdminPhone,
+  isDemoAccountPhone
 };

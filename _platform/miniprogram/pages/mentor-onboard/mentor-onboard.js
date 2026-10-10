@@ -1,6 +1,10 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
-const { UNIVERSITY_OPTIONS, CHSI_ARCHIVE_URL } = require('../../utils/universities');
+const {
+  PROVINCES,
+  schoolsForProvince,
+  CHSI_ARCHIVE_URL
+} = require('../../utils/universities');
 
 const DEGREES = [
   '本科在读 (大一)', '本科在读 (大二)', '本科在读 (大三)', '本科在读 (大四)',
@@ -8,11 +12,26 @@ const DEGREES = [
 ];
 const BANKS = ['招商银行', '工商银行', '建设银行', '农业银行', '中国银行', '交通银行'];
 
+const DEFAULT_STYLE_TAGS = [
+  '引导启发解题',
+  '大题压轴模型归纳',
+  '基础漏洞重构',
+  '耐心督学陪读',
+  '错题本高效提分法',
+  '考前心态疏导',
+  '思维导图教学',
+  '幽默风趣互动',
+  '严格打卡督学',
+  '竞赛培优拔高'
+];
+
 Page({
   data: {
     step: 1,
-    universities: UNIVERSITY_OPTIONS,
-    universityIndex: 0,
+    provinces: PROVINCES,
+    provinceIndex: 0,
+    schools: schoolsForProvince(PROVINCES[0]),
+    schoolIndex: 0,
     universityManual: '',
     showUniversityManual: false,
     degrees: DEGREES,
@@ -26,18 +45,22 @@ Page({
       '考研数学(一/二/三)', '考研英语(一/二)', '体育专项训练与中考体考'
     ],
     subjectChips: [],
+    styleChips: [],
+    customStyleInput: '',
     chsiUrl: CHSI_ARCHIVE_URL,
     form: {
       realName: '',
       phone: '',
       idCard: '',
-      university: UNIVERSITY_OPTIONS[0],
+      province: PROVINCES[0],
+      university: schoolsForProvince(PROVINCES[0])[0],
       degree: DEGREES[2],
       chsiCode: '',
       bankName: BANKS[0],
       bankCard: '',
       privacy: false,
       subjects: [],
+      styles: ['引导启发解题'],
       scoreHighlight: '',
       hourlyRate: '120',
       lectureUrl: '',
@@ -47,13 +70,16 @@ Page({
     submitting: false
   },
 
-  onLoad() {
+  onLoad(options) {
     Storage.seedIfEmpty();
     const session = Storage.getSession() || {};
-    if (session.phone) {
-      this.setData({ 'form.phone': session.phone });
+    const queryPhone = (options.phone || '').trim();
+    const phone = queryPhone || (session.phone || '').trim();
+    if (phone) {
+      this.setData({ 'form.phone': phone });
     }
     this.refreshSubjectChips();
+    this.refreshStyleChips();
   },
 
   onField(e) {
@@ -61,21 +87,37 @@ Page({
     this.setData({ ['form.' + k]: e.detail.value });
   },
 
-  onUniversityManual(e) {
-    const val = e.detail.value;
-    this.setData({ universityManual: val, 'form.university': val.trim() });
+  onProvincePick(e) {
+    const i = Number(e.detail.value);
+    const province = this.data.provinces[i];
+    const schools = schoolsForProvince(province);
+    const showManual = false;
+    this.setData({
+      provinceIndex: i,
+      schools,
+      schoolIndex: 0,
+      showUniversityManual: showManual,
+      universityManual: '',
+      'form.province': province,
+      'form.university': schools[0] || ''
+    });
   },
 
-  onUniversityPick(e) {
+  onSchoolPick(e) {
     const i = Number(e.detail.value);
-    const name = this.data.universities[i];
-    const showManual = name === '其他';
+    const name = this.data.schools[i];
+    const showManual = name === '其他（手动输入）';
     this.setData({
-      universityIndex: i,
+      schoolIndex: i,
       showUniversityManual: showManual,
       universityManual: showManual ? this.data.universityManual : '',
       'form.university': showManual ? (this.data.universityManual || '').trim() : name
     });
+  },
+
+  onUniversityManual(e) {
+    const val = e.detail.value;
+    this.setData({ universityManual: val, 'form.university': val.trim() });
   },
 
   onDegree(e) {
@@ -106,6 +148,19 @@ Page({
     });
   },
 
+  refreshStyleChips() {
+    const selected = this.data.form.styles || [];
+    const preset = DEFAULT_STYLE_TAGS.map((name) => ({
+      name,
+      on: selected.indexOf(name) >= 0,
+      custom: false
+    }));
+    const customOnly = selected
+      .filter((s) => DEFAULT_STYLE_TAGS.indexOf(s) < 0)
+      .map((name) => ({ name, on: true, custom: true }));
+    this.setData({ styleChips: preset.concat(customOnly) });
+  },
+
   toggleSubject(e) {
     const v = e.currentTarget.dataset.v;
     const list = (this.data.form.subjects || []).slice();
@@ -113,6 +168,30 @@ Page({
     if (i >= 0) list.splice(i, 1);
     else list.push(v);
     this.setData({ 'form.subjects': list }, () => this.refreshSubjectChips());
+  },
+
+  toggleStyle(e) {
+    const v = e.currentTarget.dataset.v;
+    const list = (this.data.form.styles || []).slice();
+    const i = list.indexOf(v);
+    if (i >= 0) list.splice(i, 1);
+    else list.push(v);
+    this.setData({ 'form.styles': list }, () => this.refreshStyleChips());
+  },
+
+  onCustomStyleInput(e) {
+    this.setData({ customStyleInput: e.detail.value });
+  },
+
+  addCustomStyle() {
+    const label = (this.data.customStyleInput || '').trim();
+    if (!label) {
+      showToast('请输入教学风格标签', 'warning');
+      return;
+    }
+    const list = (this.data.form.styles || []).slice();
+    if (list.indexOf(label) < 0) list.push(label);
+    this.setData({ customStyleInput: '', 'form.styles': list }, () => this.refreshStyleChips());
   },
 
   openChsiQuery() {
@@ -203,12 +282,13 @@ Page({
       verified: false,
       url: p.path || p.url || ''
     }));
+    const styles = (f.styles && f.styles.length) ? f.styles.slice() : ['引导启发解题'];
     return {
       realName: f.realName.trim(),
       phone: f.phone.trim(),
       idCard: f.idCard.trim(),
       university: this._resolvedUniversity(),
-      province: '四川',
+      province: f.province || this.data.provinces[this.data.provinceIndex] || '四川',
       degree: f.degree,
       chsiCode: (f.chsiCode || '').trim(),
       chsiStatus: f.chsiCode ? '待联网核验' : '未提供（选填）',
@@ -216,7 +296,7 @@ Page({
       customSubjects: [],
       hourlyRate: parseInt(f.hourlyRate, 10) || 120,
       scoreHighlight: (f.scoreHighlight || '').trim(),
-      styles: ['引导启发解题'],
+      styles,
       proofFiles,
       lectureUrl: (f.lectureUrl || '').trim(),
       bankName: f.bankName,
@@ -241,8 +321,13 @@ Page({
     this.setData({ submitting: true });
 
     try {
-      if (Storage.isLoggedIn()) {
-        Storage.addMentor(payload);
+      const existing = Storage.getMentorByPhone(payload.phone);
+      if (Storage.isLoggedIn() || existing) {
+        if (existing && existing.id) {
+          await Storage.updateMentorProfile(existing.id, payload);
+        } else {
+          Storage.addMentor(payload);
+        }
         showToast('已提交，进入工作台查看审核状态');
         wx.reLaunch({ url: '/pages/mentor-dashboard/mentor-dashboard' });
         return;
@@ -257,7 +342,12 @@ Page({
       const reg = await Storage.register(verify.ticket, 'mentor', payload);
       if (!reg.success) {
         if (reg.error && reg.error.indexOf('已注册') >= 0) {
-          Storage.addMentor(payload);
+          const mentor = Storage.getMentorByPhone(payload.phone);
+          if (mentor && mentor.id) {
+            await Storage.updateMentorProfile(mentor.id, payload);
+          } else {
+            Storage.addMentor(payload);
+          }
           showToast('已提交建档申请');
           wx.reLaunch({ url: '/pages/mentor-dashboard/mentor-dashboard' });
           return;
