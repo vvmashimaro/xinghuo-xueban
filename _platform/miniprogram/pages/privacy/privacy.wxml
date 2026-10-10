@@ -1,20 +1,13 @@
-<view class="privacy-container">
-  <view class="privacy-header">
-    <text class="privacy-title">{{productName}} 隐私政策</text>
-    <text class="privacy-subtitle">个人信息保护政策</text>
-    <text class="privacy-operator">运营主体：{{operatorName}}</text>
-  </view>
-
-  <view class="privacy-body">
-    <view class="section" wx:for="{{sections}}" wx:key="title">
-      <view class="section-title">{{item.title}}</view>
-      <view class="section-content">
-        <text class="content-line" wx:for="{{item.content}}" wx:key="*this">{{item}}</text>
-      </view>
+<view class="shell">
+  <view class="page-inner">
+    <view class="xh-card">
+      <view class="xh-card-title">星火学伴 个人信息保护政策</view>
+      <view class="xh-card-sub">与 Web 端 `privacy.html` / `docs/` 口径一致</view>
+      <block wx:for="{{sections}}" wx:key="title">
+        <view class="section-title">{{item.title}}</view>
+        <text wx:for="{{item.lines}}" wx:key="*this" class="privacy-line">{{item}}</text>
+      </block>
+      <button class="btn-primary" style="width:100%;margin-top:24rpx;" bindtap="goBack">返回</button>
     </view>
-  </view>
-
-  <view class="privacy-footer">
-    <button class="btn-back" bindtap="goBack">返回</button>
   </view>
 </view>

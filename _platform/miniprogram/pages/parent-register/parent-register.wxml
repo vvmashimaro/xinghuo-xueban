@@ -1,259 +1,107 @@
-<view class="container">
-  <view class="brand-header">
-    <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
-    <view>
-      <view class="brand-title">星火学伴<text class="hub-badge">REGISTER</text></view>
-      <view class="brand-sub">阳光合规课辅 · 学情建档与考纲</view>
-    </view>
-  </view>
-  <view class="hero">
-    <view class="hero-title">{{heroTitle}}</view>
-    <view class="hero-sub">{{heroSub}}</view>
-  </view>
-
-  <view class="card">
-    <view class="card-title">基础信息</view>
-    <view class="field">
-      <text class="label">家长称呼</text>
-      <input class="input" placeholder="例：刘女士" placeholder-class="input-placeholder" value="{{parentName}}" bindinput="onParentName" />
-    </view>
-    <view class="field">
-      <text class="label">学员昵称</text>
-      <input class="input" placeholder="例：乐乐同学" placeholder-class="input-placeholder" value="{{studentNickname}}" bindinput="onNickname" />
-    </view>
-    <view class="field">
-      <text class="label">年级</text>
-      <picker mode="selector" range="{{grades}}" value="{{gradeIndex}}" bindchange="onGrade">
-        <view class="input">{{grades[gradeIndex]}}</view>
-      </picker>
-    </view>
-    <view class="field">
-      <text class="label">所在城区</text>
-      <picker mode="selector" range="{{districts}}" value="{{districtIndex}}" bindchange="onDistrict">
-        <view class="input">{{districts[districtIndex]}}</view>
-      </picker>
-    </view>
-    <view class="field">
-      <text class="label">{{spacePrefLabel}}</text>
-      <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onSpace">
-        <view class="input">{{spaces[spaceIndex]}}</view>
-      </picker>
-    </view>
-  </view>
-
-  <!-- 隐私政策与手机号授权 -->
-  <view class="card" wx:if="{{!editMode}}">
-    <view class="card-title">手机号授权</view>
-    <view class="muted" style="margin-bottom:16rpx;">
-      手机号仅用于：预约1对1线下伴学、课程联系通知。不会用于营销推广或出售给第三方。
-    </view>
-
-    <!-- 隐私政策阅读与同意 -->
-    <view class="check-row panel-soft" bindtap="onTogglePrivacyRead" style="margin-bottom:16rpx;padding:16rpx;">
-      <view class="check-box {{privacyRead?'on':''}}">{{privacyRead?'✓':''}}</view>
-      <text>我已阅读并同意
-        <text class="link" catchtap="goPrivacyPage">《个人信息保护政策》</text>
-      </text>
-    </view>
-
-    <!-- 手机号授权区域（需先同意隐私政策） -->
-    <view wx:if="{{privacyRead}}">
-      <view wx:if="{{!phoneAuthorized}}">
-        <view class="muted" style="margin-bottom:12rpx;">请选择授权方式：</view>
-        
-        <!-- 微信一键授权（用户主动点击） -->
-        <button class="btn-primary" style="width:100%;margin-bottom:12rpx;" 
-                open-type="getPhoneNumber" 
-                bindgetphonenumber="onWechatPhoneAuth">
-          微信授权手机号（推荐）
-        </button>
-        
-        <!-- SMS 手动绑定选项 -->
-        <view class="muted" style="text-align:center;margin:16rpx 0;">或</view>
-        <button class="btn-ghost" style="width:100%;" bindtap="onShowSmsBinding">
-          手动输入手机号验证
-        </button>
-        
-        <!-- SMS 手动绑定表单 -->
-        <view wx:if="{{showSmsBinding}}" class="panel-soft" style="margin-top:16rpx;padding:16rpx;">
-          <view class="field">
-            <text class="label">手机号</text>
-            <input class="input" type="number" maxlength="11" placeholder="请输入手机号" value="{{smsPhone}}" bindinput="onSmsPhone" />
-          </view>
-          <view class="field">
-            <text class="label">短信验证码</text>
-            <view class="flex-row gap-8">
-              <input class="input" style="flex:1;" type="number" maxlength="6" placeholder="6位验证码" value="{{smsCode}}" bindinput="onSmsCode" />
-              <button class="btn-ghost" style="white-space:nowrap;" bindtap="onSendSmsCode" disabled="{{smsCooldown>0}}">
-                {{smsCooldown>0 ? smsCooldown+'s' : '获取验证码'}}
-              </button>
-            </view>
-          </view>
-          <button class="btn-primary" style="width:100%;margin-top:12rpx;" bindtap="onVerifySmsCode">
-            验证并绑定
-          </button>
-        </view>
-      </view>
-      
-      <!-- 已授权状态 -->
-      <view wx:if="{{phoneAuthorized}}" class="phone-authorized">
-        <view class="success-icon">✓</view>
-        <view>
-          <text style="font-weight:600;">已授权手机号：</text>
-          <text style="color:#FF5A2D;font-family:monospace;">{{phoneMasked}}</text>
-        </view>
-      </view>
-    </view>
-
-    <view wx:if="{{!privacyRead}}" class="muted" style="text-align:center;padding:32rpx 0;color:#94a3b8;">
-      请先阅读并同意隐私政策
-    </view>
-  </view>
-
-  <!-- 编辑模式：显示已绑定手机号（只读） -->
-  <view class="card" wx:if="{{editMode && phone}}">
-    <view class="card-title">联系手机号</view>
-    <view class="phone-display">
-      <text style="color:#FF5A2D;font-family:monospace;font-size:32rpx;">{{phone}}</text>
-      <text class="muted" style="margin-left:12rpx;">（登录账号，不可更改）</text>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="row-between">
-      <view class="card-title" style="margin:0;">目标学科</view>
-      <text class="badge badge-teal">已配置 {{planCount}} 科 · {{topicCount}} 专题</text>
-    </view>
-    <view class="muted" style="margin:12rpx 0 16rpx;">勾选学科后将打开三步配置向导（薄弱考点 → 推进节奏 → 学习痛点）。年级【{{syllabusGradeShort}}】决定考点清单。</view>
-    <block wx:for="{{subjectCatalogGroups}}" wx:key="title" wx:for-item="group">
-      <view class="catalog-group-title">{{group.title}}</view>
-      <view class="subject-catalog-grid">
-        <view wx:for="{{group.tiles}}" wx:key="name" wx:for-item="tile"
-          class="subject-catalog-tile {{tile.on?'on':''}}"
-          data-v="{{tile.name}}" bindtap="onSubjectTap">
-          <view class="tile-name">{{tile.name}}</view>
-          <view class="tile-hint">{{tile.hint}}</view>
-        </view>
-      </view>
-    </block>
-    <view wx:if="{{planChips.length===0}}" class="empty-hint">请勾选上方学科，系统将引导您配置薄弱考点与辅导策略</view>
-    <view class="plan-chip" wx:for="{{planChips}}" wx:key="name">
+<view class="shell">
+  <view class="shell-glow shell-glow-tr"></view>
+  <view class="shell-glow shell-glow-bl"></view>
+  <scroll-view class="page-inner" scroll-y style="height:100vh;">
+    <view class="brand-block" style="margin-bottom:24rpx;">
+      <image class="brand-logo" src="/images/logo-xinghuo.jpg" mode="aspectFill" />
       <view>
-        <view class="flex-row gap-8">
-          <text style="font-weight:900;">{{item.name}}</text>
-          <text class="badge badge-teal">{{item.topicN}} 考点</text>
-          <text class="muted">{{item.pacingShort}} · {{item.painN}} 痛点</text>
-        </view>
-        <view class="muted" style="margin-top:6rpx;">{{item.preview}}</view>
+        <view class="brand-name">{{pageTitle}}<text class="brand-tag">建档</text></view>
+        <view class="brand-desc">{{heroSub}}</view>
       </view>
-      <button class="btn-ghost" size="mini" data-v="{{item.name}}" bindtap="openWizard">配置考点</button>
     </view>
-  </view>
 
-  <view class="card">
-    <view class="card-title">时薪预算区间（双柄）</view>
-    <view class="budget-display">¥{{budgetMin}} – ¥{{budgetMax}}<text class="muted"> /时</text></view>
-    <view class="muted" style="margin-bottom:12rpx;">拖动下限与上限滑块，区间将用于匹配过滤</view>
-    <view class="slider-row">
-      <text class="muted">下限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMin}}" activeColor="#FF5A2D" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMin" bindchange="onBudgetMin" />
-      <text class="val">{{budgetMin}}</text>
-    </view>
-    <view class="slider-row">
-      <text class="muted">上限</text>
-      <slider style="flex:1;" min="70" max="240" step="5" value="{{budgetMax}}" activeColor="#FF5A2D" backgroundColor="#e2e8f0" block-size="18" bindchanging="onBudgetMax" bindchange="onBudgetMax" />
-      <text class="val">{{budgetMax}}</text>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="card-title">学情目标简述</view>
-    <textarea class="input" style="min-height:140rpx;" placeholder="例：中考前加强几何证明与函数动点…" placeholder-class="input-placeholder" value="{{targetGoal}}" bindinput="onGoal" />
-  </view>
-
-  <view class="card">
-    <view class="check-row" bindtap="onToggleConsent">
-      <view class="check-box {{consent?'on':''}}">{{consent?'✓':''}}</view>
-      <text>我已阅读并同意
-        <text class="link" catchtap="openAgreement">《资金托管与服务协议》</text>
-        ，知晓课酬按单次托管锁定，课后 <text style="color:#E83A1F;font-weight:800;">48 小时</text>无投诉或其他冻结事由则自动划拨至导师，不设大额预存消费包。
-      </text>
-    </view>
-  </view>
-
-  <button class="btn-primary" style="width:100%;" bindtap="submitProfile">{{submitLabel}}</button>
-  <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="goLogin">{{editMode?'返回主控 / 登录':'返回登录'}}</button>
-</view>
-
-<!-- 学科三步向导 -->
-<view class="modal-mask" wx:if="{{wizardShow}}">
-  <view class="modal-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">配置学科学情 · {{wizardSubject}}</view>
-      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">步骤 {{wizardStep}} / 3</view>
-    </view>
-    <view class="modal-body">
-      <view class="wiz-dots">
-        <view class="wd {{wizardStep===1?'active':''}} {{wizardStep>1?'done':''}}">1</view>
-        <text class="muted">薄弱考点</text>
-        <view class="wd {{wizardStep===2?'active':''}} {{wizardStep>2?'done':''}}">2</view>
-        <text class="muted">推进节奏</text>
-        <view class="wd {{wizardStep===3?'active':''}}">3</view>
-        <text class="muted">学习痛点</text>
+    <view class="xh-card">
+      <view class="field">
+        <text class="label">家长称呼</text>
+        <input class="input" value="{{parentName}}" bindinput="onParentName" placeholder="例：李家长" placeholder-class="input-placeholder" />
       </view>
+      <view class="field">
+        <text class="label">手机号</text>
+        <input class="input" type="number" maxlength="11" value="{{phone}}" bindinput="onPhone" disabled="{{phoneReadonly}}" placeholder-class="input-placeholder" />
+      </view>
+      <view class="field">
+        <text class="label">学员昵称</text>
+        <input class="input" value="{{studentNickname}}" bindinput="onNickname" placeholder="例：乐乐同学" placeholder-class="input-placeholder" />
+      </view>
+      <view class="field">
+        <text class="label">在读年级</text>
+        <picker mode="selector" range="{{grades}}" value="{{gradeIndex}}" bindchange="onGrade">
+          <view class="input">{{grades[gradeIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">所在区县</text>
+        <picker mode="selector" range="{{districts}}" value="{{districtIndex}}" bindchange="onDistrict">
+          <view class="input">{{districts[districtIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">偏好上课网点</text>
+        <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onSpace">
+          <view class="input">{{spaces[spaceIndex]}}</view>
+        </picker>
+      </view>
+    </view>
 
-      <block wx:if="{{wizardStep===1}}">
-        <view class="section-h">请勾选薄弱考点（可多选）</view>
-        <view class="chip-wrap">
-          <view wx:for="{{wizardTopics}}" wx:key="name"
-            class="chip {{item.on?'chip-on':''}}"
-            data-name="{{item.name}}" bindtap="toggleTopic">{{item.name}}</view>
+    <view class="xh-card">
+      <view class="xh-card-title">目标学科目录</view>
+      <view class="xh-card-sub">含考研 / 艺体 / 体育专项 · 与 Web 学科目录一致</view>
+      <block wx:for="{{subjectGroups}}" wx:key="title">
+        <view class="muted" style="margin:16rpx 0 8rpx;font-weight:800;">{{item.title}}</view>
+        <view class="subject-grid">
+          <view
+            wx:for="{{item.tiles}}"
+            wx:for-item="tile"
+            wx:key="name"
+            class="subject-tile {{tile.on?'on':''}}"
+            data-name="{{tile.name}}"
+            bindtap="onToggleSubject"
+          >
+            <view class="subject-tile-name">{{tile.name}}</view>
+            <view class="subject-tile-hint">{{tile.hint}}</view>
+          </view>
         </view>
       </block>
-      <block wx:if="{{wizardStep===2}}">
-        <view class="section-h">选择辅导推进节奏</view>
-        <radio-group bindchange="onPacing">
-          <label class="pace-row" wx:for="{{pacingOptions}}" wx:key="*this">
-            <radio value="{{item}}" checked="{{item===wizardPacing}}" color="#FF5A2D" />
-            <text>{{item}}</text>
-          </label>
-        </radio-group>
-      </block>
-      <block wx:if="{{wizardStep===3}}">
-        <view class="section-h">学习痛点标签</view>
-        <view class="chip-wrap">
-          <view wx:for="{{wizardPains}}" wx:key="name"
-            class="chip {{item.on?'chip-on':''}}"
-            data-name="{{item.name}}" bindtap="togglePain">{{item.name}}</view>
-        </view>
-      </block>
+      <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="openWizard" wx:if="{{wizardSubject}}">配置「{{wizardSubject}}」考纲弱项</button>
     </view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeWizard">取消</button>
-      <button class="btn-ghost" wx:if="{{wizardStep>1}}" bindtap="wizPrev">上一步</button>
-      <button class="btn-primary" wx:if="{{wizardStep<3}}" bindtap="wizNext">下一步</button>
-      <button class="btn-primary" wx:if="{{wizardStep===3}}" bindtap="wizSave">完成配置</button>
-    </view>
-  </view>
-</view>
 
-<!-- 协议弹窗 -->
-<view class="modal-mask" wx:if="{{agreementShow}}">
-  <view class="modal-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">《星火学伴资金托管与服务协议》</view>
-      <view style="font-size:20rpx;color:#FFC0CB;margin-top:4rpx;">请完整阅读后勾选同意 · 银行存管专户前置要件</view>
+    <view class="xh-card">
+      <view class="xh-card-title">课酬预算（元/时）</view>
+      <view class="budget-row">
+        <text class="muted">低</text>
+        <slider min="70" max="240" step="10" value="{{budgetMin}}" bindchange="onBudgetMin" style="flex:1;" activeColor="#FF5A2D" />
+        <text style="font-weight:800;">{{budgetMin}}</text>
+      </view>
+      <view class="budget-row">
+        <text class="muted">高</text>
+        <slider min="70" max="240" step="10" value="{{budgetMax}}" bindchange="onBudgetMax" style="flex:1;" activeColor="#FF5A2D" />
+        <text style="font-weight:800;">{{budgetMax}}</text>
+      </view>
+      <view class="field" style="margin-top:16rpx;">
+        <text class="label">升学 / 备考目标（选填）</text>
+        <input class="input" value="{{targetGoal}}" bindinput="onGoal" placeholder="例：中考冲刺 / 考研英语70+" placeholder-class="input-placeholder" />
+      </view>
     </view>
-    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
-      <block wx:for="{{agreementSections}}" wx:key="h">
-        <view class="agr-h">{{item.h}}</view>
-        <view class="agr-p">{{item.p}}</view>
-      </block>
-      <view class="agr-tip">特别提示：本协议项下课酬并非课后立即/秒级划拨，而以课后 48 小时无异议自动解冻划拨为默认规则，保障家长冷静期与服务质量反馈权。</view>
-    </scroll-view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeAgreement">关闭</button>
-      <button class="btn-primary" bindtap="agreeFromModal">已阅 · 勾选同意</button>
+
+    <view class="xh-card">
+      <view class="check-row" bindtap="onToggleConsent">
+        <view class="check-box {{consent?'on':''}}">{{consent?'✓':''}}</view>
+        <text class="muted">我已阅读并同意《资金托管与服务协议》</text>
+      </view>
+      <button class="btn-primary" style="width:100%;" bindtap="onSubmit">{{submitLabel}}</button>
+      <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="goLogin">{{editMode?'返回主控':'返回登录'}}</button>
+    </view>
+  </scroll-view>
+
+  <view class="modal-mask" wx:if="{{wizardShow}}" bindtap="closeWizard">
+    <view class="modal-panel" catchtap="noop">
+      <view class="modal-title">{{wizardSubject}} · 弱项考点</view>
+      <scroll-view scroll-y style="max-height:50vh;">
+        <view class="chip-scroll">
+          <view wx:for="{{wizardTopics}}" wx:key="*this" class="chip {{item.on?'on':''}}" data-v="{{item.name}}" bindtap="onTopic">{{item.name}}</view>
+        </view>
+      </scroll-view>
+      <button class="btn-primary" style="width:100%;margin-top:20rpx;" bindtap="saveWizard">保存该科计划</button>
     </view>
   </view>
 </view>
