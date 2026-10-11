@@ -1076,19 +1076,15 @@
               </div>
             </div>
 
-            <div class="pt-2 flex flex-wrap justify-center gap-3">
-              <button type="button" onclick="safeNavigate('mentor_dashboard.html', '导师工作台')" class="text-xs bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-teal-600/20">
-                <i class="fa-solid fa-chalkboard-user"></i>
-                <span>进入导师工作台（查看待审状态）</span>
-              </button>
-              <button type="button" onclick="safeNavigate('admin-saas/index.html', '星火运营中台')" class="text-xs bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-clipboard-check"></i>
-                <span>前往审核台查看进度</span>
-              </button>
-              <button type="button" onclick="window.location.reload()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium transition cursor-pointer">
-                返回重新录入
+            <div class="pt-2 flex justify-center">
+              <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-teal-600/20">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>去登录</span>
               </button>
             </div>
+            <p class="text-center text-[10px] text-slate-500 mt-2 leading-relaxed">
+              审核进度将在登录后于个人中心查看，请使用本页登记手机号登录。
+            </p>
           </div>
 
         </form>
@@ -2320,7 +2316,7 @@
         document.getElementById('progress-bar-2').style.width = '100%';
 
         window.scrollTo({ top: 350, behavior: 'smooth' });
-        showToast('入库申请已提交！可进入导师工作台查看待审状态');
+        showToast('入库申请已提交！请使用登记手机号登录查看审核进度');
         try {
           if (window.StorageService && StorageService.clearMentorRegisterDraftV2) {
             StorageService.clearMentorRegisterDraftV2();
@@ -2332,11 +2328,6 @@
           localStorage.removeItem('xh_mentor_register_draft_v2');
           localStorage.removeItem('xh_mentor_wizard_state_v1');
         } catch (e) {}
-        
-        // Redirect to mentor dashboard after 2 seconds
-        setTimeout(() => {
-          window.location.href = 'mentor_dashboard.html';
-        }, 2000);
       } catch (error) {
         console.error('Registration error:', error);
         showToast(error.message || '注册失败，请重试', 'error');
