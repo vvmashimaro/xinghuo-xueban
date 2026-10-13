@@ -449,6 +449,111 @@ const StorageService = {
     }
   },
 
+  canParentCancelBooking(booking) {
+    if (!booking) return false;
+    const cancellable = ['pending_accept', 'escrow_locked', 'accepted'];
+    if (cancellable.indexOf(booking.status) < 0) return false;
+    const sessions = booking.sessions || [];
+    if (sessions.some((s) => s && s.status === 'completed')) return false;
+    const now = Date.now();
+    const lead = 2 * 60 * 60 * 1000;
+    const starts = [];
+    sessions.forEach((sess) => {
+      if (!sess || !sess.date || !sess.timeStart) return;
+      const parts = String(sess.timeStart).split(':').map(Number);
+      const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!isNaN(d.getTime())) starts.push(d.getTime());
+    });
+    if (!starts.length && booking.schedule) {
+      const iso = String(booking.schedule).match(/(\d{4}-\d{2}-\d{2})/);
+      const tm = String(booking.schedule).match(/(\d{1,2}:\d{2})/);
+      if (iso && tm) {
+        const parts = tm[1].split(':').map(Number);
+        const d = new Date(iso[1] + 'T00:00:00');
+        d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+        if (!isNaN(d.getTime())) starts.push(d.getTime());
+      }
+    }
+    if (!starts.length) return booking.status !== 'accepted';
+    return now <= Math.min.apply(null, starts) - lead;
+  },
+
+  async cancelParentBooking(id) {
+    try {
+      const result = await _request('POST', '/api/bookings/' + encodeURIComponent(id) + '/cancel', {});
+      if (result && result.booking) {
+        const list = this.getBookings();
+        const idx = list.findIndex((b) => b.id === id);
+        if (idx >= 0) {
+          list[idx] = result.booking;
+          this.saveBookings(list);
+        }
+        return { ok: true, booking: result.booking };
+      }
+      return result || { ok: false, error: '撤销失败' };
+    } catch (e) {
+      const data = e && e.data;
+      return data || { ok: false, error: (e && e.message) || '撤销失败' };
+    }
+  },
+
+  async requestSessionLeave(bookingId, sessionId, byRole) {
+    try {
+      const result = await _request('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/leave', {
+        sessionId,
+        action: 'request',
+        byRole: byRole || 'parent'
+      });
+      if (result && result.booking) {
+        const list = this.getBookings();
+        const idx = list.findIndex((b) => b.id === bookingId);
+        if (idx >= 0) {
+          list[idx] = result.booking;
+          this.saveBookings(list);
+        }
+      }
+      return result;
+    } catch (e) {
+      return (e && e.data) || { ok: false, error: '请假失败' };
+    }
+  },
+
+  getParentWalletSummary(parent) {
+    if (!parent) {
+      return { frozenYuan: 0, hasFrozen: false, label: '资金保障 · 一课一消（演示托管）' };
+    }
+    const list = this.getBookingsForParent(parent.id);
+    const active = ['pending_accept', 'escrow_locked', 'accepted'];
+    let frozenYuan = 0;
+    list.forEach((b) => {
+      if (!b || b.type === 'trial') return;
+      if (active.indexOf(b.status) < 0) return;
+      if (
+        b.paymentStatus === 'paid' ||
+        b.escrowStatus === 'frozen' ||
+        b.escrowStatus === 'pending_payment'
+      ) {
+        frozenYuan += Number(b.amount) || 0;
+      }
+    });
+    frozenYuan = Math.round(frozenYuan * 100) / 100;
+    return {
+      frozenYuan,
+      hasFrozen: frozenYuan > 0,
+      label: '资金保障 · 一课一消（演示托管）'
+    };
+  },
+
+  async saveAssessment(payload) {
+    try {
+      return await _request('POST', '/api/assessments', payload || {});
+    } catch (e) {
+      console.warn('Save assessment failed:', e);
+      return null;
+    }
+  },
+
   getContracts() { return _read(KEYS.contracts, []); },
 
   async saveContract(contract) {

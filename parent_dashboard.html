@@ -109,15 +109,15 @@
       <!-- 右侧：银行托管钱包简况与快捷导航 -->
       <div class="flex items-center gap-2.5 sm:gap-4">
         <!-- 银行托管账户资金小微模块 -->
-        <div class="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 text-xs">
-          <div class="w-7 h-7 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-building-columns"></i>
+        <div class="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 text-xs max-w-[220px]">
+          <div class="w-7 h-7 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-xs shrink-0">
+            <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <div>
-            <div class="text-[10px] text-slate-400 font-medium leading-none">招商银行合约存管专户</div>
+          <div class="min-w-0">
+            <div class="text-[10px] text-slate-400 font-medium leading-none truncate" id="headerEscrowLabel">资金保障 · 一课一消（演示托管）</div>
             <div class="text-xs font-black text-slate-900 mt-0.5">
-              可用 ¥<span id="headerEscrowBalance">315.00</span>
-              <span class="text-[10px] text-amber-600 font-medium ml-1">(冻结 ¥135)</span>
+              <span id="headerEscrowFrozenWrap" class="hidden text-amber-700 font-mono">课次冻结 ¥<span id="headerEscrowFrozen">0.00</span></span>
+              <span id="headerEscrowEmpty" class="text-[11px] font-medium text-slate-500">暂无冻结课款</span>
             </div>
           </div>
         </div>
@@ -135,7 +135,13 @@
           <span class="sm:hidden">改学情</span>
         </button>
 
-        <button type="button" onclick="safeNavigate('login.html', '登录认证中心')" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
+        <button type="button" onclick="openParentFeedbackModal()" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-comment-dots text-teal-600 text-xs"></i>
+          <span class="hidden sm:inline">反馈投诉</span>
+          <span class="sm:hidden">反馈</span>
+        </button>
+
+        <button type="button" onclick="safeNavigate('login.html', '登录认证中心')" class="text-xs text-slate-600 hover:text-teal-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
           <i class="fa-solid fa-arrow-right-from-bracket text-slate-400"></i>
         </button>
       </div>
@@ -623,7 +629,7 @@
             <span class="text-teal-700 font-mono" id="confirmLockAmount">¥270.00</span>
           </div>
           <p class="text-slate-500 text-[10px] leading-relaxed">
-            支付款项将暂存于您的招商银行存管子专户中（单次或每周系列课次费用<strong class="text-teal-800">提前冻结</strong>）。每次结课后进入 <strong class="text-teal-800">48 小时</strong> 解冻观察期，期满无投诉则按 92% 导师 / 8% 平台自动划拨；每周固定课请假须提前一日确认。
+            支付款项将在平台托管通道中锁定（演示环境为模拟支付；单次或每周系列课次费用<strong class="text-teal-800">提前冻结</strong>）。每次结课后进入 <strong class="text-teal-800">48 小时</strong> 解冻观察期，期满无投诉则按 92% 导师 / 8% 平台自动划拨；开课前 2 小时可撤销，每周固定课请假须提前一日确认。
           </p>
         </div>
 
@@ -851,7 +857,7 @@
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white">
         <div>
           <h3 class="font-black text-sm">《三方托管服务居间协议》</h3>
-          <p class="text-[10px] text-teal-200/90 mt-0.5">在线签署 · 银行智能合约存管前置要件</p>
+          <p class="text-[10px] text-teal-200/90 mt-0.5">在线签署 · 一课一消托管（演示环境为模拟支付）</p>
         </div>
         <button type="button" onclick="closeEContractModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer">
           <i class="fa-solid fa-xmark text-xs"></i>
@@ -865,7 +871,7 @@
           <p class="hidden" data-contract-iot-clause>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
           <p data-warehouse-off>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</p>
           <p class="hidden" data-warehouse-only>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
-          <p data-warehouse-off>2. 单次课酬由家长通过商业银行存管子账户锁定（一课一消）；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+          <p data-warehouse-off>2. 单次课酬按「一课一约、一课一消」在平台托管通道中锁定（演示环境为模拟支付）；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
           <p class="hidden" data-contract-warehouse-clause>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
           <p>4. 开课前 2 小时可原路撤销；观察期内遇质量投诉，资金继续冻结并由平台协调处理。</p>
           <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>
@@ -937,6 +943,48 @@
     </div>
   </div>
 
+  <!-- 家长反馈与投诉 -->
+  <div id="parentFeedbackModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="parentFeedbackModalContent">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-900">提交反馈与投诉</h3>
+        <button type="button" onclick="closeParentFeedbackModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">反馈类型 <span class="text-red-500">*</span></label>
+          <select id="parentFeedbackType" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
+            <option value="功能问题">功能问题</option>
+            <option value="订单纠纷">订单纠纷</option>
+            <option value="投诉">投诉</option>
+            <option value="建议">建议</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">相关约课（选填）</label>
+          <input id="parentFeedbackBookingId" type="text" placeholder="例：BK-001（选填）" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">问题标题 <span class="text-red-500">*</span></label>
+          <input id="parentFeedbackTitle" type="text" placeholder="简要描述问题" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">详细说明 <span class="text-red-500">*</span></label>
+          <textarea id="parentFeedbackDetail" rows="4" placeholder="请详细描述问题或建议..." class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">联系方式（选填）</label>
+          <input id="parentFeedbackContact" type="text" placeholder="手机号或邮箱" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeParentFeedbackModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl cursor-pointer">取消</button>
+          <button type="button" onclick="submitParentFeedback()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl cursor-pointer">提交反馈</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 轻量全局 Toast 通知条 -->
   
   <!-- 试课测评引导弹窗 -->
@@ -971,7 +1019,7 @@
   <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-400">
     <div class="max-w-7xl mx-auto px-4 space-y-1">
       <p>© 2026 星火学伴 · 中学O2O课业辅导匹配与智能分布式空间体系</p>
-      <p class="text-[10px] text-slate-400">银行存管专户资金闭环运作 · 严格执行中小学课外辅导合规治理规范</p>
+      <p class="text-[10px] text-slate-400">平台撮合与托管记录可查询 · 演示环境支付为模拟，不接入真实银行专户</p>
     </div>
   </footer>
 
@@ -2201,14 +2249,8 @@
             if (window.iotCountdownTimer) { clearInterval(window.iotCountdownTimer); window.iotCountdownTimer = null; }
           }
 
-          const headerBal = document.getElementById('headerEscrowBalance');
-          if (headerBal && payYuan > 0 && !isTrial && paymentOk) {
-            const cur = parseFloat(headerBal.innerText) || 315;
-            const next = Math.max(0, cur - payYuan);
-            headerBal.innerText = next.toFixed(2);
-          }
-
           try { renderParentBookings(); } catch (_) {}
+          refreshParentWalletHeader();
 
           openPodPasscodeModal();
           if (isTrial) {
@@ -2404,9 +2446,91 @@
       if (maxLabel) maxLabel.innerText = String(currentMaxRate);
     }
 
+    function refreshParentWalletHeader() {
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      if (!parent || !window.StorageService || !StorageService.getParentWalletSummary) return;
+      const summary = StorageService.getParentWalletSummary(parent);
+      const labelEl = document.getElementById('headerEscrowLabel');
+      if (labelEl && summary.label) labelEl.textContent = summary.label;
+      const frozenWrap = document.getElementById('headerEscrowFrozenWrap');
+      const frozenAmt = document.getElementById('headerEscrowFrozen');
+      const emptyEl = document.getElementById('headerEscrowEmpty');
+      if (summary.hasFrozen) {
+        if (frozenWrap) frozenWrap.classList.remove('hidden');
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (frozenAmt) frozenAmt.textContent = Number(summary.frozenYuan || 0).toFixed(2);
+      } else {
+        if (frozenWrap) frozenWrap.classList.add('hidden');
+        if (emptyEl) emptyEl.classList.remove('hidden');
+      }
+    }
+
+    function openParentFeedbackModal() {
+      const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
+      document.getElementById('parentFeedbackType').value = '功能问题';
+      document.getElementById('parentFeedbackBookingId').value = '';
+      document.getElementById('parentFeedbackTitle').value = '';
+      document.getElementById('parentFeedbackDetail').value = '';
+      document.getElementById('parentFeedbackContact').value = parent ? (parent.phone || '') : '';
+      const modal = document.getElementById('parentFeedbackModal');
+      const content = document.getElementById('parentFeedbackModalContent');
+      modal.classList.remove('hidden');
+      setTimeout(function () {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeParentFeedbackModal() {
+      const modal = document.getElementById('parentFeedbackModal');
+      const content = document.getElementById('parentFeedbackModalContent');
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(function () { modal.classList.add('hidden'); }, 220);
+    }
+
+    function submitParentFeedback() {
+      if (!window.StorageService) return;
+      const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+      const type = document.getElementById('parentFeedbackType').value;
+      const bookingId = document.getElementById('parentFeedbackBookingId').value.trim();
+      const title = document.getElementById('parentFeedbackTitle').value.trim();
+      const detail = document.getElementById('parentFeedbackDetail').value.trim();
+      const contact = document.getElementById('parentFeedbackContact').value.trim();
+      if (!title || !detail) {
+        showToast('请填写标题与详细说明', 'warning');
+        return;
+      }
+      StorageService.addFeedbackTicket({
+        type: type,
+        title: title,
+        detail: detail,
+        bookingId: bookingId,
+        contact: contact,
+        parentId: parent ? parent.id : '',
+        submitterRole: 'parent'
+      });
+      closeParentFeedbackModal();
+      showToast('反馈已提交，平台将尽快处理');
+    }
+
+    function cancelParentBooking(bookingId) {
+      if (!window.StorageService || !bookingId) return;
+      if (!confirm('确认撤销该约课？开课前 2 小时外可原路退回托管（演示环境为模拟退款）。')) return;
+      const res = StorageService.parentCancelBooking(bookingId);
+      if (res && res.ok) {
+        showToast('约课已撤销');
+        refreshParentWalletHeader();
+      } else {
+        showToast((res && res.error) || '撤销失败', res && res.tooLate ? 'warning' : 'error');
+      }
+      renderParentBookings();
+    }
+
     function applyParentHeaderAndPassport() {
       const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
       if (!parent) return;
+      refreshParentWalletHeader();
       const nameEl = document.getElementById('headerStudentName');
       const gradeEl = document.getElementById('headerGradeBadge');
       if (nameEl) nameEl.innerText = parent.studentNickname || '学员';
@@ -2898,7 +3022,8 @@
         pending_accept: { text: '待导师接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         escrow_locked: { text: '待导师接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         accepted: { text: '导师已接单', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-        declined: { text: '导师已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+        declined: { text: '导师已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
+        cancelled: { text: '已取消', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
       };
       box.innerHTML = filtered.map(function(raw) {
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
@@ -2946,9 +3071,13 @@
               '</div>';
             }).join('') + '</div>';
         }
-        const renewBtn = canRenew
-          ? '<div class="mt-2"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button></div>'
+        const canCancel = StorageService.canParentCancelBooking && StorageService.canParentCancelBooking(b);
+        const cancelBtn = canCancel
+          ? '<button type="button" onclick="cancelParentBooking(\'' + b.id + '\')" class="text-[10px] font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg cursor-pointer">撤销约课</button>'
           : '';
+        const renewBtn = canRenew
+          ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'
+          : (cancelBtn ? '<div class="mt-2">' + cancelBtn + '</div>' : '');
         return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +

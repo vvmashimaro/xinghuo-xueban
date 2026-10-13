@@ -88,6 +88,35 @@ function bookingAmountFen(booking) {
   return yuanToFen(yuan);
 }
 
+const ACTIVE_ESCROW_STATUSES = new Set(['pending_accept', 'escrow_locked', 'accepted']);
+
+/**
+ * Sum paid / locked lesson fees for a parent (no fictitious "available balance").
+ */
+function computeParentWalletFromBookings(bookings, parentRef) {
+  const parentId = parentRef && (parentRef.id || parentRef.userId || parentRef);
+  const parentPhone = parentRef && parentRef.phone;
+  let frozenYuan = 0;
+  (bookings || []).forEach((b) => {
+    if (!b || b.type === 'trial') return;
+    if (!ACTIVE_ESCROW_STATUSES.has(String(b.status || ''))) return;
+    const owned =
+      (parentId && b.parentId === parentId) ||
+      (parentPhone && b.parentPhone === parentPhone);
+    if (!owned) return;
+    const paidOrLocked =
+      b.paymentStatus === 'paid' ||
+      b.escrowStatus === 'frozen' ||
+      b.escrowStatus === 'pending_payment';
+    if (paidOrLocked) frozenYuan += bookingAmountYuan(b);
+  });
+  return {
+    frozenYuan: roundYuan(frozenYuan),
+    hasFrozen: frozenYuan > 0,
+    label: '资金保障 · 一课一消（演示托管）'
+  };
+}
+
 function isBookingPayable(booking) {
   if (!booking) return { ok: false, error: '预约不存在' };
   if (booking.paymentStatus === 'paid') {
@@ -106,6 +135,7 @@ function isBookingPayable(booking) {
 
 module.exports = {
   computeBookingPricing,
+  computeParentWalletFromBookings,
   bookingAmountFen,
   bookingAmountYuan,
   yuanToFen,

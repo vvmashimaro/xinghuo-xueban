@@ -7,6 +7,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 // 模拟支付订单存储（生产环境应使用数据库）
 const mockOrders = new Map();
@@ -169,27 +170,51 @@ async function createRealPrepay(bookingId, amount, description, openid, payType 
   const url = '/v3/pay/transactions/jsapi';
   const body = JSON.stringify(requestBody);
   const signature = generateSignature('POST', url, timestamp, nonceStr, body);
-  
-  // TODO: 实际 HTTP 请求到微信支付 API
-  console.log(`[WeChat Pay] 准备调用预支付接口`);
-  console.log(`[WeChat Pay] 商户订单号: ${outTradeNo}`);
-  console.log(`[WeChat Pay] 提示：需要实现 HTTPS 请求到 https://api.mch.weixin.qq.com${url}`);
-  
-  // 示例：使用 axios 或 node-fetch
-  // const axios = require('axios');
-  // const response = await axios.post(`https://api.mch.weixin.qq.com${url}`, requestBody, {
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     'Authorization': `WECHATPAY2-SHA256-RSA2048 mchid="${config.mchId}",nonce_str="${nonceStr}",signature="${signature}",timestamp="${timestamp}",serial_no="${config.mchSerialNo}"`
-  //   }
-  // });
-  // return { prepayId: response.data.prepay_id, outTradeNo };
-  
-  return {
-    prepayId: 'REAL-PREPAY-PLACEHOLDER',
-    outTradeNo,
-    message: '真实微信支付接口占位，需实现 HTTP 调用'
-  };
+  const auth =
+    `WECHATPAY2-SHA256-RSA2048 mchid="${config.mchId}",nonce_str="${nonceStr}",` +
+    `signature="${signature}",timestamp="${timestamp}",serial_no="${config.mchSerialNo}"`;
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: 'api.mch.weixin.qq.com',
+        path: url,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: auth,
+          'Content-Length': Buffer.byteLength(body)
+        }
+      },
+      (res) => {
+        let raw = '';
+        res.on('data', (chunk) => {
+          raw += chunk;
+        });
+        res.on('end', () => {
+          try {
+            const json = raw ? JSON.parse(raw) : {};
+            if (res.statusCode >= 200 && res.statusCode < 300 && json.prepay_id) {
+              resolve({
+                prepayId: json.prepay_id,
+                outTradeNo,
+                mock: false
+              });
+              return;
+            }
+            const msg = json.message || json.detail || `HTTP ${res.statusCode}`;
+            reject(new Error(msg));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
 }
 
 /**

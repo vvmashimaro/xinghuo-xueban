@@ -1977,6 +1977,82 @@
       return list[idx];
     },
 
+    getParentWalletSummary: function (parent) {
+      if (!parent) return { frozenYuan: 0, hasFrozen: false, label: '资金保障 · 一课一消（演示托管）' };
+      const list = this.getBookingsForParent(parent.id || parent.phone);
+      const active = ['pending_accept', 'escrow_locked', 'accepted'];
+      let frozenYuan = 0;
+      list.forEach(function (b) {
+        if (!b || b.type === 'trial') return;
+        if (active.indexOf(b.status) < 0) return;
+        if (
+          b.paymentStatus === 'paid' ||
+          b.escrowStatus === 'frozen' ||
+          b.escrowStatus === 'pending_payment'
+        ) {
+          frozenYuan += Number(b.amount) || 0;
+        }
+      });
+      frozenYuan = Math.round(frozenYuan * 100) / 100;
+      return {
+        frozenYuan: frozenYuan,
+        hasFrozen: frozenYuan > 0,
+        label: '资金保障 · 一课一消（演示托管）'
+      };
+    },
+
+    canParentCancelBooking: function (booking) {
+      if (!booking) return false;
+      const cancellable = ['pending_accept', 'escrow_locked', 'accepted'];
+      if (cancellable.indexOf(booking.status) < 0) return false;
+      const sessions = booking.sessions || [];
+      if (sessions.some(function (s) { return s && s.status === 'completed'; })) return false;
+      const now = Date.now();
+      const lead = 2 * 60 * 60 * 1000;
+      const starts = [];
+      sessions.forEach(function (sess) {
+        if (!sess || !sess.date || !sess.timeStart) return;
+        const parts = String(sess.timeStart).split(':').map(Number);
+        const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
+        d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+        if (!isNaN(d.getTime())) starts.push(d.getTime());
+      });
+      if (!starts.length && booking.schedule) {
+        const iso = String(booking.schedule).match(/(\d{4}-\d{2}-\d{2})/);
+        const tm = String(booking.schedule).match(/(\d{1,2}:\d{2})/);
+        if (iso && tm) {
+          const parts = tm[1].split(':').map(Number);
+          const d = new Date(iso[1] + 'T00:00:00');
+          d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+          if (!isNaN(d.getTime())) starts.push(d.getTime());
+        }
+      }
+      if (!starts.length) return booking.status !== 'accepted';
+      return now <= Math.min.apply(null, starts) - lead;
+    },
+
+    parentCancelBooking: function (bookingId) {
+      const list = this.getBookings();
+      const idx = list.findIndex(function (b) { return b.id === bookingId; });
+      if (idx < 0) return { ok: false, error: '约课不存在' };
+      const booking = this.normalizeBookingRecord
+        ? this.normalizeBookingRecord(list[idx])
+        : list[idx];
+      if (!this.canParentCancelBooking(booking)) {
+        return { ok: false, error: '开课前 2 小时内不可撤销或当前状态不可取消', tooLate: true };
+      }
+      list[idx] = Object.assign({}, booking, {
+        status: 'cancelled',
+        cancelledAt: _now(),
+        cancelledBy: 'parent',
+        escrowStatus: booking.type === 'trial' ? 'waived' : 'refunded',
+        paymentStatus: booking.paymentStatus === 'paid' ? 'refunded' : booking.paymentStatus
+      });
+      this.saveBookings(list);
+      _apiSafe('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/cancel', {});
+      return { ok: true, booking: list[idx] };
+    },
+
     /* ---------- Multi-step mentor registration draft V2 ---------- */
     saveMentorRegisterDraftV2: function (draft) {
       const payload = Object.assign({}, draft || {}, { updatedAt: Date.now() });

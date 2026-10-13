@@ -74,6 +74,13 @@
 
 .wallet-card { padding: 22rpx 28rpx; }
 .wallet-bal { font-size: 30rpx; font-weight: 900; color: #0f172a; margin-top: 4rpx; }
+.bk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
 .wallet-frozen { font-size: 22rpx; color: #d97706; font-weight: 600; }
 
 .top-strip {
