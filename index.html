@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>[data-warehouse-only].hidden,[data-warehouse-off].hidden,[data-contract-iot-clause].hidden,[data-contract-warehouse-clause].hidden,#bookingSuccessSimple.hidden,#bookingSuccessWarehouse.hidden{display:none!important}</style>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <title>星火导师入驻计划 - 阳光合规 · 资金秒结 · 专属智能空间</title>
+  <title>星火导师入驻计划 - 阳光合规 · 资金保障 · 专属智能空间</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome Icons -->
@@ -130,8 +130,8 @@
             </div>
             <div class="text-xs font-bold text-white mb-1">资金保障 · 一课一结</div>
             <p class="text-[11px] text-slate-400 leading-relaxed">
-              <span class="hidden" data-warehouse-only>家长预付锁定托管户，双方扫码下课<strong class="text-emerald-300 font-semibold">资金秒到账</strong>，彻底免除赖账纠纷。</span>
-              <span data-warehouse-off>家长预付锁定托管户，双方确认结课<strong class="text-emerald-300 font-semibold">资金秒到账</strong>，彻底免除赖账纠纷。</span>
+              <span class="hidden" data-warehouse-only>约课成功后课酬预先冻结，双方扫码下课按规则<strong class="text-emerald-300 font-semibold">解冻划拨</strong>，减少赖账纠纷。</span>
+              <span data-warehouse-off>约课成功后课酬预先冻结，双方确认结课按规则<strong class="text-emerald-300 font-semibold">解冻划拨</strong>，减少赖账纠纷。</span>
             </p>
           </div>
         </div>
@@ -261,7 +261,7 @@
                 </h2>
                 <span class="text-xs bg-teal-50 text-teal-700 px-2.5 py-0.5 rounded font-medium border border-teal-200">必填项</span>
               </div>
-              <p class="text-xs text-slate-500 mt-1.5">严格遵守国家校外辅导监管红线，平台直接对接学信网与公安实名系统核验入驻资质。</p>
+              <p class="text-xs text-slate-500 mt-1.5">严格遵守国家校外辅导监管红线，平台依规范开展实名与学籍资质审核。</p>
             </div>
 
             <!-- L1 子步骤进度指示器 -->
@@ -331,7 +331,7 @@
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">身份证号码 <span class="text-red-500">*</span></label>
                 <div class="relative">
                   <i class="fa-regular fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
-                  <input type="text" id="idCard" required oninput="onL1FieldChange()" placeholder="例：510107********1234（18位，加密直联公安）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                  <input type="text" id="idCard" required oninput="onL1FieldChange()" placeholder="例：510107********1234（18位，加密存储）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
                 </div>
               </div>
 
@@ -492,7 +492,7 @@
                 </div>
               </div>
               <p class="text-[10px] text-emerald-700/90 leading-tight">
-                * 平台已将解析结果结构化加密建档，报告流水凭证号将同步存入银行存管子账户。
+                * 平台已将解析结果结构化加密建档，并纳入入驻资质审核记录。
               </p>
             </div>
 
@@ -505,14 +505,14 @@
             </div>
 
             <div id="l1-substep-3" data-l1-substep="3" class="space-y-4 hidden">
-            <!-- 新增：银行合约资金直连 · 导师收款清算账户填写 -->
+            <!-- 导师收款清算账户填写 -->
             <div class="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3">
               <div class="flex items-center justify-between">
                 <div>
                   <div class="text-xs font-bold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-building-columns text-teal-600"></i>
-                    <span>银行智能合约托管 · 导师收款清算账户</span>
-                    <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200 font-semibold">资金一课一结秒到账</span>
+                    <span>课酬资金保障 · 导师收款清算账户</span>
+                    <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200 font-semibold">一课一结</span>
                   </div>
                   <p class="text-[11px] text-slate-500 mt-1">
                     用于每节辅导下课后，系统自动释放家长预存托管款至导师银行卡（支持国内各主流一类银联借记卡）。
@@ -553,7 +553,7 @@
               </div>
               <div class="text-[10px] text-slate-400 flex items-center gap-1">
                 <i class="fa-solid fa-lock text-teal-600"></i>
-                <span>清算符合反洗钱与商业银行资金专户监管要求，平台不触碰任何课酬资金，全程银行托管直划。</span>
+                <span>清算信息将加密存储，用于课酬结算与反洗钱合规核验；平台不设资金池。</span>
               </div>
             </div>
 
@@ -574,12 +574,12 @@
                 <span class="text-[10px] text-rose-500 font-semibold">* 必选</span>
               </div>
               <p class="text-[11px] text-slate-500 leading-relaxed">
-                为履行教育合规审查、公安实名认证与银行专户结算监管职责，在您自愿提交入驻申请期间，平台将严格根据《中华人民共和国个人信息保护法》脱敏传输与加密存储您的相关信息。
+                为履行教育合规审查、实名与学籍资质审核及课酬结算职责，在您自愿提交入驻申请期间，平台将严格根据《中华人民共和国个人信息保护法》脱敏传输与加密存储您的相关信息。
               </p>
               <label class="flex items-start gap-2.5 pt-1 cursor-pointer select-none text-base">
                 <input type="checkbox" id="privacyAuthAgree" onchange="updateL1Progress()" class="mt-0.5 w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300">
                 <span class="text-xs text-slate-700 leading-tight">
-                  我已阅读并完全同意<a href="javascript:void(0)" onclick="showToast('已调阅《星火学伴导师个人信息保护与授权协议》')" class="text-teal-700 underline font-semibold">《个人信息查询授权协议》</a>，授权平台将本人姓名、身份证号码及学籍编号用于<strong>公安部网络身份识别接口</strong>、<strong>学信网在线验证接口</strong>及<strong>银行结算托管通道</strong>之一致性比对。
+                  我已阅读并完全同意<a href="javascript:void(0)" onclick="showToast('已调阅《星火学伴导师个人信息保护与授权协议》')" class="text-teal-700 underline font-semibold">《个人信息查询授权协议》</a>，授权平台将本人姓名、身份证号码及学籍编号用于<strong>依法开展的身份与学籍资质核验</strong>及<strong>课酬结算所需的一致性核对</strong>。
                 </span>
               </label>
             </div>
@@ -1071,8 +1071,8 @@
               </div>
 
               <div class="pt-2 border-t border-teal-100 flex items-center justify-between text-[11px] text-teal-700">
-                <span>银行智能托管账户</span>
-                <span class="font-mono">已挂接虚拟存管</span>
+                <span>课酬资金保障</span>
+                <span class="font-mono">收款账户已登记</span>
               </div>
             </div>
 
@@ -1201,7 +1201,7 @@
               </span>
               <span class="text-emerald-600 font-medium flex items-center gap-1">
                 <i class="fa-solid fa-shield-check"></i>
-                <span>银行智能托管</span>
+                <span>资金保障</span>
               </span>
             </div>
           </div>
@@ -1213,7 +1213,7 @@
               <span>入库导师权益保障</span>
             </div>
             <p class="text-[11px] leading-relaxed">
-              1. 课酬由商业银行智能合约监管，双方核销后系统自动解冻划拨至个人账户，杜绝欠薪。<br>
+              1. 课酬在平台资金保障流程中按约冻结，双方核销后按规则解冻划拨至个人账户，减少欠薪风险。<br>
               <span class="hidden" data-warehouse-only>2. 线下教学统一在平台分布式隔音智能仓进行，全程安全监控，免进陌生家庭。</span>
               <span data-warehouse-off>2. 线下教学在家长与导师约定的合规网点进行，平台提供约课与托管对接服务。</span>
             </p>
@@ -2065,7 +2065,7 @@
         if (!bankCard || bankCard.length < 16) {
           markL1FieldError('bankCardNumber');
           if (hint) { hint.classList.remove('hidden'); hint.innerText = '请填写 16-19 位银联借记卡号'; }
-          showToast('请填写用于课酬直达秒结的 16-19 位银联借记卡号！', 'warning');
+          showToast('请填写用于课酬结算的 16-19 位银联借记卡号！', 'warning');
           return;
         }
         if (!privacyAgree) {
