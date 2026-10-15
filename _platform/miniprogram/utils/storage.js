@@ -913,7 +913,8 @@ const StorageService = {
       syllabusTopics, videoTitle: (subjects[0] || '学科') + ' · 试讲示范课',
       lectureUrl: mentor.lectureUrl || '#', isTopMatch: matchScore >= 95,
       tagBadge: matchScore >= 96 ? matchScore + '% AI高契合' : mentor.evalGrade || '金牌导师',
-      evalGrade: mentor.evalGrade || 'V2 级金牌导师'
+      evalGrade: mentor.evalGrade || 'V2 级金牌导师',
+      chsiStatus: mentor.chsiStatus || ''
     };
   },
 

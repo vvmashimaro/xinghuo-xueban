@@ -1,0 +1,19 @@
+<view class="container">
+  <view class="card passport-hero">
+    <view style="font-weight:800;color:#0f766e;">{{studentNickname}} · {{studentGrade}}</view>
+    <view class="muted" style="margin-top:8rpx;">{{cityDistrict}} · {{passportSpace}}</view>
+    <view class="muted" style="margin-top:8rpx;">期望课酬 {{passportBudget}}</view>
+  </view>
+  <view class="card">
+    <view class="section-h">分科学情</view>
+    <view class="passport-plan" wx:for="{{passportPlans}}" wx:key="name">
+      <view style="font-weight:900;">{{item.name}}</view>
+      <view class="muted">薄弱考点：{{item.weakPoints}}</view>
+      <view class="muted">推进节奏：{{item.pacing}}</view>
+      <view class="muted">学习痛点：{{item.pains}}</view>
+    </view>
+    <view class="section-h" wx:if="{{passportGoal}}">学情目标</view>
+    <view class="muted" wx:if="{{passportGoal}}">{{passportGoal}}</view>
+  </view>
+  <button class="btn-primary" style="width:100%;" bindtap="goEdit">更新学情与考纲</button>
+</view>

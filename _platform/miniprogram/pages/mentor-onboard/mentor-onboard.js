@@ -1,5 +1,6 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
+const Chsi = require('../../utils/chsi-verify');
 
 Page({
   data: {
@@ -23,7 +24,14 @@ Page({
     },
     l1Pct: 0,
     l1State: {},
-    resCode: '', resName: '', resUniversity: '', resHourly: ''
+    resCode: '', resName: '', resUniversity: '', resHourly: '',
+    chsiBadgeText: '未验证',
+    chsiBadgeClass: 'chsi-badge-idle',
+    chsiVerifying: false,
+    chsiVerifyBtnText: '联网验证',
+    chsiPanelShow: false,
+    chsiResult: null,
+    proofFiles: []
   },
 
   async onLoad() {
@@ -40,6 +48,83 @@ Page({
   onField(e) {
     const k = e.currentTarget.dataset.k;
     this.setData({ ['form.' + k]: e.detail.value }, () => this.refreshL1());
+  },
+  onChsiField(e) {
+    this._chsiVerifiedResult = null;
+    this.setData({
+      'form.chsiCode': e.detail.value,
+      chsiPanelShow: false,
+      chsiBadgeText: Chsi.STATUS.idle.text,
+      chsiBadgeClass: Chsi.STATUS.idle.cls,
+      chsiVerifyBtnText: '联网验证'
+    }, () => this.refreshL1());
+  },
+  openChsiArchive() {
+    Chsi.openChsiArchive();
+  },
+  async triggerChsiVerify() {
+    const f = this.data.form;
+    if (this.data.chsiVerifying) return;
+    try {
+      this.setData({
+        chsiVerifying: true,
+        chsiVerifyBtnText: '核验中...',
+        chsiBadgeText: Chsi.STATUS.verifying.text,
+        chsiBadgeClass: Chsi.STATUS.verifying.cls
+      });
+      const result = await Chsi.runChsiVerification({
+        realName: f.realName,
+        chsiCode: f.chsiCode,
+        university: f.university
+      });
+      this._chsiVerifiedResult = result;
+      this.setData({
+        chsiVerifying: false,
+        chsiVerifyBtnText: '已验证',
+        chsiBadgeText: Chsi.STATUS.ok.text,
+        chsiBadgeClass: Chsi.STATUS.ok.cls,
+        chsiPanelShow: true,
+        chsiResult: result
+      });
+      showToast(`学信网核验成功：【${result.name} - ${result.university}】在籍有效！`);
+    } catch (err) {
+      this.setData({
+        chsiVerifying: false,
+        chsiVerifyBtnText: '联网验证',
+        chsiBadgeText: Chsi.STATUS.idle.text,
+        chsiBadgeClass: Chsi.STATUS.idle.cls
+      });
+      showToast((err && err.message) || '学信网验证失败', 'warning');
+    }
+  },
+  chooseProofFiles() {
+    const that = this;
+    if (!wx.chooseMessageFile) {
+      showToast('当前基础库不支持文件选择', 'warning');
+      return;
+    }
+    wx.chooseMessageFile({
+      count: 5,
+      type: 'file',
+      extension: ['jpg', 'jpeg', 'png', 'pdf'],
+      success(res) {
+        const added = (res.tempFiles || []).map((f) => ({
+          id: Date.now() + Math.random(),
+          name: f.name,
+          size: ((f.size || 0) / (1024 * 1024)).toFixed(1) + 'MB',
+          tag: '新上传'
+        }));
+        that.setData({ proofFiles: (that.data.proofFiles || []).concat(added) });
+        if (added.length) showToast(`已添加 ${added.length} 份佐证材料`);
+      }
+    });
+  },
+  removeProof(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({
+      proofFiles: (this.data.proofFiles || []).filter((x) => x.id !== id)
+    });
+    showToast('已移除该佐证材料', 'warning');
   },
   onDegree(e) {
     const i = Number(e.detail.value);
@@ -109,6 +194,14 @@ Page({
     if (!s.chsiCode) { showToast('请输入有效的学信网在线验证码（通常为16位）！', 'error'); return; }
     if (!s.bankCard) { showToast('请填写 16-19 位银联借记卡号！', 'warning'); return; }
     if (!s.privacy) { showToast('请勾选《个人信息保护与法定核查授权条款》！', 'warning'); return; }
+    const f = this.data.form;
+    if (!this._chsiVerifiedResult) {
+      this._chsiVerifiedResult = Chsi.silentFallbackResult({
+        realName: f.realName,
+        chsiCode: f.chsiCode,
+        university: f.university
+      });
+    }
     this.setData({ step: 2 });
     showToast('L1 身份、学信网与清算账户签约通过！');
   },
@@ -129,6 +222,16 @@ Page({
       showToast('请提供试讲视频或板书讲义网盘提取链接！', 'warning');
       return;
     }
+    const chsiMeta = this._chsiVerifiedResult || Chsi.silentFallbackResult({
+      realName: f.realName,
+      chsiCode: f.chsiCode,
+      university: f.university
+    });
+    const proofFiles = (this.data.proofFiles || []).map((item) => ({
+      name: item.name,
+      size: item.size,
+      tag: item.tag || '佐证材料'
+    }));
     const saved = Storage.addMentor({
       realName: f.realName.trim(),
       phone: f.phone.trim(),
@@ -137,8 +240,10 @@ Page({
       province: '四川',
       degree: f.degree,
       chsiCode: f.chsiCode.trim(),
-      chsiStatus: '有效 (在籍)',
-      chsiMajor: f.university.trim() + ' · 在籍核验',
+      chsiStatus: (chsiMeta && chsiMeta.status) || '有效 (在籍)',
+      chsiMajor: (chsiMeta && chsiMeta.university)
+        ? (chsiMeta.university + ' · 在籍核验')
+        : (f.university.trim() + ' · 在籍核验'),
       publicTeacherCompliance: true,
       subjects: f.subjects.slice(),
       customSubjects: [],
@@ -147,7 +252,7 @@ Page({
       rateTierNote: '',
       scoreHighlight: (f.scoreHighlight || '').trim(),
       styles: f.styles.length ? f.styles.slice() : ['引导启发解题'],
-      proofFiles: [],
+      proofFiles: proofFiles,
       lectureUrl: f.lectureUrl.trim(),
       bankName: f.bankName,
       bankCardNumber: f.bankCardNumber.trim(),

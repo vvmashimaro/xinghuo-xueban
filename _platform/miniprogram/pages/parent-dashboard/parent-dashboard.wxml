@@ -1,17 +1,8 @@
-<view class="container">
+<view class="container container-with-fab">
   <view class="hero">
     <view class="hero-title">你好，{{parentName}}</view>
     <view class="hero-sub">{{studentNickname}} · {{studentGrade}} · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
     <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#5eead4;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
-  </view>
-
-  <!-- 快捷操作：画像更改 / 学情护照 / 个人中心 / 退出 -->
-  <view class="action-row">
-    <button class="action-btn action-primary" bindtap="goEditProfile">学员画像更改</button>
-    <button class="action-btn" bindtap="openPassport">查阅学情护照</button>
-    <button class="action-btn" bindtap="goAssessment">学科测评</button>
-    <button class="action-btn" bindtap="goProfile">个人中心</button>
-    <button class="action-btn action-muted" bindtap="goLogin">退出登录</button>
   </view>
 
   <!-- 托管钱包示意 -->
@@ -112,6 +103,7 @@
         <view class="avatar">{{item.avatarLetter}}</view>
         <view>
           <view style="font-weight:900;">{{item.maskedName}}
+            <text class="badge badge-teal" wx:if="{{item.chsiEnrolled}}">学信网在籍</text>
             <text class="badge badge-teal" wx:if="{{item.isTopMatch}}">{{item.tagBadge}}</text>
           </view>
           <view class="muted">{{item.university}} · {{item.degreeShort}}</view>
@@ -133,6 +125,38 @@
   </view>
 
   <view wx:if="{{tutors.length===0}}" class="card muted" style="text-align:center;">当前筛选条件下暂无匹配导师，请放宽时薪或切换网点。</view>
+
+<view class="fab-settings" bindtap="openSettingsDrawer">☰</view>
+
+<view class="settings-drawer-mask" wx:if="{{settingsDrawerShow}}" bindtap="closeSettingsDrawer"></view>
+<view class="settings-drawer" wx:if="{{settingsDrawerShow}}">
+  <view class="settings-drawer-head">
+    <text class="settings-drawer-title">家长功能</text>
+    <text class="settings-item-arrow" bindtap="closeSettingsDrawer">✕</text>
+  </view>
+  <scroll-view scroll-y style="flex:1;">
+    <view class="settings-section-title">学情与档案</view>
+    <view class="settings-item" data-url="/pages/parent-register/parent-register?mode=edit" bindtap="goSettingsPage">
+      <text>学员画像更改</text><text class="settings-item-arrow">›</text>
+    </view>
+    <view class="settings-item" data-url="/pages/parent-settings-passport/parent-settings-passport" bindtap="goSettingsPage">
+      <text>查阅学情护照</text><text class="settings-item-arrow">›</text>
+    </view>
+    <view class="settings-item" data-url="/pages/parent-settings-assessment/parent-settings-assessment" bindtap="goSettingsPage">
+      <text>学科测评登记</text><text class="settings-item-arrow">›</text>
+    </view>
+    <view class="settings-section-title">账户</view>
+    <view class="settings-item" data-url="/pages/profile/profile" bindtap="goSettingsPage">
+      <text>个人中心</text><text class="settings-item-arrow">›</text>
+    </view>
+    <view class="settings-item" data-url="/pages/privacy/privacy" bindtap="goSettingsPage">
+      <text>个人信息保护政策</text><text class="settings-item-arrow">›</text>
+    </view>
+    <view class="settings-item settings-item-muted" bindtap="goLogin">
+      <text>退出登录</text><text class="settings-item-arrow">›</text>
+    </view>
+  </scroll-view>
+</view>
 
   <!-- IoT 面板（FEATURE_SMART_WAREHOUSE） -->
   <view class="card" wx:if="{{featureSmartWarehouse}}">

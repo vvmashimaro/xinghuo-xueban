@@ -49,8 +49,27 @@
         </picker>
       </view>
       <view class="field">
-        <text class="label">学信网在线验证码</text>
-        <input class="input" placeholder="例：A98F72KL50198821" placeholder-class="input-placeholder" value="{{form.chsiCode}}" data-k="chsiCode" bindinput="onField" />
+        <view class="row-between" style="margin-bottom:8rpx;">
+          <text class="label" style="margin:0;">学信网在线验证码 (16位)</text>
+          <text class="chsi-badge {{chsiBadgeClass}}">{{chsiBadgeText}}</text>
+        </view>
+        <view class="chsi-row">
+          <input class="input" placeholder="例：A98F72KL50198821" placeholder-class="input-placeholder" value="{{form.chsiCode}}" data-k="chsiCode" bindinput="onChsiField" />
+        </view>
+        <view class="flex-row gap-8" style="margin-top:12rpx;">
+          <button class="btn-ghost" size="mini" style="flex:1;" bindtap="openChsiArchive">去学信网查验证码</button>
+          <button class="btn-primary" size="mini" style="flex:1;" bindtap="triggerChsiVerify" disabled="{{chsiVerifying}}">{{chsiVerifyBtnText}}</button>
+        </view>
+        <view class="muted" style="margin-top:8rpx;">登录学信档案，申请「教育部学籍在线验证报告」，复制报告上的在线验证码</view>
+        <view class="chsi-panel" wx:if="{{chsiPanelShow}}">
+          <view style="font-weight:800;color:#047857;margin-bottom:12rpx;">学信网《教育部学籍在线验证报告》解析成功</view>
+          <view class="chsi-panel-grid">
+            <view><text class="chsi-panel-label">核验姓名</text><text class="chsi-panel-val">{{chsiResult.name}}</text></view>
+            <view><text class="chsi-panel-label">学籍高校</text><text class="chsi-panel-val">{{chsiResult.university}}</text></view>
+            <view><text class="chsi-panel-label">学籍状态</text><text class="chsi-panel-val" style="color:#047857;">{{chsiResult.status}}</text></view>
+            <view><text class="chsi-panel-label">报告有效期</text><text class="chsi-panel-val">{{chsiResult.expire}}</text></view>
+          </view>
+        </view>
       </view>
       <view class="field">
         <text class="label">开户银行</text>
@@ -111,6 +130,24 @@
         <text class="label">教学风格</text>
         <view class="chip-wrap">
           <view wx:for="{{styleChips}}" wx:key="name" class="chip {{item.on?'chip-on':''}}" data-v="{{item.name}}" bindtap="toggleStyle">{{item.name}}</view>
+        </view>
+      </view>
+      <view class="field">
+        <view class="row-between">
+          <text class="label">资历证明与佐证材料</text>
+          <text class="muted">已选 {{proofFiles.length}} 项</text>
+        </view>
+        <view class="muted">选填 · 成绩单/竞赛证书等可提升审核权重（JPG/PNG/PDF）</view>
+        <view class="proof-upload-zone" bindtap="chooseProofFiles">
+          <view style="font-weight:800;color:#0f766e;">点击选择文件上传</view>
+          <view class="muted" style="margin-top:6rpx;">演示环境仅存文件名与大小，与 Web 建档逻辑一致</view>
+        </view>
+        <view wx:if="{{proofFiles.length}}">
+          <view class="proof-chip" wx:for="{{proofFiles}}" wx:key="id">
+            <text class="proof-chip-name">{{item.name}}</text>
+            <text class="muted">{{item.size}}</text>
+            <text style="color:#ef4444;" data-id="{{item.id}}" catchtap="removeProof">×</text>
+          </view>
         </view>
       </view>
       <view class="field">
