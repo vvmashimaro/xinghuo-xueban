@@ -336,7 +336,8 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 });
 
 /* ========== 微信手机号授权（小程序）========== */
-app.post('/api/wx/phone', requireAuth, async (req, res) => {
+// 无需登录：凭微信 getPhoneNumber 一次性 code 换取验证票据（与短信 verify 相同，供登录/注册/绑定）
+app.post('/api/wx/phone', async (req, res) => {
   try {
     const { code } = req.body || {};
     

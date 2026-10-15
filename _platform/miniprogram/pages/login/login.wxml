@@ -35,9 +35,28 @@
       </text>
     </view>
 
-    <button class="btn-primary" style="width:100%;" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+    <button class="btn-primary" style="width:100%;" bindtap="onSubmit" loading="{{submitting && !autoEntering}}" disabled="{{submitting}}">
       安全登录
     </button>
+
+    <view class="login-divider">
+      <view class="login-divider-line"></view>
+      <text class="login-divider-text">或</text>
+      <view class="login-divider-line"></view>
+    </view>
+
+    <button class="btn-wechat-phone"
+            open-type="getPhoneNumber"
+            bindgetphonenumber="onWechatPhoneLogin"
+            loading="{{submitting && !autoEntering}}"
+            disabled="{{submitting}}">
+      本机号快捷登录（微信授权）
+    </button>
+    <view class="muted wechat-phone-hint">使用当前微信绑定手机号登录，无需短信验证码</view>
+
+    <view class="auto-enter-hint" wx:if="{{autoEntering}}">
+      <text class="muted">正在验证登录状态…</text>
+    </view>
 
     <view class="fallback" wx:if="{{showFallback}}">
       <view class="muted" style="margin-bottom:12rpx;">自动跳转未完成，请手动进入：</view>

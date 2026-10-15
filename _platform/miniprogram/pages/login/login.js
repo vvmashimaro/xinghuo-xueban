@@ -19,6 +19,23 @@ const ROLE_META = {
   }
 };
 
+async function resolvePostLoginTarget(user) {
+  if (user.role === 'mentor') {
+    await Storage.hydrateFromServer();
+    const mentor = await Storage.getCurrentMentor();
+    if (mentor && mentor.status === 'approved') {
+      return { url: '/pages/mentor-dashboard/mentor-dashboard', title: '导师工作台', toast: '欢迎回来' };
+    }
+    return { url: '/pages/mentor-onboard/mentor-onboard', title: '导师入库招募页', toast: '首次登录，请先完成导师建档认证' };
+  }
+  await Storage.hydrateFromServer();
+  const parent = await Storage.getCurrentParent();
+  if (parent) {
+    return { url: '/pages/parent-dashboard/parent-dashboard', title: '家长主控与智能匹配', toast: '欢迎回来' };
+  }
+  return { url: '/pages/parent-register/parent-register?mode=create', title: '学情建档与注册', toast: '首次登录，请先完善学员学情建档' };
+}
+
 Page({
   data: {
     role: 'mentor',
@@ -31,6 +48,7 @@ Page({
     smsCode: '',
     agreed: false,
     submitting: false,
+    autoEntering: false,
     showFallback: false,
     fallbackUrl: '',
     fallbackTitle: '',
@@ -40,6 +58,7 @@ Page({
   async onLoad() {
     if (Storage.ready) await Storage.ready();
     Storage.seedIfEmpty();
+    await this.tryAutoEnter();
   },
 
   onUnload() {
@@ -63,14 +82,36 @@ Page({
   onSms(e) { this.setData({ smsCode: e.detail.value }); },
   onToggleAgree() { this.setData({ agreed: !this.data.agreed }); },
 
-  onShowProtocol(e) { 
+  onShowProtocol(e) {
     e.stopPropagation();
-    showToast('已调阅《星火学伴综合服务协议》'); 
+    showToast('已调阅《星火学伴综合服务协议》');
   },
-  
-  onShowPrivacy(e) { 
+
+  onShowPrivacy(e) {
     e.stopPropagation();
     wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
+  async tryAutoEnter() {
+    if (this._autoEnterDone || this.data.submitting) return;
+    if (!Storage.isLoggedIn()) return;
+
+    this.setData({ autoEntering: true });
+    const session = await Storage.validateSession();
+    if (!session.valid || !session.user) {
+      this.setData({ autoEntering: false });
+      return;
+    }
+
+    this._autoEnterDone = true;
+    try {
+      const target = await resolvePostLoginTarget(session.user);
+      this.navigateReliably(target.url);
+    } catch (e) {
+      console.warn('[Login] auto enter failed', e);
+      this._autoEnterDone = false;
+      this.setData({ autoEntering: false });
+    }
   },
 
   async onSendSms() {
@@ -87,7 +128,7 @@ Page({
 
       if (result.success) {
         showToast(result.message || '短信验证码已发送，请查收');
-        
+
         this.setData({ smsCooldown: 60 });
         if (this._smsTimer) clearInterval(this._smsTimer);
         this._smsTimer = setInterval(() => {
@@ -128,6 +169,36 @@ Page({
     });
   },
 
+  handleNotRegistered(role, msg) {
+    showToast(msg, 'warning');
+    if (role === 'parent') {
+      setTimeout(() => wx.navigateTo({ url: '/pages/parent-register/parent-register?mode=create' }), 600);
+    } else if (role === 'mentor') {
+      setTimeout(() => wx.navigateTo({ url: '/pages/mentor-onboard/mentor-onboard' }), 600);
+    }
+  },
+
+  async completeLoginSuccess(loginResult, role) {
+    const user = loginResult.user;
+    const target = await resolvePostLoginTarget(user);
+
+    if (target.toast) {
+      showToast(target.toast);
+    }
+
+    this.setData({
+      fallbackUrl: target.url,
+      fallbackTitle: target.title
+    });
+
+    setTimeout(() => {
+      this.navigateReliably(target.url);
+      this._navWatch = setTimeout(() => {
+        this.setData({ submitting: false, showFallback: true, autoEntering: false });
+      }, 2500);
+    }, 350);
+  },
+
   async onSubmit() {
     const role = this.data.role;
     const mobile = (this.data.mobile || '').trim();
@@ -148,9 +219,8 @@ Page({
     this.setData({ submitting: true, showFallback: false });
 
     try {
-      // Step 1: 验证短信码获取票据
       const verifyResult = await Storage.verifySMS(mobile, code, 'login');
-      
+
       if (!verifyResult.success) {
         this.setData({ submitting: false });
         showToast(verifyResult.error || '验证码错误', 'error');
@@ -164,66 +234,69 @@ Page({
         return;
       }
 
-      // Step 2: 使用票据登录
       const loginResult = await Storage.login(ticket, role);
 
       if (!loginResult.success) {
         this.setData({ submitting: false });
         if (loginResult.notRegistered) {
-          const msg = loginResult.error || '该手机号未注册，请先完成注册';
-          showToast(msg, 'warning');
-          if (role === 'parent') {
-            setTimeout(() => wx.navigateTo({ url: '/pages/parent-register/parent-register?mode=create' }), 600);
-          } else if (role === 'mentor') {
-            setTimeout(() => wx.navigateTo({ url: '/pages/mentor-onboard/mentor-onboard' }), 600);
-          }
+          this.handleNotRegistered(role, loginResult.error || '该手机号未注册，请先完成注册');
           return;
         }
         showToast(loginResult.error || '登录失败', 'error');
         return;
       }
 
-      // Step 3: 登录成功，确定跳转目标
-      const user = loginResult.user;
-      let target;
-
-      if (user.role === 'mentor') {
-        await Storage.hydrateFromServer();
-        const mentor = await Storage.getCurrentMentor();
-        if (mentor && mentor.status === 'approved') {
-          target = { url: '/pages/mentor-dashboard/mentor-dashboard', title: '导师工作台', toast: '欢迎回来' };
-        } else {
-          target = { url: '/pages/mentor-onboard/mentor-onboard', title: '导师入库招募页', toast: '首次登录，请先完成导师建档认证' };
-        }
-      } else {
-        await Storage.hydrateFromServer();
-        const parent = await Storage.getCurrentParent();
-        if (parent) {
-          target = { url: '/pages/parent-dashboard/parent-dashboard', title: '家长主控与智能匹配', toast: '欢迎回来' };
-        } else {
-          target = { url: '/pages/parent-register/parent-register?mode=create', title: '学情建档与注册', toast: '首次登录，请先完善学员学情建档' };
-        }
-      }
-
-      if (target.toast) {
-        showToast(target.toast);
-      }
-
-      this.setData({
-        fallbackUrl: target.url,
-        fallbackTitle: target.title
-      });
-
-      setTimeout(() => {
-        this.navigateReliably(target.url);
-        this._navWatch = setTimeout(() => {
-          this.setData({ submitting: false, showFallback: true });
-        }, 2500);
-      }, 350);
+      await this.completeLoginSuccess(loginResult, role);
     } catch (error) {
       console.error('Login error:', error);
       this.setData({ submitting: false });
       showToast(error.message || '登录失败', 'error');
+    }
+  },
+
+  async onWechatPhoneLogin(e) {
+    if (!this.data.agreed) {
+      showToast('请阅读并勾选服务协议与隐私政策！', 'warning');
+      return;
+    }
+
+    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+      showToast('已取消授权', 'warning');
+      try {
+        await Storage.auditLog('authorize_deny', 'wechat_auth_login', false);
+      } catch (err) {
+        console.warn('[Audit Log Error]', err);
+      }
+      return;
+    }
+
+    const code = e.detail.code;
+    if (!code) {
+      showToast('未获取到授权凭证，请重试或使用短信登录', 'warning');
+      return;
+    }
+
+    const role = this.data.role;
+    this.setData({ submitting: true, showFallback: false });
+
+    try {
+      const loginResult = await Storage.loginWithWeChatPhoneCode(code, role);
+
+      if (!loginResult.success) {
+        this.setData({ submitting: false });
+        if (loginResult.notRegistered) {
+          this.handleNotRegistered(role, loginResult.error || '该手机号未注册，请先完成注册');
+          return;
+        }
+        showToast(loginResult.error || '本机号登录失败', 'error');
+        return;
+      }
+
+      await this.completeLoginSuccess(loginResult, role);
+    } catch (error) {
+      console.error('[WeChat Phone Login Error]', error);
+      this.setData({ submitting: false });
+      showToast(error.message || '本机号登录失败，请使用短信登录', 'error');
     }
   },
 
