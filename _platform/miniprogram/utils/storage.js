@@ -12,6 +12,7 @@ const KEYS = {
   mentors: 'xh_mentors_v1',
   parents: 'xh_parents_v1',
   bookings: 'xh_bookings_v1',
+  session: 'xh_session_v1',
   contracts: 'xh_contracts_v1',
   seeded: 'xh_seeded_v1'
 };
@@ -62,6 +63,63 @@ const DEFAULT_SLOTS = [
 const SPACE_OPTIONS = [
   '青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'
 ];
+
+const PARENT_TARGET_SUBJECTS_DEFAULT = [
+  '数学', '物理', '英语', '化学', '语文', '体育', '全科陪读答疑'
+];
+
+function getSeedBookings() {
+  return [
+    {
+      id: 'BK-SEED-001', mentorId: 'AP-8802', tutorId: 'AP-8802', tutorName: '李老师',
+      parentId: 'PAR-DEMO-001', parentName: '刘女士', parentPhone: '13980889211',
+      studentNickname: '乐乐同学', studentGrade: '初三 (中考冲刺)', subject: '初中物理',
+      space: '高新大源中央微网点', schedule: '2026-09-20 周六 14:00-16:00',
+      timeSlot: '周六 14:00-16:00', amount: 220, hours: 2, status: 'pending_accept',
+      createdAt: '2026-09-14 16:20', declineReason: ''
+    }
+  ];
+}
+
+function getSeedMentors() {
+  return [
+    {
+      id: 'AP-8802', code: 'CD-2026-8810', realName: '李思源', phone: '13880123456',
+      university: '电子科技大学', subjects: ['初中物理', '初中数学', '初中全科答疑'],
+      customSubjects: [], hourlyRate: 110, styles: ['基础漏洞重构', '错题本高效提分法'],
+      status: 'approved', evalGrade: 'V1 级标准导师', spacePreference: '高新大源中央微网点',
+      scoreHighlight: '高考理综278分 · 物理满分110', publicTeacherCompliance: true,
+      submitTime: '2026-09-09 19:40', reviewComment: '', proofFiles: [], lectureUrl: '#'
+    },
+    {
+      id: 'AP-8803', code: 'CD-2026-8811', realName: '王艺霖', phone: '15928114422',
+      university: '西南交通大学', subjects: ['小学英语', '初中英语', '考研英语(一/二)'],
+      customSubjects: [], hourlyRate: 120, styles: ['引导启发解题', '耐心督学陪读'],
+      status: 'approved', evalGrade: 'V2 级金牌导师', spacePreference: '青羊金沙文化微网点',
+      scoreHighlight: '高考英语146分', publicTeacherCompliance: true,
+      submitTime: '2026-09-09 20:15', reviewComment: '', proofFiles: [], lectureUrl: '#'
+    }
+  ];
+}
+
+function getSeedParent() {
+  return {
+    id: 'PAR-DEMO-001', parentName: '刘女士', parentRole: '妈妈', phone: '13980889211',
+    studentNickname: '乐乐同学', studentGrade: '初三 (中考冲刺)', cityDistrict: '青羊区',
+    subjects: ['数学', '物理'],
+    subjectPlans: {
+      '数学': { weakPoints: ['二次函数图象性质与最值求法'], pacing: '查缺补漏 · 阶段单元复盘', pains: ['畏难情绪遇压轴就慌'] },
+      '物理': { weakPoints: ['动态电路欧姆定律综合计算'], pacing: '紧贴校内进度 · 随堂查漏补缺', pains: ['概念模糊公式乱用'] }
+    },
+    syllabusTopics: ['二次函数图象性质与最值求法', '动态电路欧姆定律综合计算'],
+    pacingMode: '查缺补漏 · 阶段单元复盘',
+    budgetMin: 100, budgetMax: 160, budgetRate: 130,
+    selectedSpace: '青羊金沙文化微网点',
+    targetGoal: '希望在中考前加强几何综合证明与函数动点题型。',
+    painTags: ['畏难情绪遇压轴就慌', '概念模糊公式乱用'],
+    createdAt: '2026-09-10 09:00', updatedAt: '2026-09-10 09:00'
+  };
+}
 
 function _availabilityToSlotLabels(availability) {
   const labels = [];
@@ -198,6 +256,55 @@ const StorageService = {
   ready() { return _readyPromise; },
   isHydrated() { return _hydrated; },
 
+  seedIfEmptyLocal() {
+    const mentors = _read(KEYS.mentors, null);
+    if (!mentors || !Array.isArray(mentors) || mentors.length === 0) {
+      _write(KEYS.mentors, getSeedMentors().map(_withMentorDefaults));
+    } else {
+      let needWrite = false;
+      const patched = mentors.map((m) => {
+        if (!m.availableSlots || !m.availableSlots.length || !m.preferredSpaces) {
+          needWrite = true;
+          return _withMentorDefaults(m);
+        }
+        return m;
+      });
+      if (needWrite) _write(KEYS.mentors, patched);
+    }
+    const parents = _read(KEYS.parents, null);
+    if (!parents || !Array.isArray(parents) || parents.length === 0) {
+      _write(KEYS.parents, [getSeedParent()]);
+    }
+    const bookings = _read(KEYS.bookings, null);
+    if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
+      _write(KEYS.bookings, getSeedBookings());
+    }
+    if (!_read(KEYS.seeded, false)) _write(KEYS.seeded, true);
+    return true;
+  },
+
+  seedIfEmpty() {
+    this.seedIfEmptyLocal();
+    if (!_hydrated && this.isLoggedIn()) {
+      this.hydrateFromServer();
+    }
+    return true;
+  },
+
+  setSession(session) {
+    _write(KEYS.session, session || {});
+    return true;
+  },
+
+  getSession() {
+    return _read(KEYS.session, null);
+  },
+
+  clearSession() {
+    try { wx.removeStorageSync(KEYS.session); } catch (e) { /* ignore */ }
+    return true;
+  },
+
   getAuthToken() {
     return _read(KEYS.authToken, null);
   },
@@ -237,6 +344,17 @@ const StorageService = {
       const result = await _request('POST', '/api/auth/login', { ticket, role });
       if (result.success && result.token) {
         this.setAuthToken(result.token);
+        const user = result.user || {};
+        const session = this.getSession() || {};
+        session.role = role || user.role || session.role;
+        const uid = user.userId || user.id;
+        if (uid) {
+          if (session.role === 'parent') session.parentId = uid;
+          if (session.role === 'mentor') session.mentorId = uid;
+        }
+        if (user.profile && user.profile.phone) session.phone = user.profile.phone;
+        else if (user.phone && !String(user.phone).includes('*')) session.phone = user.phone;
+        this.setSession(session);
         return { success: true, user: result.user };
       }
       return { success: false, error: result.error || '登录失败' };
@@ -254,6 +372,15 @@ const StorageService = {
       const result = await _request('POST', '/api/auth/register', { ticket, role, profile });
       if (result.success && result.token) {
         this.setAuthToken(result.token);
+        const user = result.user || {};
+        if (role === 'parent' && profile) {
+          this.saveParent(profile);
+        }
+        const session = this.getSession() || {};
+        session.role = role || user.role || 'parent';
+        if (user.userId) session.parentId = user.userId;
+        if (profile && profile.phone) session.phone = profile.phone;
+        this.setSession(session);
         return { success: true, user: result.user };
       }
       return { success: false, error: result.error || '注册失败' };
@@ -282,41 +409,59 @@ const StorageService = {
   },
 
   async hydrateFromServer() {
-    if (!this.isLoggedIn()) {
-      console.warn('[StorageService] Not logged in, skipping hydration');
-      if (_readyResolve) { _readyResolve(false); _readyResolve = null; }
-      return null;
-    }
-
     try {
-      const user = await this.getCurrentUser();
-      if (!user) {
-        if (_readyResolve) { _readyResolve(false); _readyResolve = null; }
+      if (!this.isLoggedIn()) {
+        this.seedIfEmptyLocal();
+        _hydrated = true;
         return null;
       }
 
-      const [mentors, parents, bookings] = await Promise.all([
-        _apiSafe('GET', '/api/mentors', null) || [],
-        _apiSafe('GET', '/api/parents', null) || [],
-        _apiSafe('GET', '/api/bookings', null) || []
-      ]);
+      const user = await this.getCurrentUser();
+      if (!user) {
+        this.seedIfEmptyLocal();
+        _hydrated = true;
+        return null;
+      }
 
-      _write(KEYS.mentors, (mentors || []).map(_withMentorDefaults));
-      _write(KEYS.parents, parents || []);
-      _write(KEYS.bookings, bookings || []);
+      const mentors = await _apiSafe('GET', '/api/mentors', null);
+      const bookings = await _apiSafe('GET', '/api/bookings', null);
+      let parents = null;
+      if (user.role === 'parent') {
+        parents = await _apiSafe('GET', '/api/parents', null);
+      }
+
+      if (mentors) _write(KEYS.mentors, (mentors || []).map(_withMentorDefaults));
+      if (parents) _write(KEYS.parents, parents || []);
+      if (bookings) _write(KEYS.bookings, bookings || []);
+
+      const session = this.getSession() || {};
+      session.role = user.role || session.role;
+      if (user.userId) {
+        if (user.role === 'parent') session.parentId = user.userId;
+        if (user.role === 'mentor') session.mentorId = user.userId;
+      }
+      if (user.profile && user.profile.phone) session.phone = user.profile.phone;
+      this.setSession(session);
 
       _hydrated = true;
-      if (_readyResolve) { _readyResolve(true); _readyResolve = null; }
-      return { mentors, parents, bookings };
+      return { mentors, parents, bookings, user };
     } catch (e) {
       console.warn('[StorageService] hydrate fail', e);
-      _hydrated = false;
-      if (_readyResolve) { _readyResolve(false); _readyResolve = null; }
+      this.seedIfEmptyLocal();
+      _hydrated = true;
       return null;
+    } finally {
+      if (_readyResolve) {
+        _readyResolve(true);
+        _readyResolve = null;
+      }
     }
   },
 
-  getMentors() { return _read(KEYS.mentors, []); },
+  getMentors() {
+    this.seedIfEmptyLocal();
+    return _read(KEYS.mentors, []);
+  },
   saveMentors(list) { return _write(KEYS.mentors, list || []); },
   getMentorById(id) { return this.getMentors().find((m) => m.id === id) || null; },
   getMentorByPhone(phone) {
@@ -357,7 +502,44 @@ const StorageService = {
   getPendingMentors() { return this.getMentors().filter((m) => m.status === 'pending'); },
   getApprovedMentors() { return this.getMentors().filter((m) => m.status === 'approved'); },
 
-  getParents() { return _read(KEYS.parents, []); },
+  getParents() {
+    this.seedIfEmptyLocal();
+    return _read(KEYS.parents, []);
+  },
+
+  addParent(profile) {
+    return this.saveParent(profile);
+  },
+
+  saveParent(profile) {
+    const list = this.getParents();
+    const incoming = this.normalizeParentProfile(profile || {}) || {};
+    let idx = -1;
+    if (incoming.id) idx = list.findIndex((p) => p.id === incoming.id);
+    if (idx < 0 && incoming.phone) {
+      const phone = String(incoming.phone).trim();
+      idx = list.findIndex((p) => p.phone && String(p.phone).trim() === phone);
+    }
+    const record = Object.assign({
+      id: (idx >= 0 && list[idx].id) || incoming.id || _uid('PAR'),
+      createdAt: (idx >= 0 && list[idx].createdAt) || _now()
+    }, incoming, { updatedAt: _now() });
+    if (idx >= 0) {
+      record.id = list[idx].id;
+      record.createdAt = list[idx].createdAt || record.createdAt;
+      list[idx] = record;
+    } else {
+      list.unshift(record);
+    }
+    _write(KEYS.parents, list);
+    const session = this.getSession() || {};
+    session.role = 'parent';
+    session.parentId = record.id;
+    session.phone = record.phone;
+    this.setSession(session);
+    _apiSafe('POST', '/api/parents', record);
+    return record;
+  },
 
   normalizeParentProfile(p) {
     if (!p || typeof p !== 'object') return p;
@@ -409,10 +591,25 @@ const StorageService = {
   },
 
   async getCurrentParent() {
-    const user = await this.getCurrentUser();
-    if (!user || user.role !== 'parent') return null;
+    this.seedIfEmptyLocal();
+    const session = this.getSession();
     const parents = this.getParents();
-    const found = parents.find((p) => p.phone === user.phone) || null;
+    let found = null;
+    if (session && session.parentId) {
+      found = parents.find((p) => p.id === session.parentId) || null;
+    }
+    if (!found && session && session.phone) {
+      found = parents.find((p) => p.phone === session.phone) || null;
+    }
+    if (!found && this.isLoggedIn()) {
+      const user = await this.getCurrentUser();
+      if (user && user.role === 'parent') {
+        const uid = user.userId || (user.profile && user.profile.id);
+        if (uid) found = parents.find((p) => p.id === uid) || null;
+        if (!found && user.profile) found = this.normalizeParentProfile(user.profile);
+      }
+    }
+    if (!found && parents.length) found = parents[0];
     return found ? this.normalizeParentProfile(found) : null;
   },
 
@@ -829,5 +1026,11 @@ const StorageService = {
     }
   }
 };
+
+try {
+  StorageService.seedIfEmptyLocal();
+} catch (e) {
+  console.warn('[StorageService] local seed fail', e);
+}
 
 module.exports = StorageService;

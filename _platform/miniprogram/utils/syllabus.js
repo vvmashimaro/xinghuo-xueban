@@ -49,6 +49,19 @@ function getTopicsForSubject(subjectName, gradeText) {
   return db[subjectName] || db['数学'] || [];
 }
 
+const PARENT_TARGET_SUBJECTS_DEFAULT = [
+  '数学', '物理', '英语', '化学', '语文', '体育', '全科陪读答疑'
+];
+
+/** 按年级考纲分类返回家长可选目标学科（与 Web 注册页一致） */
+function getParentTargetSubjectsForGrade(gradeText) {
+  const category = getSyllabusCategory(gradeText);
+  const db = SYLLABUS_DATABASE[category] || SYLLABUS_DATABASE.junior;
+  const fromSyllabus = Object.keys(db || {});
+  if (fromSyllabus.length) return fromSyllabus;
+  return PARENT_TARGET_SUBJECTS_DEFAULT.slice();
+}
+
 const PAIN_OPTIONS = [
   '注意力不集中易走神',
   '畏难情绪遇压轴就慌',
@@ -80,6 +93,8 @@ module.exports = {
   SYLLABUS_DATABASE,
   getTopicsForSubject,
   getSyllabusCategory,
+  getParentTargetSubjectsForGrade,
+  PARENT_TARGET_SUBJECTS_DEFAULT,
   PAIN_OPTIONS,
   PACING_OPTIONS,
   AGREEMENT_TEXT

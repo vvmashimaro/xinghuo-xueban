@@ -138,6 +138,17 @@
     #subjectCheckboxGroup label {
       font-size: 16px !important;
     }
+    .field-readonly {
+      background: #f8fafc !important;
+      color: #475569 !important;
+      cursor: default;
+      pointer-events: none;
+    }
+    .field-readonly-label {
+      border-color: #e2e8f0 !important;
+      background: #f8fafc !important;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body class="bg-slate-100/90 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
@@ -281,17 +292,22 @@
                STEP 1: 监护人身份与孩子学段基础信息
                ================================================================= -->
           <div id="stepCard1" class="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4.5 fade-in">
-            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-2">
               <div>
                 <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
                   <span class="w-2 h-4 bg-teal-600 rounded-sm"></span>
                   监护人信息与孩子基础学段
                 </h2>
-                <p class="text-[11px] text-slate-400 mt-0.5">
+                <p class="text-[11px] text-slate-400 mt-0.5" id="step1Hint">
                   用于建立家庭辅导电子档案，严格遵循隐私保护指引
                 </p>
               </div>
-              <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">步骤 1/3</span>
+              <div class="flex items-center gap-2 shrink-0">
+                <button type="button" id="btnUnlockStep1" onclick="unlockProfileStep1()" class="hidden text-[11px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                  修改
+                </button>
+                <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">步骤 1/3</span>
+              </div>
             </div>
 
             <!-- 家长姓名与称谓角色 -->
@@ -331,8 +347,16 @@
               </div>
             </div>
 
-            <!-- 手机号与免密验证码 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- 手机号与免密验证码（更新画像模式下手机号只读，无需短信验证） -->
+            <div id="parentPhoneLockedBlock" class="hidden">
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">登录手机号（不可更改）</label>
+              <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                <span class="text-slate-400 text-xs font-bold">+86</span>
+                <span id="parentPhoneLockedDisplay" class="font-mono text-sm font-semibold text-teal-800">—</span>
+                <span class="text-[10px] text-slate-400 ml-auto">账号绑定号码</span>
+              </div>
+            </div>
+            <div id="parentPhoneAuthBlock" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
                   <span class="hidden" data-warehouse-only>手机号码（接收匹配与开仓短信）</span><span data-warehouse-off>手机号码（接收匹配与约课短信）</span><span class="text-rose-500">*</span>
@@ -343,7 +367,7 @@
                 </div>
               </div>
 
-              <div>
+              <div id="parentSmsBlock">
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
                   短信免密校验码 <span class="text-rose-500">*</span>
                 </label>
@@ -1163,6 +1187,11 @@
     /* ---------- 分学科配置状态 ---------- */
     /** @type {Object.<string, {weakPoints:string[], pacing:string, pains:string[]}>} */
     let subjectPlans = {};
+    /** 已登录家长更新学情（?mode=edit） */
+    let profileUpdateMode = false;
+    let editingParentId = null;
+    let step1FieldsLocked = false;
+    let storedParentPhone = '';
     let wizardSubject = null;
     let wizardStep = 1;
     let wizardOpening = false; // 防止关闭时误触发
@@ -1735,6 +1764,147 @@
     /* ==========================================================================
        表单提交与智能匹配弹窗
        ========================================================================== */
+    function getPageModeHint() {
+      try {
+        return (new URLSearchParams(window.location.search).get('mode') || '').toLowerCase();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function maskPhoneDisplay(phone) {
+      const p = String(phone || '').trim();
+      if (p.length === 11) return p.slice(0, 3) + '****' + p.slice(7);
+      return p || '—';
+    }
+
+    function setStep1FieldsLocked(locked) {
+      step1FieldsLocked = !!locked;
+      const ids = ['parentName', 'studentNickname', 'studentGrade'];
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (locked) el.classList.add('field-readonly');
+        else el.classList.remove('field-readonly');
+        el.readOnly = locked && el.tagName === 'INPUT';
+        el.disabled = locked && el.tagName === 'SELECT';
+      });
+      document.querySelectorAll('input[name="parentRole"]').forEach((r) => {
+        const label = r.closest('label');
+        if (label) {
+          if (locked) label.classList.add('field-readonly-label');
+          else label.classList.remove('field-readonly-label');
+        }
+        r.disabled = locked;
+      });
+      document.querySelectorAll('input[name="cityDistrict"]').forEach((r) => {
+        const label = r.closest('label');
+        if (label) {
+          if (locked) label.classList.add('field-readonly-label');
+          else label.classList.remove('field-readonly-label');
+        }
+        r.disabled = locked;
+      });
+      const unlockBtn = document.getElementById('btnUnlockStep1');
+      if (unlockBtn) {
+        if (profileUpdateMode && locked) unlockBtn.classList.remove('hidden');
+        else unlockBtn.classList.add('hidden');
+      }
+    }
+
+    function unlockProfileStep1() {
+      if (!profileUpdateMode) return;
+      setStep1FieldsLocked(false);
+      showToast('已解锁基础信息，修改后请保存画像', 'success');
+    }
+
+    function applyParentProfileToForm(parent) {
+      if (!parent) return;
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+      setVal('parentName', parent.parentName || '');
+      setVal('studentNickname', parent.studentNickname || '');
+      if (parent.studentGrade) setVal('studentGrade', parent.studentGrade);
+      if (parent.targetGoal != null) setVal('targetGoal', parent.targetGoal || '');
+      if (parent.parentRole) {
+        const r = document.querySelector('input[name="parentRole"][value="' + parent.parentRole + '"]');
+        if (r) r.checked = true;
+      }
+      if (parent.cityDistrict) {
+        const r = document.querySelector('input[name="cityDistrict"][value="' + parent.cityDistrict + '"]');
+        if (r) r.checked = true;
+      }
+      if (parent.selectedSpace) {
+        const r = document.querySelector('input[name="selectedSpace"][value="' + parent.selectedSpace + '"]');
+        if (r) r.checked = true;
+      }
+      if (parent.budgetMin != null) {
+        const el = document.getElementById('budgetMinRange');
+        if (el) el.value = String(parent.budgetMin);
+      }
+      if (parent.budgetMax != null) {
+        const el = document.getElementById('budgetMaxRange');
+        if (el) el.value = String(parent.budgetMax);
+      }
+      const agree = document.getElementById('parentAgreementCheck');
+      if (agree) agree.checked = true;
+      subjectPlans = parent.subjectPlans && typeof parent.subjectPlans === 'object' ? JSON.parse(JSON.stringify(parent.subjectPlans)) : {};
+      const subjects = parent.subjects && parent.subjects.length ? parent.subjects : Object.keys(subjectPlans);
+      document.querySelectorAll('input[name="targetSubject"]').forEach((cb) => {
+        cb.checked = subjects.indexOf(cb.value) >= 0;
+      });
+      syncBudgetFill();
+      updateGradeLabel();
+      renderSubjectPlanChips();
+      updateLivePreview();
+    }
+
+    function enterProfileUpdateMode(parent) {
+      profileUpdateMode = true;
+      editingParentId = parent.id || null;
+      storedParentPhone = parent.phone || '';
+      document.title = '星火学伴 - 更新学情与考纲目标';
+      const h1 = document.querySelector('main h1');
+      if (h1) h1.textContent = '更新学情与考纲目标 · 在现有档案上精准调优';
+      const step1Hint = document.getElementById('step1Hint');
+      if (step1Hint) step1Hint.textContent = '已载入当前学员画像；如需改基础信息请点击「修改」。手机号不可变更。';
+      const lockedBlock = document.getElementById('parentPhoneLockedBlock');
+      const authBlock = document.getElementById('parentPhoneAuthBlock');
+      const lockedDisplay = document.getElementById('parentPhoneLockedDisplay');
+      if (lockedBlock) lockedBlock.classList.remove('hidden');
+      if (authBlock) authBlock.classList.add('hidden');
+      if (lockedDisplay) lockedDisplay.textContent = maskPhoneDisplay(storedParentPhone);
+      const phoneInput = document.getElementById('parentPhone');
+      if (phoneInput) {
+        phoneInput.value = storedParentPhone;
+        phoneInput.required = false;
+      }
+      const submitBtn = document.getElementById('btnSubmitParent');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs"></i><span>保存画像并返回主控</span>';
+      }
+      applyParentProfileToForm(parent);
+      setStep1FieldsLocked(true);
+    }
+
+    async function initProfileUpdateFromSession() {
+      if (getPageModeHint() !== 'edit') return false;
+      if (!window.StorageService) return false;
+      if (StorageService.ready) await StorageService.ready();
+      StorageService.seedIfEmpty();
+      if (!StorageService.isLoggedIn || !StorageService.isLoggedIn()) {
+        showToast('请先登录家长账号', 'warning');
+        setTimeout(() => { window.location.href = 'login.html'; }, 600);
+        return true;
+      }
+      const parent = StorageService.getCurrentParent();
+      if (!parent) {
+        showToast('未找到学员画像，请先完成建档', 'warning');
+        return true;
+      }
+      enterProfileUpdateMode(parent);
+      return true;
+    }
+
     async function handleParentSubmit() {
       const agree = document.getElementById('parentAgreementCheck')?.checked;
       if (!agree) {
@@ -1746,31 +1916,30 @@
       const phoneEl = document.getElementById('parentPhone');
       const codeEl = document.getElementById('parentSmsCode');
       
-      if (!phoneEl) {
-        showToast('表单元素加载异常：找不到手机号输入框', 'error');
-        console.error('Element not found: parentPhone');
-        return;
-      }
+      const phone = profileUpdateMode
+        ? (storedParentPhone || (phoneEl && phoneEl.value.trim()) || '')
+        : (phoneEl && phoneEl.value.trim());
+      const code = profileUpdateMode ? '000000' : (codeEl && codeEl.value.trim());
       
-      if (!codeEl) {
-        showToast('表单元素加载异常：找不到验证码输入框', 'error');
-        console.error('Element not found: parentSmsCode');
-        return;
+      if (!profileUpdateMode) {
+        if (!phoneEl) {
+          showToast('表单元素加载异常：找不到手机号输入框', 'error');
+          return;
+        }
+        if (!codeEl) {
+          showToast('表单元素加载异常：找不到验证码输入框', 'error');
+          return;
+        }
       }
-      
-      const phone = phoneEl.value.trim();
-      const code = codeEl.value.trim();
       
       if (!phone || phone.length !== 11) {
         showToast('请输入有效的 11 位手机号码！', 'warning');
-        console.warn('Phone validation failed:', phone);
         goToStep(1);
         return;
       }
 
-      if (!code || code.length !== 6) {
+      if (!profileUpdateMode && (!code || code.length !== 6)) {
         showToast('请输入 6 位短信验证码！', 'warning');
-        console.warn('Code validation failed:', code);
         goToStep(1);
         return;
       }
@@ -1790,6 +1959,56 @@
       }
 
       const btn = document.getElementById('btnSubmitParent');
+      const aggEarly = aggregateFromPlans();
+      const parentRoleEarly = document.querySelector('input[name="parentRole"]:checked')?.value || '家长';
+      const cityDistrictEarly = document.querySelector('input[name="cityDistrict"]:checked')?.value || '青羊区';
+      const selectedSpaceEarly = document.querySelector('input[name="selectedSpace"]:checked')?.value || '青羊金沙文化微网点';
+      const budgetMinEarly = parseInt(document.getElementById('budgetMinRange')?.value || '80', 10);
+      const budgetMaxEarly = parseInt(document.getElementById('budgetMaxRange')?.value || '180', 10);
+      const budgetRateEarly = Math.round((budgetMinEarly + budgetMaxEarly) / 2);
+      const plansCopyEarly = {};
+      Object.keys(subjectPlans).forEach((k) => {
+        plansCopyEarly[k] = {
+          weakPoints: (subjectPlans[k].weakPoints || []).slice(),
+          pacing: subjectPlans[k].pacing || '',
+          pains: (subjectPlans[k].pains || []).slice()
+        };
+      });
+
+      if (profileUpdateMode) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>保存画像中...</span>';
+        }
+        const profile = {
+          parentName: document.getElementById('parentName')?.value.trim() || '',
+          parentRole: parentRoleEarly,
+          phone: phone,
+          studentNickname: document.getElementById('studentNickname')?.value.trim() || '',
+          studentGrade: document.getElementById('studentGrade')?.value || '',
+          cityDistrict: cityDistrictEarly,
+          subjects: checkedSubjects,
+          subjectPlans: plansCopyEarly,
+          syllabusTopics: aggEarly.weakPoints,
+          pacingMode: aggEarly.pacingMode,
+          budgetMin: budgetMinEarly,
+          budgetMax: budgetMaxEarly,
+          budgetRate: budgetRateEarly,
+          selectedSpace: selectedSpaceEarly,
+          targetGoal: document.getElementById('targetGoal')?.value.trim() || '',
+          painTags: aggEarly.pains
+        };
+        if (editingParentId) profile.id = editingParentId;
+        StorageService.saveParent(profile);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs"></i><span>保存画像并返回主控</span>';
+        }
+        showToast('画像已保存，正在返回主控…', 'success');
+        setTimeout(() => { window.location.href = 'parent_dashboard.html'; }, 500);
+        return;
+      }
+
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>验证身份中...</span>';
@@ -2307,12 +2526,17 @@
       }
     }
 
-    window.onload = function() {
+    window.onload = async function() {
       updateGradeLabel();
       syncBudgetFill();
       renderSubjectPlanChips();
       updateLivePreview();
       bindWizardAutoAdvanceHooks();
+      const profileLoaded = await initProfileUpdateFromSession();
+      if (profileLoaded) {
+        scheduleParentDraftSave(false);
+        return;
+      }
       const gradeSelect = document.getElementById('studentGrade');
       if (gradeSelect && !gradeSelect.getAttribute('data-bound')) {
         gradeSelect.addEventListener('change', function() {
