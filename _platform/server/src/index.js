@@ -11,6 +11,7 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const sms = require('./sms');
+const bookingSmsNotify = require('./booking-sms-notify');
 const auth = require('./auth');
 const wechatPay = require('./wechat-pay');
 const pricing = require('./pricing');
@@ -995,7 +996,7 @@ app.patch('/api/bookings/:id', requireAuth, (req, res) => {
   ok(res, updated);
 });
 
-app.post('/api/bookings/:id/respond', requireAuth, (req, res) => {
+app.post('/api/bookings/:id/respond', requireAuth, async (req, res) => {
   // 只有导师可以响应预约
   if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
     return fail(res, 403, '只有导师可以响应预约');
@@ -1011,13 +1012,17 @@ app.post('/api/bookings/:id/respond', requireAuth, (req, res) => {
     }
   }
   
-  const updated = db.respondToBooking(req.params.id, req.body || {});
+  const decisionBody = req.body || {};
+  const updated = db.respondToBooking(req.params.id, decisionBody);
   if (!updated) return fail(res, 404, 'booking not found');
+
+  await bookingSmsNotify.notifyBookingRespond(updated, decisionBody, db);
+
   ok(res, updated);
 });
 
 
-app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
+app.post('/api/bookings/:id/cancel', requireAuth, async (req, res) => {
   if (req.user.role !== 'parent' && req.user.role !== 'admin') {
     return fail(res, 403, '仅家长可撤销约课');
   }
@@ -1038,6 +1043,10 @@ app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
   if (!result || !result.ok) {
     return res.status(400).json(result || { ok: false, error: 'cancel failed' });
   }
+
+  const cancelledBooking = result.booking || booking;
+  await bookingSmsNotify.notifyParentCancel(cancelledBooking, db);
+
   ok(res, result);
 });
 

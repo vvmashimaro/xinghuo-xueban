@@ -25,18 +25,51 @@ function isProduction() {
   return process.env.NODE_ENV === 'production';
 }
 
+function isTencentCredentialsReady() {
+  return Boolean(
+    process.env.TENCENT_SMS_SECRET_ID &&
+      process.env.TENCENT_SMS_SECRET_KEY &&
+      process.env.TENCENT_SMS_SDK_APP_ID
+  );
+}
+
+/**
+ * 按场景解析腾讯云模板 ID（未配置则返回空）
+ */
+function resolveTencentTemplateId(scene) {
+  switch (scene) {
+    case 'login':
+      return process.env.TENCENT_SMS_TEMPLATE_LOGIN || '';
+    case 'booking':
+      return process.env.TENCENT_SMS_TEMPLATE_BOOKING || '';
+    case 'accept':
+    case 'accept_parent':
+      return (
+        process.env.TENCENT_SMS_TEMPLATE_ACCEPT ||
+        process.env.TENCENT_SMS_TEMPLATE_BOOKING ||
+        ''
+      );
+    case 'accept_mentor':
+      return process.env.TENCENT_SMS_TEMPLATE_ACCEPT_MENTOR || '';
+    case 'cancel':
+      return process.env.TENCENT_SMS_TEMPLATE_CANCEL || '';
+    default:
+      return '';
+  }
+}
+
 /**
  * 检查发送冷却时间
  */
 function checkSendCooldown(phone) {
   const now = Date.now();
   const lastSend = sendCooldown.get(phone);
-  
+
   if (lastSend && now - lastSend < SEND_COOLDOWN_MS) {
     const waitSeconds = Math.ceil((SEND_COOLDOWN_MS - (now - lastSend)) / 1000);
     return { ok: false, error: `发送过于频繁，请 ${waitSeconds} 秒后再试`, retryAfter: waitSeconds };
   }
-  
+
   return { ok: true };
 }
 
@@ -46,7 +79,7 @@ function checkSendCooldown(phone) {
 function getCurrentDate() {
   const now = new Date();
   // 转换为 Asia/Shanghai 时区（UTC+8）
-  const shanghaiTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  const shanghaiTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   return shanghaiTime.toISOString().split('T')[0];
 }
 
@@ -56,16 +89,16 @@ function getCurrentDate() {
 function checkDailyLimit(phone) {
   const today = getCurrentDate();
   const record = dailyCount.get(phone);
-  
+
   if (!record || record.date !== today) {
     // 新的一天，不增加计数，只检查
     return { ok: true };
   }
-  
+
   if (record.count >= MAX_DAILY_SENDS) {
     return { ok: false, error: '今日发送次数已达上限，请明天再试' };
   }
-  
+
   return { ok: true };
 }
 
@@ -75,7 +108,7 @@ function checkDailyLimit(phone) {
 function recordSuccessfulSend(phone) {
   const today = getCurrentDate();
   const record = dailyCount.get(phone);
-  
+
   if (!record || record.date !== today) {
     dailyCount.set(phone, { count: 1, date: today });
   } else {
@@ -111,18 +144,25 @@ function maskPhoneForLog(phone) {
 
 async function sendMockSMS(phone, code, scene, auth = null) {
   const maskedPhone = maskPhoneForLog(phone);
-  
+
   // 检查是否为管理员手机号
   const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
-  
+
   if (isAdmin) {
     // 对于管理员手机号，记录真实验证码到日志（用于 pm2 logs 查看）
     console.log(`[mock-sms] ${maskedPhone} code=${code}`);
     // 管理员不能使用 888888
     return { success: true, provider: 'mock', message: '验证码已发送（管理员需使用真实验证码）' };
   }
-  
+
   return { success: true, provider: 'mock', message: '演示模式：请使用 888888' };
+}
+
+function logMockTransactional(phone, scene, templateParamSet) {
+  console.log(
+    `[SMS Mock] scene=${scene} to=${maskPhoneForLog(phone)} params=${JSON.stringify(templateParamSet)}`
+  );
+  return { success: true, provider: 'mock', message: 'Mock 通知已记录' };
 }
 
 /**
@@ -135,57 +175,74 @@ function tencentCloudSign(secretKey, date, service, stringToSign) {
   return crypto.createHmac('sha256', kSigning).update(stringToSign).digest('hex');
 }
 
+function buildTemplateParamSet(scene, payload) {
+  if (scene === 'login') {
+    return [String(payload), '5'];
+  }
+  const info = payload || {};
+  const tutorName = info.tutorName || '导师';
+  const studentName = info.studentName || '学员';
+  const subject = info.subject || '课程';
+  const schedule = info.schedule || '';
+  const space = info.space || '';
+  const reason = info.reason || '已取消';
+
+  switch (scene) {
+    case 'accept_mentor':
+      return [studentName, subject, schedule, space];
+    case 'cancel': {
+      const cancelledBy = info.cancelledBy || 'system';
+      const displayName = cancelledBy === 'parent' ? studentName : tutorName;
+      return [displayName, subject, schedule, reason];
+    }
+    case 'booking':
+    case 'accept':
+    case 'accept_parent':
+    default:
+      return [tutorName, subject, schedule, space];
+  }
+}
+
 /**
  * 腾讯云短信发送（真实实现）
  * API: SendSms, version 2021-01-11, TC3-HMAC-SHA256 signing
  */
-async function sendTencentSMS(phone, code, scene) {
+async function sendTencentTemplateSMS(phone, scene, payload) {
   const secretId = process.env.TENCENT_SMS_SECRET_ID;
   const secretKey = process.env.TENCENT_SMS_SECRET_KEY;
   const sdkAppId = process.env.TENCENT_SMS_SDK_APP_ID;
   const signName = process.env.TENCENT_SMS_SIGN_NAME || '星火学伴';
   const region = process.env.TENCENT_SMS_REGION || 'ap-guangzhou';
-  const templateId = scene === 'booking' 
-    ? process.env.TENCENT_SMS_TEMPLATE_BOOKING
-    : process.env.TENCENT_SMS_TEMPLATE_LOGIN;
-  
-  if (!secretId || !secretKey || !sdkAppId || !templateId) {
-    if (isProduction()) {
-      throw new Error('腾讯云短信配置不完整：缺少 SecretId/SecretKey/SdkAppId 或模板 ID');
+  const templateId = resolveTencentTemplateId(scene);
+
+  if (!isTencentCredentialsReady() || !templateId) {
+    console.log(`[SMS Tencent] 配置不完整（scene=${scene}），降级到 mock`);
+    if (scene === 'login') {
+      return sendMockSMS(phone, payload, scene);
     }
-    console.log(`[SMS Tencent] 配置不完整，降级到 mock 模式`);
-    return sendMockSMS(phone, code, scene);
+    return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
   }
-  
-  // 构建请求
+
+  const templateParamSet = buildTemplateParamSet(scene, payload);
+
   const host = 'sms.tencentcloudapi.com';
   const service = 'sms';
   const version = '2021-01-11';
   const action = 'SendSms';
   const timestamp = Math.floor(Date.now() / 1000);
   const date = new Date(timestamp * 1000).toISOString().split('T')[0];
-  
-  // 请求体
-  const params = scene === 'booking' 
-    ? {
-        PhoneNumberSet: [`+86${phone}`],
-        SmsSdkAppId: sdkAppId,
-        SignName: signName,
-        TemplateId: templateId,
-        TemplateParamSet: [code.tutorName, code.subject, code.schedule, code.space]
-      }
-    : {
-        PhoneNumberSet: [`+86${phone}`],
-        SmsSdkAppId: sdkAppId,
-        SignName: signName,
-        TemplateId: templateId,
-        TemplateParamSet: [code, '5']
-      };
-  
-  const payload = JSON.stringify(params);
-  
-  // 计算签名
-  const hashedRequestPayload = crypto.createHash('sha256').update(payload).digest('hex');
+
+  const params = {
+    PhoneNumberSet: [`+86${phone}`],
+    SmsSdkAppId: sdkAppId,
+    SignName: signName,
+    TemplateId: templateId,
+    TemplateParamSet: templateParamSet
+  };
+
+  const payloadBody = JSON.stringify(params);
+
+  const hashedRequestPayload = crypto.createHash('sha256').update(payloadBody).digest('hex');
   const httpRequestMethod = 'POST';
   const canonicalUri = '/';
   const canonicalQueryString = '';
@@ -197,8 +254,7 @@ async function sendTencentSMS(phone, code, scene) {
   const stringToSign = `TC3-HMAC-SHA256\n${timestamp}\n${credentialScope}\n${hashedCanonicalRequest}`;
   const signature = tencentCloudSign(secretKey, date, service, stringToSign);
   const authorization = `TC3-HMAC-SHA256 Credential=${secretId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-  
-  // 发送请求
+
   return new Promise((resolve, reject) => {
     const options = {
       hostname: host,
@@ -207,33 +263,35 @@ async function sendTencentSMS(phone, code, scene) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload),
-        'Host': host,
+        'Content-Length': Buffer.byteLength(payloadBody),
+        Host: host,
         'X-TC-Action': action,
         'X-TC-Version': version,
         'X-TC-Timestamp': timestamp,
         'X-TC-Region': region,
-        'Authorization': authorization
+        Authorization: authorization
       }
     };
-    
+
     const req = https.request(options, (res) => {
       let data = '';
-      res.on('data', (chunk) => { data += chunk; });
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
       res.on('end', () => {
         try {
           const result = JSON.parse(data);
-          
+
           if (result.Response && result.Response.Error) {
             console.error('[SMS Tencent] API Error:', result.Response.Error);
             reject(new Error(result.Response.Error.Message || '腾讯云短信发送失败'));
             return;
           }
-          
+
           if (result.Response && result.Response.SendStatusSet) {
             const status = result.Response.SendStatusSet[0];
             if (status.Code === 'Ok') {
-              console.log(`[SMS Tencent] 短信发送成功到 ${maskPhoneForLog(phone)}`);
+              console.log(`[SMS Tencent] 短信发送成功 scene=${scene} ${maskPhoneForLog(phone)}`);
               resolve({ success: true, provider: 'tencent', message: '短信已发送' });
             } else {
               console.error('[SMS Tencent] 发送失败:', status.Message);
@@ -248,15 +306,20 @@ async function sendTencentSMS(phone, code, scene) {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       console.error('[SMS Tencent] Request error:', e);
       reject(e);
     });
-    
-    req.write(payload);
+
+    req.write(payloadBody);
     req.end();
   });
+}
+
+/** @deprecated 内部兼容：login 传字符串验证码，业务通知传对象 */
+async function sendTencentSMS(phone, codeOrInfo, scene) {
+  return sendTencentTemplateSMS(phone, scene, codeOrInfo);
 }
 
 /**
@@ -270,59 +333,53 @@ async function sendSMS(phone, scene = 'login', auth = null) {
   if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
     return { success: false, error: '手机号格式不正确' };
   }
-  
+
   // 检查发送冷却时间
   const cooldownCheck = checkSendCooldown(phone);
   if (!cooldownCheck.ok) {
     return { success: false, error: cooldownCheck.error, retryAfter: cooldownCheck.retryAfter };
   }
-  
+
   // 检查每日限额
   const dailyCheck = checkDailyLimit(phone);
   if (!dailyCheck.ok) {
     return { success: false, error: dailyCheck.error };
   }
-  
+
   // 生成验证码
   const code = generateCode();
   const codeHash = hashCode(code);
   const expiry = Date.now() + CODE_EXPIRY_MS;
-  
+
   // 存储验证码哈希
   codeStore.set(phone, { codeHash, scene, expiry, attempts: 0 });
-  
-  // 根据提供商发送
+
   const provider = getProvider();
   let result;
-  
+
   try {
-    switch (provider) {
-      case 'tencent':
-        result = await sendTencentSMS(phone, code, scene);
-        break;
-      case 'mock':
-      default:
-        result = await sendMockSMS(phone, code, scene, auth);
-        break;
+    if (provider === 'tencent' && isTencentCredentialsReady() && resolveTencentTemplateId('login')) {
+      result = await sendTencentTemplateSMS(phone, 'login', code);
+    } else if (provider === 'tencent') {
+      console.log('[SMS] 腾讯云登录模板未配置完整，使用 mock 发送验证码');
+      result = await sendMockSMS(phone, code, scene, auth);
+    } else {
+      result = await sendMockSMS(phone, code, scene, auth);
     }
-    
-    // 发送成功，记录冷却时间和每日计数
+
     sendCooldown.set(phone, Date.now());
     recordSuccessfulSend(phone);
-    
+
     return { success: true, provider: result.provider, message: result.message };
   } catch (error) {
     console.error('[SMS Error]', error);
-    
-    // 删除存储的验证码（发送失败）
+
     codeStore.delete(phone);
-    
-    // 生产环境失败不应降级到 mock
-    if (isProduction()) {
+
+    if (isProduction() && provider === 'tencent') {
       return { success: false, error: '短信发送失败，请稍后重试' };
     }
-    
-    // 开发环境可以继续使用 mock
+
     return { success: true, provider: 'mock-fallback', message: '开发模式：验证码 888888' };
   }
 }
@@ -339,117 +396,127 @@ function verifySMS(phone, code, scene = 'login', auth = null) {
   if (!phone || !code) {
     return { success: false, error: '手机号和验证码不能为空' };
   }
-  
-  // 管理员手机号必须使用真实验证码，永远禁止 mock 验证码
+
   const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
   if (isAdmin && code === '888888') {
     return { success: false, error: '管理员请使用短信验证码登录' };
   }
-  
-  // Mock 万能验证码（仅在非生产环境，且非管理员手机）
+
   if (!isProduction() && code === '888888' && !isAdmin) {
     console.log(`[SMS Verify] Mock 验证通过：${maskPhoneForLog(phone)}`);
-    
-    // 生成验证票据（标记为 mock）
+
     const ticket = auth ? auth.createVerificationTicket(phone, true) : null;
-    
+
     return { success: true, phone, scene, mock: true, ticket };
   }
-  
-  // 生产环境禁止 mock 验证码
+
   if (isProduction() && code === '888888') {
     return { success: false, error: '验证码错误' };
   }
-  
+
   const stored = codeStore.get(phone);
-  
+
   if (!stored) {
     return { success: false, error: '验证码不存在或已过期' };
   }
-  
+
   if (Date.now() > stored.expiry) {
     codeStore.delete(phone);
     return { success: false, error: '验证码已过期' };
   }
-  
+
   if (stored.scene !== scene) {
     return { success: false, error: '验证码场景不匹配' };
   }
-  
+
   if (stored.attempts >= MAX_VERIFY_ATTEMPTS) {
     codeStore.delete(phone);
     return { success: false, error: '验证次数过多，请重新获取' };
   }
-  
+
   stored.attempts += 1;
-  
-  // 验证码哈希比对
+
   const codeHash = hashCode(code);
   if (stored.codeHash !== codeHash) {
     return { success: false, error: '验证码错误', attemptsLeft: MAX_VERIFY_ATTEMPTS - stored.attempts };
   }
-  
-  // 验证成功，删除验证码
+
   codeStore.delete(phone);
-  
-  // 生成验证票据
+
   const ticket = auth ? auth.createVerificationTicket(phone) : null;
-  
+
   return { success: true, phone, scene, ticket };
 }
 
-/**
- * 发送预约成功通知短信
- * @param {string} phone - 手机号
- * @param {object} bookingInfo - 预约信息 { tutorName, subject, schedule, space }
- */
-async function sendBookingNotification(phone, bookingInfo) {
+async function sendTransactionalNotification(phone, scene, bookingInfo, options = {}) {
   if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
     return { success: false, error: '手机号格式不正确' };
   }
-  
+
   const provider = getProvider();
-  const templateId = process.env.TENCENT_SMS_TEMPLATE_BOOKING;
-  
-  // Mock 模式
-  if (provider === 'mock' || !templateId) {
-    console.log(`[SMS Booking Mock] 发送预约通知到 ${maskPhoneForLog(phone)}`);
-    console.log(`[SMS Booking Mock] 导师: ${bookingInfo.tutorName}, 科目: ${bookingInfo.subject}`);
-    console.log(`[SMS Booking Mock] 时间: ${bookingInfo.schedule}, 地点: ${bookingInfo.space}`);
-    return { success: true, provider: 'mock', message: 'Mock 预约通知已记录' };
+  const templateId = resolveTencentTemplateId(scene);
+  const payload = Object.assign({}, bookingInfo, options);
+
+  if (provider === 'mock' || (provider === 'tencent' && !templateId)) {
+    return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
   }
-  
-  // 生产环境：调用实际短信服务
-  try {
-    if (provider === 'tencent') {
-      // 使用腾讯云发送预约通知
-      const result = await sendTencentSMS(phone, bookingInfo, 'booking');
-      return result;
+
+  if (provider === 'tencent') {
+    try {
+      return await sendTencentTemplateSMS(phone, scene, payload);
+    } catch (error) {
+      console.error(`[SMS ${scene} Error]`, error);
+      return { success: false, error: error.message || '短信发送失败' };
     }
-    
-    // 未配置提供商
-    if (isProduction()) {
-      throw new Error('短信提供商未配置');
-    }
-    
-    return { success: true, provider: 'mock-fallback', message: 'Mock 预约通知已记录' };
-  } catch (error) {
-    console.error('[SMS Booking Error]', error);
-    
-    // 生产环境失败则返回错误
-    if (isProduction()) {
-      return { success: false, error: '预约通知发送失败' };
-    }
-    
-    // 开发环境降级到 mock
-    return { success: true, provider: 'mock-fallback', message: 'Mock 预约通知已记录' };
   }
+
+  return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
+}
+
+/**
+ * 发送预约成功通知短信（创建约课）
+ */
+async function sendBookingNotification(phone, bookingInfo) {
+  return sendTransactionalNotification(phone, 'booking', bookingInfo);
+}
+
+/**
+ * 导师接单：通知家长
+ */
+async function sendBookingAcceptNotification(phone, bookingInfo) {
+  return sendTransactionalNotification(phone, 'accept', bookingInfo);
+}
+
+/**
+ * 导师接单：可选通知导师本人
+ */
+async function sendBookingMentorAcceptNotification(phone, bookingInfo) {
+  const templateId = resolveTencentTemplateId('accept_mentor');
+  if (!templateId) {
+    return { success: true, provider: 'skip', message: '未配置导师接单确认模板' };
+  }
+  return sendTransactionalNotification(phone, 'accept_mentor', bookingInfo);
+}
+
+/**
+ * 退单/拒单通知
+ * @param {{ cancelledBy?: 'parent'|'mentor' }} options
+ */
+async function sendBookingCancelNotification(phone, bookingInfo, options = {}) {
+  const cancelledBy = options.cancelledBy === 'parent' ? 'parent' : 'mentor';
+  return sendTransactionalNotification(phone, 'cancel', bookingInfo, { cancelledBy });
 }
 
 module.exports = {
   sendSMS,
   verifySMS,
   sendBookingNotification,
+  sendBookingAcceptNotification,
+  sendBookingMentorAcceptNotification,
+  sendBookingCancelNotification,
   getProvider,
-  isProduction
+  isProduction,
+  isTencentCredentialsReady,
+  resolveTencentTemplateId,
+  buildTemplateParamSet
 };
