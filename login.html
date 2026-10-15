@@ -146,7 +146,7 @@
           </div>
           <div id="smsDemoHint" class="text-[10px] text-slate-400 flex items-center gap-1 pt-0.5">
             <i class="fa-solid fa-circle-info text-teal-400"></i>
-            <span id="smsDemoHintText">请先获取短信验证码；演示环境部分账号可使用测试码（以发送成功提示为准）</span>
+            <span id="smsDemoHintText">请先点击「获取验证码」，验证码将发送至您的手机</span>
           </div>
         </div>
 
@@ -433,10 +433,8 @@
           if (result.requiresRealCode) {
             if (hintText) hintText.textContent = '该手机号需使用短信中的真实验证码登录';
             if (hintEl) hintEl.classList.remove('hidden');
-          } else if (result.provider === 'mock' && result.message && !String(result.message).includes('888888')) {
-            if (hintText) hintText.textContent = result.message;
-          } else if (result.provider === 'mock') {
-            if (hintText) hintText.innerHTML = '演示环境可使用测试验证码（见发送提示）';
+          } else if (result.message && hintText) {
+            hintText.textContent = result.message;
           }
           const msg = result.message || (result.provider === 'mock'
             ? '短信验证码已发送'
