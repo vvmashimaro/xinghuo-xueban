@@ -2275,21 +2275,101 @@
       }, 900);
     }
 
+    function isWeChatBrowser() {
+      return /MicroMessenger/i.test(navigator.userAgent || '');
+    }
+
+    function showWeChatNativeQr(codeUrl) {
+      let modal = document.getElementById('wechatNativePayModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'wechatNativePayModal';
+        modal.className = 'fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 p-4';
+        modal.innerHTML =
+          '<div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">' +
+          '<p class="text-sm font-bold text-slate-800 mb-3">微信扫码支付</p>' +
+          '<img id="wechatNativePayQr" alt="微信支付二维码" class="mx-auto w-52 h-52 border border-slate-100 rounded-lg" />' +
+          '<p class="text-xs text-slate-500 mt-3">支付完成后请稍候，系统将通过回调确认订单</p>' +
+          '<button type="button" id="wechatNativePayClose" class="mt-4 text-xs text-teal-700 font-semibold">关闭</button>' +
+          '</div>';
+        document.body.appendChild(modal);
+        modal.querySelector('#wechatNativePayClose').addEventListener('click', () => {
+          modal.classList.add('hidden');
+        });
+      }
+      const img = modal.querySelector('#wechatNativePayQr');
+      if (img) {
+        img.src =
+          'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(codeUrl);
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function invokeWeixinJsapiPay(params) {
+      return new Promise((resolve, reject) => {
+        function onBridgeReady() {
+          window.WeixinJSBridge.invoke(
+            'getBrandWCPayRequest',
+            {
+              appId: params.appId,
+              timeStamp: params.timeStamp,
+              nonceStr: params.nonceStr,
+              package: params.package,
+              signType: params.signType || 'RSA',
+              paySign: params.paySign
+            },
+            function (res) {
+              if (res.err_msg === 'get_brand_wcpay_request:ok') {
+                resolve({ success: true });
+              } else {
+                reject(new Error(res.err_msg || '微信支付失败'));
+              }
+            }
+          );
+        }
+        if (typeof window.WeixinJSBridge === 'undefined') {
+          document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+        } else {
+          onBridgeReady();
+        }
+      });
+    }
+
     // 微信支付处理
     async function handleWeChatPayment(bookingId, _displayAmountYuan, tutorName, subject) {
       try {
         const payMode = window.XH_CONFIG?.PAY_MODE || 'demo';
+        const inWeChat = isWeChatBrowser();
+        const description = `星火学伴 · ${subject} · ${tutorName}`;
 
-        const prepayResult = await StorageService.api('POST', '/api/pay/wechat/prepay', {
+        let prepayResult = await StorageService.api('POST', '/api/pay/wechat/prepay', {
           bookingId: bookingId,
-          description: `星火学伴 · ${subject} · ${tutorName}`
+          description,
+          payType: inWeChat ? 'JSAPI' : 'NATIVE'
         });
 
-        if (!prepayResult || !prepayResult.prepayId) {
-          return { success: false, error: '支付订单创建失败' };
+        if (
+          inWeChat &&
+          prepayResult &&
+          !prepayResult.mock &&
+          !prepayResult.prepayId &&
+          !prepayResult.codeUrl
+        ) {
+          prepayResult = await StorageService.api('POST', '/api/pay/wechat/prepay', {
+            bookingId,
+            description,
+            payType: 'NATIVE'
+          });
+        }
+
+        if (!prepayResult || prepayResult.error) {
+          return { success: false, error: (prepayResult && prepayResult.error) || '支付订单创建失败' };
         }
 
         if (payMode === 'demo' && prepayResult.mock) {
+          if (!prepayResult.prepayId && !prepayResult.outTradeNo) {
+            return { success: false, error: '支付订单创建失败' };
+          }
           const confirmResult = await StorageService.api('POST', '/api/pay/wechat/mock-confirm', {
             outTradeNo: prepayResult.outTradeNo
           });
@@ -2300,7 +2380,22 @@
           return { success: true, outTradeNo: prepayResult.outTradeNo };
         }
 
-        showToast('请使用微信扫码支付');
+        if (prepayResult.codeUrl) {
+          showWeChatNativeQr(prepayResult.codeUrl);
+          showToast('请使用微信扫描二维码完成支付');
+          return { success: false, pending: true, error: '请完成微信支付' };
+        }
+
+        if (prepayResult.prepayId && prepayResult.paySign && inWeChat) {
+          try {
+            await invokeWeixinJsapiPay(prepayResult);
+            return { success: true, outTradeNo: prepayResult.outTradeNo };
+          } catch (bridgeErr) {
+            console.warn('Weixin JSAPI pay failed', bridgeErr);
+          }
+        }
+
+        showToast('请使用微信完成支付');
         return { success: false, error: '请完成微信支付' };
       } catch (error) {
         console.error('WeChat payment error:', error);

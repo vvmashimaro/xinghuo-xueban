@@ -557,7 +557,7 @@ Page({
         `星火学伴 · ${subject} · ${tutorName}`
       );
 
-      if (!prepayResult.success || !prepayResult.prepayId) {
+      if (!prepayResult.success || prepayResult.error || !prepayResult.prepayId) {
         showToast(prepayResult.error || '支付订单创建失败', 'error');
         console.error('Prepay failed:', prepayResult);
         return false;
@@ -567,32 +567,40 @@ Page({
       if (payMode === 'demo' && prepayResult.mock) {
         const confirmResult = await Storage.mockConfirmPayment(prepayResult.outTradeNo);
         return !!(confirmResult && confirmResult.success);
-      } else {
-        // 生产模式：调用微信支付
-        const payParams = {
-          timeStamp: String(Math.floor(Date.now() / 1000)),
-          nonceStr: prepayResult.prepayId,
-          package: `prepay_id=${prepayResult.prepayId}`,
-          signType: 'RSA',
-          paySign: prepayResult.paySign || 'PLACEHOLDER'
-        };
+      }
 
+      const payParams = {
+        timeStamp: prepayResult.timeStamp,
+        nonceStr: prepayResult.nonceStr,
+        package: prepayResult.package,
+        signType: prepayResult.signType || 'RSA',
+        paySign: prepayResult.paySign
+      };
+
+      if (!payParams.timeStamp || !payParams.paySign) {
+        showToast('支付参数不完整，请检查服务端微信支付配置', 'error');
+        return false;
+      }
+
+      return new Promise((resolve) => {
         wx.requestPayment({
           ...payParams,
           success: () => {
             showToast('✓ 支付成功');
             this.reload();
+            resolve(true);
           },
           fail: (err) => {
-            if (err.errMsg.includes('cancel')) {
+            const msg = (err && err.errMsg) || '';
+            if (msg.includes('cancel')) {
               showToast('支付已取消', 'warning');
             } else {
               showToast('支付失败，请重试', 'error');
             }
+            resolve(false);
           }
         });
-        return false;
-      }
+      });
     } catch (error) {
       console.error('WeChat payment error:', error);
       showToast('支付处理异常，请稍后重试', 'error');

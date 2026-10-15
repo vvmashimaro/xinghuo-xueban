@@ -15,6 +15,7 @@ const auth = require('./auth');
 const wechatPay = require('./wechat-pay');
 const pricing = require('./pricing');
 const wechatPhone = require('./wechat-phone');
+const wechatSession = require('./wechat-session');
 const phoneCrypto = require('./phone-crypto');
 
 const PORT = Number(process.env.PORT) || 8787;
@@ -34,8 +35,16 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json({ limit: '8mb' }));
-app.use(express.raw({ type: 'application/json', limit: '8mb' })); // For WeChat Pay callback
+app.use(
+  express.json({
+    limit: '8mb',
+    verify: (req, _res, buf) => {
+      if (buf && buf.length) {
+        req.rawBody = buf.toString('utf8');
+      }
+    }
+  })
+);
 
 // 工具函数
 function ok(res, data) {
@@ -457,10 +466,36 @@ app.post('/api/auth/phone/audit', requireAuth, (req, res) => {
   }
 });
 
+/* ========== 微信小程序 openid（jscode2session） ========== */
+app.post('/api/wechat/jscode2session', requireAuth, async (req, res) => {
+  try {
+    const { code } = req.body || {};
+    if (!code) {
+      return fail(res, 400, '缺少 code');
+    }
+    const session = await wechatSession.code2Session(code);
+    if (req.user.role === 'parent') {
+      const parents = db.getParents();
+      const parent = parents.find((p) => p.id === req.user.userId);
+      if (parent) {
+        db.saveParent(Object.assign({}, parent, { wechatOpenid: session.openid }));
+      }
+    }
+    ok(res, {
+      success: true,
+      bound: true,
+      mock: !!session.mock
+    });
+  } catch (error) {
+    console.error('[WeChat jscode2session Error]', error);
+    fail(res, 500, error.message || '微信登录失败');
+  }
+});
+
 /* ========== 微信支付 ========== */
 app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
   try {
-    const { bookingId, description, openid, payType } = req.body || {};
+    const { bookingId, description, openid, payType, wxCode } = req.body || {};
     
     if (!bookingId) {
       return fail(res, 400, '缺少 bookingId');
@@ -488,13 +523,31 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
     }
 
     const amountFen = payable.amountFen;
-    
+
+    let resolvedOpenid = openid;
+    if (wxCode) {
+      const session = await wechatSession.code2Session(wxCode);
+      resolvedOpenid = session.openid;
+      if (req.user.role === 'parent') {
+        const parents = db.getParents();
+        const parent = parents.find((p) => p.id === req.user.userId);
+        if (parent) {
+          db.saveParent(Object.assign({}, parent, { wechatOpenid: session.openid }));
+        }
+      }
+    } else if (!resolvedOpenid && req.user.role === 'parent') {
+      const parent = db.getParents().find((p) => p.id === req.user.userId);
+      resolvedOpenid = parent && parent.wechatOpenid;
+    }
+
+    const resolvedPayType = payType || (resolvedOpenid ? 'JSAPI' : 'NATIVE');
+
     const result = await wechatPay.createPrepay({
       bookingId,
       amount: amountFen,
       description: description || '星火学伴 · 课程预约',
-      openid,
-      payType: payType || 'JSAPI'
+      openid: resolvedOpenid,
+      payType: resolvedPayType
     });
 
     if (result && result.outTradeNo) {
@@ -519,32 +572,43 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/pay/wechat/notify', (req, res) => {
+app.post('/api/pay/wechat/notify', async (req, res) => {
   try {
     const body = req.body;
     const headers = req.headers;
-    
-    const result = wechatPay.handlePaymentNotify(body, headers);
-    
-    // 更新订单状态
-    if (result.tradeState === 'SUCCESS') {
-      const booking = db.getBookings().find(b => 
-        b.id === result.outTradeNo.split('-')[1] || 
-        b.id.includes(result.outTradeNo.split('-')[1])
-      );
-      
+    const rawBody = req.rawBody;
+
+    const result = await wechatPay.handlePaymentNotify(body, headers, rawBody);
+
+    if (result.tradeState === 'SUCCESS' && result.outTradeNo) {
+      const payOrder = db.getPayOrder(result.outTradeNo);
+      const bookingId =
+        (payOrder && payOrder.bookingId) ||
+        (result.outTradeNo.startsWith('BK-') ? result.outTradeNo.split('-')[1] : null);
+      const booking = bookingId ? db.getBookings().find((b) => b.id === bookingId) : null;
+
+      db.savePayOrder({
+        outTradeNo: result.outTradeNo,
+        status: 'SUCCESS',
+        transactionId: result.transactionId,
+        successTime: result.successTime || new Date().toISOString()
+      });
+
       if (booking) {
-        db.updateBooking(booking.id, {
-          paymentStatus: 'paid',
-          paymentMethod: 'wechat',
-          paidAt: result.successTime,
-          transactionId: result.transactionId,
-          escrowStatus: 'frozen'
-        }, { trust: 'payment' });
+        db.updateBooking(
+          booking.id,
+          {
+            paymentStatus: 'paid',
+            paymentMethod: 'wechat',
+            paidAt: result.successTime || new Date().toISOString(),
+            transactionId: result.transactionId,
+            escrowStatus: 'frozen'
+          },
+          { trust: 'payment' }
+        );
       }
     }
-    
-    // 微信要求返回特定格式
+
     res.json({ code: 'SUCCESS', message: '成功' });
   } catch (error) {
     console.error('[WeChat Pay Notify Error]', error);

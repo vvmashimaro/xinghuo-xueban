@@ -1,6 +1,6 @@
 /**
  * 星火学伴 · 微信支付服务
- * 支持 JSAPI、Native 和小程序支付
+ * 支持 JSAPI（小程序）、Native（扫码）支付
  */
 'use strict';
 
@@ -9,26 +9,29 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+const WECHAT_API_HOST = 'api.mch.weixin.qq.com';
+
 // 模拟支付订单存储（生产环境应使用数据库）
 const mockOrders = new Map();
+
+// 微信平台证书缓存 serial -> PEM public key
+const platformPublicKeys = new Map();
+let platformCertsFetchedAt = 0;
+const PLATFORM_CERT_TTL_MS = 12 * 60 * 60 * 1000;
 
 function isProduction() {
   return process.env.NODE_ENV === 'production';
 }
 
 function isMockPayAllowed() {
-  // 生产环境不允许模拟支付，除非明确设置 ALLOW_MOCK_PAY=true（不推荐）
   if (isProduction()) {
     return process.env.ALLOW_MOCK_PAY === 'true';
   }
   return true;
 }
 
-/**
- * 获取微信支付配置
- */
 function getWeChatPayConfig() {
-  const config = {
+  return {
     mchId: process.env.WECHAT_MCH_ID,
     appId: process.env.WECHAT_APP_ID,
     apiV3Key: process.env.WECHAT_API_V3_KEY,
@@ -37,13 +40,8 @@ function getWeChatPayConfig() {
     privateKeyPem: process.env.WECHAT_PRIVATE_KEY_PEM,
     notifyUrl: process.env.WECHAT_NOTIFY_URL
   };
-  
-  return config;
 }
 
-/**
- * 检查微信支付配置是否完整
- */
 function isConfigComplete() {
   const config = getWeChatPayConfig();
   return !!(
@@ -56,51 +54,186 @@ function isConfigComplete() {
   );
 }
 
-/**
- * 加载商户私钥
- */
 function loadPrivateKey() {
   const config = getWeChatPayConfig();
-  
+
   if (config.privateKeyPem) {
     return config.privateKeyPem.replace(/\\n/g, '\n');
   }
-  
+
   if (config.privateKeyPath) {
     const keyPath = path.resolve(__dirname, '..', config.privateKeyPath);
     if (fs.existsSync(keyPath)) {
       return fs.readFileSync(keyPath, 'utf8');
     }
   }
-  
+
   return null;
 }
 
-/**
- * 生成签名（微信支付 V3 API）
- */
-function generateSignature(method, url, timestamp, nonce, body) {
+function signMessage(message) {
   const privateKey = loadPrivateKey();
   if (!privateKey) {
     throw new Error('商户私钥未配置');
   }
-  
-  const message = `${method}\n${url}\n${timestamp}\n${nonce}\n${body}\n`;
   const sign = crypto.createSign('RSA-SHA256');
   sign.update(message);
   return sign.sign(privateKey, 'base64');
 }
 
 /**
- * 生成随机字符串
+ * 生成签名（微信支付 V3 API 商户请求）
  */
+function generateSignature(method, url, timestamp, nonce, body) {
+  const message = `${method}\n${url}\n${timestamp}\n${nonce}\n${body}\n`;
+  return signMessage(message);
+}
+
 function generateNonceStr() {
   return crypto.randomBytes(16).toString('hex').toUpperCase();
 }
 
+function buildAuthorization(method, urlPath, body) {
+  const config = getWeChatPayConfig();
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const nonceStr = generateNonceStr();
+  const bodyStr = body === undefined || body === null ? '' : body;
+  const signature = generateSignature(method, urlPath, timestamp, nonceStr, bodyStr);
+  return {
+    timestamp,
+    nonceStr,
+    authorization:
+      `WECHATPAY2-SHA256-RSA2048 mchid="${config.mchId}",nonce_str="${nonceStr}",` +
+      `signature="${signature}",timestamp="${timestamp}",serial_no="${config.mchSerialNo}"`
+  };
+}
+
+function wechatPayRequest(method, urlPath, bodyObj) {
+  const body = bodyObj ? JSON.stringify(bodyObj) : '';
+  const { authorization } = buildAuthorization(method, urlPath, body);
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: WECHAT_API_HOST,
+        path: urlPath,
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: authorization,
+          'Content-Length': Buffer.byteLength(body)
+        }
+      },
+      (res) => {
+        let raw = '';
+        res.on('data', (chunk) => {
+          raw += chunk;
+        });
+        res.on('end', () => {
+          try {
+            const json = raw ? JSON.parse(raw) : {};
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              resolve(json);
+              return;
+            }
+            const msg = json.message || json.detail || raw || `HTTP ${res.statusCode}`;
+            reject(new Error(msg));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+    );
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
 /**
- * Mock 预支付（开发/演示环境）
+ * AES-256-GCM 解密（APIv3 密钥 / 回调 resource）
  */
+function decryptAes256Gcm({ ciphertext, associated_data, nonce }, apiV3Key) {
+  const key = Buffer.from(apiV3Key, 'utf8');
+  const buf = Buffer.from(ciphertext, 'base64');
+  const authTag = buf.slice(buf.length - 16);
+  const data = buf.slice(0, buf.length - 16);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(nonce, 'utf8'));
+  if (associated_data) {
+    decipher.setAAD(Buffer.from(associated_data, 'utf8'));
+  }
+  decipher.setAuthTag(authTag);
+  const decoded = Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
+  return JSON.parse(decoded);
+}
+
+function decryptNotifyResource(resource) {
+  const config = getWeChatPayConfig();
+  if (!config.apiV3Key) {
+    throw new Error('未配置 WECHAT_API_V3_KEY');
+  }
+  return decryptAes256Gcm(resource, config.apiV3Key);
+}
+
+async function ensurePlatformCertificates() {
+  const now = Date.now();
+  if (platformPublicKeys.size && now - platformCertsFetchedAt < PLATFORM_CERT_TTL_MS) {
+    return;
+  }
+
+  const config = getWeChatPayConfig();
+  const json = await wechatPayRequest('GET', '/v3/certificates');
+  const list = json.data || [];
+  list.forEach((item) => {
+    if (!item || !item.serial_no || !item.encrypt_certificate) return;
+    const certPem = decryptAes256Gcm(item.encrypt_certificate, config.apiV3Key);
+    platformPublicKeys.set(item.serial_no, certPem);
+  });
+  platformCertsFetchedAt = now;
+}
+
+async function verifyNotifySignature(signature, timestamp, nonce, rawBody, serial) {
+  if (!signature || !timestamp || !nonce || rawBody == null) {
+    return false;
+  }
+  try {
+    await ensurePlatformCertificates();
+    const certPem = platformPublicKeys.get(serial);
+    if (!certPem) {
+      console.warn('[WeChat Pay] 未找到平台证书 serial:', serial);
+      return false;
+    }
+    const message = `${timestamp}\n${nonce}\n${rawBody}\n`;
+    return crypto.createVerify('RSA-SHA256').update(message).verify(certPem, signature, 'base64');
+  } catch (err) {
+    console.error('[WeChat Pay] 回调验签失败', err.message);
+    return false;
+  }
+}
+
+/**
+ * 小程序 / JSAPI 调起支付参数
+ */
+function buildJsapiPayParams(prepayId) {
+  const config = getWeChatPayConfig();
+  const appId = config.appId;
+  const timeStamp = String(Math.floor(Date.now() / 1000));
+  const nonceStr = generateNonceStr();
+  const packageStr = `prepay_id=${prepayId}`;
+  const message = `${appId}\n${timeStamp}\n${nonceStr}\n${packageStr}\n`;
+  const paySign = signMessage(message);
+
+  return {
+    appId,
+    timeStamp,
+    nonceStr,
+    package: packageStr,
+    signType: 'RSA',
+    paySign
+  };
+}
+
 function registerMockOrder(order) {
   if (order && order.outTradeNo) {
     mockOrders.set(order.outTradeNo, order);
@@ -115,7 +248,7 @@ function hydrateMockOrders(orders) {
 function createMockPrepay(bookingId, amount, description) {
   const prepayId = `MOCK-PREPAY-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
   const outTradeNo = `BK-${bookingId}-${Date.now()}`;
-  
+
   mockOrders.set(outTradeNo, {
     prepayId,
     outTradeNo,
@@ -126,31 +259,29 @@ function createMockPrepay(bookingId, amount, description) {
     createTime: new Date().toISOString(),
     mock: true
   });
-  
+
   console.log(`[WeChat Pay Mock] 创建预支付订单`);
   console.log(`[WeChat Pay Mock] 商户订单号: ${outTradeNo}`);
   console.log(`[WeChat Pay Mock] 预支付ID: ${prepayId}`);
   console.log(`[WeChat Pay Mock] 金额: ¥${(amount / 100).toFixed(2)}`);
   console.log(`[WeChat Pay Mock] 开发提示：调用 POST /api/pay/wechat/mock-confirm 模拟支付成功`);
-  
+
   return {
     prepayId,
     outTradeNo,
-    codeUrl: null, // Native 支付会返回二维码 URL
+    codeUrl: null,
     mock: true,
+    payType: 'MOCK',
     message: 'Mock 预支付已创建，使用 /api/pay/wechat/mock-confirm 模拟完成'
   };
 }
 
-/**
- * 真实微信预支付（JSAPI / 小程序）
- */
 async function createRealPrepay(bookingId, amount, description, openid, payType = 'JSAPI') {
   const config = getWeChatPayConfig();
+  const normalizedType = String(payType || 'JSAPI').toUpperCase();
+  const isNative = normalizedType === 'NATIVE';
   const outTradeNo = `BK-${bookingId}-${Date.now()}`;
-  const timestamp = Math.floor(Date.now() / 1000);
-  const nonceStr = generateNonceStr();
-  
+
   const requestBody = {
     appid: config.appId,
     mchid: config.mchId,
@@ -162,111 +293,76 @@ async function createRealPrepay(bookingId, amount, description, openid, payType 
       currency: 'CNY'
     }
   };
-  
-  if (payType === 'JSAPI') {
+
+  if (!isNative) {
+    if (!openid) {
+      throw new Error('JSAPI 支付需要 openid，请先调用 wx.login 并绑定微信会话');
+    }
     requestBody.payer = { openid };
   }
-  
-  const url = '/v3/pay/transactions/jsapi';
-  const body = JSON.stringify(requestBody);
-  const signature = generateSignature('POST', url, timestamp, nonceStr, body);
-  const auth =
-    `WECHATPAY2-SHA256-RSA2048 mchid="${config.mchId}",nonce_str="${nonceStr}",` +
-    `signature="${signature}",timestamp="${timestamp}",serial_no="${config.mchSerialNo}"`;
 
-  return new Promise((resolve, reject) => {
-    const req = https.request(
-      {
-        hostname: 'api.mch.weixin.qq.com',
-        path: url,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: auth,
-          'Content-Length': Buffer.byteLength(body)
-        }
-      },
-      (res) => {
-        let raw = '';
-        res.on('data', (chunk) => {
-          raw += chunk;
-        });
-        res.on('end', () => {
-          try {
-            const json = raw ? JSON.parse(raw) : {};
-            if (res.statusCode >= 200 && res.statusCode < 300 && json.prepay_id) {
-              resolve({
-                prepayId: json.prepay_id,
-                outTradeNo,
-                mock: false
-              });
-              return;
-            }
-            const msg = json.message || json.detail || `HTTP ${res.statusCode}`;
-            reject(new Error(msg));
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }
-    );
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
+  const url = isNative ? '/v3/pay/transactions/native' : '/v3/pay/transactions/jsapi';
+  const json = await wechatPayRequest('POST', url, requestBody);
+
+  if (isNative) {
+    return {
+      outTradeNo,
+      codeUrl: json.code_url,
+      prepayId: null,
+      mock: false,
+      payType: 'NATIVE'
+    };
+  }
+
+  const jsapi = buildJsapiPayParams(json.prepay_id);
+  return {
+    prepayId: json.prepay_id,
+    outTradeNo,
+    mock: false,
+    payType: 'JSAPI',
+    ...jsapi
+  };
 }
 
-/**
- * 创建预支付订单
- */
 async function createPrepay(params) {
   const { bookingId, amount, description, openid, payType } = params;
-  
+
   if (!bookingId || !amount) {
     throw new Error('缺少必要参数：bookingId 或 amount');
   }
-  
-  // 检查配置
-  const configComplete = isConfigComplete();
-  
-  // 如果配置不完整且允许 mock，则使用 mock
-  if (!configComplete) {
+
+  if (!isConfigComplete()) {
     if (isMockPayAllowed()) {
       return createMockPrepay(bookingId, amount, description);
     }
     throw new Error('微信支付配置不完整，无法创建预支付订单');
   }
-  
-  // 配置完整，调用真实接口
+
   return await createRealPrepay(bookingId, amount, description, openid, payType);
 }
 
-/**
- * Mock 确认支付（仅开发环境）
- */
 function mockConfirmPayment(outTradeNo) {
   if (!isMockPayAllowed()) {
     throw new Error('当前环境不允许模拟支付');
   }
-  
+
   const order = mockOrders.get(outTradeNo);
   if (!order) {
     return { success: false, error: '订单不存在' };
   }
-  
+
   if (order.status === 'SUCCESS') {
     return { success: false, error: '订单已支付' };
   }
-  
+
   order.status = 'SUCCESS';
   order.successTime = new Date().toISOString();
   order.transactionId = `MOCK-WX-${Date.now()}`;
-  
+
   console.log(`[WeChat Pay Mock] 支付成功`);
   console.log(`[WeChat Pay Mock] 商户订单号: ${outTradeNo}`);
   console.log(`[WeChat Pay Mock] 微信订单号: ${order.transactionId}`);
-  
+
   return {
     success: true,
     outTradeNo,
@@ -278,36 +374,46 @@ function mockConfirmPayment(outTradeNo) {
 }
 
 /**
- * 验证微信支付回调签名
+ * 处理支付回调通知（需传入原始 body 字符串用于验签）
  */
-function verifyNotifySignature(signature, timestamp, nonce, body) {
-  // TODO: 实现微信支付平台证书验证
-  // 需要先下载微信支付平台证书，然后验证签名
-  console.log('[WeChat Pay] 回调签名验证（占位实现）');
-  return true;
-}
+async function handlePaymentNotify(body, headers, rawBody) {
+  const signature = headers['wechatpay-signature'] || headers['Wechatpay-Signature'];
+  const timestamp = headers['wechatpay-timestamp'] || headers['Wechatpay-Timestamp'];
+  const nonce = headers['wechatpay-nonce'] || headers['Wechatpay-Nonce'];
+  const serial = headers['wechatpay-serial'] || headers['Wechatpay-Serial'];
 
-/**
- * 处理支付回调通知
- */
-function handlePaymentNotify(body, headers) {
-  const signature = headers['wechatpay-signature'];
-  const timestamp = headers['wechatpay-timestamp'];
-  const nonce = headers['wechatpay-nonce'];
-  
-  // 验证签名
+  let raw;
+  if (rawBody != null) {
+    if (typeof rawBody === 'string') raw = rawBody;
+    else if (Buffer.isBuffer(rawBody)) raw = rawBody.toString('utf8');
+    else raw = JSON.stringify(body);
+  } else if (typeof body === 'string') {
+    raw = body;
+  } else {
+    raw = JSON.stringify(body);
+  }
+
+  let payload = body;
+  if (typeof body === 'string') {
+    payload = JSON.parse(body);
+  }
+
   if (isConfigComplete()) {
-    const valid = verifyNotifySignature(signature, timestamp, nonce, body);
+    const valid = await verifyNotifySignature(signature, timestamp, nonce, raw, serial);
     if (!valid) {
       throw new Error('签名验证失败');
     }
   }
-  
-  // TODO: 解密回调内容（微信支付使用 APIv3 密钥加密）
-  const decryptedData = body; // 占位
-  
-  console.log('[WeChat Pay] 收到支付回调通知');
-  
+
+  let decryptedData = payload;
+  if (payload && payload.resource && payload.resource.ciphertext) {
+    decryptedData = decryptNotifyResource(payload.resource);
+  } else if (payload && payload.event_type && !payload.out_trade_no) {
+    throw new Error('回调缺少可解密 resource');
+  }
+
+  console.log('[WeChat Pay] 收到支付回调', decryptedData.out_trade_no, decryptedData.trade_state);
+
   return {
     outTradeNo: decryptedData.out_trade_no,
     transactionId: decryptedData.transaction_id,
@@ -317,12 +423,6 @@ function handlePaymentNotify(body, headers) {
   };
 }
 
-/**
- * 查询订单状态
- */
-/**
- * Mock / stub refund (real WeChat refund API TODO when config complete)
- */
 function refundOrder(outTradeNo, reason) {
   if (mockOrders.has(outTradeNo)) {
     const order = mockOrders.get(outTradeNo);
@@ -338,13 +438,11 @@ function refundOrder(outTradeNo, reason) {
   if (!isConfigComplete()) {
     return { success: true, outTradeNo, mock: true, message: 'Mock 退款（未配置微信支付）' };
   }
-  // TODO: 调用微信支付退款 API
   console.log(`[WeChat Pay] 退款占位: ${outTradeNo}`);
   return { success: false, error: '真实微信退款接口尚未接入' };
 }
 
 function getOrderStatus(outTradeNo) {
-  // Mock 订单
   if (mockOrders.has(outTradeNo)) {
     const order = mockOrders.get(outTradeNo);
     return {
@@ -358,10 +456,9 @@ function getOrderStatus(outTradeNo) {
       mock: true
     };
   }
-  
-  // TODO: 调用微信支付订单查询接口
+
   console.log(`[WeChat Pay] 查询订单状态: ${outTradeNo} (占位实现)`);
-  
+
   return {
     outTradeNo,
     status: 'NOTPAY',
@@ -378,5 +475,10 @@ module.exports = {
   isMockPayAllowed,
   registerMockOrder,
   hydrateMockOrders,
-  refundOrder
+  refundOrder,
+  buildJsapiPayParams,
+  decryptNotifyResource,
+  decryptAes256Gcm,
+  generateSignature,
+  signMessage
 };
