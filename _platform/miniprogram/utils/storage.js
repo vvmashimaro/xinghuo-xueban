@@ -147,7 +147,19 @@ function _request(method, path, body) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
-          reject({ status: res.statusCode, data: res.data, message: 'API ' + res.statusCode + ' ' + path });
+          const body = res.data;
+          const serverError =
+            body && typeof body === 'object'
+              ? body.error || body.message
+              : typeof body === 'string' && body.trim()
+                ? body.trim()
+                : null;
+          reject({
+            status: res.statusCode,
+            data: body,
+            path,
+            message: serverError || `请求失败（${res.statusCode}）`
+          });
         }
       },
       fail(err) {
@@ -155,6 +167,17 @@ function _request(method, path, body) {
       }
     });
   });
+}
+
+function _apiErrorFromReject(e) {
+  if (!e) return '请求失败';
+  if (typeof e === 'string') return e;
+  if (e.message) return e.message;
+  const body = e.data;
+  if (body && typeof body === 'object' && (body.error || body.message)) {
+    return body.error || body.message;
+  }
+  return '请求失败';
 }
 
 async function _apiSafe(method, path, body) {
@@ -191,12 +214,21 @@ const StorageService = {
     return !!this.getAuthToken();
   },
 
+  async sendSMS(phone, scene) {
+    try {
+      const result = await _request('POST', '/api/auth/sms/send', { phone, scene });
+      return result;
+    } catch (e) {
+      return { success: false, error: _apiErrorFromReject(e) || '发送失败' };
+    }
+  },
+
   async verifySMS(phone, code, scene) {
     try {
       const result = await _request('POST', '/api/auth/sms/verify', { phone, code, scene });
       return result;
     } catch (e) {
-      return { success: false, error: e.message || '验证失败' };
+      return { success: false, error: _apiErrorFromReject(e) || '验证失败' };
     }
   },
 
@@ -209,7 +241,11 @@ const StorageService = {
       }
       return { success: false, error: result.error || '登录失败' };
     } catch (e) {
-      return { success: false, error: e.message || '登录失败' };
+      return {
+        success: false,
+        error: _apiErrorFromReject(e) || '登录失败',
+        notRegistered: e && e.status === 404
+      };
     }
   },
 
@@ -222,7 +258,7 @@ const StorageService = {
       }
       return { success: false, error: result.error || '注册失败' };
     } catch (e) {
-      return { success: false, error: e.message || '注册失败' };
+      return { success: false, error: _apiErrorFromReject(e) || '注册失败' };
     }
   },
 
@@ -665,65 +701,6 @@ const StorageService = {
   },
 
   // Phone-related operations
-  async sendSMS(phone, scene) {
-    try {
-      const result = await _request('POST', '/api/auth/sms/send', { phone, scene });
-      return result;
-    } catch (e) {
-      return { success: false, error: e.message || '发送失败' };
-    }
-  },
-
-  async verifySMS(phone, code, scene) {
-    try {
-      const result = await _request('POST', '/api/auth/sms/verify', { phone, code, scene });
-      return result;
-    } catch (e) {
-      return { success: false, error: e.message || '验证失败' };
-    }
-  },
-
-  async register(ticket, role, profile) {
-    try {
-      const result = await _request('POST', '/api/auth/register', { ticket, role, profile });
-      if (result.success && result.token) {
-        // Store auth token
-        wx.setStorageSync(KEYS.authToken, result.token);
-        // Store user session
-        this.setSession({ userId: result.user.id, phone: result.user.phone, role: result.user.role });
-        // Store profile based on role
-        if (role === 'parent' && result.user.profile) {
-          this.saveParent(result.user.profile);
-        } else if (role === 'mentor' && result.user.profile) {
-          this.saveMentor(result.user.profile);
-        }
-      }
-      return result;
-    } catch (e) {
-      return { success: false, error: e.message || '注册失败' };
-    }
-  },
-
-  async login(ticket) {
-    try {
-      const result = await _request('POST', '/api/auth/login', { ticket });
-      if (result.success && result.token) {
-        // Store auth token
-        wx.setStorageSync(KEYS.authToken, result.token);
-        // Store user session
-        this.setSession({ userId: result.user.id, phone: result.user.phone, role: result.user.role });
-      }
-      return result;
-    } catch (e) {
-      return { success: false, error: e.message || '登录失败' };
-    }
-  },
-
-  isLoggedIn() {
-    const token = wx.getStorageSync(KEYS.authToken);
-    return !!token;
-  },
-
   async getWeChatPhone(code) {
     try {
       const result = await _request('POST', '/api/wx/phone', { code });
