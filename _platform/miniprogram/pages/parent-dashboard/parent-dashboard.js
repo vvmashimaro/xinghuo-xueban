@@ -89,7 +89,8 @@ Page({
     iotBtnLabel: '模拟扫码开门 · 通电照明',
     iotBtnClass: 'btn-iot-idle',
     iotBtnDisabled: false,
-    featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE
+    featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
+    settingsDrawerShow: false
   },
 
   onLoad() {
@@ -189,12 +190,15 @@ Page({
       on: (this.data.spaceFilter || '') === f.value
     }));
 
-    tutors = tutors.map((t) =>
-      Object.assign({}, t, {
+    tutors = tutors.map((t) => {
+      const chsi = String(t.chsiStatus || '');
+      const chsiEnrolled = chsi.indexOf('有效') >= 0 || chsi.indexOf('在籍') >= 0;
+      return Object.assign({}, t, {
         syllabusText: (t.syllabusTopics || []).slice(0, 3).join('、'),
-        hasLecture: !!(t.lectureUrl && t.lectureUrl !== '#')
-      })
-    );
+        hasLecture: !!(t.lectureUrl && t.lectureUrl !== '#'),
+        chsiEnrolled
+      });
+    });
 
     const bookings = Storage.getBookingsForParent(parent.id).map((b) => {
       const st = BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' };
@@ -295,32 +299,20 @@ Page({
     }, () => this.reload());
   },
 
-  goEditProfile() {
-    wx.navigateTo({ url: '/pages/parent-register/parent-register?mode=edit' });
+  openSettingsDrawer() {
+    this.setData({ settingsDrawerShow: true });
+  },
+  closeSettingsDrawer() {
+    this.setData({ settingsDrawerShow: false });
+  },
+  goSettingsPage(e) {
+    const url = e.currentTarget.dataset.url;
+    this.closeSettingsDrawer();
+    if (url) wx.navigateTo({ url });
   },
 
   openPassport() {
-    const parent = this._parent || Storage.getCurrentParent();
-    if (!parent) return;
-    const plans = parent.subjectPlans || {};
-    const subjects = parent.subjects || Object.keys(plans);
-    const passportPlans = subjects.map((name) => {
-      const plan = plans[name] || {};
-      return {
-        name,
-        weakPoints: (plan.weakPoints || []).join('、') || '未标注',
-        pacing: plan.pacing || parent.pacingMode || '未设',
-        pains: (plan.pains || []).join('、') || '未标注'
-      };
-    });
-    this.setData({
-      passportShow: true,
-      passportSubjects: subjects,
-      passportPlans,
-      passportBudget: '¥' + (parent.budgetMin || 80) + '–' + (parent.budgetMax || 180) + '/小时',
-      passportSpace: parent.selectedSpace || '',
-      passportGoal: parent.targetGoal || ''
-    });
+    wx.navigateTo({ url: '/pages/parent-settings-passport/parent-settings-passport' });
   },
   closePassport() {
     this.setData({ passportShow: false });
@@ -678,6 +670,7 @@ Page({
   },
 
   goLogin() {
+    this.closeSettingsDrawer();
     Storage.clearSession();
     wx.reLaunch({ url: '/pages/login/login' });
   },
@@ -863,15 +856,7 @@ Page({
   },
 
   goAssessment() {
-    const parent = this._parent || Storage.getCurrentParent();
-    const subjects = (parent && parent.subjects && parent.subjects.length)
-      ? parent.subjects
-      : this.data.assessmentSubjects;
-    this.setData({
-      assessmentShow: true,
-      assessmentSubjects: subjects,
-      assessmentSubject: subjects[0] || '数学'
-    });
+    wx.navigateTo({ url: '/pages/parent-settings-assessment/parent-settings-assessment' });
   },
 
   closeAssessment() {

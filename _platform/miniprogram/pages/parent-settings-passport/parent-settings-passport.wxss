@@ -1,0 +1,5 @@
+@import "../parent-dashboard/parent-dashboard.wxss";
+
+.passport-hero {
+  background: linear-gradient(135deg, #f0fdfa, #fff);
+}

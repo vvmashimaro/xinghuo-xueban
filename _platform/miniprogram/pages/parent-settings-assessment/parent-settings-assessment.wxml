@@ -1,0 +1,10 @@
+<view class="container">
+  <view class="card">
+    <view class="card-title">试课 / 学科测评</view>
+    <view class="muted" style="margin-bottom:16rpx;">与 Web 测评流程一致：登记测评意向，便于导师备课。</view>
+    <view class="chip-wrap">
+      <view class="chip {{assessmentSubject===item?'chip-on':''}}" wx:for="{{assessmentSubjects}}" wx:key="*this" data-v="{{item}}" bindtap="onAssessmentSubject">{{item}}</view>
+    </view>
+    <button class="btn-primary" style="width:100%;margin-top:24rpx;" bindtap="submitQuickAssessment">登记测评</button>
+  </view>
+</view>

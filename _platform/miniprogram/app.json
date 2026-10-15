@@ -5,6 +5,10 @@
     "pages/parent-register/parent-register",
     "pages/parent-dashboard/parent-dashboard",
     "pages/mentor-dashboard/mentor-dashboard",
+    "pages/mentor-settings-profile/mentor-settings-profile",
+    "pages/mentor-settings-credentials/mentor-settings-credentials",
+    "pages/parent-settings-passport/parent-settings-passport",
+    "pages/parent-settings-assessment/parent-settings-assessment",
     "pages/privacy/privacy",
     "pages/profile/profile"
   ],
