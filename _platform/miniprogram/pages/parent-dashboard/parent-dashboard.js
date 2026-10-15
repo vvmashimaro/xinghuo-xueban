@@ -6,7 +6,8 @@ const BOOKING_STATUS = {
   pending_accept: { text: '待导师接单', badge: 'badge-pending' },
   escrow_locked: { text: '托管已锁', badge: 'badge-pending' },
   accepted: { text: '已接单', badge: 'badge-approved' },
-  declined: { text: '已婉拒', badge: 'badge-rejected' }
+  declined: { text: '已婉拒', badge: 'badge-rejected' },
+  cancelled: { text: '已取消', badge: 'badge-rejected' }
 };
 
 const SORT_OPTIONS = [
@@ -46,8 +47,12 @@ Page({
     sortLabels: SORT_OPTIONS,
     filterMin: 80,
     filterMax: 180,
-    walletAvailable: '315.00',
-    walletFrozen: '135.00',
+    walletLabel: '资金保障 · 一课一消（演示托管）',
+    walletFrozen: '0.00',
+    walletHasFrozen: false,
+    assessmentShow: false,
+    assessmentSubject: '数学',
+    assessmentSubjects: ['数学', '英语', '物理', '化学', '体育'],
     phoneAuthorized: false,
     phoneMasked: '',
     phoneAuthShow: false,
@@ -193,18 +198,28 @@ Page({
 
     const bookings = Storage.getBookingsForParent(parent.id).map((b) => {
       const st = BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' };
-      return Object.assign({}, b, { statusText: st.text, statusBadge: st.badge });
+      const sessionActions = [];
+      (b.sessions || []).forEach((s) => {
+        if (!s || !s.id) return;
+        if (
+          (b.status === 'accepted' || b.status === 'pending_accept' || b.status === 'escrow_locked') &&
+          (s.status === 'scheduled' || s.status === 'leave_too_late')
+        ) {
+          sessionActions.push({
+            sessionId: s.id,
+            label: '请假 ' + (s.date || s.timeLabel || s.timeStart || '')
+          });
+        }
+      });
+      return Object.assign({}, b, {
+        statusText: st.text,
+        statusBadge: st.badge,
+        canCancel: Storage.canParentCancelBooking(b),
+        sessionActions
+      });
     });
 
-    // 冻结金额示意：取待接单/已接单金额合计的演示值
-    let frozen = 0;
-    bookings.forEach((b) => {
-      if (b.status === 'pending_accept' || b.status === 'accepted' || b.status === 'escrow_locked') {
-        frozen += Number(b.amount) || 0;
-      }
-    });
-    const walletFrozen = frozen > 0 ? frozen.toFixed(2) : '135.00';
-    const walletAvailable = Math.max(0, 450 - Number(walletFrozen)).toFixed(2);
+    const wallet = Storage.getParentWalletSummary(parent);
 
     // IoT 关联最近 pending/accepted 约课
     const linkable = bookings.find((b) => b.status === 'accepted' || b.status === 'pending_accept');
@@ -233,8 +248,9 @@ Page({
       parentPhone: parent.phone,
       phoneAuthorized,
       phoneMasked,
-      walletAvailable,
-      walletFrozen,
+      walletLabel: wallet.label,
+      walletFrozen: wallet.frozenYuan.toFixed(2),
+      walletHasFrozen: wallet.hasFrozen,
       iotLinkedBooking
     });
     this._parent = parent;
@@ -835,6 +851,77 @@ Page({
       }
     } catch (error) {
       console.error('[Phone Bind Error]', error);
+    }
+  },
+
+  goAssessment() {
+    const parent = this._parent || Storage.getCurrentParent();
+    const subjects = (parent && parent.subjects && parent.subjects.length)
+      ? parent.subjects
+      : this.data.assessmentSubjects;
+    this.setData({
+      assessmentShow: true,
+      assessmentSubjects: subjects,
+      assessmentSubject: subjects[0] || '数学'
+    });
+  },
+
+  closeAssessment() {
+    this.setData({ assessmentShow: false });
+  },
+
+  onAssessmentSubject(e) {
+    this.setData({ assessmentSubject: e.currentTarget.dataset.v || '数学' });
+  },
+
+  async submitQuickAssessment() {
+    const parent = this._parent || Storage.getCurrentParent();
+    if (!parent) return;
+    const subject = this.data.assessmentSubject || '数学';
+    await Storage.saveAssessment({
+      parentId: parent.id,
+      studentNickname: parent.studentNickname,
+      studentGrade: parent.studentGrade,
+      subject,
+      source: 'miniprogram_quick',
+      selfReportLevel: '待完善',
+      note: '小程序快捷测评入口登记'
+    });
+    this.setData({ assessmentShow: false });
+    showToast('测评意向已登记，请按导师要求完成详细测评');
+  },
+
+  async onCancelBooking(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    const that = this;
+    wx.showModal({
+      title: '撤销约课',
+      content: '开课前 2 小时外可撤销并退回托管（演示为模拟退款）。确认撤销？',
+      success(res) {
+        if (!res.confirm) return;
+        Storage.cancelParentBooking(id).then((r) => {
+          if (r && r.ok) {
+            showToast('约课已撤销');
+            that.reload();
+          } else {
+            showToast((r && r.error) || '撤销失败', 'warning');
+          }
+        });
+      }
+    });
+  },
+
+  async onRequestLeave(e) {
+    const bookingId = e.currentTarget.dataset.bid;
+    const sessionId = e.currentTarget.dataset.sid;
+    if (!bookingId || !sessionId) return;
+    const result = await Storage.requestSessionLeave(bookingId, sessionId, 'parent');
+    if (result && result.ok !== false) {
+      showToast('已提交请假（须提前一日确认）');
+      this.reload();
+    } else {
+      showToast((result && result.error) || '请假失败', 'warning');
     }
   }
 });
