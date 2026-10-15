@@ -561,6 +561,15 @@
         const loginResult = await _api('POST', '/api/auth/login', { ticket, role });
         if (loginResult.success && loginResult.token) {
           this.setAuthToken(loginResult.token);
+          const user = loginResult.user || {};
+          const session = this.getSession() || {};
+          session.role = role || user.role || session.role;
+          const uid = user.userId || user.id;
+          if (uid) {
+            if (session.role === 'parent') session.parentId = uid;
+            if (session.role === 'mentor') session.mentorId = uid;
+          }
+          this.setSession(session);
           return { success: true, user: loginResult.user };
         }
         
@@ -690,6 +699,12 @@
             if (user.role === 'parent') {
               const parents = await _apiSafe('GET', '/api/parents');
               if (parents) _write(KEYS.parents, parents);
+              const session = this.getSession() || {};
+              const parentId = user.userId || (user.profile && user.profile.id);
+              if (parentId) session.parentId = parentId;
+              if (user.profile && user.profile.phone) session.phone = user.profile.phone;
+              session.role = 'parent';
+              this.setSession(session);
             }
             
             if (user.role === 'mentor') {
@@ -1019,6 +1034,18 @@
       if (!found && session && session.phone) {
         found = list.find((p) => p.phone === session.phone) || null;
       }
+      if (!found && this.isLoggedIn && this.isLoggedIn()) {
+        try {
+          const token = this.getAuthToken();
+          if (token) {
+            const cached = _read(KEYS.session, null);
+            if (cached && cached.parentId) {
+              found = list.find((p) => p.id === cached.parentId) || null;
+            }
+          }
+        } catch (e) { /* ignore */ }
+      }
+      if (!found && list.length === 1) found = list[0];
       if (!found) found = list[0] || null;
       return found ? this.normalizeParentProfile(found) : null;
     },

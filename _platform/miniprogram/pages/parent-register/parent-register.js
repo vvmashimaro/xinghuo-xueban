@@ -3,6 +3,8 @@ const { showToast } = require('../../utils/toast');
 const appConfig = require('../../utils/config');
 const {
   getTopicsForSubject,
+  getParentTargetSubjectsForGrade,
+  PARENT_TARGET_SUBJECTS_DEFAULT,
   PAIN_OPTIONS,
   PACING_OPTIONS,
   AGREEMENT_TEXT
@@ -33,7 +35,7 @@ Page({
     districtIndex: 0,
     spaces: Storage.SPACE_OPTIONS || ['青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'],
     spaceIndex: 0,
-    subjectOptions: ['数学', '物理', '英语', '化学', '语文', '体育', '全科陪读答疑'],
+    subjectOptions: PARENT_TARGET_SUBJECTS_DEFAULT.slice(),
     subjectOptionChips: [],
     selectedSubjects: [],
     subjectPlans: {},
@@ -73,7 +75,7 @@ Page({
 
     let parent = null;
     if (modeHint === 'edit') {
-      parent = Storage.getCurrentParent();
+      parent = await Storage.getCurrentParent();
     } else if (modeHint !== 'create' && session.phone) {
       const byPhone = Storage.getParents().find((p) => p.phone === session.phone);
       if (byPhone) parent = Storage.normalizeParentProfile(byPhone);
@@ -83,6 +85,12 @@ Page({
 
     if (editMode && parent) {
       this.applyEditMode(parent);
+    } else if (modeHint === 'edit' && !parent) {
+      showToast('未找到学员画像，请重新登录', 'warning');
+      this.setData({ editMode: false });
+      wx.setNavigationBarTitle({ title: '学情建档与注册' });
+      this.syncSubjectOptionsForGrade();
+      this.refreshSubjectOptionChips();
     } else {
       // 创建模式：consent 默认未勾选；可带入会话手机号
       if (session.phone) {
@@ -105,6 +113,14 @@ Page({
         consent: false
       });
       wx.setNavigationBarTitle({ title: '学情建档与注册' });
+      this.syncSubjectOptionsForGrade();
+      this.refreshSubjectOptionChips();
+    }
+  },
+
+  onShow() {
+    if (!this.data.subjectOptionChips || !this.data.subjectOptionChips.length) {
+      this.syncSubjectOptionsForGrade();
       this.refreshSubjectOptionChips();
     }
   },
@@ -150,10 +166,17 @@ Page({
       targetGoal: parent.targetGoal || '',
       consent: true
     }, () => {
+      this.syncSubjectOptionsForGrade();
       this.refreshChips();
       this.refreshSubjectOptionChips();
     });
     wx.setNavigationBarTitle({ title: '学员画像更改' });
+  },
+
+  syncSubjectOptionsForGrade() {
+    const grade = this.data.grades[this.data.gradeIndex];
+    const options = getParentTargetSubjectsForGrade(grade);
+    this.setData({ subjectOptions: options });
   },
 
   refreshSubjectOptionChips() {
@@ -345,7 +368,12 @@ Page({
   
   /* ========== 原有功能 ========== */
   onGoal(e) { this.setData({ targetGoal: e.detail.value }); },
-  onGrade(e) { this.setData({ gradeIndex: Number(e.detail.value) }); },
+  onGrade(e) {
+    this.setData({ gradeIndex: Number(e.detail.value) }, () => {
+      this.syncSubjectOptionsForGrade();
+      this.refreshSubjectOptionChips();
+    });
+  },
   onDistrict(e) { this.setData({ districtIndex: Number(e.detail.value) }); },
   onSpace(e) { this.setData({ spaceIndex: Number(e.detail.value) }); },
   onToggleConsent() { this.setData({ consent: !this.data.consent }); },
