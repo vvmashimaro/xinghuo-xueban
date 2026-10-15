@@ -1429,6 +1429,102 @@ function respondToBooking(id, decision) {
   return s.bookings[idx];
 }
 
+const CANCEL_LEAD_MS = 2 * 60 * 60 * 1000;
+
+function findSuccessPayOrderForBooking(bookingId) {
+  return (getState().payOrders || []).find(
+    (o) => o.bookingId === bookingId && (o.status === 'SUCCESS' || o.status === 'PAID')
+  );
+}
+
+function collectSessionStartTimes(booking) {
+  const starts = [];
+  const sessions = Array.isArray(booking.sessions) ? booking.sessions : [];
+  sessions.forEach((sess) => {
+    if (!sess || sess.status === 'completed') return;
+    if (sess.date && sess.timeStart) {
+      const parts = String(sess.timeStart).split(':').map(Number);
+      const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
+    }
+  });
+  if (!starts.length) {
+    const bookingSchedule = require('./booking-schedule');
+    const parsed = bookingSchedule.parseOneOffSessionFromSchedule(booking);
+    if (parsed && parsed.date && parsed.timeStart) {
+      const parts = String(parsed.timeStart).split(':').map(Number);
+      const d = new Date(String(parsed.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
+    }
+  }
+  return starts;
+}
+
+function parentCancelBooking(bookingId, parentRef) {
+  const s = getState();
+  const idx = s.bookings.findIndex((b) => b.id === bookingId);
+  if (idx < 0) return { ok: false, error: '约课不存在' };
+  const booking = s.bookings[idx];
+  const parentId = parentRef && (parentRef.id || parentRef);
+  const parentPhone = parentRef && parentRef.phone;
+  const owned =
+    (parentId && booking.parentId === parentId) ||
+    (parentPhone && booking.parentPhone === parentPhone);
+  if (!owned) return { ok: false, error: '只能撤销自己的约课' };
+
+  const cancellable = ['pending_accept', 'escrow_locked', 'accepted'];
+  if (!cancellable.includes(String(booking.status || ''))) {
+    return { ok: false, error: '当前状态不可撤销' };
+  }
+  const sessions = Array.isArray(booking.sessions) ? booking.sessions : [];
+  if (sessions.some((sess) => sess && sess.status === 'completed')) {
+    return { ok: false, error: '已有完课记录，无法撤销' };
+  }
+
+  const now = Date.now();
+  const starts = collectSessionStartTimes(booking);
+  if (starts.length) {
+    const earliest = Math.min(...starts);
+    if (now > earliest - CANCEL_LEAD_MS) {
+      return { ok: false, error: '开课前 2 小时内不可撤销', tooLate: true };
+    }
+  } else if (booking.status === 'accepted') {
+    return { ok: false, error: '无法确认开课时间，请联系平台协助取消' };
+  }
+
+  const cancelledSessions = sessions.map((sess) =>
+    Object.assign({}, sess, {
+      status: 'cancelled',
+      escrowStatus: booking.type === 'trial' ? 'waived' : 'refunded'
+    })
+  );
+
+  const payOrder = findSuccessPayOrderForBooking(bookingId);
+  if (payOrder && payOrder.outTradeNo) {
+    refundPayOrder(payOrder.outTradeNo, {
+      reason: '家长开课前撤销',
+      refundedBy: parentPhone || parentId || 'parent'
+    });
+  }
+
+  const patch = {
+    status: 'cancelled',
+    cancelledAt: _now(),
+    cancelledBy: 'parent',
+    sessions: cancelledSessions,
+    escrowStatus: booking.type === 'trial' ? 'waived' : 'refunded'
+  };
+  if (!payOrder && booking.paymentStatus === 'paid') {
+    patch.paymentStatus = 'refunded';
+    patch.refundedAt = _now();
+  }
+
+  const updated = updateBooking(bookingId, patch, { trust: 'admin' });
+  return { ok: true, booking: updated };
+}
+
 
 /* ---------- Weekly leave / escrow helpers ---------- */
 const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -2350,6 +2446,7 @@ module.exports = {
   addBooking,
   updateBooking,
   respondToBooking,
+  parentCancelBooking,
   buildWeeklySessions,
   requestSessionLeave,
   confirmSessionLeave,

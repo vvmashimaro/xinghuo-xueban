@@ -953,6 +953,54 @@ app.post('/api/bookings/:id/respond', requireAuth, (req, res) => {
 });
 
 
+app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '仅家长可撤销约课');
+  }
+  const booking = db.getBookings().find((b) => b.id === req.params.id);
+  if (!booking) return fail(res, 404, 'booking not found');
+
+  let parentRef = null;
+  if (req.user.role === 'parent') {
+    parentRef = db.getParents().find((p) => p.id === req.user.userId);
+    if (!parentRef) return fail(res, 403, '家长档案不存在');
+  } else {
+    parentRef = db.getParents().find(
+      (p) => p.id === booking.parentId || p.phone === booking.parentPhone
+    );
+  }
+
+  const result = db.parentCancelBooking(req.params.id, parentRef || { id: booking.parentId });
+  if (!result || !result.ok) {
+    return res.status(400).json(result || { ok: false, error: 'cancel failed' });
+  }
+  ok(res, result);
+});
+
+app.get('/api/parents/me/wallet', requireAuth, (req, res) => {
+  if (req.user.role !== 'parent' && req.user.role !== 'admin') {
+    return fail(res, 403, '无权限');
+  }
+  try {
+    const parent =
+      req.user.role === 'parent'
+        ? db.getParents().find((p) => p.id === req.user.userId)
+        : null;
+    if (req.user.role === 'parent' && !parent) {
+      return fail(res, 404, '家长档案不存在');
+    }
+    const bookings = db.getBookings();
+    const summary = pricing.computeParentWalletFromBookings(
+      bookings,
+      parent || { id: req.user.userId }
+    );
+    ok(res, summary);
+  } catch (error) {
+    console.error('[Parent Wallet Error]', error);
+    fail(res, 500, '查询托管摘要失败');
+  }
+});
+
 app.post('/api/bookings/:id/leave', requireAuth, (req, res) => {
   const booking = db.getBookings().find(b => b.id === req.params.id);
   if (!booking) return fail(res, 404, 'booking not found');

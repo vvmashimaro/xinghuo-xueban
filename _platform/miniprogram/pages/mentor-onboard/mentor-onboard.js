@@ -163,7 +163,7 @@ Page({
       resUniversity: saved.university,
       resHourly: '¥ ' + saved.hourlyRate + ' /h'
     });
-    showToast('入库申请已提交！可进入导师工作台查看待审状态');
+    showToast('入库申请已提交！可在导师端查看待审状态');
   },
 
   goDashboard() {
