@@ -130,8 +130,8 @@
             </div>
             <div class="text-xs font-bold text-white mb-1">资金保障 · 一课一结</div>
             <p class="text-[11px] text-slate-400 leading-relaxed">
-              <span class="hidden" data-warehouse-only>约课成功后课酬预先冻结，双方扫码下课按规则<strong class="text-emerald-300 font-semibold">解冻划拨</strong>，减少赖账纠纷（演示环境为模拟支付）。</span>
-              <span data-warehouse-off>约课成功后课酬预先冻结，结课确认后按规则<strong class="text-emerald-300 font-semibold">解冻划拨</strong>，减少拖欠纠纷（演示环境为模拟支付）。</span>
+              <span class="hidden" data-warehouse-only>约课成功后课酬预先冻结，双方扫码下课按规则<strong class="text-emerald-300 font-semibold">解冻划拨</strong>，减少赖账纠纷。</span>
+              <span data-warehouse-off>约课成功后课酬预先冻结，结课确认后按规则<strong class="text-emerald-300 font-semibold">解冻划拨</strong>，减少拖欠纠纷。</span>
             </p>
           </div>
         </div>
@@ -323,7 +323,6 @@
                     发送验证码
                   </button>
                 </div>
-                <p class="text-blue-700 text-[11px] mt-1">演示模式下请填写 888888</p>
               </div>
 
               <!-- 身份证号 -->
@@ -333,15 +332,6 @@
                   <i class="fa-regular fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
                   <input type="text" id="idCard" required oninput="onL1FieldChange()" placeholder="例：510107********1234（18位，加密存储）" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
                 </div>
-              </div>
-
-              <!-- SMS验证（演示用） -->
-              <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs">
-                <div class="flex items-center gap-2 text-blue-800 font-bold mb-2">
-                  <i class="fa-solid fa-shield-halved"></i>
-                  <span>短信验证码（演示：888888）</span>
-                </div>
-                <p class="text-blue-700 text-[11px]">真实场景将发送验证码至上述手机。演示模式下请填写 888888。</p>
               </div>
 
               <!-- 导航按钮 -->
@@ -437,7 +427,7 @@
               <div>
                 <div class="flex items-center justify-between mb-1.5">
                   <label class="block text-xs font-bold text-slate-700">
-                    学信网在线验证码 (16位) <span class="text-red-500">*</span>
+                    学信网在线验证码 (16位) <span class="text-slate-400 font-normal">选填</span>
                   </label>
                   <span id="chsiVerifyStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-500 border border-slate-200">
                     未验证
@@ -446,7 +436,7 @@
                 <div class="relative flex items-center gap-2">
                   <div class="relative flex-1">
                     <i class="fa-solid fa-fingerprint absolute left-3 top-3 text-slate-400 text-sm"></i>
-                    <input type="text" id="chsiCode" required placeholder="例：A98F72KL50198821（学信网在线验证码）" oninput="onChsiInputChanged(); updateL1Progress();" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition font-mono uppercase">
+                    <input type="text" id="chsiCode" placeholder="例：A98F72KL50198821（学信网在线验证码）" oninput="onChsiInputChanged(); updateL1Progress();" class="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition font-mono uppercase">
                   </div>
                   <a href="https://my.chsi.com.cn/archive/index.jsp" target="_blank" rel="noopener" class="shrink-0 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-300 whitespace-nowrap">
                     <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
@@ -494,6 +484,21 @@
               <p class="text-[10px] text-emerald-700/90 leading-tight">
                 * 平台已将解析结果结构化加密建档，并纳入入驻资质审核记录。
               </p>
+            </div>
+
+            <!-- 其它证明（选填） -->
+            <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 space-y-3">
+              <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-file-circle-plus text-teal-600"></i>
+                其它证明
+                <span class="text-[10px] font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">选填</span>
+              </label>
+              <p class="text-[11px] text-slate-500">学生证、学历证、在校成绩单等，可补充学籍核验（JPG、PNG、PDF）。</p>
+              <div onclick="document.getElementById('eduOtherProofInput').click()" class="border-2 border-dashed border-teal-300 hover:border-teal-500 hover:bg-teal-50/40 rounded-xl p-3 text-center cursor-pointer transition bg-white">
+                <input type="file" id="eduOtherProofInput" multiple accept=".jpg,.jpeg,.png,.pdf" onchange="handleEduOtherProofUpload(event)" class="hidden">
+                <p class="text-xs font-semibold text-slate-700">点击上传其它证明</p>
+              </div>
+              <div id="eduOtherProofList" class="flex flex-wrap gap-2"></div>
             </div>
 
               <div class="pt-2">
@@ -602,7 +607,6 @@
                 <li data-key="phone" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>手机号码</li>
                 <li data-key="idCard" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>身份证号</li>
                 <li data-key="university" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>就读高校</li>
-                <li data-key="chsiCode" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>学信网验证码</li>
                 <li data-key="bankCard" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>收款银行卡</li>
                 <li data-key="privacy" class="flex items-center gap-1.5"><i class="fa-regular fa-circle text-slate-300 text-[9px]"></i>隐私授权同意</li>
               </ul>
@@ -955,7 +959,7 @@
                     真实有据的实证材料将显著提升家长端信任度与系统撮合权重（支持 JPG、PNG、PDF）。
                   </p>
                 </div>
-                <span class="text-[11px] font-mono text-slate-400 shrink-0" id="uploadCountText">已选 2 项材料</span>
+                <span class="text-[11px] font-mono text-slate-400 shrink-0" id="uploadCountText">已选 0 项材料</span>
               </div>
 
               <!-- 上传范围备注指南 -->
@@ -1000,7 +1004,7 @@
 
               <!-- 已上传文件列表胶囊容器 -->
               <div id="uploadedFilesList" class="flex flex-wrap gap-2 pt-1">
-                <!-- 由 JS 动态渲染或展示默认演示文件 -->
+                <!-- 由 JS 动态渲染已上传文件 -->
               </div>
             </div>
 
@@ -1071,7 +1075,7 @@
               </div>
 
               <div class="pt-2 border-t border-teal-100 flex items-center justify-between text-[11px] text-teal-700">
-                <span>课酬资金保障（演示）</span>
+                <span>课酬资金保障</span>
                 <span class="font-mono">收款账户已登记 · 模拟一课一消</span>
               </div>
             </div>
@@ -1508,10 +1512,8 @@
        3. 实时名片卡预览更新 (所见即所得)
        ========================================================================== */
     // 导师资料与证明材料动态管理
-    let uploadedMaterials = [
-      { id: 1, name: "全国数学联赛高中组四川省二等奖.pdf", size: "1.8MB", tag: "学科竞赛" },
-      { id: 2, name: "大一在读成绩单与数学分析年级排名前5%.jpg", size: "2.4MB", tag: "在校成绩" }
-    ];
+    let uploadedMaterials = [];
+    let eduOtherProofMaterials = [];
 
     // 自选/特色科目数据管理
     let customSubjectList = [];
@@ -1692,6 +1694,50 @@
       renderUploadedFiles();
       updateLiveCard();
       showToast(`已成功添加 ${files.length} 份资历证明材料！`);
+      event.target.value = '';
+    }
+
+    function handleEduOtherProofUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        eduOtherProofMaterials.push({
+          id: Date.now() + Math.random(),
+          name: f.name,
+          size: (f.size / (1024 * 1024)).toFixed(1) + 'MB',
+          tag: '其它证明'
+        });
+      }
+      renderEduOtherProofFiles();
+      showToast(`已添加 ${files.length} 份其它证明`);
+      event.target.value = '';
+    }
+
+    function removeEduOtherProof(id) {
+      eduOtherProofMaterials = eduOtherProofMaterials.filter(item => item.id !== id);
+      renderEduOtherProofFiles();
+      showToast('已移除该其它证明', 'warning');
+    }
+
+    function renderEduOtherProofFiles() {
+      const container = document.getElementById('eduOtherProofList');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!eduOtherProofMaterials.length) return;
+      eduOtherProofMaterials.forEach(item => {
+        const chip = document.createElement('div');
+        chip.className = 'inline-flex items-center gap-1.5 bg-white border border-teal-200/90 text-slate-700 text-[11px] px-2.5 py-1 rounded-lg shadow-sm font-medium';
+        chip.innerHTML = `
+          <i class="fa-solid fa-paperclip text-teal-600 text-[10px]"></i>
+          <span class="max-w-[160px] truncate" title="${item.name}">${item.name}</span>
+          <span class="text-[10px] text-teal-700 bg-teal-50 px-1 py-0.2 rounded font-mono">${item.size}</span>
+          <button type="button" onclick="removeEduOtherProof(${item.id})" class="text-slate-400 hover:text-rose-500 ml-0.5 text-xs transition" title="移除">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        `;
+        container.appendChild(chip);
+      });
     }
 
     function removeMaterial(id) {
@@ -2001,7 +2047,7 @@
 
     function updateL1Progress() {
       const state = getL1FieldState();
-      const keys = ['realName','phone','idCard','university','chsiCode','bankCard','privacy'];
+      const keys = ['realName','phone','idCard','university','bankCard','privacy'];
       const done = keys.filter(k => state[k]).length;
       const pct = Math.round((done / keys.length) * 100);
       const bar = document.getElementById('l1ProgressBar');
@@ -2057,10 +2103,10 @@
           showToast('请选择或手动输入您的就读/毕业高校！', 'error');
           return;
         }
-        if (!chsiCode || chsiCode.length < 12) {
+        if (chsiCode && chsiCode.length > 0 && chsiCode.length < 12) {
           markL1FieldError('chsiCode');
-          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请输入有效的学信网在线验证码（通常为16位）'; }
-          showToast('请输入有效的学信网在线验证码（通常为16位）！', 'error');
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = '学信网在线验证码格式不正确（通常为16位）'; }
+          showToast('学信网在线验证码格式不正确（通常为16位）！', 'warning');
           return;
         }
         if (!bankCard || bankCard.length < 16) {
@@ -2075,8 +2121,7 @@
           return;
         }
 
-        // 若尚未执行学信网校验，给予静默自动比对或直接通过
-        if (!chsiVerifiedResult) {
+        if (chsiCode && chsiCode.length >= 12 && !chsiVerifiedResult) {
           chsiVerifiedResult = {
             valid: true,
             name: realName,
@@ -2098,7 +2143,7 @@
         document.getElementById('progress-bar-1').style.width = '100%';
 
         window.scrollTo({ top: 380, behavior: 'smooth' });
-        showToast('L1 身份、学信网与清算账户签约通过！');
+        showToast('L1 身份与清算账户签约通过！');
         __l1WasComplete = true;
         persistMentorDraft(false);
         ensureOnboardAvailabilityPicker();
@@ -2156,7 +2201,7 @@
         }
       } catch (error) {
         console.error('SMS send error:', error);
-        showToast('验证码发送失败（演示环境默认码：888888）', 'warning');
+        showToast('验证码发送失败，请稍后重试', 'warning');
       } finally {
         if (btn) {
           setTimeout(() => {
@@ -2230,9 +2275,13 @@
         const styleTags = Array.from(document.querySelectorAll('#styleTagContainer > span'))
           .map(s => s.innerText.replace(/×|✕|✖/g, '').trim())
           .filter(Boolean);
-        const proofFiles = (typeof uploadedMaterials !== 'undefined' ? uploadedMaterials : []).map(f => ({
-          name: f.name, size: f.size || '', verified: true, tag: f.tag || ''
-        }));
+        const proofFiles = []
+          .concat((typeof eduOtherProofMaterials !== 'undefined' ? eduOtherProofMaterials : []).map(f => ({
+            name: f.name, size: f.size || '', verified: true, tag: f.tag || '其它证明'
+          })))
+          .concat((typeof uploadedMaterials !== 'undefined' ? uploadedMaterials : []).map(f => ({
+            name: f.name, size: f.size || '', verified: true, tag: f.tag || ''
+          })));
 
         const availability = (window.__onboardAvailApi && window.__onboardAvailApi.getValue)
           ? window.__onboardAvailApi.getValue()
@@ -2256,21 +2305,28 @@
         const finalUniversityEl = document.getElementById('finalUniversityValue');
         const chsiCodeEl = document.getElementById('chsiCode');
         
-        if (!realNameEl || !idCardEl || !finalUniversityEl || !chsiCodeEl) {
+        if (!realNameEl || !idCardEl || !finalUniversityEl) {
           showToast('表单元素加载异常，请刷新页面重试', 'error');
           return;
         }
+
+        const chsiTrim = chsiCodeEl ? chsiCodeEl.value.trim() : '';
+        const universityTrim = finalUniversityEl.value.trim();
         
         const profile = {
           realName: realNameEl.value.trim(),
           phone: phone,
           idCard: idCardEl.value.trim(),
-          university: finalUniversityEl.value.trim(),
+          university: universityTrim,
           province: (document.getElementById('provinceSelect') && document.getElementById('provinceSelect').value) || '四川',
           degree: (document.getElementById('educationLevel') && document.getElementById('educationLevel').value) || '',
-          chsiCode: chsiCodeEl.value.trim(),
-          chsiStatus: (chsiVerifiedResult && chsiVerifiedResult.status) || '有效 (在籍)',
-          chsiMajor: (chsiVerifiedResult && chsiVerifiedResult.university) ? (chsiVerifiedResult.university + ' · 在籍核验') : '学信网核验通过',
+          chsiCode: chsiTrim,
+          chsiStatus: chsiTrim
+            ? ((chsiVerifiedResult && chsiVerifiedResult.status) || '待核验')
+            : '未填写',
+          chsiMajor: chsiTrim && chsiVerifiedResult && chsiVerifiedResult.university
+            ? (chsiVerifiedResult.university + ' · 在籍核验')
+            : (universityTrim + ' · 待学籍核验'),
           publicTeacherCompliance: true,
           subjects: allSubjects,
           customSubjects: (customSubjectList || []).slice(),
@@ -2347,7 +2403,7 @@
           }
         } catch (e) {
           console.warn('Sandbox navigation fallback:', e);
-          showToast(`已成功切换至【${targetTitle || targetUrl}】演示态`);
+          showToast(`页面跳转失败，请手动打开【${targetTitle || targetUrl}】`);
         }
       }, 600);
     }
@@ -2389,7 +2445,7 @@
 
     function isL1Complete() {
       const state = getL1FieldState();
-      return ['realName','phone','idCard','university','chsiCode','bankCard','privacy'].every((k) => !!state[k]);
+      return ['realName','phone','idCard','university','bankCard','privacy'].every((k) => !!state[k]);
     }
 
     function isL2Complete() {

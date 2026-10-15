@@ -113,7 +113,7 @@ function computeParentWalletFromBookings(bookings, parentRef) {
   return {
     frozenYuan: roundYuan(frozenYuan),
     hasFrozen: frozenYuan > 0,
-    label: '资金保障 · 一课一消（演示托管）'
+    label: '资金保障 · 一课一消'
   };
 }
 

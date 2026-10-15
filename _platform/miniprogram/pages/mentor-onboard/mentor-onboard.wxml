@@ -50,7 +50,7 @@
       </view>
       <view class="field">
         <view class="row-between" style="margin-bottom:8rpx;">
-          <text class="label" style="margin:0;">学信网在线验证码 (16位)</text>
+          <text class="label" style="margin:0;">学信网在线验证码 (16位，选填)</text>
           <text class="chsi-badge {{chsiBadgeClass}}">{{chsiBadgeText}}</text>
         </view>
         <view class="chsi-row">
@@ -68,6 +68,23 @@
             <view><text class="chsi-panel-label">学籍高校</text><text class="chsi-panel-val">{{chsiResult.university}}</text></view>
             <view><text class="chsi-panel-label">学籍状态</text><text class="chsi-panel-val" style="color:#047857;">{{chsiResult.status}}</text></view>
             <view><text class="chsi-panel-label">报告有效期</text><text class="chsi-panel-val">{{chsiResult.expire}}</text></view>
+          </view>
+        </view>
+      </view>
+      <view class="field">
+        <view class="row-between">
+          <text class="label">其它证明</text>
+          <text class="muted">已选 {{proofFiles.length}} 项</text>
+        </view>
+        <view class="muted">选填 · 学生证、学历证、在校成绩单等（JPG/PNG/PDF）</view>
+        <view class="proof-upload-zone" bindtap="chooseEduProofFiles">
+          <view style="font-weight:800;color:#0f766e;">点击选择文件上传</view>
+        </view>
+        <view wx:if="{{proofFiles.length}}">
+          <view class="proof-chip" wx:for="{{proofFiles}}" wx:key="id">
+            <text class="proof-chip-name">{{item.name}}</text>
+            <text class="muted">{{item.size}}</text>
+            <text style="color:#ef4444;" data-id="{{item.id}}" catchtap="removeProof">×</text>
           </view>
         </view>
       </view>
@@ -98,7 +115,6 @@
           <view class="cli {{l1State.phone?'ok':''}}">{{l1State.phone?'✓':'○'}} 手机号</view>
           <view class="cli {{l1State.idCard?'ok':''}}">{{l1State.idCard?'✓':'○'}} 身份证</view>
           <view class="cli {{l1State.university?'ok':''}}">{{l1State.university?'✓':'○'}} 高校</view>
-          <view class="cli {{l1State.chsiCode?'ok':''}}">{{l1State.chsiCode?'✓':'○'}} 学信网码</view>
           <view class="cli {{l1State.bankCard?'ok':''}}">{{l1State.bankCard?'✓':'○'}} 借记卡</view>
           <view class="cli {{l1State.privacy?'ok':''}}">{{l1State.privacy?'✓':'○'}} 隐私授权</view>
         </view>
@@ -140,7 +156,7 @@
         <view class="muted">选填 · 成绩单/竞赛证书等可提升审核权重（JPG/PNG/PDF）</view>
         <view class="proof-upload-zone" bindtap="chooseProofFiles">
           <view style="font-weight:800;color:#0f766e;">点击选择文件上传</view>
-          <view class="muted" style="margin-top:6rpx;">演示环境仅存文件名与大小，与 Web 建档逻辑一致</view>
+          <view class="muted" style="margin-top:6rpx;">上传后将在资质审核中归档</view>
         </view>
         <view wx:if="{{proofFiles.length}}">
           <view class="proof-chip" wx:for="{{proofFiles}}" wx:key="id">

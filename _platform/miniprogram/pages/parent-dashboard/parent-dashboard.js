@@ -47,7 +47,7 @@ Page({
     sortLabels: SORT_OPTIONS,
     filterMin: 80,
     filterMax: 180,
-    walletLabel: '资金保障 · 一课一消（演示托管）',
+    walletLabel: '资金保障 · 一课一消',
     walletFrozen: '0.00',
     walletHasFrozen: false,
     assessmentShow: false,
@@ -86,7 +86,7 @@ Page({
     iotDoorText: '门禁关闭',
     iotLightText: '灯光关闭',
     iotCountdown: '--:--:--',
-    iotBtnLabel: '模拟扫码开门 · 通电照明',
+    iotBtnLabel: '扫码开门 · 通电照明',
     iotBtnClass: 'btn-iot-idle',
     iotBtnDisabled: false,
     featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
@@ -628,7 +628,7 @@ Page({
         iotBadgeClass: 'badge-teal',
         iotDoorText: '门禁关闭',
         iotLightText: '灯光关闭',
-        iotBtnLabel: '模拟扫码开门 · 通电照明',
+        iotBtnLabel: '扫码开门 · 通电照明',
         iotBtnClass: 'btn-iot-idle',
         iotBtnDisabled: false
       });
@@ -770,9 +770,7 @@ Page({
       const result = await Storage.sendSMS(phone, 'bind');
 
       if (result.success) {
-        const msg = result.provider === 'mock'
-          ? '验证码已发送（演示可用：888888）'
-          : '验证码已发送，请查收';
+        const msg = result.message || '验证码已发送，请查收';
         showToast(msg);
 
         this.setData({ smsCooldown: 60 });
@@ -791,7 +789,7 @@ Page({
       }
     } catch (error) {
       console.error('[SMS Send Error]', error);
-      showToast('发送失败（演示可用：888888）', 'warning');
+      showToast('发送失败，请稍后重试', 'warning');
     }
   },
 
@@ -890,7 +888,7 @@ Page({
     const that = this;
     wx.showModal({
       title: '撤销约课',
-      content: '开课前 2 小时外可撤销并退回托管（演示为模拟退款）。确认撤销？',
+      content: '开课前 2 小时外可撤销并退回托管。确认撤销？',
       success(res) {
         if (!res.confirm) return;
         Storage.cancelParentBooking(id).then((r) => {

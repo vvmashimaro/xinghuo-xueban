@@ -128,7 +128,7 @@ Page({
   goLogin() { wx.reLaunch({ url: '/pages/login/login' }); },
   resetDemo() {
     Storage.resetDemoData();
-    showToast('演示数据已重置');
+    showToast('本地数据已重置');
     this.setData({ selectedId: '' }, () => this.reload());
   }
 });

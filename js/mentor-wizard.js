@@ -38,8 +38,7 @@ const L1_SUBSTEPS = {
     icon: 'fa-graduation-cap',
     validator: function() {
       const uni = (document.getElementById('finalUniversityValue')?.value || '').trim();
-      const chsi = (document.getElementById('chsiCode')?.value || '').trim();
-      return !!(uni && chsi && chsi.length >= 10);
+      return !!uni;
     }
   },
   3: {  // 结算账户

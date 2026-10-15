@@ -283,10 +283,7 @@ Page({
       const result = await Storage.sendSMS(phone, 'register');
 
       if (result.success) {
-        const msg = result.provider === 'mock'
-          ? '验证码已发送（演示可用：888888）'
-          : '验证码已发送，请查收';
-        showToast(msg);
+        showToast(result.message || '验证码已发送，请查收');
 
         this.setData({ smsCooldown: 60 });
         if (this._smsTimer) clearInterval(this._smsTimer);
@@ -304,7 +301,7 @@ Page({
       }
     } catch (error) {
       console.error('[SMS Send Error]', error);
-      showToast('发送失败（演示可用：888888）', 'warning');
+      showToast('发送失败，请稍后重试', 'warning');
     }
   },
 

@@ -367,8 +367,8 @@
             <input id="sensIdCard" type="text" placeholder="例：510107************" maxlength="18" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更学信网验证码</label>
-            <input id="sensChsi" type="text" placeholder="例：A98F72KL50198821" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更学信网验证码（选填）</label>
+            <input id="sensChsi" type="text" placeholder="例：A98F72KL50198821，留空表示暂不更新" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
@@ -1069,21 +1069,22 @@
         showToast('请填写有效姓名与身份证号', 'warning');
         return;
       }
-      if (!chsiCode || chsiCode.length < 10) {
-        showToast('请填写有效学信网验证码', 'warning');
+      if (chsiCode && chsiCode.length > 0 && chsiCode.length < 10) {
+        showToast('学信网验证码格式不正确', 'warning');
         return;
       }
       if (!bankCardNumber || bankCardNumber.length < 16) {
         showToast('请填写 16-19 位借记卡号', 'warning');
         return;
       }
-      CURRENT_MENTOR = StorageService.updateMentorProfile(CURRENT_MENTOR.id, {
+      const patch = {
         realName: realName,
         idCard: idCard,
-        chsiCode: chsiCode,
         bankName: bankName || '招商银行',
         bankCardNumber: bankCardNumber
-      }, { sensitiveChange: true });
+      };
+      if (chsiCode) patch.chsiCode = chsiCode;
+      CURRENT_MENTOR = StorageService.updateMentorProfile(CURRENT_MENTOR.id, patch, { sensitiveChange: true });
       closeSensitiveChangeModal();
       showToast('敏感变更已提交，档案回退待审核', 'warning');
       renderAudit(CURRENT_MENTOR);

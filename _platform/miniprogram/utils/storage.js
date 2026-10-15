@@ -801,7 +801,7 @@ const StorageService = {
 
   getParentWalletSummary(parent) {
     if (!parent) {
-      return { frozenYuan: 0, hasFrozen: false, label: '资金保障 · 一课一消（演示托管）' };
+      return { frozenYuan: 0, hasFrozen: false, label: '资金保障 · 一课一消' };
     }
     const list = this.getBookingsForParent(parent.id);
     const active = ['pending_accept', 'escrow_locked', 'accepted'];
@@ -821,7 +821,7 @@ const StorageService = {
     return {
       frozenYuan,
       hasFrozen: frozenYuan > 0,
-      label: '资金保障 · 一课一消（演示托管）'
+      label: '资金保障 · 一课一消'
     };
   },
 
