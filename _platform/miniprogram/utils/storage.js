@@ -183,7 +183,8 @@ function _withMentorDefaults(m) {
   return copy;
 }
 
-function _request(method, path, body) {
+function _request(method, path, body, options) {
+  const opts = options || {};
   return new Promise((resolve, reject) => {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     const token = _read(KEYS.authToken, null);
@@ -198,8 +199,11 @@ function _request(method, path, body) {
       success(res) {
         if (res.statusCode === 401) {
           _write(KEYS.authToken, null);
-          reject(new Error('未授权，请重新登录'));
-          wx.reLaunch({ url: '/pages/login/login' });
+          const err = { status: 401, message: '未授权，请重新登录' };
+          if (!opts.noAuthRedirect) {
+            wx.reLaunch({ url: '/pages/login/login' });
+          }
+          reject(err);
           return;
         }
         if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -406,6 +410,49 @@ const StorageService = {
       console.warn('Get current user failed:', e);
       return null;
     }
+  },
+
+  /** 校验本地 token 是否仍有效（登录页自动进入用，401 不强制跳转登录页） */
+  async validateSession() {
+    if (!this.isLoggedIn()) {
+      return { valid: false };
+    }
+    try {
+      const user = await _request('GET', '/api/auth/me', null, { noAuthRedirect: true });
+      if (!user || !user.role) {
+        return { valid: false };
+      }
+      const session = this.getSession() || {};
+      session.role = user.role || session.role;
+      if (user.userId) {
+        if (user.role === 'parent') session.parentId = user.userId;
+        if (user.role === 'mentor') session.mentorId = user.userId;
+      }
+      if (user.profile && user.profile.phone) session.phone = user.profile.phone;
+      this.setSession(session);
+      return { valid: true, user };
+    } catch (e) {
+      if (e && e.status === 401) {
+        this.clearAuthToken();
+      }
+      return { valid: false };
+    }
+  },
+
+  /** 微信 getPhoneNumber code → 票据 → 按角色登录 */
+  async loginWithWeChatPhoneCode(code, role) {
+    const phoneResult = await this.getWeChatPhone(code);
+    if (!phoneResult || !phoneResult.success) {
+      return {
+        success: false,
+        error: (phoneResult && phoneResult.error) || '获取手机号失败'
+      };
+    }
+    const ticket = phoneResult.ticket;
+    if (!ticket) {
+      return { success: false, error: '未获取到验证票据，请重试' };
+    }
+    return this.login(ticket, role);
   },
 
   async hydrateFromServer() {
