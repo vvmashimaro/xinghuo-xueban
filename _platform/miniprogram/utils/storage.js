@@ -798,14 +798,46 @@ const StorageService = {
     }
   },
 
-  // Payment operations
-  async prepayWechat(bookingId, _displayAmountYuan, description) {
+  wxLoginCode() {
+    return new Promise((resolve, reject) => {
+      wx.login({
+        success: (res) => {
+          if (res.code) resolve(res.code);
+          else reject(new Error('wx.login 未返回 code'));
+        },
+        fail: (err) => reject(err || new Error('wx.login 失败'))
+      });
+    });
+  },
+
+  async bindWechatSession(wxCode) {
     try {
+      const code = wxCode || (await this.wxLoginCode());
+      const result = await _request('POST', '/api/wechat/jscode2session', { code });
+      return result;
+    } catch (e) {
+      return { success: false, error: e.message || '微信会话绑定失败' };
+    }
+  },
+
+  // Payment operations
+  async prepayWechat(bookingId, _displayAmountYuan, description, options) {
+    try {
+      const opts = options || {};
+      let wxCode = opts.wxCode;
+      if (!wxCode && opts.bindSession !== false) {
+        try {
+          wxCode = await this.wxLoginCode();
+        } catch (loginErr) {
+          console.warn('[prepayWechat] wx.login failed', loginErr);
+        }
+      }
       const result = await _request('POST', '/api/pay/wechat/prepay', {
         bookingId,
-        description
+        description,
+        wxCode
       });
-      return result;
+      return Object.assign({ success: true }, result);
     } catch (e) {
       return { success: false, error: e.message || '创建支付订单失败' };
     }
