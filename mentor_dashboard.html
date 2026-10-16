@@ -368,7 +368,14 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更学信网验证码（选填）</label>
-            <input id="sensChsi" type="text" placeholder="例：A98F72KL50198821，留空表示暂不更新" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            <input id="sensChsi" type="text" maxlength="16" placeholder="例：A98F72KL50198821，留空表示暂不更新" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+              <a href="https://my.chsi.com.cn/archive/bab/index.action?" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1.5 rounded-lg">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                去学信网查验证码
+              </a>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">登录学信档案申请「教育部学籍在线验证报告」后复制 16 位在线验证码</p>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>

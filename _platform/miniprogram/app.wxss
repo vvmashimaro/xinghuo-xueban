@@ -119,12 +119,21 @@ view, text, button, input, textarea, picker, label, scroll-view {
 }
 
 .chsi-row {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
+  width: 100%;
 }
 .chsi-row .input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.chsi-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+.chsi-actions button {
   flex: 1;
+  min-width: 200rpx;
 }
 .chsi-badge {
   font-size: 20rpx;
