@@ -3,6 +3,21 @@
     <view class="card-title">资料维护（非敏感）</view>
     <view class="muted" style="margin-bottom:16rpx;">修改后保存不触发复审；可约时段与家长预约可见性以此为准。</view>
     <view class="field">
+      <view class="row-between" style="margin-bottom:8rpx;">
+        <text class="label" style="margin:0;">擅长学科（可多选）</text>
+        <text class="muted">已选 {{selectedSubjectCount}} 门</text>
+      </view>
+      <view class="subject-group" wx:for="{{subjectGroupsView}}" wx:key="key" wx:for-item="group">
+        <view class="subject-group-head">
+          <text class="subject-group-title">{{group.title}}</text>
+          <text class="muted">{{group.hint}}</text>
+        </view>
+        <view class="chip-wrap">
+          <view wx:for="{{group.chips}}" wx:key="name" wx:for-item="chip" class="chip {{chip.on?'chip-on':''}}" data-v="{{chip.name}}" bindtap="toggleSubject">{{chip.name}}</view>
+        </view>
+      </view>
+    </view>
+    <view class="field">
       <text class="label">期望时薪</text>
       <input class="input" type="number" value="{{edit.hourlyRate}}" data-k="hourlyRate" bindinput="onEdit" />
     </view>

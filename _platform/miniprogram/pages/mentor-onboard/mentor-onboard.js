@@ -1,6 +1,8 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
 const Chsi = require('../../utils/chsi-verify');
+const ProofUpload = require('../../utils/proof-upload');
+const SubjectCatalog = require('../../utils/subject-catalog');
 
 Page({
   data: {
@@ -11,9 +13,9 @@ Page({
     bankIndex: 0,
     spaces: Storage.SPACE_OPTIONS || ['青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'],
     spaceIndex: 0,
-    subjectChips: [],
+    subjectGroupsView: [],
+    selectedSubjectCount: 0,
     styleChips: [],
-    subjectOptions: ['小学数学', '小学英语', '小学语文', '初中数学', '初中物理', '初中英语', '初中化学', '初中语文', '初中体育', '初中全科答疑', '高中数学', '高中物理', '高中英语', '高中化学', '高中语文', '考研数学(一/二/三)', '考研英语(一/二)', '考研思想政治', '体育专项训练与中考体考', '舞蹈/播音艺考辅导', '美术艺考文化课冲刺'],
     styleOptions: ['引导启发解题', '大题压轴模型归纳', '思维导图教学', '基础漏洞重构', '错题本高效提分法', '耐心督学陪读', '考前心态疏导'],
     form: {
       realName: '', phone: '', idCard: '', university: '', degree: '本科在读 (大三)',
@@ -98,48 +100,31 @@ Page({
     }
   },
   chooseEduProofFiles() {
-    const that = this;
-    if (!wx.chooseMessageFile) {
-      showToast('当前基础库不支持文件选择', 'warning');
-      return;
-    }
-    wx.chooseMessageFile({
-      count: 5,
-      type: 'file',
-      extension: ['jpg', 'jpeg', 'png', 'pdf'],
-      success(res) {
-        const added = (res.tempFiles || []).map((f) => ({
-          id: Date.now() + Math.random(),
-          name: f.name,
-          size: ((f.size || 0) / (1024 * 1024)).toFixed(1) + 'MB',
-          tag: '其它证明'
-        }));
-        that.setData({ proofFiles: (that.data.proofFiles || []).concat(added) });
-        if (added.length) showToast(`已添加 ${added.length} 份其它证明`);
-      }
-    });
+    this._pickAndUploadProofs('其它证明');
   },
   chooseProofFiles() {
-    const that = this;
-    if (!wx.chooseMessageFile) {
-      showToast('当前基础库不支持文件选择', 'warning');
-      return;
+    this._pickAndUploadProofs('新上传');
+  },
+  async _pickAndUploadProofs(tag) {
+    try {
+      wx.showLoading({ title: '上传中…', mask: true });
+      const uploaded = await ProofUpload.pickProofFiles({ tag, count: 5 });
+      wx.hideLoading();
+      if (!uploaded.length) return;
+      const added = uploaded.map((item) => ({
+        id: item.id || Date.now() + Math.random(),
+        name: item.name,
+        size: item.size,
+        tag: item.tag || tag,
+        url: item.url,
+        path: item.path
+      }));
+      this.setData({ proofFiles: (this.data.proofFiles || []).concat(added) });
+      showToast(`已上传 ${added.length} 份${tag === '其它证明' ? '其它证明' : '佐证材料'}`);
+    } catch (err) {
+      wx.hideLoading();
+      showToast((err && err.message) || '上传失败', 'warning');
     }
-    wx.chooseMessageFile({
-      count: 5,
-      type: 'file',
-      extension: ['jpg', 'jpeg', 'png', 'pdf'],
-      success(res) {
-        const added = (res.tempFiles || []).map((f) => ({
-          id: Date.now() + Math.random(),
-          name: f.name,
-          size: ((f.size || 0) / (1024 * 1024)).toFixed(1) + 'MB',
-          tag: '新上传'
-        }));
-        that.setData({ proofFiles: (that.data.proofFiles || []).concat(added) });
-        if (added.length) showToast(`已添加 ${added.length} 份佐证材料`);
-      }
-    });
   },
   removeProof(e) {
     const id = e.currentTarget.dataset.id;
@@ -184,7 +169,8 @@ Page({
     const subjects = this.data.form.subjects || [];
     const styles = this.data.form.styles || [];
     this.setData({
-      subjectChips: (this.data.subjectOptions || []).map((name) => ({ name, on: subjects.indexOf(name) >= 0 })),
+      subjectGroupsView: SubjectCatalog.buildSubjectChipGroups(subjects),
+      selectedSubjectCount: subjects.length,
       styleChips: (this.data.styleOptions || []).map((name) => ({ name, on: styles.indexOf(name) >= 0 }))
     });
   },
@@ -252,9 +238,12 @@ Page({
       }))
       : null;
     const proofFiles = (this.data.proofFiles || []).map((item) => ({
+      id: item.id,
       name: item.name,
       size: item.size,
-      tag: item.tag || '佐证材料'
+      tag: item.tag || '佐证材料',
+      url: item.url,
+      path: item.path
     }));
     const saved = Storage.addMentor({
       realName: f.realName.trim(),

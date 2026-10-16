@@ -5,7 +5,7 @@
   </view>
 
   <view class="role-tabs">
-    <view class="role-tab {{role==='mentor'?'on':''}}" data-role="mentor" bindtap="onSwitchRole">青年导师</view>
+    <view class="role-tab {{role==='mentor'?'on':''}}" data-role="mentor" bindtap="onSwitchRole">伴读导师</view>
     <view class="role-tab {{role==='parent'?'on':''}}" data-role="parent" bindtap="onSwitchRole">家长 / 学员</view>
   </view>
 

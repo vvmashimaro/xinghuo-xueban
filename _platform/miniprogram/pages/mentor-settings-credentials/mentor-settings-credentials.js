@@ -1,6 +1,7 @@
 const Storage = require('../../utils/storage');
 const Chsi = require('../../utils/chsi-verify');
 const { showToast } = require('../../utils/toast');
+const ProofUpload = require('../../utils/proof-upload');
 
 Page({
   data: {
@@ -137,30 +138,22 @@ Page({
     this.reload();
   },
 
-  chooseOtherProof() {
-    const that = this;
-    if (!wx.chooseMessageFile) {
-      showToast('当前基础库不支持文件选择', 'warning');
-      return;
+  async chooseOtherProof() {
+    const m = this._mentor;
+    if (!m) return;
+    try {
+      wx.showLoading({ title: '上传中…', mask: true });
+      const uploaded = await ProofUpload.pickProofFiles({ tag: '其它证明', count: 5 });
+      wx.hideLoading();
+      if (!uploaded.length) return;
+      const merged = (m.proofFiles || []).concat(uploaded);
+      await Storage.updateMentorProfile(m.id, { proofFiles: merged });
+      showToast(`已上传 ${uploaded.length} 份其它证明`);
+      this.reload();
+    } catch (err) {
+      wx.hideLoading();
+      showToast((err && err.message) || '上传失败', 'warning');
     }
-    wx.chooseMessageFile({
-      count: 5,
-      type: 'file',
-      extension: ['jpg', 'jpeg', 'png', 'pdf'],
-      success(res) {
-        const m = that._mentor;
-        if (!m) return;
-        const added = (res.tempFiles || []).map((f) => ({
-          name: f.name,
-          size: ((f.size || 0) / (1024 * 1024)).toFixed(1) + 'MB',
-          tag: '其它证明'
-        }));
-        const merged = (m.proofFiles || []).concat(added);
-        Storage.updateMentorProfile(m.id, { proofFiles: merged });
-        showToast(`已添加 ${added.length} 份其它证明`);
-        that.reload();
-      }
-    });
   },
   removeProof(e) {
     const m = this._mentor;

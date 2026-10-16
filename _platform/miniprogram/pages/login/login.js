@@ -6,7 +6,7 @@ const warehouseOn = !!appConfig.FEATURE_SMART_WAREHOUSE;
 
 const ROLE_META = {
   mentor: {
-    title: '青年导师端登录',
+    title: '伴读导师端登录',
     subtitle: warehouseOn
       ? '资金保障 · 免押扫码开启智能教学仓'
       : '资金保障 · 阳光透明接单授课'

@@ -1,6 +1,7 @@
 const Storage = require('../../utils/storage');
 const Avail = require('../../utils/mentor-availability');
 const { showToast } = require('../../utils/toast');
+const SubjectCatalog = require('../../utils/subject-catalog');
 
 Page({
   data: {
@@ -13,7 +14,10 @@ Page({
     timeSlots: Avail.TIME_SLOTS,
     availability: {},
     activeSlotOn: {},
-    availabilitySummary: ''
+    availabilitySummary: '',
+    subjects: [],
+    subjectGroupsView: [],
+    selectedSubjectCount: 0
   },
 
   async onShow() {
@@ -38,6 +42,7 @@ Page({
     let spaceIndex = spaces.indexOf(mentor.spacePreference || (mentor.preferredSpaces && mentor.preferredSpaces[0]));
     if (spaceIndex < 0) spaceIndex = 0;
     const loaded = Avail.loadAvailabilityFromStorage(Storage.getMentorAvailability(mentor.id));
+    const subjects = (mentor.subjects || []).slice();
     this.setData({
       spaceIndex,
       edit: {
@@ -45,11 +50,27 @@ Page({
         scoreHighlight: mentor.scoreHighlight || '',
         lectureUrl: mentor.lectureUrl || ''
       },
+      subjects,
+      subjectGroupsView: SubjectCatalog.buildSubjectChipGroups(subjects),
+      selectedSubjectCount: subjects.length,
       availability: loaded.availability,
       selectedWeekday: loaded.selectedWeekday,
       selectedWeekdayLabel: loaded.selectedWeekdayLabel,
       activeSlotOn: loaded.activeSlotOn,
       availabilitySummary: Avail.summarizeAvailability(loaded.availability)
+    });
+  },
+
+  toggleSubject(e) {
+    const v = e.currentTarget.dataset.v;
+    const list = (this.data.subjects || []).slice();
+    const i = list.indexOf(v);
+    if (i >= 0) list.splice(i, 1);
+    else list.push(v);
+    this.setData({
+      subjects: list,
+      subjectGroupsView: SubjectCatalog.buildSubjectChipGroups(list),
+      selectedSubjectCount: list.length
     });
   },
 
@@ -95,12 +116,17 @@ Page({
   saveProfile() {
     const m = this._mentor;
     if (!m) return;
+    if (!(this.data.subjects || []).length) {
+      showToast('请至少选择一门擅长学科', 'warning');
+      return;
+    }
     const availability = Avail.availabilityToArray(this.data.availability);
     const space = this.data.spaces[this.data.spaceIndex];
     Storage.setMentorAvailability(m.id, availability);
     Storage.updateMentorProfile(
       m.id,
       {
+        subjects: (this.data.subjects || []).slice(),
         hourlyRate: parseInt(this.data.edit.hourlyRate, 10) || m.hourlyRate,
         scoreHighlight: this.data.edit.scoreHighlight,
         lectureUrl: this.data.edit.lectureUrl,
