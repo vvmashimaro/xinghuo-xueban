@@ -129,9 +129,18 @@
     <view class="card">
       <view class="card-title">L2 辅导能力画像与学科标签</view>
       <view class="field">
-        <text class="label">擅长学科（可多选）</text>
-        <view class="chip-wrap">
-          <view wx:for="{{subjectChips}}" wx:key="name" class="chip {{item.on?'chip-on':''}}" data-v="{{item.name}}" bindtap="toggleSubject">{{item.name}}</view>
+        <view class="row-between" style="margin-bottom:8rpx;">
+          <text class="label" style="margin:0;">擅长学科（可多选）</text>
+          <text class="muted">已选 {{selectedSubjectCount}} 门</text>
+        </view>
+        <view class="subject-group" wx:for="{{subjectGroupsView}}" wx:key="key" wx:for-item="group">
+          <view class="subject-group-head">
+            <text class="subject-group-title">{{group.title}}</text>
+            <text class="muted">{{group.hint}}</text>
+          </view>
+          <view class="chip-wrap">
+            <view wx:for="{{group.chips}}" wx:key="name" wx:for-item="chip" class="chip {{chip.on?'chip-on':''}}" data-v="{{chip.name}}" bindtap="toggleSubject">{{chip.name}}</view>
+          </view>
         </view>
       </view>
       <view class="field">

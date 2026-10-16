@@ -524,6 +524,46 @@ const StorageService = {
     return mentors.find((m) => m.phone === user.phone) || null;
   },
 
+  addMentor(mentor) {
+    const list = this.getMentors();
+    const record = Object.assign(
+      {
+        id: _uid('AP'),
+        code: 'CD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000),
+        status: 'pending',
+        submitTime: _now(),
+        evalGrade: '待教研评级',
+        reviewComment: '',
+        publicTeacherCompliance: true,
+        customSubjects: [],
+        proofFiles: [],
+        styles: [],
+        subjects: []
+      },
+      mentor
+    );
+    const normalized = _withMentorDefaults(record);
+    list.unshift(normalized);
+    this.saveMentors(list);
+    const session = this.getSession() || {};
+    session.role = 'mentor';
+    session.mentorId = normalized.id;
+    session.phone = normalized.phone || session.phone;
+    this.setSession(session);
+    _apiSafe('POST', '/api/mentors', mentor || {}).then((remote) => {
+      if (remote && remote.id) {
+        const all = this.getMentors().filter((m) => m.id !== normalized.id);
+        all.unshift(_withMentorDefaults(remote));
+        this.saveMentors(all);
+        const s = this.getSession() || {};
+        s.mentorId = remote.id;
+        s.phone = remote.phone || s.phone;
+        this.setSession(s);
+      }
+    });
+    return normalized;
+  },
+
   async updateMentorProfile(id, patch, options) {
     try {
       const result = await _request('PATCH', '/api/mentors/' + encodeURIComponent(id), {

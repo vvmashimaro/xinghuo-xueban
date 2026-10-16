@@ -112,7 +112,7 @@
 
       <!-- 动态标题说明 -->
       <div class="space-y-1">
-        <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">青年导师端登录</h1>
+        <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">伴读导师端登录</h1>
         <p id="roleSubtitle" class="text-xs text-slate-300/80 leading-relaxed">
           资金保障 · 阳光透明接单授课
         </p>
@@ -329,7 +329,7 @@
       if (role === 'mentor') {
         tabMentor.className = ROLE_TAB_ACTIVE;
         tabMentor.setAttribute('aria-selected', 'true');
-        roleTitle.innerText = "青年导师端登录";
+        roleTitle.innerText = "伴读导师端登录";
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('mentor')
           : '资金保障 · 阳光透明接单授课';

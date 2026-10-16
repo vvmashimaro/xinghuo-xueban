@@ -9,6 +9,8 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const proofUpload = require('./proof-upload');
 const db = require('./db');
 const sms = require('./sms');
 const auth = require('./auth');
@@ -1293,6 +1295,40 @@ const subjectCatalog = require('./subject-catalog');
 app.get('/api/subject-catalog', (req, res) => {
   ok(res, subjectCatalog.getSubjectCatalog());
 });
+
+/* ========== Proof file uploads (mini program + web) ========== */
+proofUpload.ensureDirs();
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '..', 'uploads'), {
+    maxAge: isProduction ? '7d' : 0,
+    fallthrough: true
+  })
+);
+
+app.post(
+  '/api/uploads/proof',
+  requireAuth,
+  express.raw({ type: () => true, limit: '12mb' }),
+  (req, res) => {
+    try {
+      const contentType = req.headers['content-type'] || '';
+      if (!contentType.toLowerCase().includes('multipart/form-data')) {
+        return fail(res, 400, '请使用 multipart 上传文件');
+      }
+      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || '');
+      const { fields, file } = proofUpload.parseMultipart(body, contentType);
+      const result = proofUpload.saveProofUpload(file, fields);
+      if (!result.ok) {
+        return fail(res, 400, result.error || '上传失败');
+      }
+      ok(res, { file: result.record });
+    } catch (error) {
+      console.error('[Proof Upload Error]', error);
+      fail(res, 400, '上传解析失败');
+    }
+  }
+);
 
 app.get('/api/teaching-points', requireAuth, (req, res) => {
   db.seedIfEmpty();
