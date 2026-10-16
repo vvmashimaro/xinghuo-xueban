@@ -54,11 +54,11 @@
           <text class="chsi-badge {{chsiBadgeClass}}">{{chsiBadgeText}}</text>
         </view>
         <view class="chsi-row">
-          <input class="input" placeholder="例：A98F72KL50198821" placeholder-class="input-placeholder" value="{{form.chsiCode}}" data-k="chsiCode" bindinput="onChsiField" />
+          <input class="input" maxlength="16" placeholder="例：A98F72KL50198821" placeholder-class="input-placeholder" value="{{form.chsiCode}}" data-k="chsiCode" bindinput="onChsiField" />
         </view>
-        <view class="flex-row gap-8" style="margin-top:12rpx;">
-          <button class="btn-ghost" size="mini" style="flex:1;" bindtap="openChsiArchive">去学信网查验证码</button>
-          <button class="btn-primary" size="mini" style="flex:1;" bindtap="triggerChsiVerify" disabled="{{chsiVerifying}}">{{chsiVerifyBtnText}}</button>
+        <view class="chsi-actions">
+          <button class="btn-ghost" size="mini" bindtap="openChsiArchive">去学信网查验证码</button>
+          <button class="btn-primary" size="mini" bindtap="triggerChsiVerify" disabled="{{chsiVerifying}}">{{chsiVerifyBtnText}}</button>
         </view>
         <view class="muted" style="margin-top:8rpx;">登录学信档案，申请「教育部学籍在线验证报告」，复制报告上的在线验证码</view>
         <view class="chsi-panel" wx:if="{{chsiPanelShow}}">

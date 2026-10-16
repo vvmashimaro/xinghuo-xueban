@@ -1,7 +1,8 @@
 /**
  * 学信网在线验证码校验（与 Web index.html 演示逻辑对齐，前端模拟结构化解析）
+ * 生产环境报告核验可参考：https://www.chsi.com.cn/xlcx/bgcx.jsp
  */
-const CHSI_ARCHIVE_URL = 'https://my.chsi.com.cn/archive/index.jsp';
+const CHSI_ARCHIVE_URL = 'https://my.chsi.com.cn/archive/bab/index.action?';
 
 const STATUS = {
   idle: { text: '未验证', cls: 'chsi-badge-idle' },
