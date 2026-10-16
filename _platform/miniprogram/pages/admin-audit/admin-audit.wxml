@@ -66,5 +66,5 @@
   </view>
 
   <button class="btn-ghost" style="width:100%;" bindtap="goLogin">返回登录</button>
-  <button class="btn-ghost" style="width:100%;margin-top:12rpx;" bindtap="resetDemo">重置演示数据</button>
+  <button class="btn-ghost" style="width:100%;margin-top:12rpx;" bindtap="resetDemo">重置本地数据</button>
 </view>

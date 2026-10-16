@@ -161,7 +161,7 @@
   <!-- IoT 面板（FEATURE_SMART_WAREHOUSE） -->
   <view class="card" wx:if="{{featureSmartWarehouse}}">
     <view class="row-between">
-      <view class="card-title" style="margin:0;">IoT 智能仓履约模拟</view>
+      <view class="card-title" style="margin:0;">IoT 智能仓履约</view>
       <text class="badge {{iotBadgeClass}}">{{iotBadge}}</text>
     </view>
     <view class="muted" style="margin-top:8rpx;" wx:if="{{iotLinkedBooking}}">关联约课：{{iotLinkedBooking}}</view>

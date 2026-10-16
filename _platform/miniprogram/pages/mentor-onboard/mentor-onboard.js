@@ -97,6 +97,28 @@ Page({
       showToast((err && err.message) || '学信网验证失败', 'warning');
     }
   },
+  chooseEduProofFiles() {
+    const that = this;
+    if (!wx.chooseMessageFile) {
+      showToast('当前基础库不支持文件选择', 'warning');
+      return;
+    }
+    wx.chooseMessageFile({
+      count: 5,
+      type: 'file',
+      extension: ['jpg', 'jpeg', 'png', 'pdf'],
+      success(res) {
+        const added = (res.tempFiles || []).map((f) => ({
+          id: Date.now() + Math.random(),
+          name: f.name,
+          size: ((f.size || 0) / (1024 * 1024)).toFixed(1) + 'MB',
+          tag: '其它证明'
+        }));
+        that.setData({ proofFiles: (that.data.proofFiles || []).concat(added) });
+        if (added.length) showToast(`已添加 ${added.length} 份其它证明`);
+      }
+    });
+  },
   chooseProofFiles() {
     const that = this;
     if (!wx.chooseMessageFile) {
@@ -149,7 +171,6 @@ Page({
       phone: (f.phone || '').length === 11,
       idCard: (f.idCard || '').trim().length >= 15,
       university: !!((f.university || '').trim()),
-      chsiCode: (f.chsiCode || '').trim().length >= 12,
       bankCard: (f.bankCardNumber || '').trim().length >= 16,
       privacy: !!f.privacy
     };
@@ -191,19 +212,19 @@ Page({
       return;
     }
     if (!s.university) { showToast('请填写就读/毕业高校！', 'error'); return; }
-    if (!s.chsiCode) { showToast('请输入有效的学信网在线验证码（通常为16位）！', 'error'); return; }
     if (!s.bankCard) { showToast('请填写 16-19 位银联借记卡号！', 'warning'); return; }
     if (!s.privacy) { showToast('请勾选《个人信息保护与法定核查授权条款》！', 'warning'); return; }
     const f = this.data.form;
-    if (!this._chsiVerifiedResult) {
+    const chsiTrim = (f.chsiCode || '').trim();
+    if (chsiTrim.length >= 12 && !this._chsiVerifiedResult) {
       this._chsiVerifiedResult = Chsi.silentFallbackResult({
         realName: f.realName,
-        chsiCode: f.chsiCode,
+        chsiCode: chsiTrim,
         university: f.university
       });
     }
     this.setData({ step: 2 });
-    showToast('L1 身份、学信网与清算账户签约通过！');
+    showToast('L1 身份与清算账户签约通过！');
   },
 
   backL1() { this.setData({ step: 1 }); },
@@ -222,11 +243,14 @@ Page({
       showToast('请提供试讲视频或板书讲义网盘提取链接！', 'warning');
       return;
     }
-    const chsiMeta = this._chsiVerifiedResult || Chsi.silentFallbackResult({
-      realName: f.realName,
-      chsiCode: f.chsiCode,
-      university: f.university
-    });
+    const chsiTrim = (f.chsiCode || '').trim();
+    const chsiMeta = chsiTrim.length >= 12
+      ? (this._chsiVerifiedResult || Chsi.silentFallbackResult({
+        realName: f.realName,
+        chsiCode: chsiTrim,
+        university: f.university
+      }))
+      : null;
     const proofFiles = (this.data.proofFiles || []).map((item) => ({
       name: item.name,
       size: item.size,
@@ -239,11 +263,11 @@ Page({
       university: f.university.trim(),
       province: '四川',
       degree: f.degree,
-      chsiCode: f.chsiCode.trim(),
-      chsiStatus: (chsiMeta && chsiMeta.status) || '有效 (在籍)',
-      chsiMajor: (chsiMeta && chsiMeta.university)
+      chsiCode: chsiTrim,
+      chsiStatus: chsiMeta ? (chsiMeta.status || '有效 (在籍)') : '未填写',
+      chsiMajor: chsiMeta && chsiMeta.university
         ? (chsiMeta.university + ' · 在籍核验')
-        : (f.university.trim() + ' · 在籍核验'),
+        : (f.university.trim() + ' · 待学籍核验'),
       publicTeacherCompliance: true,
       subjects: f.subjects.slice(),
       customSubjects: [],

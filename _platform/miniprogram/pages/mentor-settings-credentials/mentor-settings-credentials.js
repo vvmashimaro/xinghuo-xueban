@@ -13,6 +13,7 @@ Page({
     chsiStatus: '',
     chsiMajor: '',
     proofCount: 0,
+    proofFiles: [],
     publicTeacherCompliance: true,
     sensitiveShow: false,
     sens: {
@@ -42,6 +43,12 @@ Page({
       chsiStatus: mentor.chsiStatus || '待核验',
       chsiMajor: mentor.chsiMajor || '—',
       proofCount: (mentor.proofFiles || []).length,
+      proofFiles: (mentor.proofFiles || []).map((item, idx) => ({
+        id: item.id || ('pf-' + idx),
+        name: item.name || '未命名文件',
+        size: item.size || '',
+        tag: item.tag || '佐证材料'
+      })),
       publicTeacherCompliance: !!mentor.publicTeacherCompliance
     });
   },
@@ -101,8 +108,8 @@ Page({
       showToast('请填写有效姓名与身份证号', 'warning');
       return;
     }
-    if (!chsiCode || chsiCode.length < 10) {
-      showToast('请填写有效学信网验证码', 'warning');
+    if (chsiCode && chsiCode.length > 0 && chsiCode.length < 10) {
+      showToast('学信网验证码格式不正确', 'warning');
       return;
     }
     if (!bankCardNumber || bankCardNumber.length < 16) {
@@ -112,11 +119,11 @@ Page({
     const patch = {
       realName,
       idCard,
-      chsiCode,
       bankName: (s.bankName || '').trim() || '招商银行',
       bankCardNumber,
       phone: (s.phone || '').trim() || m.phone
     };
+    if (chsiCode) patch.chsiCode = chsiCode;
     if (s.note) {
       patch.reviewComment = '【敏感信息变更待复审】' + s.note;
     }
@@ -127,6 +134,43 @@ Page({
     Storage.setSession(session);
     this.setData({ sensitiveShow: false });
     showToast('已提交敏感变更，进入复审', 'warning');
+    this.reload();
+  },
+
+  chooseOtherProof() {
+    const that = this;
+    if (!wx.chooseMessageFile) {
+      showToast('当前基础库不支持文件选择', 'warning');
+      return;
+    }
+    wx.chooseMessageFile({
+      count: 5,
+      type: 'file',
+      extension: ['jpg', 'jpeg', 'png', 'pdf'],
+      success(res) {
+        const m = that._mentor;
+        if (!m) return;
+        const added = (res.tempFiles || []).map((f) => ({
+          name: f.name,
+          size: ((f.size || 0) / (1024 * 1024)).toFixed(1) + 'MB',
+          tag: '其它证明'
+        }));
+        const merged = (m.proofFiles || []).concat(added);
+        Storage.updateMentorProfile(m.id, { proofFiles: merged });
+        showToast(`已添加 ${added.length} 份其它证明`);
+        that.reload();
+      }
+    });
+  },
+  removeProof(e) {
+    const m = this._mentor;
+    if (!m) return;
+    const idx = Number(e.currentTarget.dataset.idx);
+    const list = (m.proofFiles || []).slice();
+    if (idx < 0 || idx >= list.length) return;
+    list.splice(idx, 1);
+    Storage.updateMentorProfile(m.id, { proofFiles: list });
+    showToast('已移除该佐证材料', 'warning');
     this.reload();
   }
 });

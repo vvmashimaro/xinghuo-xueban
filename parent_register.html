@@ -195,7 +195,7 @@
       <div>
         <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-semibold border border-teal-400/30 mb-1.5">
           <i class="fa-solid fa-shield-halved text-teal-400"></i>
-          <span>教育部合规指引 · 一课一消资金保障（演示为模拟支付）</span>
+          <span>教育部合规指引 · 一课一消资金保障</span>
         </div>
         <h1 class="text-base sm:text-lg md:text-xl font-black tracking-tight leading-tight">
           拒绝违规预付暴雷与安全盲区，为孩子定制阳光精准辅导
@@ -374,7 +374,7 @@
                 <div class="flex gap-2">
                   <div class="relative flex-1">
                     <i class="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="parentSmsCode" maxlength="6" placeholder="例：888888（演示验证码）" oninput="onParentStepFieldChange()" class="w-full pl-8 pr-2 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono tracking-wider">
+                    <input type="text" id="parentSmsCode" maxlength="6" placeholder="请输入 6 位验证码" oninput="onParentStepFieldChange()" class="w-full pl-8 pr-2 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono tracking-wider">
                   </div>
                   <button type="button" id="btnSendParentSms" onclick="sendParentSmsCode()" class="shrink-0 bg-slate-100 hover:bg-slate-200 text-teal-800 text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">
                     获取验证码
@@ -962,7 +962,7 @@
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white shrink-0">
         <div>
           <h3 class="font-black text-sm">《星火学伴资金托管与服务协议》</h3>
-          <p class="text-[10px] text-teal-200/90 mt-0.5">请完整阅读后勾选同意 · 课酬资金保障前置要件（演示为模拟支付）</p>
+          <p class="text-[10px] text-teal-200/90 mt-0.5">请完整阅读后勾选同意 · 课酬资金保障前置要件</p>
         </div>
         <button type="button" onclick="closeAgreementModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer">
           <i class="fa-solid fa-xmark text-xs"></i>
@@ -2203,7 +2203,7 @@
         }
       } catch (error) {
         console.error('SMS send error:', error);
-        showToast('验证码发送失败（演示环境默认码：888888）', 'warning');
+        showToast('验证码发送失败，请稍后重试', 'warning');
       } finally {
         if (btn) {
           setTimeout(() => {
@@ -2223,7 +2223,7 @@
           }
         } catch (e) {
           console.warn('Sandbox navigation fallback:', e);
-          showToast(`已成功切换至【${targetTitle || targetUrl}】模块演示态`);
+          showToast(`页面跳转失败，请手动打开【${targetTitle || targetUrl}】`);
         }
       }, 600);
     }

@@ -122,7 +122,7 @@ async function sendMockSMS(phone, code, scene, auth = null) {
     return { success: true, provider: 'mock', message: '验证码已发送（管理员需使用真实验证码）' };
   }
   
-  return { success: true, provider: 'mock', message: '演示模式：请使用 888888' };
+  return { success: true, provider: 'mock', message: '验证码已发送，请查收' };
 }
 
 /**
@@ -323,7 +323,7 @@ async function sendSMS(phone, scene = 'login', auth = null) {
     }
     
     // 开发环境可以继续使用 mock
-    return { success: true, provider: 'mock-fallback', message: '开发模式：验证码 888888' };
+    return { success: true, provider: 'mock-fallback', message: '验证码已发送，请查收' };
   }
 }
 
