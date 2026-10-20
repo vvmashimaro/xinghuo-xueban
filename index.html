@@ -2072,7 +2072,6 @@
     
       scheduleMentorDraftSave(false);
       refreshMentorPreviewGate();
-      maybeAutoAdvanceMentorL1(pct === 100);
     }
 
     function goToStep(step) {
@@ -2538,27 +2537,6 @@
     function scheduleMentorDraftSave(showTip) {
       if (__mentorDraftTimer) clearTimeout(__mentorDraftTimer);
       __mentorDraftTimer = setTimeout(() => persistMentorDraft(!!showTip), 300);
-    }
-
-    function maybeAutoAdvanceMentorL1(isComplete) {
-      if (__restoringMentorDraft || __mentorAutoLock) return;
-      const onStep1 = document.getElementById('step1-card') && !document.getElementById('step1-card').classList.contains('hidden');
-      if (!onStep1) {
-        __l1WasComplete = isComplete;
-        return;
-      }
-      if (isComplete && !__l1WasComplete) {
-        __l1WasComplete = true;
-        __mentorAutoLock = true;
-        persistMentorDraft(false);
-        showToast('L1 已保存，自动进入 L2 能力画像');
-        setTimeout(() => {
-          goToStep(2);
-          __mentorAutoLock = false;
-        }, 380);
-      } else if (!isComplete) {
-        __l1WasComplete = false;
-      }
     }
 
     function applyMentorDraft(draft) {

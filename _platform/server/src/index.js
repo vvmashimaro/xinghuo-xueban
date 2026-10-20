@@ -496,6 +496,106 @@ app.post('/api/wechat/jscode2session', requireAuth, async (req, res) => {
 });
 
 /* ========== 微信支付 ========== */
+
+function bookingForPayOrderAccess(req, res, payOrder, outTradeNo) {
+  const bookingId =
+    (payOrder && payOrder.bookingId) || wechatPay.parseBookingIdFromOutTradeNo(outTradeNo);
+  const booking = bookingId ? db.getBookings().find((b) => b.id === bookingId) : null;
+  if (!booking) return { booking: null, allowed: true };
+  if (req.user.role === 'parent') {
+    const parent = db.getParents().find((p) => p.id === req.user.userId);
+    if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
+      fail(res, 403, '只能操作自己的订单');
+      return { booking, allowed: false };
+    }
+  } else if (req.user.role === 'mentor') {
+    if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
+      fail(res, 403, '无权限');
+      return { booking, allowed: false };
+    }
+  } else if (req.user.role !== 'admin') {
+    fail(res, 403, '无权限');
+    return { booking, allowed: false };
+  }
+  return { booking, allowed: true };
+}
+
+function markBookingPaidFromPaySuccess(booking, payMeta) {
+  if (!booking) return null;
+  const payable = pricing.isBookingPayable(booking);
+  const patch = {
+    paymentStatus: 'paid',
+    paymentMethod: 'wechat',
+    paidAt: payMeta.successTime || new Date().toISOString(),
+    transactionId: payMeta.transactionId,
+    escrowStatus: 'frozen'
+  };
+  if (payable.ok && payable.amountYuan != null) {
+    patch.amount = payable.amountYuan;
+  }
+  return db.updateBooking(booking.id, patch, { trust: 'payment' });
+}
+
+async function syncPayOrderWithRemote(outTradeNo) {
+  const payOrder = db.getPayOrder(outTradeNo);
+  if (!payOrder) {
+    return { ok: false, error: '订单不存在', status: 'NOTFOUND' };
+  }
+
+  if (payOrder.status === 'SUCCESS') {
+    const booking = db.getBookings().find((b) => b.id === payOrder.bookingId);
+    return {
+      ok: true,
+      status: 'SUCCESS',
+      paid: true,
+      outTradeNo,
+      bookingId: payOrder.bookingId,
+      paymentStatus: booking && booking.paymentStatus,
+      mock: !!payOrder.mock,
+      synced: false
+    };
+  }
+
+  const remote = await wechatPay.queryTransactionByOutTradeNo(outTradeNo);
+  const tradeState = remote.tradeState || remote.status;
+
+  if (tradeState !== 'SUCCESS') {
+    return {
+      ok: true,
+      status: tradeState || 'NOTPAY',
+      paid: false,
+      outTradeNo,
+      bookingId: payOrder.bookingId,
+      mock: !!remote.mock,
+      synced: false
+    };
+  }
+
+  db.savePayOrder({
+    outTradeNo,
+    status: 'SUCCESS',
+    transactionId: remote.transactionId,
+    successTime: remote.successTime || new Date().toISOString()
+  });
+
+  const booking = db.getBookings().find((b) => b.id === payOrder.bookingId);
+  if (booking && booking.paymentStatus !== 'paid') {
+    markBookingPaidFromPaySuccess(booking, remote);
+  }
+
+  const refreshed = booking ? db.getBookings().find((b) => b.id === booking.id) : null;
+  return {
+    ok: true,
+    status: 'SUCCESS',
+    paid: true,
+    outTradeNo,
+    bookingId: payOrder.bookingId,
+    paymentStatus: refreshed && refreshed.paymentStatus,
+    mock: !!remote.mock,
+    synced: true
+  };
+}
+
 app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
   try {
     const { bookingId, description, openid, payType, wxCode } = req.body || {};
@@ -587,7 +687,7 @@ app.post('/api/pay/wechat/notify', async (req, res) => {
       const payOrder = db.getPayOrder(result.outTradeNo);
       const bookingId =
         (payOrder && payOrder.bookingId) ||
-        (result.outTradeNo.startsWith('BK-') ? result.outTradeNo.split('-')[1] : null);
+        wechatPay.parseBookingIdFromOutTradeNo(result.outTradeNo);
       const booking = bookingId ? db.getBookings().find((b) => b.id === bookingId) : null;
 
       db.savePayOrder({
@@ -744,29 +844,49 @@ app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, (req, res) => {
   }
 });
 
-app.get('/api/pay/orders/:outTradeNo', requireAuth, (req, res) => {
+app.post('/api/pay/wechat/sync', requireAuth, async (req, res) => {
+  try {
+    const outTradeNo = (req.body && req.body.outTradeNo) || req.query.outTradeNo;
+    if (!outTradeNo) {
+      return fail(res, 400, '缺少 outTradeNo');
+    }
+    const payOrder = db.getPayOrder(outTradeNo);
+    if (!payOrder) {
+      return fail(res, 404, '订单不存在');
+    }
+    const access = bookingForPayOrderAccess(req, res, payOrder, outTradeNo);
+    if (!access.allowed) return;
+    const result = await syncPayOrderWithRemote(outTradeNo);
+    if (!result.ok) {
+      return fail(res, 404, result.error || '同步失败');
+    }
+    ok(res, Object.assign({ success: true }, result));
+  } catch (error) {
+    console.error('[WeChat Pay Sync Error]', error);
+    fail(res, 500, error.message || '同步支付状态失败');
+  }
+});
+
+app.get('/api/pay/orders/:outTradeNo', requireAuth, async (req, res) => {
   try {
     const { outTradeNo } = req.params;
-    
-    // 从 outTradeNo 中提取 bookingId（格式通常为 PREFIX-bookingId-timestamp）
-    const bookingId = outTradeNo.split('-')[1];
-    const booking = db.getBookings().find(b => b.id === bookingId);
-    
-    if (booking) {
-      // 验证用户只能查询自己的订单
-      if (req.user.role === 'parent') {
-        const parent = db.getParents().find(p => p.id === req.user.userId);
-        if (!parent || (booking.parentId !== parent.id && booking.parentPhone !== parent.phone)) {
-          return fail(res, 403, '只能查询自己的订单');
-        }
-      } else if (req.user.role === 'mentor') {
-        if (booking.mentorId !== req.user.userId && booking.tutorId !== req.user.userId) {
-          return fail(res, 403, '无权限');
-        }
+    const payOrder = db.getPayOrder(outTradeNo);
+    const access = bookingForPayOrderAccess(req, res, payOrder, outTradeNo);
+    if (!access.allowed) return;
+
+    if (req.query.sync === '1' || req.query.sync === 'true') {
+      const result = await syncPayOrderWithRemote(outTradeNo);
+      if (!result.ok) {
+        return fail(res, 404, result.error || '同步失败');
       }
+      return ok(res, Object.assign({ success: true }, result));
     }
-    
+
     const result = wechatPay.getOrderStatus(outTradeNo);
+    if (payOrder) {
+      result.bookingId = payOrder.bookingId;
+      result.status = payOrder.status || result.status;
+    }
     ok(res, result);
   } catch (error) {
     console.error('[Get Order Error]', error);

@@ -659,18 +659,8 @@ function onL1FieldChange() {
     }
   }, 500);
 
-  // Auto-advance if valid and not locked
-  if (isValid && !__l1SubAutoLock && !window.__restoringMentorDraft && currentL1SubStep < 4) {
-    __l1SubAutoLock = true;
-    if (typeof showToast === 'function') {
-      showToast(`${L1_SUBSTEPS[currentL1SubStep].title}已保存`);
-    }
-    setTimeout(() => {
-      goToL1SubStep(currentL1SubStep + 1);
-      __l1SubAutoLock = false;
-    }, 400);
-  }
 }
+
 
 function onL2FieldChange() {
   if (typeof refreshMentorPreviewGate === 'function') {
@@ -687,16 +677,6 @@ function onL2FieldChange() {
     }
   }, 500);
 
-  if (isValid && !__l2SubAutoLock && !window.__restoringMentorDraft && currentL2SubStep < 3) {
-    __l2SubAutoLock = true;
-    if (typeof showToast === 'function') {
-      showToast(`${L2_SUBSTEPS[currentL2SubStep].title}已保存`);
-    }
-    setTimeout(() => {
-      goToL2SubStep(currentL2SubStep + 1);
-      __l2SubAutoLock = false;
-    }, 400);
-  }
 }
 
 /**

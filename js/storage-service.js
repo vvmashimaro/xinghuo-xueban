@@ -620,6 +620,32 @@
     },
 
     /** Authenticated JSON API (Bearer token). */
+    waitForPaymentConfirmed: async function (outTradeNo, options) {
+      if (!outTradeNo) {
+        return { success: false, error: '缺少 outTradeNo' };
+      }
+      const opts = options || {};
+      const maxMs = Number(opts.maxMs) > 0 ? Number(opts.maxMs) : 90000;
+      const intervalMs = Number(opts.intervalMs) > 0 ? Number(opts.intervalMs) : 1500;
+      const started = Date.now();
+      while (Date.now() - started < maxMs) {
+        try {
+          const result = await _api('POST', '/api/pay/wechat/sync', { outTradeNo });
+          if (result && (result.paid || result.status === 'SUCCESS')) {
+            return Object.assign({ success: true }, result);
+          }
+        } catch (e) {
+          if (opts.strict) {
+            return { success: false, error: e.message || '同步支付状态失败' };
+          }
+        }
+        await new Promise(function (resolve) {
+          setTimeout(resolve, intervalMs);
+        });
+      }
+      return { success: false, error: '支付确认超时，请稍后在「我的预约」查看' };
+    },
+
     api: async function (method, path, body) {
       return _api(method, path, body);
     },

@@ -63,6 +63,15 @@ async function run() {
   const notifyResult = await wechatPay.handlePaymentNotify(notifyBody, {}, JSON.stringify(notifyBody));
   assert.strictEqual(notifyResult.tradeState, 'SUCCESS');
 
+  assert.strictEqual(
+    wechatPay.parseBookingIdFromOutTradeNo('BK-BK-MUNG8VXL-270-1790733090731'),
+    'BK-MUNG8VXL-270'
+  );
+  assert.strictEqual(
+    wechatPay.parseBookingIdFromOutTradeNo('BK-BK-SEED-001-1234567890123'),
+    'BK-SEED-001'
+  );
+
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
   const pem = privateKey.export({ type: 'pkcs1', format: 'pem' });
   process.env.WECHAT_PRIVATE_KEY_PEM = pem.toString().replace(/\n/g, '\\n');
