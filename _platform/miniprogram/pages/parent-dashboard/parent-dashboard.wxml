@@ -225,7 +225,6 @@
     <view class="muted" style="margin:12rpx 0;">系统将在 20:30 强制断电通风停机，保障合规收课。</view>
     <button class="{{iotBtnClass}}" style="width:100%;" disabled="{{iotBtnDisabled}}" bindtap="simulateIoT">{{iotBtnLabel}}</button>
   </view>
-</view>
 
 <!-- 学情护照 -->
 <view class="modal-mask" wx:if="{{passportShow}}">
