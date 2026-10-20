@@ -549,16 +549,20 @@ Page({
         `星火学伴 · ${subject} · ${tutorName}`
       );
 
-      if (!prepayResult.success || prepayResult.error || !prepayResult.prepayId) {
+      if (!prepayResult.success || prepayResult.error) {
         showToast(prepayResult.error || '支付订单创建失败', 'error');
         console.error('Prepay failed:', prepayResult);
         return false;
       }
 
-      // Demo 模式：自动模拟支付成功
-      if (payMode === 'demo' && prepayResult.mock) {
+      if (prepayResult.mock) {
         const confirmResult = await Storage.mockConfirmPayment(prepayResult.outTradeNo);
         return !!(confirmResult && confirmResult.success);
+      }
+
+      if (!prepayResult.prepayId) {
+        showToast('支付参数不完整，请检查服务端微信支付配置', 'error');
+        return false;
       }
 
       const payParams = {
@@ -574,13 +578,21 @@ Page({
         return false;
       }
 
+      const outTradeNo = prepayResult.outTradeNo;
       return new Promise((resolve) => {
         wx.requestPayment({
           ...payParams,
-          success: () => {
-            showToast('✓ 支付成功');
-            this.reload();
-            resolve(true);
+          success: async () => {
+            showToast('正在确认支付结果…');
+            const synced = await Storage.waitForPaymentConfirmed(outTradeNo, { maxMs: 90000 });
+            if (synced && synced.success) {
+              showToast('✓ 支付成功');
+              this.reload();
+              resolve(true);
+              return;
+            }
+            showToast((synced && synced.error) || '支付尚未确认', 'warning');
+            resolve(false);
           },
           fail: (err) => {
             const msg = (err && err.errMsg) || '';

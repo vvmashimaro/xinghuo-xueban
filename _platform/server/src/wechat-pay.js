@@ -240,6 +240,22 @@ function registerMockOrder(order) {
   }
 }
 
+/**
+ * outTradeNo 格式: BK-{bookingId}-{timestampMs}，bookingId 本身可含连字符。
+ */
+function parseBookingIdFromOutTradeNo(outTradeNo) {
+  if (!outTradeNo || typeof outTradeNo !== 'string') return null;
+  if (!outTradeNo.startsWith('BK-')) return null;
+  const rest = outTradeNo.slice(3);
+  const lastDash = rest.lastIndexOf('-');
+  if (lastDash <= 0) return null;
+  const tail = rest.slice(lastDash + 1);
+  if (/^\d{10,}$/.test(tail)) {
+    return rest.slice(0, lastDash);
+  }
+  return rest.split('-')[0] || null;
+}
+
 function hydrateMockOrders(orders) {
   if (!Array.isArray(orders)) return;
   orders.forEach((o) => registerMockOrder(o));
@@ -442,7 +458,7 @@ function refundOrder(outTradeNo, reason) {
   return { success: false, error: '真实微信退款接口尚未接入' };
 }
 
-function getOrderStatus(outTradeNo) {
+function getLocalOrderStatus(outTradeNo) {
   if (mockOrders.has(outTradeNo)) {
     const order = mockOrders.get(outTradeNo);
     return {
@@ -456,13 +472,54 @@ function getOrderStatus(outTradeNo) {
       mock: true
     };
   }
+  return null;
+}
 
-  console.log(`[WeChat Pay] 查询订单状态: ${outTradeNo} (占位实现)`);
+async function queryTransactionByOutTradeNo(outTradeNo) {
+  const local = getLocalOrderStatus(outTradeNo);
+  if (local) {
+    return {
+      outTradeNo,
+      bookingId: local.bookingId,
+      tradeState: local.status === 'SUCCESS' ? 'SUCCESS' : 'NOTPAY',
+      transactionId: local.transactionId,
+      successTime: local.successTime,
+      amount: local.amount,
+      mock: true
+    };
+  }
+
+  if (!isConfigComplete()) {
+    return {
+      outTradeNo,
+      tradeState: 'NOTPAY',
+      mock: true,
+      message: '微信支付未配置，无法查询真实订单'
+    };
+  }
+
+  const config = getWeChatPayConfig();
+  const urlPath =
+    `/v3/pay/transactions/out-trade-no/${encodeURIComponent(outTradeNo)}?mchid=${encodeURIComponent(config.mchId)}`;
+  const json = await wechatPayRequest('GET', urlPath, null);
+  return {
+    outTradeNo: json.out_trade_no || outTradeNo,
+    tradeState: json.trade_state,
+    transactionId: json.transaction_id,
+    successTime: json.success_time,
+    amount: json.amount && json.amount.total,
+    mock: false
+  };
+}
+
+function getOrderStatus(outTradeNo) {
+  const local = getLocalOrderStatus(outTradeNo);
+  if (local) return local;
 
   return {
     outTradeNo,
     status: 'NOTPAY',
-    message: '真实订单查询接口占位'
+    message: '请调用同步接口查询微信支付订单状态'
   };
 }
 
@@ -471,6 +528,9 @@ module.exports = {
   mockConfirmPayment,
   handlePaymentNotify,
   getOrderStatus,
+  getLocalOrderStatus,
+  queryTransactionByOutTradeNo,
+  parseBookingIdFromOutTradeNo,
   isConfigComplete,
   isMockPayAllowed,
   registerMockOrder,

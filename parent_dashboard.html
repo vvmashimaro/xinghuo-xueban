@@ -2366,36 +2366,54 @@
           return { success: false, error: (prepayResult && prepayResult.error) || '支付订单创建失败' };
         }
 
-        if (payMode === 'demo' && prepayResult.mock) {
-          if (!prepayResult.prepayId && !prepayResult.outTradeNo) {
+        const outTradeNo = prepayResult.outTradeNo;
+
+        if (prepayResult.mock) {
+          if (!prepayResult.prepayId && !outTradeNo) {
             return { success: false, error: '支付订单创建失败' };
           }
           const confirmResult = await StorageService.api('POST', '/api/pay/wechat/mock-confirm', {
-            outTradeNo: prepayResult.outTradeNo
+            outTradeNo
           });
 
           if (!confirmResult || !confirmResult.success) {
             return { success: false, error: (confirmResult && confirmResult.error) || '支付确认失败' };
           }
-          return { success: true, outTradeNo: prepayResult.outTradeNo };
+          return { success: true, outTradeNo };
+        }
+
+        async function confirmPaidOnServer() {
+          if (!outTradeNo || !StorageService.waitForPaymentConfirmed) {
+            return { success: false, error: '无法确认支付状态' };
+          }
+          showToast('正在确认支付结果…');
+          const synced = await StorageService.waitForPaymentConfirmed(outTradeNo, { maxMs: 90000 });
+          if (synced && synced.success) {
+            return { success: true, outTradeNo };
+          }
+          return { success: false, error: (synced && synced.error) || '支付尚未确认' };
         }
 
         if (prepayResult.codeUrl) {
           showWeChatNativeQr(prepayResult.codeUrl);
           showToast('请使用微信扫描二维码完成支付');
-          return { success: false, pending: true, error: '请完成微信支付' };
+          return await confirmPaidOnServer();
         }
 
         if (prepayResult.prepayId && prepayResult.paySign && inWeChat) {
           try {
             await invokeWeixinJsapiPay(prepayResult);
-            return { success: true, outTradeNo: prepayResult.outTradeNo };
+            return await confirmPaidOnServer();
           } catch (bridgeErr) {
             console.warn('Weixin JSAPI pay failed', bridgeErr);
           }
         }
 
-        showToast('请使用微信完成支付');
+        if (prepayResult.prepayId && prepayResult.paySign) {
+          showToast('请在微信内打开本页完成支付，或使用扫码支付');
+        } else {
+          showToast('请使用微信完成支付');
+        }
         return { success: false, error: '请完成微信支付' };
       } catch (error) {
         console.error('WeChat payment error:', error);

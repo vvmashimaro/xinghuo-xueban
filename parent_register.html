@@ -1291,7 +1291,6 @@
           renderSubjectPlanChips();
           updateLivePreview();
           scheduleParentDraftSave(false);
-          maybeAutoAdvanceParentSteps();
         }
       } else {
         // 取消勾选：清除该科配置
@@ -1302,7 +1301,6 @@
         renderSubjectPlanChips();
         updateLivePreview();
         scheduleParentDraftSave(false);
-        maybeAutoAdvanceParentSteps();
       }
     }
 
@@ -1322,7 +1320,6 @@
       __wizStep1WasValid = false;
       __wizStep2WasValid = false;
       __wizStep3WasValid = false;
-      setTimeout(bindWizardAutoAdvanceHooks, 0);
       const title = document.getElementById('wizardSubjectTitle');
       if (title) title.innerText = subjectName;
 
@@ -1411,7 +1408,6 @@
       if (!el) return;
       const on = !el.classList.contains('bg-teal-100');
       setPainChipActive(el, on);
-      maybeAutoAdvanceWizard();
     }
 
     function showWizardStep(step) {
@@ -1458,7 +1454,6 @@
       __wizStep2WasValid = false;
       __wizStep3WasValid = false;
       persistParentDraft(false);
-      maybeAutoAdvanceParentSteps();
     }
 
     /* ---------- 双柄预算 ---------- */
@@ -2355,41 +2350,9 @@
       return checked.every((s) => !!subjectPlans[s]);
     }
 
-    function maybeAutoAdvanceParentSteps() {
-      if (__restoringDraft || __parentAutoLock) return;
-      if (__parentAutoTimer) clearTimeout(__parentAutoTimer);
-      __parentAutoTimer = setTimeout(() => {
-        if (__parentAutoLock || __restoringDraft) return;
-        if (currentStep === 1) {
-          const ok = isParentStep1ReadyForAdvance();
-          if (ok && !__step1WasValid) {
-            __step1WasValid = true;
-            __parentAutoLock = true;
-            persistParentDraft(false);
-            showToast('基本信息已保存，进入考点配置');
-            setTimeout(() => { goToStep(2); __parentAutoLock = false; }, 350);
-          } else if (!ok) {
-            __step1WasValid = false;
-          }
-        } else if (currentStep === 2) {
-          const ok = isParentStep2Valid();
-          if (ok && !__step2WasValid) {
-            __step2WasValid = true;
-            __parentAutoLock = true;
-            persistParentDraft(false);
-            showToast('学科配置已保存，进入空间与偏好');
-            setTimeout(() => { goToStep(3); __parentAutoLock = false; }, 350);
-          } else if (!ok) {
-            __step2WasValid = false;
-          }
-        }
-      }, 420);
-    }
-
     function onParentStepFieldChange() {
       updateLivePreview();
       scheduleParentDraftSave(false);
-      maybeAutoAdvanceParentSteps();
     }
 
     function onParentPrefFieldChange() {
@@ -2407,52 +2370,6 @@
     }
     function isWizardPane3Valid() {
       return document.querySelectorAll('#wizardPainContainer > span.bg-teal-100').length > 0;
-    }
-
-    function maybeAutoAdvanceWizard() {
-      if (!wizardSubject || __restoringDraft) return;
-      if (__wizAutoTimer) clearTimeout(__wizAutoTimer);
-      __wizAutoTimer = setTimeout(() => {
-        if (!wizardSubject) return;
-        if (wizardStep === 1) {
-          const ok = isWizardPane1Valid();
-          if (ok && !__wizStep1WasValid) {
-            __wizStep1WasValid = true;
-            showToast('考点已保存');
-            scheduleParentDraftSave(false);
-            wizardNextStep();
-          } else if (!ok) __wizStep1WasValid = false;
-        } else if (wizardStep === 2) {
-          const ok = isWizardPane2Valid();
-          if (ok && !__wizStep2WasValid) {
-            __wizStep2WasValid = true;
-            showToast('推进策略已保存');
-            scheduleParentDraftSave(false);
-            wizardNextStep();
-          } else if (!ok) __wizStep2WasValid = false;
-        } else if (wizardStep === 3) {
-          const ok = isWizardPane3Valid();
-          if (ok && !__wizStep3WasValid) {
-            __wizStep3WasValid = true;
-            finishSubjectWizard();
-          } else if (!ok) __wizStep3WasValid = false;
-        }
-      }, 380);
-    }
-
-    function bindWizardAutoAdvanceHooks() {
-      const topicBox = document.getElementById('wizardTopicsContainer');
-      if (topicBox && !topicBox.getAttribute('data-auto-bound')) {
-        topicBox.addEventListener('change', (e) => {
-          if (e.target && e.target.classList.contains('wizard-topic-cb')) maybeAutoAdvanceWizard();
-        });
-        topicBox.setAttribute('data-auto-bound', '1');
-      }
-      document.querySelectorAll('input[name="wizardPacing"]').forEach((r) => {
-        if (r.getAttribute('data-auto-bound')) return;
-        r.addEventListener('change', () => maybeAutoAdvanceWizard());
-        r.setAttribute('data-auto-bound', '1');
-      });
     }
 
     function applyParentDraft(draft) {
