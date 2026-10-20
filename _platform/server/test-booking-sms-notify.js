@@ -12,40 +12,24 @@ async function main() {
   process.env.TENCENT_SMS_TEMPLATE_REFUND = 'tpl-refund-test';
   assert.strictEqual(sms.resolveTencentTemplateId('refund'), 'tpl-refund-test');
 
+  assert.strictEqual(sms.sceneUsesTemplateVariables('login'), true);
+  assert.strictEqual(sms.sceneUsesTemplateVariables('booking'), false);
+  assert.strictEqual(sms.sceneUsesTemplateVariables('refund'), false);
+
   const loginParams = sms.buildTemplateParamSet('login', { code: '123456', minutes: 5 });
   assert.deepStrictEqual(loginParams, ['123456', '5']);
 
-  const bookingParams = sms.buildTemplateParamSet('booking', {
-    studentName: '小明',
-    subject: '数学',
-    schedule: '周日 10:00',
-    space: '金沙网点'
-  });
-  assert.deepStrictEqual(bookingParams, ['小明', '数学', '周日 10:00', '金沙网点']);
+  assert.deepStrictEqual(sms.buildTemplateParamSet('booking', { studentName: '小明' }), []);
+  assert.deepStrictEqual(sms.buildTemplateParamSet('refund', { amountYuan: 120 }), []);
 
-  const refundParams = sms.buildTemplateParamSet('refund', {
-    subject: '英语',
-    amountYuan: 120,
-    schedule: '2026-10-20 19:00'
-  });
-  assert.deepStrictEqual(refundParams, ['英语', '120.00', '2026-10-20 19:00']);
-
-  const declineParams = sms.buildTemplateParamSet('cancel', {
-    tutorName: '张老师',
-    studentName: '小明',
-    subject: '数学',
-    schedule: '2026-10-20 19:00',
-    reason: '导师暂时无法承接',
-    cancelledBy: 'mentor'
-  });
-  assert.deepStrictEqual(declineParams, ['张老师', '数学', '2026-10-20 19:00', '导师暂时无法承接']);
-
-  const mentorCancelParams = sms.buildTemplateParamSet('cancel_mentor', {
-    studentName: '小明',
-    subject: '数学',
-    schedule: '2026-10-20 19:00'
-  });
-  assert.deepStrictEqual(mentorCancelParams, ['小明', '数学', '2026-10-20 19:00']);
+  assert.strictEqual(
+    sms.notificationFixedCopy('booking'),
+    sms.NOTIFICATION_FIXED_COPY.booking
+  );
+  assert.strictEqual(
+    sms.notificationFixedCopy('cancel'),
+    '抱歉，导师暂无法承接本次约课，请登录星火学伴重新选择导师。'
+  );
 
   const accept = await sms.sendBookingAcceptNotification('13980889211', {
     tutorName: '李老师',
@@ -54,6 +38,7 @@ async function main() {
     space: '金沙网点'
   });
   assert(accept.success, 'accept mock should succeed');
+  assert.strictEqual(accept.message, sms.NOTIFICATION_FIXED_COPY.accept);
 
   const parent = db.getParents()[0];
   const mentor = db.getMentors().find((m) => m.status === 'approved');
@@ -75,6 +60,13 @@ async function main() {
   await bookingSmsNotify.notifyBookingRespond(booking, { action: 'accept' }, db);
   await bookingSmsNotify.notifyBookingRespond(booking, { action: 'decline', reason: '时间冲突' }, db);
   await bookingSmsNotify.notifyParentCancel(booking, db);
+
+  const refund = await sms.sendRefundNotification(parent.phone, {
+    subject: '化学',
+    amountYuan: 99,
+    refunded: true
+  });
+  assert.strictEqual(refund.message, sms.NOTIFICATION_FIXED_COPY.refund);
 
   console.log('test-booking-sms-notify: OK');
 }

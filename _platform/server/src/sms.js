@@ -18,6 +18,31 @@ const SEND_COOLDOWN_MS = parseInt(process.env.SMS_COOLDOWN_MS || '60000', 10); /
 const MAX_VERIFY_ATTEMPTS = 3; // 最多验证3次
 const MAX_DAILY_SENDS = 10; // 每天最多发送10次
 
+/**
+ * 腾讯云「通知类」短信模板固定文案（控制台配置为无变量全文；代码不传 TemplateParamSet）
+ * 验证码类模板仍使用 buildTemplateParamSet('login', …)
+ */
+const NOTIFICATION_FIXED_COPY = {
+  booking: '您有新的约课待接单，请登录星火学伴导师端查看详情。',
+  accept: '导师已确认您的约课，请登录星火学伴查看上课时间与地点。',
+  accept_parent: '导师已确认您的约课，请登录星火学伴查看上课时间与地点。',
+  accept_mentor: '您已确认本次约课，请登录星火学伴导师端查看详情。',
+  cancel: '抱歉，导师暂无法承接本次约课，请登录星火学伴重新选择导师。',
+  cancel_mentor: '家长已撤销约课，请登录星火学伴查看。',
+  refund: '您的约课已撤销，退款将原路退回微信，请留意到账通知。'
+};
+
+function sceneUsesTemplateVariables(scene) {
+  return scene === 'login';
+}
+
+function notificationFixedCopy(scene) {
+  if (scene === 'accept' || scene === 'accept_parent') {
+    return NOTIFICATION_FIXED_COPY.accept;
+  }
+  return NOTIFICATION_FIXED_COPY[scene] || '【星火学伴】通知';
+}
+
 function getProvider() {
   return process.env.SMS_PROVIDER || 'mock';
 }
@@ -155,11 +180,10 @@ async function sendMockSMS(phone, code, scene, auth = null) {
   return { success: true, provider: 'mock', message: '验证码已发送，请查收' };
 }
 
-function logMockTransactional(phone, scene, templateParamSet) {
-  console.log(
-    `[SMS Mock] scene=${scene} to=${maskPhoneForLog(phone)} params=${JSON.stringify(templateParamSet)}`
-  );
-  return { success: true, provider: 'mock', message: 'Mock 通知已记录' };
+function logMockTransactional(phone, scene) {
+  const copy = notificationFixedCopy(scene);
+  console.log(`[SMS Mock] scene=${scene} to=${maskPhoneForLog(phone)} fixedCopy=${copy}`);
+  return { success: true, provider: 'mock', message: copy };
 }
 
 /**
@@ -173,46 +197,13 @@ function tencentCloudSign(secretKey, date, service, stringToSign) {
 }
 
 function buildTemplateParamSet(scene, payload) {
-  if (scene === 'login') {
-    const minutes =
-      payload && payload.minutes != null ? String(payload.minutes) : String(CODE_EXPIRY_MINUTES);
-    const code = payload && payload.code != null ? String(payload.code) : String(payload);
-    return [code, minutes];
+  if (!sceneUsesTemplateVariables(scene)) {
+    return [];
   }
-
-  const info = payload || {};
-  const tutorName = info.tutorName || '导师';
-  const studentName = info.studentName || info.studentNickname || '学员';
-  const subject = info.subject || '课程';
-  const schedule = info.schedule || info.timeSlot || '';
-  const space = info.space || '';
-  const reason = info.reason || info.declineReason || '已取消';
-
-  switch (scene) {
-    case 'accept_mentor':
-      return [studentName, subject, schedule, space];
-    case 'cancel_mentor':
-      return [studentName, subject, schedule];
-    case 'cancel': {
-      const cancelledBy = info.cancelledBy || 'mentor';
-      if (cancelledBy === 'parent') {
-        return [studentName, subject, schedule, reason];
-      }
-      return [tutorName, subject, schedule, reason];
-    }
-    case 'refund': {
-      const amountYuan =
-        info.amountYuan != null ? Number(info.amountYuan).toFixed(2) : '0.00';
-      const courseLabel = subject || '约课';
-      return [courseLabel, amountYuan, schedule];
-    }
-    case 'booking':
-      return [studentName, subject, schedule, space];
-    case 'accept':
-    case 'accept_parent':
-    default:
-      return [tutorName, subject, schedule, space];
-  }
+  const minutes =
+    payload && payload.minutes != null ? String(payload.minutes) : String(CODE_EXPIRY_MINUTES);
+  const code = payload && payload.code != null ? String(payload.code) : String(payload);
+  return [code, minutes];
 }
 
 /**
@@ -233,10 +224,8 @@ async function sendTencentTemplateSMS(phone, scene, payload) {
         payload && payload.code != null ? payload.code : typeof payload === 'string' ? payload : '';
       return sendMockSMS(phone, code, scene);
     }
-    return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
+    return logMockTransactional(phone, scene);
   }
-
-  const templateParamSet = buildTemplateParamSet(scene, payload);
 
   const host = 'sms.tencentcloudapi.com';
   const service = 'sms';
@@ -249,9 +238,11 @@ async function sendTencentTemplateSMS(phone, scene, payload) {
     PhoneNumberSet: [`+86${phone}`],
     SmsSdkAppId: sdkAppId,
     SignName: signName,
-    TemplateId: templateId,
-    TemplateParamSet: templateParamSet
+    TemplateId: templateId
   };
+  if (sceneUsesTemplateVariables(scene)) {
+    params.TemplateParamSet = buildTemplateParamSet(scene, payload);
+  }
 
   const payloadBody = JSON.stringify(params);
 
@@ -451,25 +442,23 @@ async function sendTransactionalNotification(phone, scene, bookingInfo, options 
 
   const provider = getProvider();
   const templateId = resolveTencentTemplateId(scene);
-  const payload = Object.assign({}, bookingInfo, options);
-
   if (provider === 'mock' || (provider === 'tencent' && !templateId)) {
-    return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
+    return logMockTransactional(phone, scene);
   }
 
   if (provider === 'tencent') {
     try {
-      return await sendTencentTemplateSMS(phone, scene, payload);
+      return await sendTencentTemplateSMS(phone, scene, bookingInfo);
     } catch (error) {
       console.error(`[SMS ${scene} Error]`, error);
       if (isProduction()) {
         return { success: false, error: error.message || '短信发送失败' };
       }
-      return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
+      return logMockTransactional(phone, scene);
     }
   }
 
-  return logMockTransactional(phone, scene, buildTemplateParamSet(scene, payload));
+  return logMockTransactional(phone, scene);
 }
 
 /** 新约课待接单：通知导师 */
@@ -515,20 +504,8 @@ async function sendRefundNotification(phone, info) {
   const provider = getProvider();
   const templateId = resolveTencentTemplateId('refund');
 
-  const amountText =
-    info && info.amountYuan != null ? `¥${Number(info.amountYuan).toFixed(2)}` : '课酬';
-  const summary = info && info.refunded
-    ? `约课已撤销，${amountText} 将原路退回微信账户`
-    : '约课已撤销';
-
   if (provider === 'mock' || !templateId) {
-    console.log(`[SMS Refund Mock] 发送至 ${maskPhoneForLog(phone)}: ${summary}`);
-    if (info) {
-      console.log(
-        `[SMS Refund Mock] 科目: ${info.subject || ''}, 时间: ${info.schedule || ''}, 原因: ${info.reason || ''}`
-      );
-    }
-    return logMockTransactional(phone, 'refund', buildTemplateParamSet('refund', info || {}));
+    return logMockTransactional(phone, 'refund');
   }
 
   try {
@@ -538,13 +515,13 @@ async function sendRefundNotification(phone, info) {
     if (isProduction()) {
       throw new Error('短信提供商未配置');
     }
-    return logMockTransactional(phone, 'refund', buildTemplateParamSet('refund', info || {}));
+    return logMockTransactional(phone, 'refund');
   } catch (error) {
     console.error('[SMS Refund Error]', error);
     if (isProduction()) {
       return { success: false, error: '退款通知发送失败' };
     }
-    return logMockTransactional(phone, 'refund', buildTemplateParamSet('refund', info || {}));
+    return logMockTransactional(phone, 'refund');
   }
 }
 
@@ -561,5 +538,8 @@ module.exports = {
   isProduction,
   isTencentCredentialsReady,
   resolveTencentTemplateId,
-  buildTemplateParamSet
+  buildTemplateParamSet,
+  sceneUsesTemplateVariables,
+  notificationFixedCopy,
+  NOTIFICATION_FIXED_COPY
 };
