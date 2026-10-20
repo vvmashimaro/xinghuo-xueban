@@ -1462,7 +1462,7 @@ function collectSessionStartTimes(booking) {
   return starts;
 }
 
-function parentCancelBooking(bookingId, parentRef) {
+function validateParentCancelBooking(bookingId, parentRef) {
   const s = getState();
   const idx = s.bookings.findIndex((b) => b.id === bookingId);
   if (idx < 0) return { ok: false, error: '约课不存在' };
@@ -1494,6 +1494,20 @@ function parentCancelBooking(bookingId, parentRef) {
     return { ok: false, error: '无法确认开课时间，请联系平台协助取消' };
   }
 
+  const payOrder = findSuccessPayOrderForBooking(bookingId);
+  return { ok: true, booking, payOrder, parentPhone, parentId };
+}
+
+function parentCancelBooking(bookingId, parentRef, options) {
+  const skipRefund = options && options.skipRefund;
+  const validated = validateParentCancelBooking(bookingId, parentRef);
+  if (!validated.ok) return validated;
+
+  const booking = validated.booking;
+  const parentPhone = validated.parentPhone;
+  const parentId = validated.parentId;
+  const sessions = Array.isArray(booking.sessions) ? booking.sessions : [];
+
   const cancelledSessions = sessions.map((sess) =>
     Object.assign({}, sess, {
       status: 'cancelled',
@@ -1501,8 +1515,8 @@ function parentCancelBooking(bookingId, parentRef) {
     })
   );
 
-  const payOrder = findSuccessPayOrderForBooking(bookingId);
-  if (payOrder && payOrder.outTradeNo) {
+  const payOrder = validated.payOrder;
+  if (!skipRefund && payOrder && payOrder.outTradeNo) {
     refundPayOrder(payOrder.outTradeNo, {
       reason: '家长开课前撤销',
       refundedBy: parentPhone || parentId || 'parent'
@@ -1890,7 +1904,8 @@ function refundPayOrder(outTradeNo, meta) {
       status: 'REFUND',
       refundTime,
       refundReason: (meta && meta.reason) || '',
-      refundedBy: (meta && meta.refundedBy) || 'admin'
+      refundedBy: (meta && meta.refundedBy) || 'admin',
+      refundId: (meta && meta.refundId) || order.refundId
     })
   );
   let booking = null;
@@ -2446,6 +2461,7 @@ module.exports = {
   addBooking,
   updateBooking,
   respondToBooking,
+  validateParentCancelBooking,
   parentCancelBooking,
   buildWeeklySessions,
   requestSessionLeave,

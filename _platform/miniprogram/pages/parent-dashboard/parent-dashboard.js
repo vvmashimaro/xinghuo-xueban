@@ -90,7 +90,9 @@ Page({
     iotBtnClass: 'btn-iot-idle',
     iotBtnDisabled: false,
     featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
-    settingsDrawerShow: false
+    settingsDrawerShow: false,
+    consoleSection: 'courses',
+    consoleFabShow: false
   },
 
   onLoad() {
@@ -299,6 +301,24 @@ Page({
     }, () => this.reload());
   },
 
+  onConsoleTab(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) this.setData({ consoleSection: id });
+  },
+  toggleConsoleFab() {
+    this.setData({ consoleFabShow: !this.data.consoleFabShow });
+  },
+  closeConsoleFab() {
+    this.setData({ consoleFabShow: false });
+  },
+  pickConsoleSection(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({ consoleSection: id || 'courses', consoleFabShow: false });
+  },
+  openSettingsDrawerFromFab() {
+    this.setData({ consoleFabShow: false });
+    this.openSettingsDrawer();
+  },
   openSettingsDrawer() {
     this.setData({ settingsDrawerShow: true });
   },
@@ -905,7 +925,10 @@ Page({
         if (!res.confirm) return;
         Storage.cancelParentBooking(id).then((r) => {
           if (r && r.ok) {
-            showToast('约课已撤销');
+            const msg = r.refund && r.refund.outTradeNo
+              ? '约课已撤销，课酬将原路退回微信'
+              : '约课已撤销';
+            showToast(msg);
             that.reload();
           } else {
             showToast((r && r.error) || '撤销失败', 'warning');

@@ -148,6 +148,7 @@
     </div>
   </header>
 
+  <div data-console-pane="courses" class="space-y-0">
   <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
     <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto relative z-10 space-y-4">
@@ -214,6 +215,11 @@
         <div id="parentCompletedList" class="space-y-2"></div>
       </div>
     </section>
+  </main>
+  </div>
+
+  <div data-console-pane="discover" class="hidden">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
 
     <!-- 搜索与多维过滤条卡片 -->
     <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
@@ -316,6 +322,37 @@
     </div>
 
   </main>
+  </div>
+
+  <div data-console-pane="account" class="hidden">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
+      <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+        <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-teal-600"></i>
+          我的账户 · 资金保障
+        </h2>
+        <p class="text-xs text-slate-500">一课一消托管；开课前 2 小时外撤销将原路退回微信支付账户。</p>
+        <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs">
+          <div class="text-[10px] text-slate-400">当前冻结课款</div>
+          <div class="text-lg font-black text-amber-700 font-mono mt-1" id="accountWalletFrozen">暂无冻结课款</div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-2 pt-1">
+          <button type="button" onclick="openPassportDrawer()" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-passport mr-1.5"></i>查阅学情护照
+          </button>
+          <button type="button" onclick="safeNavigate('parent_register.html?mode=edit', '学情重构档案')" class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-sliders mr-1.5 text-teal-600"></i>重配学情与考纲
+          </button>
+          <button type="button" onclick="safeNavigate('assessment.html', '学生学科测评')" class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-clipboard-check mr-1.5 text-teal-600"></i>学科测评
+          </button>
+          <button type="button" onclick="openParentFeedbackModal()" class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-comment-dots mr-1.5 text-teal-600"></i>反馈投诉（超时取消等）
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <div id="tutorDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="tutorModalContent">
@@ -1096,6 +1133,7 @@
 <script src="js/config.js"></script>
 <script src="js/feature-flags.js"></script>
   <script src="js/storage-service.js"></script>
+  <script src="js/console-nav.js"></script>
 
     <script>
     // 统一库 hydrate：页面脚本可 await StorageService.ready()
@@ -2561,6 +2599,7 @@
     }
 
     function refreshParentWalletHeader() {
+      const accountEl = document.getElementById('accountWalletFrozen');
       const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
       if (!parent || !window.StorageService || !StorageService.getParentWalletSummary) return;
       const summary = StorageService.getParentWalletSummary(parent);
@@ -2576,6 +2615,11 @@
       } else {
         if (frozenWrap) frozenWrap.classList.add('hidden');
         if (emptyEl) emptyEl.classList.remove('hidden');
+      }
+      if (accountEl) {
+        accountEl.textContent = summary.hasFrozen
+          ? '课次冻结 ¥' + Number(summary.frozenYuan || 0).toFixed(2)
+          : '暂无冻结课款';
       }
     }
 
@@ -2633,7 +2677,7 @@
       if (!confirm('确认撤销该约课？开课前 2 小时外可原路退回托管。')) return;
       const res = StorageService.parentCancelBooking(bookingId);
       if (res && res.ok) {
-        showToast('约课已撤销');
+        showToast('约课已撤销，已支付课酬将原路退回微信账户');
         refreshParentWalletHeader();
       } else {
         showToast((res && res.error) || '撤销失败', res && res.tooLate ? 'warning' : 'error');
@@ -3247,6 +3291,14 @@
       renderTopMatchedTutors();
       applyFilterAndSearch();
       renderParentBookings();
+      if (window.UserConsoleNavInit) {
+        UserConsoleNavInit('parent', {
+          onChange: function (sectionId) {
+            if (sectionId === 'discover') applyFilterAndSearch();
+            if (sectionId === 'account') refreshParentWalletHeader();
+          }
+        });
+      }
     };
   </script>
 </body>

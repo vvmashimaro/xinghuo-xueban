@@ -1,4 +1,11 @@
+<view class="console-tab-bar">
+  <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">我的课程</view>
+  <view class="console-tab {{consoleSection==='workspace'?'on':''}}" data-id="workspace" bindtap="onConsoleTab">工作台</view>
+  <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+</view>
+
 <view class="container container-with-fab">
+  <block wx:if="{{consoleSection==='workspace'}}">
   <view class="hero">
     <view class="hero-title">{{mentorName}} 的工作台</view>
     <view class="hero-sub">{{university}} · {{code}}</view>
@@ -18,7 +25,9 @@
     <view class="detail-line">审核意见：{{reviewComment}}</view>
     <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="openSettingsDrawer">打开功能侧栏 · 资料与资质</button>
   </view>
+  </block>
 
+  <block wx:if="{{consoleSection==='courses'}}">
   <view class="card">
     <view class="row-between">
       <view class="card-title" style="margin:0;">约课申请箱</view>
@@ -39,9 +48,30 @@
       </view>
     </view>
   </view>
+  </block>
+
+  <block wx:if="{{consoleSection==='account'}}">
+    <view class="card">
+      <view class="card-title" style="margin:0;">我的账户</view>
+      <view class="muted" style="margin-top:8rpx;">课酬一课一消托管，结课后 48 小时观察期划拨。</view>
+      <view class="settings-item" style="margin-top:16rpx;" bindtap="openSettingsDrawer">
+        <text>资料与资质设置</text><text class="settings-item-arrow">›</text>
+      </view>
+      <view class="settings-item" data-url="/pages/profile/profile" bindtap="goSettingsPage">
+        <text>个人中心</text><text class="settings-item-arrow">›</text>
+      </view>
+    </view>
+  </block>
 </view>
 
-<view class="fab-settings" bindtap="openSettingsDrawer" aria-role="button">☰</view>
+<view class="fab-settings" bindtap="toggleConsoleFab" aria-role="button">☰</view>
+<view class="settings-drawer-mask" wx:if="{{consoleFabShow}}" bindtap="closeConsoleFab"></view>
+<view class="console-fab-sheet" wx:if="{{consoleFabShow}}">
+  <view class="console-fab-sheet-item {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="pickConsoleSection">我的课程</view>
+  <view class="console-fab-sheet-item {{consoleSection==='workspace'?'on':''}}" data-id="workspace" bindtap="pickConsoleSection">工作台</view>
+  <view class="console-fab-sheet-item {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="pickConsoleSection">我的账户</view>
+  <view class="console-fab-sheet-item" bindtap="openSettingsDrawerFromFab">功能设置侧栏</view>
+</view>
 
 <view class="settings-drawer-mask" wx:if="{{settingsDrawerShow}}" bindtap="closeSettingsDrawer"></view>
 <view class="settings-drawer" wx:if="{{settingsDrawerShow}}">

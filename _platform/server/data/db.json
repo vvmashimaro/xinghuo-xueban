@@ -807,6 +807,151 @@
   "bookings": [
     {
       "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李思源",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "2026-10-25 周日 19:00-21:00",
+      "hours": 2,
+      "weekday": 0,
+      "time": "19:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "sessionDate": "2026-10-25",
+      "id": "BK-MVG1JIDX-131",
+      "createdAt": "2026-10-20 02:05",
+      "status": "cancelled",
+      "declineReason": "",
+      "type": "one_off",
+      "sessions": [
+        {
+          "id": "SES-20261025-0-FQ6BM",
+          "date": "2026-10-25",
+          "weekday": 0,
+          "weekdayLabel": "周日",
+          "timeStart": "19:00",
+          "timeEnd": "21:00",
+          "timeLabel": "19:00-21:00",
+          "status": "cancelled",
+          "escrowStatus": "refunded",
+          "leaveRequestedAt": "",
+          "leaveConfirmedAt": "",
+          "leaveRequestedBy": "",
+          "leaveDeadline": "2026-10-24 23:59",
+          "completedAt": "",
+          "releaseAt": ""
+        }
+      ],
+      "paymentStatus": "refunded",
+      "amount": 220,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "refunded",
+      "teachingPointId": "TP-1",
+      "boothId": "TP-1-B1",
+      "boothLabel": "仓位1",
+      "timeConflictForced": false,
+      "hasTimeConflict": false,
+      "timeConflictNote": "",
+      "updatedAt": "2026-10-20 02:05",
+      "refundedAt": "2026-10-20 02:05",
+      "cancelledAt": "2026-10-20 02:05",
+      "cancelledBy": "parent"
+    },
+    {
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李思源",
+      "subject": "物理",
+      "space": "青羊金沙文化微网点",
+      "schedule": "2026-10-20 03:00-16:00",
+      "hours": 2,
+      "weekday": 0,
+      "time": "19:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "sessionDate": "2026-10-20",
+      "id": "BK-MVG1JICI-849",
+      "createdAt": "2026-10-20 02:05",
+      "status": "pending_accept",
+      "declineReason": "",
+      "type": "one_off",
+      "sessions": [
+        {
+          "id": "SES-SOON",
+          "date": "2026-10-20",
+          "timeStart": "03:00",
+          "timeEnd": "16:00",
+          "status": "scheduled"
+        }
+      ],
+      "paymentStatus": "paid",
+      "amount": 220,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "pending_payment",
+      "teachingPointId": "TP-1",
+      "boothId": "TP-1-B1",
+      "boothLabel": "仓位1",
+      "timeConflictForced": false,
+      "hasTimeConflict": false,
+      "timeConflictNote": "",
+      "updatedAt": "2026-10-20 02:05"
+    },
+    {
+      "mentorId": "AP-8802",
+      "tutorId": "AP-8802",
+      "tutorName": "李思源",
+      "subject": "数学",
+      "space": "青羊金沙文化微网点",
+      "schedule": "2026-10-25 周日 19:00-21:00",
+      "hours": 2,
+      "weekday": 0,
+      "time": "19:00",
+      "parentId": "PAR-DEMO-001",
+      "parentPhone": "13980889211",
+      "studentNickname": "乐乐同学",
+      "studentGrade": "初三 (中考冲刺)",
+      "sessionDate": "2026-10-25",
+      "id": "BK-MVG1JICF-402",
+      "createdAt": "2026-10-20 02:05",
+      "status": "cancelled",
+      "declineReason": "",
+      "type": "one_off",
+      "sessions": [
+        {
+          "id": "SES-CANCEL-TEST",
+          "date": "2026-10-25",
+          "weekday": 0,
+          "timeStart": "14:00",
+          "timeEnd": "16:00",
+          "timeLabel": "14:00-16:00",
+          "status": "cancelled",
+          "escrowStatus": "refunded"
+        }
+      ],
+      "paymentStatus": "refunded",
+      "amount": 220,
+      "sessionCount": 1,
+      "perSessionAmount": 220,
+      "escrowStatus": "refunded",
+      "teachingPointId": "TP-1",
+      "boothId": "TP-1-B1",
+      "boothLabel": "仓位1",
+      "timeConflictForced": false,
+      "hasTimeConflict": false,
+      "timeConflictNote": "",
+      "updatedAt": "2026-10-20 02:05",
+      "cancelledAt": "2026-10-20 02:05",
+      "cancelledBy": "parent",
+      "refundedAt": "2026-10-20 02:05"
+    },
+    {
+      "mentorId": "AP-8802",
       "subject": "初中物理",
       "space": "青羊金沙文化微网点",
       "schedule": "周日 09:00-11:00",
@@ -1294,6 +1439,19 @@
   ],
   "payOrders": [
     {
+      "outTradeNo": "BK-BK-MVG1JIDX-131-1792461911253",
+      "bookingId": "BK-MVG1JIDX-131",
+      "amount": 20000,
+      "amountYuan": 200,
+      "status": "REFUND",
+      "mock": true,
+      "transactionId": "MOCK-TX-CANCEL",
+      "successTime": "2026-10-20T02:05:11.254Z",
+      "refundTime": "2026-10-20 02:05",
+      "refundReason": "家长开课前撤销",
+      "refundedBy": "13980889211"
+    },
+    {
       "outTradeNo": "BK-BK-MUNG8VXL-270-1790733090731",
       "prepayId": "MOCK-PREPAY-1790733090731-WKRKROS0L",
       "bookingId": "BK-MUNG8VXL-270",
@@ -1410,5 +1568,73 @@
   ],
   "featureFlags": {
     "FEATURE_SMART_WAREHOUSE": false
-  }
+  },
+  "teachingPoints": [
+    {
+      "id": "TP-1",
+      "name": "青羊金沙文化微网点",
+      "boothCount": 3,
+      "booths": [
+        {
+          "id": "TP-1-B1",
+          "label": "仓位1",
+          "number": 1
+        },
+        {
+          "id": "TP-1-B2",
+          "label": "仓位2",
+          "number": 2
+        },
+        {
+          "id": "TP-1-B3",
+          "label": "仓位3",
+          "number": 3
+        }
+      ]
+    },
+    {
+      "id": "TP-2",
+      "name": "高新大源中央微网点",
+      "boothCount": 3,
+      "booths": [
+        {
+          "id": "TP-2-B1",
+          "label": "仓位1",
+          "number": 1
+        },
+        {
+          "id": "TP-2-B2",
+          "label": "仓位2",
+          "number": 2
+        },
+        {
+          "id": "TP-2-B3",
+          "label": "仓位3",
+          "number": 3
+        }
+      ]
+    },
+    {
+      "id": "TP-3",
+      "name": "武侯川大望江微网点",
+      "boothCount": 3,
+      "booths": [
+        {
+          "id": "TP-3-B1",
+          "label": "仓位1",
+          "number": 1
+        },
+        {
+          "id": "TP-3-B2",
+          "label": "仓位2",
+          "number": 2
+        },
+        {
+          "id": "TP-3-B3",
+          "label": "仓位3",
+          "number": 3
+        }
+      ]
+    }
+  ]
 }

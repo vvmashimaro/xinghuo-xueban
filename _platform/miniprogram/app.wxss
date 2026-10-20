@@ -30,6 +30,64 @@ view, text, button, input, textarea, picker, label, scroll-view {
 
 .container-with-fab {
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom) + 120rpx);
+  padding-top: calc(24rpx + 88rpx);
+}
+
+.console-tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 800;
+  display: flex;
+  gap: 12rpx;
+  padding: 16rpx 28rpx calc(12rpx + env(safe-area-inset-top));
+  background: rgba(248, 250, 252, 0.97);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.06);
+}
+.console-tab {
+  flex: 1;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 800;
+  padding: 16rpx 8rpx;
+  border-radius: 16rpx;
+  background: #fff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+.console-tab.on {
+  background: #0d9488;
+  color: #fff;
+  border-color: #0d9488;
+}
+.console-fab-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 970;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 28rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -8rpx 32rpx rgba(15, 23, 42, 0.12);
+}
+.console-fab-sheet-item {
+  width: 100%;
+  text-align: left;
+  font-size: 28rpx;
+  font-weight: 700;
+  padding: 24rpx 20rpx;
+  margin-bottom: 12rpx;
+  border-radius: 16rpx;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.console-fab-sheet-item.on {
+  background: #ccfbf1;
+  border-color: #14b8a6;
+  color: #115e59;
 }
 
 /* 右侧悬浮 · 功能 / 设置入口 */

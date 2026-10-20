@@ -809,7 +809,7 @@ const StorageService = {
           list[idx] = result.booking;
           this.saveBookings(list);
         }
-        return { ok: true, booking: result.booking };
+        return { ok: true, booking: result.booking, refund: result.refund };
       }
       return result || { ok: false, error: '撤销失败' };
     } catch (e) {
