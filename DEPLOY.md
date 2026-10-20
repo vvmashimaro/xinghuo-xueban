@@ -326,6 +326,7 @@ module.exports = {
 
 9. **备份与安全**
    - [ ] 配置数据库定期备份
+   - [ ] 配置佐证材料每日本地备份（生产机 cron，见 [docs/ops-proof-upload-backup.md](./docs/ops-proof-upload-backup.md)）
    - [ ] 配置 SSL 证书自动续期
    - [ ] 配置防火墙和访问限制
 
