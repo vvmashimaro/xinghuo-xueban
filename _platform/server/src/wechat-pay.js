@@ -439,7 +439,31 @@ async function handlePaymentNotify(body, headers, rawBody) {
   };
 }
 
-function refundOrder(outTradeNo, reason) {
+function normalizeRefundParams(outTradeNoOrParams, reason) {
+  if (outTradeNoOrParams && typeof outTradeNoOrParams === 'object') {
+    return Object.assign({}, outTradeNoOrParams);
+  }
+  return {
+    outTradeNo: outTradeNoOrParams,
+    reason: reason || ''
+  };
+}
+
+/**
+ * 微信支付 V3 退款（原路退回至用户支付账户）
+ * @param {string|object} outTradeNoOrParams - 商户订单号或 { outTradeNo, reason, amountFen, transactionId }
+ */
+async function refundOrder(outTradeNoOrParams, reason) {
+  const params = normalizeRefundParams(outTradeNoOrParams, reason);
+  const outTradeNo = params.outTradeNo;
+  const refundReason = params.reason || '用户撤销约课';
+  const amountFen = Number(params.amountFen);
+  const transactionId = params.transactionId;
+
+  if (!outTradeNo) {
+    return { success: false, error: '缺少商户订单号' };
+  }
+
   if (mockOrders.has(outTradeNo)) {
     const order = mockOrders.get(outTradeNo);
     if (order.status !== 'SUCCESS') {
@@ -447,15 +471,48 @@ function refundOrder(outTradeNo, reason) {
     }
     order.status = 'REFUND';
     order.refundTime = new Date().toISOString();
-    order.refundReason = reason || '';
+    order.refundReason = refundReason;
     console.log(`[WeChat Pay Mock] 退款成功: ${outTradeNo}`);
     return { success: true, outTradeNo, mock: true };
   }
+
   if (!isConfigComplete()) {
-    return { success: true, outTradeNo, mock: true, message: 'Mock 退款（未配置微信支付）' };
+    if (isMockPayAllowed()) {
+      return { success: true, outTradeNo, mock: true, message: 'Mock 退款（未配置微信支付）' };
+    }
+    return { success: false, error: '微信支付配置不完整，无法退款' };
   }
-  console.log(`[WeChat Pay] 退款占位: ${outTradeNo}`);
-  return { success: false, error: '真实微信退款接口尚未接入' };
+
+  if (!amountFen || amountFen <= 0) {
+    return { success: false, error: '缺少有效退款金额（分）' };
+  }
+
+  const outRefundNo = `RF-${String(outTradeNo).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 48)}-${Date.now()}`;
+  const requestBody = {
+    out_trade_no: outTradeNo,
+    out_refund_no: outRefundNo.slice(0, 64),
+    reason: String(refundReason).slice(0, 80),
+    amount: {
+      refund: Math.round(amountFen),
+      total: Math.round(amountFen),
+      currency: 'CNY'
+    }
+  };
+  if (transactionId) {
+    requestBody.transaction_id = transactionId;
+  }
+
+  const json = await wechatPayRequest('POST', '/v3/refund/domestic/refunds', requestBody);
+  console.log('[WeChat Pay] 退款受理', outTradeNo, json.status || json.refund_id);
+
+  return {
+    success: true,
+    outTradeNo,
+    outRefundNo: json.out_refund_no || requestBody.out_refund_no,
+    refundId: json.refund_id,
+    status: json.status,
+    mock: false
+  };
 }
 
 function getLocalOrderStatus(outTradeNo) {

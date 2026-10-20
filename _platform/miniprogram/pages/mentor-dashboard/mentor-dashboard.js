@@ -33,7 +33,9 @@ Page({
     declineShow: false,
     declineReason: '',
     declineId: '',
-    settingsDrawerShow: false
+    settingsDrawerShow: false,
+    consoleSection: 'courses',
+    consoleFabShow: false
   },
 
   async onShow() {
@@ -105,6 +107,24 @@ Page({
     });
   },
 
+  onConsoleTab(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) this.setData({ consoleSection: id });
+  },
+  toggleConsoleFab() {
+    this.setData({ consoleFabShow: !this.data.consoleFabShow });
+  },
+  closeConsoleFab() {
+    this.setData({ consoleFabShow: false });
+  },
+  pickConsoleSection(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({ consoleSection: id || 'courses', consoleFabShow: false });
+  },
+  openSettingsDrawerFromFab() {
+    this.setData({ consoleFabShow: false });
+    this.openSettingsDrawer();
+  },
   openSettingsDrawer() {
     this.setData({ settingsDrawerShow: true });
   },

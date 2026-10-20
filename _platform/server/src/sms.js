@@ -446,10 +446,55 @@ async function sendBookingNotification(phone, bookingInfo) {
   }
 }
 
+/**
+ * 撤销约课 / 退款到账通知
+ */
+async function sendRefundNotification(phone, info) {
+  if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+    return { success: false, error: '手机号格式不正确' };
+  }
+
+  const provider = getProvider();
+  const templateId = process.env.TENCENT_SMS_TEMPLATE_REFUND;
+
+  const amountText =
+    info && info.amountYuan != null ? `¥${Number(info.amountYuan).toFixed(2)}` : '课酬';
+  const summary = info && info.refunded
+    ? `约课已撤销，${amountText} 将原路退回微信账户`
+    : '约课已撤销';
+
+  if (provider === 'mock' || !templateId) {
+    console.log(`[SMS Refund Mock] 发送至 ${maskPhoneForLog(phone)}: ${summary}`);
+    if (info) {
+      console.log(
+        `[SMS Refund Mock] 科目: ${info.subject || ''}, 时间: ${info.schedule || ''}, 原因: ${info.reason || ''}`
+      );
+    }
+    return { success: true, provider: 'mock', message: summary };
+  }
+
+  try {
+    if (provider === 'tencent') {
+      return await sendTencentSMS(phone, info || {}, 'refund');
+    }
+    if (isProduction()) {
+      throw new Error('短信提供商未配置');
+    }
+    return { success: true, provider: 'mock-fallback', message: summary };
+  } catch (error) {
+    console.error('[SMS Refund Error]', error);
+    if (isProduction()) {
+      return { success: false, error: '退款通知发送失败' };
+    }
+    return { success: true, provider: 'mock-fallback', message: summary };
+  }
+}
+
 module.exports = {
   sendSMS,
   verifySMS,
   sendBookingNotification,
+  sendRefundNotification,
   getProvider,
   isProduction
 };

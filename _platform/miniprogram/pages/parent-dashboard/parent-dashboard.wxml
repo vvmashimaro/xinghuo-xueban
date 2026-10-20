@@ -1,4 +1,11 @@
+<view class="console-tab-bar">
+  <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">我的课程</view>
+  <view class="console-tab {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="onConsoleTab">查找导师</view>
+  <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+</view>
+
 <view class="container container-with-fab">
+  <block wx:if="{{consoleSection==='courses'}}">
   <view class="hero">
     <view class="hero-title">你好，{{parentName}}</view>
     <view class="hero-sub">{{studentNickname}} · {{studentGrade}} · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
@@ -60,7 +67,9 @@
       </view>
     </view>
   </view>
+  </block>
 
+  <block wx:if="{{consoleSection==='discover'}}">
   <!-- 筛选：搜索 + 学科 + 网点 + 排序 -->
   <view class="card">
     <view class="section-h">筛选与匹配</view>
@@ -125,8 +134,41 @@
   </view>
 
   <view wx:if="{{tutors.length===0}}" class="card muted" style="text-align:center;">当前筛选条件下暂无匹配导师，请放宽时薪或切换网点。</view>
+  </block>
 
-<view class="fab-settings" bindtap="openSettingsDrawer">☰</view>
+  <block wx:if="{{consoleSection==='account'}}">
+    <view class="card wallet-card">
+      <view class="card-title" style="margin:0;">我的账户</view>
+      <view class="muted" style="margin-top:8rpx;">一课一消托管；开课前 2 小时外撤销将原路退回微信。</view>
+      <view class="wallet-bal" wx:if="{{walletHasFrozen}}" style="margin-top:12rpx;">课次冻结 ¥{{walletFrozen}}</view>
+      <view class="muted" wx:else style="margin-top:12rpx;">暂无冻结课款</view>
+    </view>
+    <view class="card">
+      <view class="settings-item" data-url="/pages/parent-settings-passport/parent-settings-passport" bindtap="goSettingsPage">
+        <text>查阅学情护照</text><text class="settings-item-arrow">›</text>
+      </view>
+      <view class="settings-item" data-url="/pages/parent-register/parent-register?mode=edit" bindtap="goSettingsPage">
+        <text>学员画像更改</text><text class="settings-item-arrow">›</text>
+      </view>
+      <view class="settings-item" data-url="/pages/profile/profile" bindtap="goSettingsPage">
+        <text>个人中心</text><text class="settings-item-arrow">›</text>
+      </view>
+      <view class="settings-item" bindtap="openSettingsDrawer">
+        <text>全部功能与设置</text><text class="settings-item-arrow">›</text>
+      </view>
+    </view>
+  </block>
+
+</view>
+
+<view class="fab-settings" bindtap="toggleConsoleFab">☰</view>
+<view class="settings-drawer-mask" wx:if="{{consoleFabShow}}" bindtap="closeConsoleFab"></view>
+<view class="console-fab-sheet" wx:if="{{consoleFabShow}}">
+  <view class="console-fab-sheet-item {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="pickConsoleSection">我的课程</view>
+  <view class="console-fab-sheet-item {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="pickConsoleSection">查找导师</view>
+  <view class="console-fab-sheet-item {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="pickConsoleSection">我的账户</view>
+  <view class="console-fab-sheet-item" bindtap="openSettingsDrawerFromFab">功能设置侧栏</view>
+</view>
 
 <view class="settings-drawer-mask" wx:if="{{settingsDrawerShow}}" bindtap="closeSettingsDrawer"></view>
 <view class="settings-drawer" wx:if="{{settingsDrawerShow}}">

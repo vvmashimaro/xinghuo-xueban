@@ -112,6 +112,7 @@
 
     <div id="dashboardBody" class="space-y-5">
 
+      <div data-console-pane="workspace" class="space-y-5">
       <!-- 1. 审核状态 -->
       <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
@@ -237,7 +238,9 @@
           </div>
         </div>
       </section>
+      </div>
 
+      <div data-console-pane="courses" class="hidden space-y-5">
       <!-- 3. 约课申请箱 + 已完课 -->
       <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
@@ -268,6 +271,24 @@
           <div id="completedSessionsList" class="space-y-2.5"></div>
         </div>
       </section>
+      </div>
+
+      <div data-console-pane="account" class="hidden space-y-5">
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-4 sm:p-5 space-y-3">
+        <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-teal-600"></i>
+          我的账户
+        </h2>
+        <p class="text-xs text-slate-500">课酬按一课一消托管；结课确认后进入 48 小时观察期再划拨。</p>
+        <div class="grid sm:grid-cols-2 gap-2">
+          <button type="button" onclick="safeNavigate('index.html', '导师认证与建库')" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-id-card mr-1.5"></i>补件 / 重新建档
+          </button>
+          <button type="button" onclick="openSensitiveChangeModal()" class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-shield-halved mr-1.5 text-amber-600"></i>申请变更敏感信息
+          </button>
+        </div>
+      </section>
 
       <!-- 4. 反馈与投诉 -->
       <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -288,6 +309,7 @@
           </div>
         </div>
       </section>
+      </div>
 
     </div>
   </main>
@@ -477,6 +499,7 @@
 <script src="js/config.js"></script>
 <script src="js/feature-flags.js"></script>
   <script src="js/storage-service.js"></script>
+  <script src="js/console-nav.js"></script>
   <script src="js/availability-picker.js"></script>
 
     <script>
@@ -1188,6 +1211,19 @@
       renderProfileForm(CURRENT_MENTOR);
       renderInbox(CURRENT_MENTOR);
       renderFeedbackTickets(CURRENT_MENTOR);
+      if (window.UserConsoleNavInit) {
+        UserConsoleNavInit('mentor', {
+          onChange: function (sectionId) {
+            if (sectionId === 'courses' && CURRENT_MENTOR) renderInbox(CURRENT_MENTOR);
+          }
+        });
+      }
+    }
+
+    function openMentorSettings() {
+      if (window.UserConsoleNav) {
+        UserConsoleNav.setSection('workspace', true);
+      }
     }
 
     function openFeedbackModal() {

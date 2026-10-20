@@ -536,6 +536,49 @@ function markBookingPaidFromPaySuccess(booking, payMeta) {
   return db.updateBooking(booking.id, patch, { trust: 'payment' });
 }
 
+async function executeWeChatRefundForOrder(payOrder, reason) {
+  if (!payOrder) {
+    return { ok: false, error: '订单不存在' };
+  }
+  if (payOrder.status === 'REFUND' || payOrder.status === 'REFUNDED') {
+    return { ok: false, error: '订单已退款' };
+  }
+  if (payOrder.status !== 'SUCCESS') {
+    return { ok: false, error: '仅已支付订单可退款' };
+  }
+
+  const allowMockRefund =
+    wechatPay.isMockPayAllowed() && (!wechatPay.isConfigComplete() || payOrder.mock);
+
+  if (allowMockRefund) {
+    const wxResult = await wechatPay.refundOrder({
+      outTradeNo: payOrder.outTradeNo,
+      reason,
+      amountFen: payOrder.amount,
+      transactionId: payOrder.transactionId
+    });
+    if (!wxResult.success) {
+      return { ok: false, error: wxResult.error || '退款失败' };
+    }
+    return { ok: true, mock: true, wx: wxResult };
+  }
+
+  if (!wechatPay.isConfigComplete()) {
+    return { ok: false, error: '当前支付环境不支持退款' };
+  }
+
+  const wxResult = await wechatPay.refundOrder({
+    outTradeNo: payOrder.outTradeNo,
+    reason,
+    amountFen: payOrder.amount,
+    transactionId: payOrder.transactionId
+  });
+  if (!wxResult.success) {
+    return { ok: false, error: wxResult.error || '微信退款失败' };
+  }
+  return { ok: true, mock: false, wx: wxResult };
+}
+
 async function syncPayOrderWithRemote(outTradeNo) {
   const payOrder = db.getPayOrder(outTradeNo);
   if (!payOrder) {
@@ -809,7 +852,7 @@ app.get('/api/pay/orders', requireAdmin, (req, res) => {
   }
 });
 
-app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, (req, res) => {
+app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, async (req, res) => {
   try {
     const { outTradeNo } = req.params;
     const body = req.body || {};
@@ -817,22 +860,14 @@ app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, (req, res) => {
     if (!payOrder) {
       return fail(res, 404, '订单不存在');
     }
-    const allowMockRefund =
-      wechatPay.isMockPayAllowed() &&
-      (!wechatPay.isConfigComplete() || payOrder.mock || sms.getProvider() === 'mock');
-    if (allowMockRefund) {
-      wechatPay.refundOrder(outTradeNo, body.reason);
-    } else if (wechatPay.isConfigComplete()) {
-      const wxResult = wechatPay.refundOrder(outTradeNo, body.reason);
-      if (!wxResult.success) {
-        return fail(res, 400, wxResult.error || '微信退款失败');
-      }
-    } else {
-      return fail(res, 400, '当前支付环境不支持退款');
+    const wxRefund = await executeWeChatRefundForOrder(payOrder, body.reason || '管理员退款');
+    if (!wxRefund.ok) {
+      return fail(res, 400, wxRefund.error || '微信退款失败');
     }
     const result = db.refundPayOrder(outTradeNo, {
       reason: body.reason || '',
-      refundedBy: req.user.phone || req.user.userId || 'admin'
+      refundedBy: req.user.phone || req.user.userId || 'admin',
+      refundId: wxRefund.wx && wxRefund.wx.refundId
     });
     if (!result.ok) {
       return fail(res, 400, result.error);
@@ -1140,7 +1175,7 @@ app.post('/api/bookings/:id/respond', requireAuth, (req, res) => {
 });
 
 
-app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
+app.post('/api/bookings/:id/cancel', requireAuth, async (req, res) => {
   if (req.user.role !== 'parent' && req.user.role !== 'admin') {
     return fail(res, 403, '仅家长可撤销约课');
   }
@@ -1157,11 +1192,61 @@ app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
     );
   }
 
-  const result = db.parentCancelBooking(req.params.id, parentRef || { id: booking.parentId });
+  const validated = db.validateParentCancelBooking(
+    req.params.id,
+    parentRef || { id: booking.parentId }
+  );
+  if (!validated.ok) {
+    return res.status(400).json(validated);
+  }
+
+  const payOrder = validated.payOrder;
+  let refundNotice = null;
+  if (payOrder && payOrder.outTradeNo) {
+    const wxRefund = await executeWeChatRefundForOrder(payOrder, '家长开课前撤销');
+    if (!wxRefund.ok) {
+      return fail(res, 400, wxRefund.error || '微信原路退款失败，约课未撤销');
+    }
+    const dbRefund = db.refundPayOrder(payOrder.outTradeNo, {
+      reason: '家长开课前撤销',
+      refundedBy: validated.parentPhone || validated.parentId || 'parent',
+      refundId: wxRefund.wx && wxRefund.wx.refundId
+    });
+    if (!dbRefund.ok) {
+      return fail(res, 400, dbRefund.error || '退款记账失败');
+    }
+    refundNotice = {
+      amountYuan: payOrder.amountYuan,
+      outTradeNo: payOrder.outTradeNo,
+      mock: !!wxRefund.mock
+    };
+  }
+
+  const result = db.parentCancelBooking(req.params.id, parentRef || { id: booking.parentId }, {
+    skipRefund: true
+  });
   if (!result || !result.ok) {
     return res.status(400).json(result || { ok: false, error: 'cancel failed' });
   }
-  ok(res, result);
+
+  const notifyPhone = booking.parentPhone || (parentRef && parentRef.phone);
+  if (notifyPhone) {
+    try {
+      await sms.sendRefundNotification(notifyPhone, {
+        subject: booking.subject || '课程',
+        schedule: booking.schedule || '',
+        amountYuan: refundNotice && refundNotice.amountYuan != null
+          ? refundNotice.amountYuan
+          : booking.amount,
+        reason: '家长开课前撤销',
+        refunded: !!(payOrder && payOrder.outTradeNo)
+      });
+    } catch (error) {
+      console.error('[Cancel Refund SMS Error]', error);
+    }
+  }
+
+  ok(res, Object.assign({}, result, { refund: refundNotice }));
 });
 
 app.get('/api/parents/me/wallet', requireAuth, (req, res) => {

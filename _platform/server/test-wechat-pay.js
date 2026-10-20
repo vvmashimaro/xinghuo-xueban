@@ -35,6 +35,15 @@ async function run() {
   assert.ok(mockPrepay.prepayId);
   assert.ok(mockPrepay.outTradeNo);
 
+  wechatPay.mockConfirmPayment(mockPrepay.outTradeNo);
+  const mockRefund = await wechatPay.refundOrder({
+    outTradeNo: mockPrepay.outTradeNo,
+    reason: 'unit test refund',
+    amountFen: 100
+  });
+  assert.strictEqual(mockRefund.success, true);
+  assert.strictEqual(mockRefund.mock, true);
+
   const apiKey = '12345678901234567890123456789012';
   const nonce = 'test-nonce-12';
   const resourceBody = JSON.stringify({
