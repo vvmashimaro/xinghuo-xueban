@@ -13,6 +13,7 @@ const path = require('path');
 const proofUpload = require('./proof-upload');
 const db = require('./db');
 const sms = require('./sms');
+const bookingSmsNotify = require('./booking-sms-notify');
 const auth = require('./auth');
 const wechatPay = require('./wechat-pay');
 const pricing = require('./pricing');
@@ -1108,18 +1109,12 @@ app.post('/api/bookings', requireAuth, async (req, res) => {
     return fail(res, 400, '创建预约失败');
   }
   
-  // 发送预约成功短信通知
-  if (booking && booking.id && booking.parentPhone) {
+  // 新约课待接单：短信通知导师（失败不影响创建）
+  if (booking && booking.id) {
     try {
-      await sms.sendBookingNotification(booking.parentPhone, {
-        tutorName: booking.tutorName || '导师',
-        subject: booking.subject || '课程',
-        schedule: booking.schedule || booking.timeSlot || '',
-        space: booking.space || ''
-      });
+      await bookingSmsNotify.notifyBookingCreated(booking, db);
     } catch (error) {
       console.error('[Booking SMS Notification Error]', error);
-      // 短信发送失败不影响预约创建
     }
   }
   
@@ -1153,7 +1148,7 @@ app.patch('/api/bookings/:id', requireAuth, (req, res) => {
   ok(res, updated);
 });
 
-app.post('/api/bookings/:id/respond', requireAuth, (req, res) => {
+app.post('/api/bookings/:id/respond', requireAuth, async (req, res) => {
   // 只有导师可以响应预约
   if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
     return fail(res, 403, '只有导师可以响应预约');
@@ -1171,6 +1166,13 @@ app.post('/api/bookings/:id/respond', requireAuth, (req, res) => {
   
   const updated = db.respondToBooking(req.params.id, req.body || {});
   if (!updated) return fail(res, 404, 'booking not found');
+
+  try {
+    await bookingSmsNotify.notifyBookingRespond(updated, req.body || {}, db);
+  } catch (error) {
+    console.error('[Booking Respond SMS Error]', error);
+  }
+
   ok(res, updated);
 });
 
@@ -1244,6 +1246,12 @@ app.post('/api/bookings/:id/cancel', requireAuth, async (req, res) => {
     } catch (error) {
       console.error('[Cancel Refund SMS Error]', error);
     }
+  }
+
+  try {
+    await bookingSmsNotify.notifyParentCancel(booking, db);
+  } catch (error) {
+    console.error('[Cancel Mentor SMS Error]', error);
   }
 
   ok(res, Object.assign({}, result, { refund: refundNotice }));
