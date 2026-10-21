@@ -51,6 +51,27 @@ function isProduction() {
   return process.env.NODE_ENV === 'production';
 }
 
+/**
+ * TEMPORARY / DEV ONLY — 万能验证码开关（生产环境切勿长期开启，真实短信模式下存在安全风险）
+ * ALLOW_DEV_OTP=true 时，DEV_OTP_CODE（默认 888888）可通过全部短信校验（含管理员、生产 NODE_ENV）
+ */
+function isDevOtpEnabled() {
+  const v = String(process.env.ALLOW_DEV_OTP || '')
+    .trim()
+    .toLowerCase();
+  return v === 'true' || v === '1' || v === 'yes';
+}
+
+function getDevOtpCode() {
+  const custom = String(process.env.DEV_OTP_CODE || '').trim();
+  return custom || '888888';
+}
+
+function isDevOtpCode(code) {
+  if (!isDevOtpEnabled() || code == null) return false;
+  return String(code).trim() === getDevOtpCode();
+}
+
 function isTencentCredentialsReady() {
   return Boolean(
     process.env.TENCENT_SMS_SECRET_ID &&
@@ -172,9 +193,18 @@ async function sendMockSMS(phone, code, scene, auth = null) {
 
   const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
 
-  if (isAdmin) {
+  if (isAdmin && !isDevOtpEnabled()) {
     console.log(`[mock-sms] ${maskedPhone} code=${code}`);
     return { success: true, provider: 'mock', message: '验证码已发送（管理员需使用真实验证码）' };
+  }
+
+  if (isAdmin && isDevOtpEnabled()) {
+    console.log(`[mock-sms] ${maskedPhone} code=${code} (ALLOW_DEV_OTP: may use ${getDevOtpCode()})`);
+    return {
+      success: true,
+      provider: 'mock',
+      message: `验证码已发送（临时万能码 ${getDevOtpCode()} 已启用）`
+    };
   }
 
   return { success: true, provider: 'mock', message: '验证码已发送，请查收' };
@@ -386,18 +416,27 @@ function verifySMS(phone, code, scene = 'login', auth = null) {
     return { success: false, error: '手机号和验证码不能为空' };
   }
 
+  if (isDevOtpCode(code)) {
+    console.warn(
+      `[SMS Verify] DEV OTP accepted for ${maskPhoneForLog(phone)} (ALLOW_DEV_OTP=true, code=${getDevOtpCode()})`
+    );
+    const ticket = auth ? auth.createVerificationTicket(phone, false) : null;
+    return { success: true, phone, scene, devOtp: true, ticket };
+  }
+
   const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
-  if (isAdmin && code === '888888') {
+  const legacyDemoCode = '888888';
+  if (isAdmin && code === legacyDemoCode) {
     return { success: false, error: '管理员请使用短信验证码登录' };
   }
 
-  if (!isProduction() && code === '888888' && !isAdmin) {
+  if (!isProduction() && code === legacyDemoCode && !isAdmin) {
     console.log(`[SMS Verify] Mock 验证通过：${maskPhoneForLog(phone)}`);
     const ticket = auth ? auth.createVerificationTicket(phone, true) : null;
     return { success: true, phone, scene, mock: true, ticket };
   }
 
-  if (isProduction() && code === '888888') {
+  if (isProduction() && code === legacyDemoCode) {
     return { success: false, error: '验证码错误' };
   }
 
@@ -528,6 +567,9 @@ async function sendRefundNotification(phone, info) {
 module.exports = {
   sendSMS,
   verifySMS,
+  isDevOtpEnabled,
+  getDevOtpCode,
+  isDevOtpCode,
   sendBookingNotification,
   sendBookingAcceptNotification,
   sendBookingMentorAcceptNotification,

@@ -121,7 +121,7 @@ app.post('/api/auth/sms/send', async (req, res) => {
       });
     }
     
-    const requiresRealCode = auth.isAdminPhone(phone);
+    const requiresRealCode = auth.isAdminPhone(phone) && !sms.isDevOtpEnabled();
     ok(res, {
       success: true,
       message: result.message,
@@ -1771,7 +1771,11 @@ app.listen(PORT, HOST, () => {
   console.log('');
   console.log('  短信服务:');
   console.log(`    Provider:   ${sms.getProvider()}`);
-  console.log(`    Status:     ${sms.getProvider() === 'mock' ? '演示模式 (888888)' : '生产模式'}`);
+  if (sms.isDevOtpEnabled()) {
+    console.log(`    Status:     ⚠️  DEV OTP ON (code=${sms.getDevOtpCode()}, ALLOW_DEV_OTP=true)`);
+  } else {
+    console.log(`    Status:     ${sms.getProvider() === 'mock' ? '演示模式 (非生产可用 888888)' : '生产模式'}`);
+  }
   console.log('');
   console.log('  微信支付:');
   console.log(`    配置状态:   ${wechatPay.isConfigComplete() ? '✓ 已配置' : '✗ 未配置'}`);
