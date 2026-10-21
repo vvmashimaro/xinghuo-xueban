@@ -11,12 +11,15 @@ const https = require('https');
 const codeStore = new Map(); // { phone: { codeHash, scene, expiry, attempts } }
 const sendCooldown = new Map(); // { phone: lastSendTime }
 const dailyCount = new Map(); // { phone: { count, date } }
+const ipHourlyCount = new Map(); // { ip: { count, hourKey } }
+const sendingInFlight = new Set(); // 正在发送中的手机号互斥锁
 
 const CODE_EXPIRY_MS = 5 * 60 * 1000; // 5分钟
 const CODE_EXPIRY_MINUTES = Math.round(CODE_EXPIRY_MS / 60000);
 const SEND_COOLDOWN_MS = parseInt(process.env.SMS_COOLDOWN_MS || '60000', 10); // 60秒发送间隔（测试可设为 0）
 const MAX_VERIFY_ATTEMPTS = 3; // 最多验证3次
 const MAX_DAILY_SENDS = 10; // 每天最多发送10次
+const MAX_IP_HOURLY_SENDS = parseInt(process.env.SMS_MAX_IP_HOURLY || '30', 10);
 
 /**
  * 腾讯云「通知类」短信模板固定文案（控制台配置为无变量全文；代码不传 TemplateParamSet）
@@ -52,14 +55,30 @@ function isProduction() {
 }
 
 /**
- * TEMPORARY / DEV ONLY — 万能验证码开关（生产环境切勿长期开启，真实短信模式下存在安全风险）
- * ALLOW_DEV_OTP=true 时，DEV_OTP_CODE（默认 888888）可通过全部短信校验（含管理员、生产 NODE_ENV）
+ * TEMPORARY / DEV ONLY — 万能验证码开关
+ * ALLOW_DEV_OTP=true 时，DEV_OTP_CODE（默认 888888）可通过短信校验。
+ * 生产环境（NODE_ENV=production）下：非管理员仍可用（过渡到真实短信前），管理员账号一律拒绝。
  */
 function isDevOtpEnabled() {
   const v = String(process.env.ALLOW_DEV_OTP || '')
     .trim()
     .toLowerCase();
   return v === 'true' || v === '1' || v === 'yes';
+}
+
+function warnDevOtpAtStartup() {
+  if (!isDevOtpEnabled()) return;
+  if (isProduction()) {
+    console.error('='.repeat(60));
+    console.error('[SECURITY] NODE_ENV=production 且 ALLOW_DEV_OTP=true');
+    console.error(
+      `[SECURITY] 万能验证码 ${getDevOtpCode()} 仅对非管理员有效；管理员账号已拒绝 DEV OTP。`
+    );
+    console.error('[SECURITY] 真实短信上线后请关闭 ALLOW_DEV_OTP。');
+    console.error('='.repeat(60));
+  } else {
+    console.warn(`[SMS] DEV OTP enabled (code=${getDevOtpCode()}, ALLOW_DEV_OTP=true)`);
+  }
 }
 
 function getDevOtpCode() {
@@ -190,16 +209,17 @@ function maskPhoneForLog(phone) {
 
 async function sendMockSMS(phone, code, scene, auth = null) {
   const maskedPhone = maskPhoneForLog(phone);
+  const codePart = isProduction() ? 'code=******' : `code=${code}`;
 
   const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
 
   if (isAdmin && !isDevOtpEnabled()) {
-    console.log(`[mock-sms] ${maskedPhone} code=${code}`);
+    console.log(`[mock-sms] ${maskedPhone} ${codePart}`);
     return { success: true, provider: 'mock', message: '验证码已发送（管理员需使用真实验证码）' };
   }
 
   if (isAdmin && isDevOtpEnabled()) {
-    console.log(`[mock-sms] ${maskedPhone} code=${code} (ALLOW_DEV_OTP: may use ${getDevOtpCode()})`);
+    console.log(`[mock-sms] ${maskedPhone} ${codePart} (ALLOW_DEV_OTP: may use ${getDevOtpCode()})`);
     return {
       success: true,
       provider: 'mock',
@@ -207,6 +227,7 @@ async function sendMockSMS(phone, code, scene, auth = null) {
     };
   }
 
+  console.log(`[mock-sms] ${maskedPhone} ${codePart}`);
   return { success: true, provider: 'mock', message: '验证码已发送，请查收' };
 }
 
@@ -248,6 +269,9 @@ async function sendTencentTemplateSMS(phone, scene, payload) {
   const templateId = resolveTencentTemplateId(scene);
 
   if (!isTencentCredentialsReady() || !templateId) {
+    if (isProduction()) {
+      throw new Error(`生产环境腾讯云短信模板或密钥未配置完整 (scene=${scene})`);
+    }
     console.log(`[SMS Tencent] 配置不完整（scene=${scene}），降级到 mock`);
     if (scene === 'login') {
       const code =
@@ -351,12 +375,38 @@ async function sendTencentTemplateSMS(phone, scene, payload) {
   });
 }
 
+function isLoopbackIp(ip) {
+  const s = String(ip || '').replace(/^::ffff:/, '');
+  return s === '127.0.0.1' || s === '::1' || s === 'localhost' || s === '';
+}
+
+function checkAndRecordIpLimit(ip) {
+  if (MAX_IP_HOURLY_SENDS <= 0) return { ok: true };
+  if (!isProduction() && isLoopbackIp(ip)) return { ok: true };
+  if (!ip) return { ok: true };
+  const hourKey = new Date().toISOString().slice(0, 13);
+  const rec = ipHourlyCount.get(ip);
+  if (!rec || rec.hourKey !== hourKey) {
+    ipHourlyCount.set(ip, { count: 1, hourKey });
+    return { ok: true };
+  }
+  if (rec.count >= MAX_IP_HOURLY_SENDS) {
+    return { ok: false, error: '当前网络请求过于频繁，请稍后再试' };
+  }
+  rec.count += 1;
+  return { ok: true };
+}
+
 /**
  * 发送短信验证码
  */
-async function sendSMS(phone, scene = 'login', auth = null) {
+async function sendSMS(phone, scene = 'login', auth = null, clientIp = '') {
   if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
     return { success: false, error: '手机号格式不正确' };
+  }
+
+  if (sendingInFlight.has(phone)) {
+    return { success: false, error: '验证码发送中，请勿重复点击', retryAfter: 5 };
   }
 
   const cooldownCheck = checkSendCooldown(phone);
@@ -369,6 +419,15 @@ async function sendSMS(phone, scene = 'login', auth = null) {
     return { success: false, error: dailyCheck.error };
   }
 
+  const ipCheck = checkAndRecordIpLimit(clientIp);
+  if (!ipCheck.ok) {
+    return { success: false, error: ipCheck.error };
+  }
+
+  sendingInFlight.add(phone);
+  const prevCooldown = sendCooldown.get(phone);
+  sendCooldown.set(phone, Date.now());
+
   const code = generateCode();
   const codeHash = hashCode(code);
   const expiry = Date.now() + CODE_EXPIRY_MS;
@@ -376,35 +435,42 @@ async function sendSMS(phone, scene = 'login', auth = null) {
   codeStore.set(phone, { codeHash, scene, expiry, attempts: 0 });
 
   const provider = getProvider();
-  let result;
 
   try {
-    if (provider === 'tencent' && isTencentCredentialsReady() && resolveTencentTemplateId('login')) {
-      result = await sendTencentTemplateSMS(phone, 'login', {
-        code,
-        minutes: CODE_EXPIRY_MINUTES
-      });
-    } else if (provider === 'tencent') {
-      console.log('[SMS] 腾讯云登录模板未配置完整，使用 mock 发送验证码');
-      result = await sendMockSMS(phone, code, scene, auth);
+    let result;
+    if (provider === 'tencent') {
+      if (!isTencentCredentialsReady() || !resolveTencentTemplateId('login')) {
+        if (isProduction()) {
+          throw new Error('生产环境腾讯云短信登录模板或密钥未配置完整');
+        }
+        console.log('[SMS] 开发环境腾讯云配置不完整，使用 mock 发送验证码');
+        result = await sendMockSMS(phone, code, scene, auth);
+      } else {
+        result = await sendTencentTemplateSMS(phone, 'login', {
+          code,
+          minutes: CODE_EXPIRY_MINUTES
+        });
+      }
     } else {
       result = await sendMockSMS(phone, code, scene, auth);
     }
 
-    sendCooldown.set(phone, Date.now());
     recordSuccessfulSend(phone);
-
     return { success: true, provider: result.provider, message: result.message };
   } catch (error) {
-    console.error('[SMS Error]', error);
+    console.error('[SMS Error]', error && error.message);
 
     codeStore.delete(phone);
+    if (prevCooldown) sendCooldown.set(phone, prevCooldown);
+    else sendCooldown.delete(phone);
 
     if (isProduction() && provider === 'tencent') {
       return { success: false, error: '短信发送失败，请稍后重试' };
     }
 
     return { success: true, provider: 'mock-fallback', message: '验证码已发送，请查收' };
+  } finally {
+    sendingInFlight.delete(phone);
   }
 }
 
@@ -416,15 +482,19 @@ function verifySMS(phone, code, scene = 'login', auth = null) {
     return { success: false, error: '手机号和验证码不能为空' };
   }
 
+  const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
+
   if (isDevOtpCode(code)) {
+    if (isAdmin && isProduction()) {
+      console.error(`[SECURITY ALERT] 拦截管理员手机号使用 DEV OTP: ${maskPhoneForLog(phone)}`);
+      return { success: false, error: '生产环境管理员严禁使用测试万能码，请使用真实短信验证码' };
+    }
     console.warn(
-      `[SMS Verify] DEV OTP accepted for ${maskPhoneForLog(phone)} (ALLOW_DEV_OTP=true, code=${getDevOtpCode()})`
+      `[SMS Verify] DEV OTP accepted for ${maskPhoneForLog(phone)} (ALLOW_DEV_OTP=true)`
     );
     const ticket = auth ? auth.createVerificationTicket(phone, false) : null;
     return { success: true, phone, scene, devOtp: true, ticket };
   }
-
-  const isAdmin = auth && typeof auth.isAdminPhone === 'function' && auth.isAdminPhone(phone);
   const legacyDemoCode = '888888';
   if (isAdmin && code === legacyDemoCode) {
     return { success: false, error: '管理员请使用短信验证码登录' };
@@ -481,7 +551,13 @@ async function sendTransactionalNotification(phone, scene, bookingInfo, options 
 
   const provider = getProvider();
   const templateId = resolveTencentTemplateId(scene);
-  if (provider === 'mock' || (provider === 'tencent' && !templateId)) {
+  if (provider === 'tencent' && !templateId) {
+    if (isProduction()) {
+      return { success: false, error: '生产环境腾讯云短信模板未配置' };
+    }
+    return logMockTransactional(phone, scene);
+  }
+  if (provider === 'mock' || !templateId) {
     return logMockTransactional(phone, scene);
   }
 
@@ -543,6 +619,12 @@ async function sendRefundNotification(phone, info) {
   const provider = getProvider();
   const templateId = resolveTencentTemplateId('refund');
 
+  if (provider === 'tencent' && !templateId) {
+    if (isProduction()) {
+      return { success: false, error: '生产环境腾讯云退款短信模板未配置' };
+    }
+    return logMockTransactional(phone, 'refund');
+  }
   if (provider === 'mock' || !templateId) {
     return logMockTransactional(phone, 'refund');
   }
@@ -564,12 +646,23 @@ async function sendRefundNotification(phone, info) {
   }
 }
 
+function resetRateLimitsForTests() {
+  codeStore.clear();
+  sendCooldown.clear();
+  dailyCount.clear();
+  ipHourlyCount.clear();
+  sendingInFlight.clear();
+}
+
 module.exports = {
   sendSMS,
   verifySMS,
   isDevOtpEnabled,
   getDevOtpCode,
   isDevOtpCode,
+  warnDevOtpAtStartup,
+  checkAndRecordIpLimit,
+  resetRateLimitsForTests,
   sendBookingNotification,
   sendBookingAcceptNotification,
   sendBookingMentorAcceptNotification,

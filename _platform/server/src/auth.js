@@ -184,14 +184,26 @@ function revokeToken(token, db) {
  * @returns {string|null} token
  */
 function extractTokenFromRequest(req) {
-  const authHeader = req.headers['authorization'];
+  if (!req || !req.headers) return null;
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
   if (!authHeader) return null;
-  
-  // 支持 "Bearer <token>" 格式
-  const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (match) return match[1];
-  
-  return authHeader;
+
+  const match = String(authHeader).match(/^Bearer\s+(.+)$/i);
+  if (match) return match[1].trim();
+
+  return String(authHeader).trim();
+}
+
+function safeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) {
+    const dummy = bufA.length ? bufA : Buffer.from('x');
+    crypto.timingSafeEqual(dummy, dummy);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 /**
@@ -236,30 +248,29 @@ function createAuthMiddleware(db) {
   }
 
   /**
-   * Express 中间件：要求管理员权限（支持 token 和 X-Admin-Token）
+   * Express 中间件：要求管理员权限（支持会话 token 和 X-Admin-Token）
    */
   function requireAdminToken(req, res, next) {
-    // 先检查用户登录 token
     const userToken = extractTokenFromRequest(req);
     const user = verifyToken(userToken, db);
-    
+
     if (user && user.role === 'admin') {
       req.user = user;
       req.token = userToken;
       return next();
     }
-    
-    // 检查静态 admin token（备用）
+
     const adminToken = process.env.ADMIN_TOKEN;
     if (!adminToken) {
-      return res.status(500).json({ error: '服务器未配置管理员令牌' });
-    }
-    
-    const providedToken = req.headers['x-admin-token'] || req.headers['authorization']?.replace('Bearer ', '');
-    if (providedToken !== adminToken) {
       return res.status(403).json({ error: '需要管理员权限' });
     }
-    
+
+    const headerToken = String(req.headers['x-admin-token'] || '').trim() || userToken || '';
+    if (!safeCompare(headerToken, adminToken)) {
+      return res.status(403).json({ error: '需要管理员权限' });
+    }
+
+    req.user = { userId: 'ADMIN-STATIC', role: 'admin', phone: '' };
     next();
   }
 
@@ -282,6 +293,7 @@ module.exports = {
   verifyToken,
   revokeToken,
   extractTokenFromRequest,
+  safeCompare,
   createAuthMiddleware,
   cleanupExpiredTokens
 };
