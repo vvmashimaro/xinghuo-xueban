@@ -72,6 +72,33 @@ async function run() {
   const notifyResult = await wechatPay.handlePaymentNotify(notifyBody, {}, JSON.stringify(notifyBody));
   assert.strictEqual(notifyResult.tradeState, 'SUCCESS');
 
+  const pemPlain = '-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----';
+  const pemCipher = genAesGcmPayload(pemPlain, apiKey, 'certificate', nonce);
+  const pemDecoded = wechatPay.decryptAes256GcmRaw({
+    ciphertext: pemCipher,
+    associated_data: 'certificate',
+    nonce
+  }, apiKey);
+  assert.strictEqual(pemDecoded, pemPlain);
+  assert.ok(wechatPay.parsePlatformCertPem(pemDecoded).indexOf('BEGIN CERTIFICATE') >= 0);
+
+  assert.strictEqual(wechatPay.interpretRefundStatus({ status: 'PROCESSING' }).success, true);
+  assert.strictEqual(wechatPay.interpretRefundStatus({ status: 'SUCCESS' }).success, true);
+  assert.strictEqual(wechatPay.interpretRefundStatus({ status: 'ABNORMAL' }).success, false);
+  assert.strictEqual(wechatPay.interpretRefundStatus({ status: 'CLOSED' }).success, false);
+
+  const savedNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'production';
+  let threw = false;
+  try {
+    await wechatPay.handlePaymentNotify({ out_trade_no: 'BK-FORGED', trade_state: 'SUCCESS' }, {}, '{}');
+  } catch (err) {
+    threw = /配置不完整|拒绝处理/.test(String(err && err.message));
+  }
+  if (savedNodeEnv === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = savedNodeEnv;
+  assert.ok(threw, 'production must reject notify when WeChat Pay config is incomplete');
+
   assert.strictEqual(
     wechatPay.parseBookingIdFromOutTradeNo('BK-BK-MUNG8VXL-270-1790733090731'),
     'BK-MUNG8VXL-270'

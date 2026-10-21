@@ -61,6 +61,8 @@ function run() {
     type: 'one_off'
   };
 
+  assert(db.getFeatureFlags().FEATURE_SMART_WAREHOUSE === false, 'warehouse flag stays false by default');
+
   const s1 = sessionPayload('2030-06-15', 6, '14:00', '16:00');
   const first = db.addBooking(
     Object.assign({}, parentBase, {
@@ -69,7 +71,20 @@ function run() {
     })
   );
   assert(first && first.id, 'first booking created');
-  assert(first.boothId, 'booth auto-assigned');
+  assert(!first.boothId, 'warehouse off: do not auto-assign booth');
+
+  const overlapSameSlot = db.addBooking(
+    Object.assign({}, parentBase, {
+      parentId: 'PAR-TEST-002',
+      parentPhone: '13900002222',
+      studentNickname: '另一学员',
+      sessions: [sessionPayload('2030-06-15', 6, '14:00', '16:00')],
+      schedule: '2030-06-15 周六 14:00-16:00'
+    })
+  );
+  assert(overlapSameSlot && overlapSameSlot.id, 'warehouse off: overlapping booth capacity is not enforced');
+  assert(overlapSameSlot.code !== 'BOOTH_FULL', 'warehouse off: BOOTH_FULL skipped');
+  console.log('✓ FEATURE_SMART_WAREHOUSE=false skips booth allocation');
 
   const conflict = db.addBooking(
     Object.assign({}, parentBase, {
@@ -96,19 +111,32 @@ function run() {
   assert(forced && forced.id && forced.hasTimeConflict, 'forced booking stores hasTimeConflict');
   console.log('✓ Force book path sets hasTimeConflict');
 
+  db.updateFeatureFlags({ FEATURE_SMART_WAREHOUSE: true });
+  const wareFirst = db.addBooking(
+    Object.assign({}, parentBase, {
+      parentId: 'PAR-WH-1',
+      parentPhone: '13900003111',
+      studentNickname: '仓位学员1',
+      sessions: [sessionPayload('2030-06-22', 6, '14:00', '16:00')],
+      schedule: '2030-06-22 周六 14:00-16:00'
+    })
+  );
+  assert(wareFirst && wareFirst.boothId, 'warehouse on: booth auto-assigned');
+
   const boothDup = db.addBooking(
     Object.assign({}, parentBase, {
-      parentId: 'PAR-TEST-002',
-      parentPhone: '13900002222',
-      studentNickname: '另一学员',
-      boothId: first.boothId,
-      teachingPointId: first.teachingPointId,
-      sessions: [sessionPayload('2030-06-15', 6, '14:00', '16:00')],
-      schedule: '2030-06-15 周六 14:00-16:00'
+      parentId: 'PAR-WH-2',
+      parentPhone: '13900003222',
+      studentNickname: '仓位学员2',
+      boothId: wareFirst.boothId,
+      teachingPointId: wareFirst.teachingPointId,
+      sessions: [sessionPayload('2030-06-22', 6, '14:00', '16:00')],
+      schedule: '2030-06-22 周六 14:00-16:00'
     })
   );
   assert(boothDup.ok === false && boothDup.code === 'BOOTH_CONFLICT', 'same booth overlap rejected');
-  console.log('✓ Same-booth overlap rejected');
+  console.log('✓ Same-booth overlap rejected when warehouse on');
+  db.updateFeatureFlags({ FEATURE_SMART_WAREHOUSE: false });
 
   const badTime = db.addBooking(
     Object.assign({}, parentBase, {

@@ -152,9 +152,9 @@ function wechatPayRequest(method, urlPath, bodyObj) {
 }
 
 /**
- * AES-256-GCM 解密（APIv3 密钥 / 回调 resource）
+ * AES-256-GCM 解密为原始字符串（平台证书为 PEM 明文，回调 resource 为 JSON）
  */
-function decryptAes256Gcm({ ciphertext, associated_data, nonce }, apiV3Key) {
+function decryptAes256GcmRaw({ ciphertext, associated_data, nonce }, apiV3Key) {
   const key = Buffer.from(apiV3Key, 'utf8');
   const buf = Buffer.from(ciphertext, 'base64');
   const authTag = buf.slice(buf.length - 16);
@@ -164,7 +164,11 @@ function decryptAes256Gcm({ ciphertext, associated_data, nonce }, apiV3Key) {
     decipher.setAAD(Buffer.from(associated_data, 'utf8'));
   }
   decipher.setAuthTag(authTag);
-  const decoded = Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
+  return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
+}
+
+function decryptAes256Gcm({ ciphertext, associated_data, nonce }, apiV3Key) {
+  const decoded = decryptAes256GcmRaw({ ciphertext, associated_data, nonce }, apiV3Key);
   return JSON.parse(decoded);
 }
 
@@ -174,6 +178,13 @@ function decryptNotifyResource(resource) {
     throw new Error('未配置 WECHAT_API_V3_KEY');
   }
   return decryptAes256Gcm(resource, config.apiV3Key);
+}
+
+function parsePlatformCertPem(decoded) {
+  if (decoded == null) return '';
+  if (typeof decoded === 'string') return decoded;
+  if (typeof decoded === 'object' && decoded.certificate) return String(decoded.certificate);
+  return String(decoded);
 }
 
 async function ensurePlatformCertificates() {
@@ -187,19 +198,37 @@ async function ensurePlatformCertificates() {
   const list = json.data || [];
   list.forEach((item) => {
     if (!item || !item.serial_no || !item.encrypt_certificate) return;
-    const certPem = decryptAes256Gcm(item.encrypt_certificate, config.apiV3Key);
-    platformPublicKeys.set(item.serial_no, certPem);
+    // 平台证书解密后是 PEM 纯文本，不能 JSON.parse
+    const certPem = parsePlatformCertPem(
+      decryptAes256GcmRaw(item.encrypt_certificate, config.apiV3Key)
+    );
+    if (certPem && certPem.indexOf('BEGIN CERTIFICATE') >= 0) {
+      platformPublicKeys.set(item.serial_no, certPem);
+    } else {
+      console.warn('[WeChat Pay] 平台证书解密结果不是 PEM serial:', item.serial_no);
+    }
   });
   platformCertsFetchedAt = now;
 }
 
 async function verifyNotifySignature(signature, timestamp, nonce, rawBody, serial) {
-  if (!signature || !timestamp || !nonce || rawBody == null) {
+  if (!signature || !timestamp || !nonce || rawBody == null || !serial) {
+    return false;
+  }
+  const ts = Number(timestamp);
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(ts) || Math.abs(nowSec - ts) > 300) {
+    console.warn('[WeChat Pay] 回调时间戳超出5分钟有效窗口:', timestamp);
     return false;
   }
   try {
     await ensurePlatformCertificates();
-    const certPem = platformPublicKeys.get(serial);
+    let certPem = platformPublicKeys.get(serial);
+    if (!certPem) {
+      platformCertsFetchedAt = 0;
+      await ensurePlatformCertificates();
+      certPem = platformPublicKeys.get(serial);
+    }
     if (!certPem) {
       console.warn('[WeChat Pay] 未找到平台证书 serial:', serial);
       return false;
@@ -391,12 +420,19 @@ function mockConfirmPayment(outTradeNo) {
 
 /**
  * 处理支付回调通知（需传入原始 body 字符串用于验签）
+ * 生产环境配置缺失时绝不跳过验签；配置完整时始终验签并要求加密 resource。
  */
 async function handlePaymentNotify(body, headers, rawBody) {
-  const signature = headers['wechatpay-signature'] || headers['Wechatpay-Signature'];
-  const timestamp = headers['wechatpay-timestamp'] || headers['Wechatpay-Timestamp'];
-  const nonce = headers['wechatpay-nonce'] || headers['Wechatpay-Nonce'];
-  const serial = headers['wechatpay-serial'] || headers['Wechatpay-Serial'];
+  const hdrs = headers || {};
+  const signature = hdrs['wechatpay-signature'] || hdrs['Wechatpay-Signature'];
+  const timestamp = hdrs['wechatpay-timestamp'] || hdrs['Wechatpay-Timestamp'];
+  const nonce = hdrs['wechatpay-nonce'] || hdrs['Wechatpay-Nonce'];
+  const serial = hdrs['wechatpay-serial'] || hdrs['Wechatpay-Serial'];
+
+  const configReady = isConfigComplete();
+  if (isProduction() && !configReady) {
+    throw new Error('微信支付配置不完整，拒绝处理回调通知');
+  }
 
   let raw;
   if (rawBody != null) {
@@ -414,16 +450,25 @@ async function handlePaymentNotify(body, headers, rawBody) {
     payload = JSON.parse(body);
   }
 
-  if (isConfigComplete()) {
+  const mustVerify = configReady || isProduction();
+  if (mustVerify) {
+    if (typeof raw !== 'string' || !raw.length) {
+      throw new Error('缺少原始请求体 rawBody，无法验签');
+    }
     const valid = await verifyNotifySignature(signature, timestamp, nonce, raw, serial);
     if (!valid) {
       throw new Error('签名验证失败');
+    }
+    if (!payload || !payload.resource || !payload.resource.ciphertext) {
+      throw new Error('回调缺少加密 resource 报文');
     }
   }
 
   let decryptedData = payload;
   if (payload && payload.resource && payload.resource.ciphertext) {
     decryptedData = decryptNotifyResource(payload.resource);
+  } else if (mustVerify) {
+    throw new Error('回调缺少加密 resource 报文');
   } else if (payload && payload.event_type && !payload.out_trade_no) {
     throw new Error('回调缺少可解密 resource');
   }
@@ -435,6 +480,7 @@ async function handlePaymentNotify(body, headers, rawBody) {
     transactionId: decryptedData.transaction_id,
     tradeState: decryptedData.trade_state,
     amount: decryptedData.amount?.total,
+    payerTotal: decryptedData.amount?.payer_total,
     successTime: decryptedData.success_time
   };
 }
@@ -502,16 +548,63 @@ async function refundOrder(outTradeNoOrParams, reason) {
     requestBody.transaction_id = transactionId;
   }
 
-  const json = await wechatPayRequest('POST', '/v3/refund/domestic/refunds', requestBody);
-  console.log('[WeChat Pay] 退款受理', outTradeNo, json.status || json.refund_id);
+  let json;
+  try {
+    json = await wechatPayRequest('POST', '/v3/refund/domestic/refunds', requestBody);
+  } catch (err) {
+    console.error('[WeChat Pay] 退款请求失败', outTradeNo, err && err.message);
+    return {
+      success: false,
+      error: (err && err.message) || '微信退款请求失败',
+      status: 'refund_failed',
+      outTradeNo,
+      mock: false
+    };
+  }
+  console.log('[WeChat Pay] 退款响应', outTradeNo, json.status, json.refund_id);
+
+  const interpreted = interpretRefundStatus(json);
+  if (!interpreted.success) {
+    return {
+      success: false,
+      error: interpreted.error,
+      status: interpreted.status,
+      outTradeNo,
+      outRefundNo: json.out_refund_no || requestBody.out_refund_no,
+      refundId: json.refund_id,
+      mock: false
+    };
+  }
 
   return {
     success: true,
     outTradeNo,
     outRefundNo: json.out_refund_no || requestBody.out_refund_no,
     refundId: json.refund_id,
-    status: json.status,
+    status: interpreted.status,
     mock: false
+  };
+}
+
+function interpretRefundStatus(json) {
+  const status = String((json && json.status) || '').toUpperCase();
+  if (status === 'ABNORMAL' || status === 'CLOSED') {
+    return {
+      success: false,
+      status,
+      error: `微信退款状态异常(${status})，请联系客服处理`
+    };
+  }
+  if (status === 'SUCCESS') {
+    return { success: true, status: 'SUCCESS' };
+  }
+  if (status === 'PROCESSING' || !status) {
+    return { success: true, status: status || 'PROCESSING' };
+  }
+  return {
+    success: false,
+    status: status || 'refund_failed',
+    error: `微信退款状态未知(${status || 'empty'})`
   };
 }
 
@@ -593,9 +686,12 @@ module.exports = {
   registerMockOrder,
   hydrateMockOrders,
   refundOrder,
+  interpretRefundStatus,
   buildJsapiPayParams,
   decryptNotifyResource,
   decryptAes256Gcm,
+  decryptAes256GcmRaw,
+  parsePlatformCertPem,
   generateSignature,
   signMessage
 };

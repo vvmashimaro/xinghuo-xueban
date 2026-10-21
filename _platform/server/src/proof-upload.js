@@ -32,6 +32,56 @@ function extFromMime(mime) {
   return '';
 }
 
+function detectMagicExt(buf) {
+  if (!Buffer.isBuffer(buf) || buf.length < 5) return '';
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return '.jpg';
+  if (
+    buf.length >= 8 &&
+    buf[0] === 0x89 &&
+    buf[1] === 0x50 &&
+    buf[2] === 0x4e &&
+    buf[3] === 0x47 &&
+    buf[4] === 0x0d &&
+    buf[5] === 0x0a &&
+    buf[6] === 0x1a &&
+    buf[7] === 0x0a
+  ) {
+    return '.png';
+  }
+  if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46 && buf[4] === 0x2d) {
+    return '.pdf';
+  }
+  return '';
+}
+
+function mimeFromExt(ext) {
+  if (ext === '.pdf') return 'application/pdf';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  return 'application/octet-stream';
+}
+
+function proofMetaPath(storedName) {
+  return path.join(PROOF_DIR, `${storedName}.meta.json`);
+}
+
+function writeProofMeta(storedName, meta) {
+  try {
+    fs.writeFileSync(proofMetaPath(storedName), JSON.stringify(meta || {}), 'utf8');
+  } catch (err) {
+    console.warn('[proof-upload] write meta failed', err && err.message);
+  }
+}
+
+function readProofMeta(storedName) {
+  try {
+    const raw = fs.readFileSync(proofMetaPath(storedName), 'utf8');
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
 function formatSizeMb(bytes) {
   return ((Number(bytes) || 0) / (1024 * 1024)).toFixed(1) + 'MB';
 }
@@ -98,7 +148,7 @@ function parseMultipart(buffer, contentType) {
   return { fields, file };
 }
 
-function saveProofUpload(file, fields) {
+function saveProofUpload(file, fields, owner) {
   ensureDirs();
   if (!file || !file.buffer || !file.buffer.length) {
     return { ok: false, error: '未收到文件' };
@@ -109,17 +159,31 @@ function saveProofUpload(file, fields) {
 
   const originalFromField = fields && fields.originalName ? String(fields.originalName) : '';
   const originalName = sanitizeBaseName(originalFromField || file.originalname || 'file');
-  let ext = extFromName(originalName) || extFromName(file.originalname) || extFromMime(file.mimetype);
-  if (!ext) {
-    return { ok: false, error: '仅支持 JPG、PNG、PDF' };
+  const magicExt = detectMagicExt(file.buffer);
+  if (!magicExt) {
+    return { ok: false, error: '文件内容校验失败：仅支持真实的 JPG、PNG、PDF 文件' };
+  }
+  const claimedExt = extFromName(originalName) || extFromName(file.originalname) || extFromMime(file.mimetype);
+  const claimedNorm = claimedExt === '.jpeg' ? '.jpg' : claimedExt;
+  if (claimedNorm && claimedNorm !== magicExt) {
+    return { ok: false, error: '文件扩展名与实际内容不符' };
   }
 
-  const storedName = `${Date.now().toString(36)}-${crypto.randomBytes(4).toString('hex')}${ext}`;
+  const storedName = `${Date.now().toString(36)}-${crypto.randomBytes(16).toString('hex')}${magicExt}`;
   const absPath = path.join(PROOF_DIR, storedName);
   fs.writeFileSync(absPath, file.buffer);
 
   const tag = (fields && fields.tag ? String(fields.tag).trim() : '') || '佐证材料';
   const publicUrl = `/uploads/proofs/${storedName}`;
+  const mimeType = mimeFromExt(magicExt);
+
+  if (owner && owner.userId) {
+    writeProofMeta(storedName, {
+      ownerId: owner.userId,
+      ownerRole: owner.role || '',
+      createdAt: new Date().toISOString()
+    });
+  }
 
   return {
     ok: true,
@@ -130,8 +194,26 @@ function saveProofUpload(file, fields) {
       tag,
       url: publicUrl,
       path: `uploads/proofs/${storedName}`,
-      mimeType: file.mimetype || ''
+      mimeType
     }
+  };
+}
+
+function resolveProofFile(fileName) {
+  const storedName = path.basename(String(fileName || ''));
+  if (!storedName || storedName !== fileName || storedName.indexOf('..') >= 0) {
+    return { ok: false, error: 'invalid name' };
+  }
+  const absPath = path.join(PROOF_DIR, storedName);
+  if (!absPath.startsWith(PROOF_DIR) || !fs.existsSync(absPath) || !fs.statSync(absPath).isFile()) {
+    return { ok: false, error: 'not found' };
+  }
+  return {
+    ok: true,
+    storedName,
+    absPath,
+    mimeType: mimeFromExt(path.extname(storedName).toLowerCase()),
+    meta: readProofMeta(storedName)
   };
 }
 
@@ -141,5 +223,8 @@ module.exports = {
   ensureDirs,
   parseMultipart,
   saveProofUpload,
+  detectMagicExt,
+  resolveProofFile,
+  readProofMeta,
   MAX_BYTES
 };

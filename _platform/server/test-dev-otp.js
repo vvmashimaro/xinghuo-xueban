@@ -45,10 +45,15 @@ function run() {
     assert.strictEqual(user.success, true);
     assert.ok(user.ticket);
     const admin = ctx.sms.verifySMS(adminPhone, '888888', 'login', ctx.auth);
-    assert.strictEqual(admin.success, true);
-    assert.ok(admin.ticket);
-    const ticketData = ctx.auth.verifyAndConsumeTicket(admin.ticket);
-    assert.strictEqual(ticketData.mock, false);
+    assert.strictEqual(admin.success, false, 'production must reject DEV OTP for admin');
+    assert.ok(admin.error);
+    ctx.restore();
+  }
+
+  {
+    const ctx = loadSmsWithEnv({ NODE_ENV: 'development', ALLOW_DEV_OTP: 'true' });
+    const admin = ctx.sms.verifySMS(adminPhone, '888888', 'login', ctx.auth);
+    assert.strictEqual(admin.success, true, 'non-production admin may use DEV OTP');
     ctx.restore();
   }
 
@@ -69,3 +74,4 @@ function run() {
 }
 
 run();
+process.exit(0);

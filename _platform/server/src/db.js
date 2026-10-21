@@ -11,12 +11,12 @@ const bookingSchedule = require('./booking-schedule');
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const DATA_DIR = process.env.DATABASE_PATH 
   ? path.dirname(process.env.DATABASE_PATH)
   : path.join(__dirname, '..', 'data');
 const DB_PATH = process.env.DATABASE_PATH || path.join(DATA_DIR, 'db.json');
-const TMP_PATH = DB_PATH + '.tmp';
 
 const DEFAULT_SLOTS = [
   '周六 09:00-11:00',
@@ -772,11 +772,38 @@ function ensureDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function persist() {
+let persistLock = false;
+let persistQueued = false;
+
+function writeSnapshotAtomic() {
   ensureDir();
   const json = JSON.stringify(state, null, 2);
-  fs.writeFileSync(TMP_PATH, json, 'utf8');
-  fs.renameSync(TMP_PATH, DB_PATH);
+  const uniqueTmp = `${DB_PATH}.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+  try {
+    fs.writeFileSync(uniqueTmp, json, 'utf8');
+    fs.renameSync(uniqueTmp, DB_PATH);
+  } catch (err) {
+    try {
+      if (fs.existsSync(uniqueTmp)) fs.unlinkSync(uniqueTmp);
+    } catch (_) {}
+    throw err;
+  }
+}
+
+function persist() {
+  if (persistLock) {
+    persistQueued = true;
+    return;
+  }
+  persistLock = true;
+  try {
+    do {
+      persistQueued = false;
+      writeSnapshotAtomic();
+    } while (persistQueued);
+  } finally {
+    persistLock = false;
+  }
 }
 
 function load() {
@@ -828,9 +855,17 @@ function load() {
     
     if (needMigration) persist();
   } catch (e) {
-    console.warn('[db] load fail, reseed', e.message);
-    state = emptySnapshot();
-    persist();
+    console.error('[db] CRITICAL: 数据库文件读取或解析失败！', e && e.message);
+    const corruptBackup = `${DB_PATH}.corrupt.${Date.now()}.bak`;
+    try {
+      fs.copyFileSync(DB_PATH, corruptBackup);
+      console.error(`[db] 已将异常数据库备份至: ${corruptBackup}`);
+    } catch (backupErr) {
+      console.error('[db] 备份损坏文件失败', backupErr && backupErr.message);
+    }
+    const err = new Error(`数据库文件损坏，拒绝用演示数据覆盖: ${DB_PATH}`);
+    err.code = 'DB_CORRUPT';
+    throw err;
   }
   return state;
 }
@@ -1257,20 +1292,23 @@ function addBooking(booking) {
     }
   }
 
+  const warehouseEnabled = !!getFeatureFlags().FEATURE_SMART_WAREHOUSE;
   ensureTeachingPoints(s);
   const teachingPoint = bookingSchedule.teachingPointBySpaceName(
     s.teachingPoints,
     clientFields.space || booking.space
   );
-  if (!teachingPoint && bookingType !== 'trial') {
+  if (warehouseEnabled && !teachingPoint && bookingType !== 'trial') {
     return { ok: false, error: '未找到对应教学点', code: 'TEACHING_POINT_NOT_FOUND' };
   }
 
   let boothId = clientFields.boothId || booking.boothId || '';
   let boothLabel = clientFields.boothLabel || booking.boothLabel || '';
-  const teachingPointId = teachingPoint ? teachingPoint.id : '';
+  const teachingPointId = teachingPoint
+    ? teachingPoint.id
+    : clientFields.teachingPointId || booking.teachingPointId || '';
 
-  if (teachingPoint && sessions.length) {
+  if (warehouseEnabled && teachingPoint && sessions.length) {
     if (boothId) {
       const booth = (teachingPoint.booths || []).find((b) => b.id === boothId);
       if (!booth) {
@@ -1895,19 +1933,32 @@ function refundPayOrder(outTradeNo, meta) {
   if (order.status === 'REFUND' || order.status === 'REFUNDED') {
     return { ok: false, error: '订单已退款' };
   }
-  if (order.status !== 'SUCCESS') {
+  if (order.status === 'refund_pending') {
+    return { ok: false, error: '退款处理中', status: 'refund_pending' };
+  }
+  if (order.status !== 'SUCCESS' && order.status !== 'refund_failed') {
     return { ok: false, error: '仅已支付订单可退款' };
+  }
+  const wxStatus = String((meta && (meta.wxStatus || meta.status)) || '').toUpperCase();
+  let nextStatus = 'REFUND';
+  if (wxStatus === 'PROCESSING') nextStatus = 'refund_pending';
+  if (wxStatus === 'ABNORMAL' || wxStatus === 'CLOSED' || wxStatus === 'REFUND_FAILED') {
+    nextStatus = 'refund_failed';
   }
   const refundTime = _now();
   const updatedOrder = savePayOrder(
     Object.assign({}, order, {
-      status: 'REFUND',
+      status: nextStatus,
+      refundWxStatus: wxStatus || nextStatus,
       refundTime,
       refundReason: (meta && meta.reason) || '',
       refundedBy: (meta && meta.refundedBy) || 'admin',
       refundId: (meta && meta.refundId) || order.refundId
     })
   );
+  if (nextStatus === 'refund_failed') {
+    return { ok: false, error: (meta && meta.error) || '退款失败', order: updatedOrder, status: nextStatus };
+  }
   let booking = null;
   if (order.bookingId) {
     booking = getBookings().find((b) => b.id === order.bookingId) || null;

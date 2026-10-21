@@ -92,14 +92,24 @@ app.get('/api/snapshot', requireAdminToken, (req, res) => {
   ok(res, db.snapshot());
 });
 
-// 危险操作：替换快照（生产环境需要 admin token）
+function dangerousDbResetAllowed() {
+  return !isProduction || process.env.ALLOW_DANGEROUS_DB_RESET === 'true';
+}
+
+// 危险操作：替换快照（生产环境默认禁用，需 ALLOW_DANGEROUS_DB_RESET=true）
 app.post('/api/snapshot', requireAdminToken, (req, res) => {
+  if (!dangerousDbResetAllowed()) {
+    return fail(res, 403, '生产环境已禁用全量快照覆盖');
+  }
   const body = req.body || {};
   ok(res, db.replaceSnapshot(body));
 });
 
-// 危险操作：重置数据库（生产环境需要 admin token）
+// 危险操作：重置数据库（生产环境默认禁用）
 app.post('/api/reset', requireAdminToken, (req, res) => {
+  if (!dangerousDbResetAllowed()) {
+    return fail(res, 403, '生产环境严禁重置数据库');
+  }
   ok(res, db.reset());
 });
 
@@ -112,7 +122,8 @@ app.post('/api/auth/sms/send', async (req, res) => {
       return fail(res, 400, '缺少手机号');
     }
     
-    const result = await sms.sendSMS(phone, scene || 'login', auth);
+    const clientIp = clientIpFromReq(req);
+    const result = await sms.sendSMS(phone, scene || 'login', auth, clientIp);
     
     if (!result.success) {
       return res.status(429).json({
@@ -274,6 +285,15 @@ app.post('/api/auth/register', (req, res) => {
     // 创建用户记录
     let user;
     const profileData = Object.assign({ phone }, profile || {});
+    delete profileData.id;
+    profileData.phone = phone;
+    if (role === 'mentor') {
+      delete profileData.status;
+      delete profileData.evalGrade;
+      delete profileData.reviewComment;
+      delete profileData.code;
+      delete profileData.sensitiveChangePending;
+    }
     
     if (role === 'parent') {
       user = db.saveParent(profileData);
@@ -521,6 +541,70 @@ function bookingForPayOrderAccess(req, res, payOrder, outTradeNo) {
   return { booking, allowed: true };
 }
 
+function clientIpFromReq(req) {
+  const xf = req.headers['x-forwarded-for'];
+  if (xf) return String(xf).split(',')[0].trim();
+  const ip = (req.ip || (req.socket && req.socket.remoteAddress) || '').replace(/^::ffff:/, '');
+  return ip;
+}
+
+function amountsMatchFen(expected, actual) {
+  const a = Number(expected);
+  const b = Number(actual);
+  return Number.isFinite(a) && Number.isFinite(b) && a > 0 && a === b;
+}
+
+function applyWeChatPaySuccess(payOrder, result) {
+  if (!payOrder) {
+    return { ok: false, http: 404, message: '订单不存在' };
+  }
+  if (payOrder.status === 'SUCCESS') {
+    return { ok: true, idempotent: true };
+  }
+  if (!amountsMatchFen(payOrder.amount, result.amount)) {
+    console.error(
+      `[WeChat Pay Security] 金额不匹配! outTradeNo=${payOrder.outTradeNo}, 期望=${payOrder.amount}, 实际=${result.amount}`
+    );
+    return { ok: false, http: 400, message: '订单金额校验失败' };
+  }
+  db.savePayOrder({
+    outTradeNo: payOrder.outTradeNo,
+    status: 'SUCCESS',
+    transactionId: result.transactionId,
+    successTime: result.successTime || new Date().toISOString()
+  });
+  const booking = payOrder.bookingId
+    ? db.getBookings().find((b) => b.id === payOrder.bookingId)
+    : null;
+  if (booking && booking.paymentStatus !== 'paid') {
+    markBookingPaidFromPaySuccess(booking, result);
+  }
+  return { ok: true, idempotent: false };
+}
+
+const notifyLocks = new Set();
+const refundLocks = new Set();
+
+const MENTOR_PRIVILEGED_PATCH_KEYS = [
+  'status',
+  'evalGrade',
+  'reviewComment',
+  'code',
+  'phone',
+  'sensitiveChangePending',
+  'id'
+];
+const MENTOR_SENSITIVE_KEYS = [
+  'realName',
+  'idCard',
+  'university',
+  'degree',
+  'chsiCode',
+  'bankName',
+  'bankCardNumber',
+  'proofFiles'
+];
+
 function markBookingPaidFromPaySuccess(booking, payMeta) {
   if (!booking) return null;
   const payable = pricing.isBookingPayable(booking);
@@ -541,43 +625,82 @@ async function executeWeChatRefundForOrder(payOrder, reason) {
   if (!payOrder) {
     return { ok: false, error: '订单不存在' };
   }
+  const outTradeNo = payOrder.outTradeNo;
+  if (!outTradeNo) {
+    return { ok: false, error: '缺少商户订单号' };
+  }
+  if (refundLocks.has(outTradeNo)) {
+    return { ok: false, error: '退款处理中，请勿重复提交', status: 'refund_pending' };
+  }
   if (payOrder.status === 'REFUND' || payOrder.status === 'REFUNDED') {
     return { ok: false, error: '订单已退款' };
   }
-  if (payOrder.status !== 'SUCCESS') {
+  if (payOrder.status === 'refund_pending') {
+    return { ok: false, error: '退款处理中，请勿重复提交', status: 'refund_pending' };
+  }
+  if (payOrder.status !== 'SUCCESS' && payOrder.status !== 'refund_failed') {
     return { ok: false, error: '仅已支付订单可退款' };
   }
 
-  const allowMockRefund =
-    wechatPay.isMockPayAllowed() && (!wechatPay.isConfigComplete() || payOrder.mock);
+  refundLocks.add(outTradeNo);
+  try {
+    const allowMockRefund =
+      wechatPay.isMockPayAllowed() && (!wechatPay.isConfigComplete() || payOrder.mock);
 
-  if (allowMockRefund) {
-    const wxResult = await wechatPay.refundOrder({
-      outTradeNo: payOrder.outTradeNo,
+    let wxResult;
+    if (allowMockRefund) {
+      wxResult = await wechatPay.refundOrder({
+        outTradeNo,
+        reason,
+        amountFen: payOrder.amount,
+        transactionId: payOrder.transactionId
+      });
+      if (!wxResult.success) {
+        db.savePayOrder({
+          outTradeNo,
+          status: 'refund_failed',
+          refundWxStatus: wxResult.status || 'refund_failed',
+          refundError: wxResult.error || '退款失败'
+        });
+        return { ok: false, error: wxResult.error || '退款失败', status: 'refund_failed', wx: wxResult };
+      }
+      return { ok: true, mock: true, wx: wxResult, status: wxResult.status || 'SUCCESS' };
+    }
+
+    if (!wechatPay.isConfigComplete()) {
+      return { ok: false, error: '当前支付环境不支持退款' };
+    }
+
+    wxResult = await wechatPay.refundOrder({
+      outTradeNo,
       reason,
       amountFen: payOrder.amount,
       transactionId: payOrder.transactionId
     });
     if (!wxResult.success) {
-      return { ok: false, error: wxResult.error || '退款失败' };
+      db.savePayOrder({
+        outTradeNo,
+        status: 'refund_failed',
+        refundWxStatus: wxResult.status || 'refund_failed',
+        refundError: wxResult.error || '微信退款失败'
+      });
+      return {
+        ok: false,
+        error: wxResult.error || '微信退款失败',
+        status: 'refund_failed',
+        wx: wxResult
+      };
     }
-    return { ok: true, mock: true, wx: wxResult };
+    const pending = String(wxResult.status || '').toUpperCase() === 'PROCESSING';
+    return {
+      ok: true,
+      mock: false,
+      wx: wxResult,
+      status: pending ? 'refund_pending' : wxResult.status || 'SUCCESS'
+    };
+  } finally {
+    refundLocks.delete(outTradeNo);
   }
-
-  if (!wechatPay.isConfigComplete()) {
-    return { ok: false, error: '当前支付环境不支持退款' };
-  }
-
-  const wxResult = await wechatPay.refundOrder({
-    outTradeNo: payOrder.outTradeNo,
-    reason,
-    amountFen: payOrder.amount,
-    transactionId: payOrder.transactionId
-  });
-  if (!wxResult.success) {
-    return { ok: false, error: wxResult.error || '微信退款失败' };
-  }
-  return { ok: true, mock: false, wx: wxResult };
 }
 
 async function syncPayOrderWithRemote(outTradeNo) {
@@ -615,16 +738,9 @@ async function syncPayOrderWithRemote(outTradeNo) {
     };
   }
 
-  db.savePayOrder({
-    outTradeNo,
-    status: 'SUCCESS',
-    transactionId: remote.transactionId,
-    successTime: remote.successTime || new Date().toISOString()
-  });
-
-  const booking = db.getBookings().find((b) => b.id === payOrder.bookingId);
-  if (booking && booking.paymentStatus !== 'paid') {
-    markBookingPaidFromPaySuccess(booking, remote);
+  const applied = applyWeChatPaySuccess(payOrder, remote);
+  if (!applied.ok) {
+    return { ok: false, error: applied.message || '支付金额校验失败', status: 'AMOUNT_MISMATCH' };
   }
 
   const refreshed = booking ? db.getBookings().find((b) => b.id === booking.id) : null;
@@ -720,6 +836,7 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
 });
 
 app.post('/api/pay/wechat/notify', async (req, res) => {
+  let lockedTradeNo = null;
   try {
     const body = req.body;
     const headers = req.headers;
@@ -728,38 +845,31 @@ app.post('/api/pay/wechat/notify', async (req, res) => {
     const result = await wechatPay.handlePaymentNotify(body, headers, rawBody);
 
     if (result.tradeState === 'SUCCESS' && result.outTradeNo) {
-      const payOrder = db.getPayOrder(result.outTradeNo);
-      const bookingId =
-        (payOrder && payOrder.bookingId) ||
-        wechatPay.parseBookingIdFromOutTradeNo(result.outTradeNo);
-      const booking = bookingId ? db.getBookings().find((b) => b.id === bookingId) : null;
+      const outTradeNo = result.outTradeNo;
+      if (notifyLocks.has(outTradeNo)) {
+        return res.json({ code: 'SUCCESS', message: '处理中' });
+      }
+      notifyLocks.add(outTradeNo);
+      lockedTradeNo = outTradeNo;
 
-      db.savePayOrder({
-        outTradeNo: result.outTradeNo,
-        status: 'SUCCESS',
-        transactionId: result.transactionId,
-        successTime: result.successTime || new Date().toISOString()
-      });
+      const payOrder = db.getPayOrder(outTradeNo);
+      if (!payOrder) {
+        console.error(`[WeChat Pay Notify] 本地未找到订单: ${outTradeNo}`);
+        return res.status(404).json({ code: 'FAIL', message: '订单不存在' });
+      }
 
-      if (booking) {
-        db.updateBooking(
-          booking.id,
-          {
-            paymentStatus: 'paid',
-            paymentMethod: 'wechat',
-            paidAt: result.successTime || new Date().toISOString(),
-            transactionId: result.transactionId,
-            escrowStatus: 'frozen'
-          },
-          { trust: 'payment' }
-        );
+      const applied = applyWeChatPaySuccess(payOrder, result);
+      if (!applied.ok) {
+        return res.status(applied.http || 400).json({ code: 'FAIL', message: applied.message });
       }
     }
 
     res.json({ code: 'SUCCESS', message: '成功' });
   } catch (error) {
     console.error('[WeChat Pay Notify Error]', error);
-    res.json({ code: 'FAIL', message: error.message });
+    res.status(400).json({ code: 'FAIL', message: error.message });
+  } finally {
+    if (lockedTradeNo) notifyLocks.delete(lockedTradeNo);
   }
 });
 
@@ -868,7 +978,8 @@ app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, async (req, res) =>
     const result = db.refundPayOrder(outTradeNo, {
       reason: body.reason || '',
       refundedBy: req.user.phone || req.user.userId || 'admin',
-      refundId: wxRefund.wx && wxRefund.wx.refundId
+      refundId: wxRefund.wx && wxRefund.wx.refundId,
+      wxStatus: (wxRefund.wx && wxRefund.wx.status) || wxRefund.status
     });
     if (!result.ok) {
       return fail(res, 400, result.error);
@@ -953,12 +1064,23 @@ app.get('/api/mentors', requireAuth, (req, res) => {
 });
 
 app.post('/api/mentors', requireAuth, (req, res) => {
-  // 只有导师角色可以创建导师资料（注册时调用）
   if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
     return fail(res, 403, '无权限');
   }
-  
-  const mentor = db.addMentor(req.body || {});
+  const body = Object.assign({}, req.body || {});
+  if (req.user.role !== 'admin') {
+    body.id = req.user.userId;
+    body.phone = req.user.phone;
+    MENTOR_PRIVILEGED_PATCH_KEYS.forEach((k) => {
+      if (k !== 'id' && k !== 'phone') delete body[k];
+    });
+    delete body.status;
+    delete body.evalGrade;
+    delete body.reviewComment;
+    delete body.code;
+    delete body.sensitiveChangePending;
+  }
+  const mentor = db.addMentor(body);
   ok(res, mentor);
 });
 
@@ -995,15 +1117,36 @@ app.get('/api/mentors/:id', requireAuth, (req, res) => {
 });
 
 app.patch('/api/mentors/:id', requireAuth, (req, res) => {
-  // 只能修改自己的资料，或管理员可以修改任何人
   if (req.user.role !== 'admin' && req.user.userId !== req.params.id) {
     return fail(res, 403, '只能修改自己的资料');
   }
-  
+
+  const existing = db.getMentorById(req.params.id);
+  if (!existing) return fail(res, 404, 'mentor not found');
+
   const body = req.body || {};
-  const options = body._options || {};
+  const options = Object.assign({}, body._options || {});
   const patch = Object.assign({}, body);
   delete patch._options;
+  delete patch.id;
+
+  if (req.user.role !== 'admin') {
+    MENTOR_PRIVILEGED_PATCH_KEYS.forEach((k) => {
+      delete patch[k];
+    });
+    const touchedSensitive = MENTOR_SENSITIVE_KEYS.some((k) => {
+      if (patch[k] === undefined) return false;
+      try {
+        return JSON.stringify(patch[k]) !== JSON.stringify(existing[k]);
+      } catch (_) {
+        return true;
+      }
+    });
+    if (touchedSensitive) {
+      options.sensitiveChange = true;
+    }
+  }
+
   const updated = db.updateMentor(req.params.id, patch, options);
   if (!updated) return fail(res, 404, 'mentor not found');
   ok(res, updated);
@@ -1026,12 +1169,15 @@ app.get('/api/parents', requireAuth, (req, res) => {
 });
 
 app.post('/api/parents', requireAuth, (req, res) => {
-  // 只有家长角色可以创建家长资料（注册时调用）
   if (req.user.role !== 'parent' && req.user.role !== 'admin') {
     return fail(res, 403, '无权限');
   }
-  
-  const parent = db.saveParent(req.body || {});
+  const body = Object.assign({}, req.body || {});
+  if (req.user.role === 'parent') {
+    body.id = req.user.userId;
+    body.phone = req.user.phone;
+  }
+  const parent = db.saveParent(body);
   ok(res, parent);
 });
 
@@ -1212,7 +1358,8 @@ app.post('/api/bookings/:id/cancel', requireAuth, async (req, res) => {
     const dbRefund = db.refundPayOrder(payOrder.outTradeNo, {
       reason: '家长开课前撤销',
       refundedBy: validated.parentPhone || validated.parentId || 'parent',
-      refundId: wxRefund.wx && wxRefund.wx.refundId
+      refundId: wxRefund.wx && wxRefund.wx.refundId,
+      wxStatus: (wxRefund.wx && wxRefund.wx.status) || wxRefund.status
     });
     if (!dbRefund.ok) {
       return fail(res, 400, dbRefund.error || '退款记账失败');
@@ -1303,12 +1450,14 @@ app.post('/api/bookings/:id/leave', requireAuth, (req, res) => {
   const sessionId = body.sessionId;
   const action = body.action || 'request';
   let result;
-  if (action === 'confirm' || action === 'approve') {
-    result = db.confirmSessionLeave(req.params.id, sessionId, true);
-  } else if (action === 'reject') {
-    result = db.confirmSessionLeave(req.params.id, sessionId, false);
+  if (action === 'confirm' || action === 'approve' || action === 'reject') {
+    if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
+      return fail(res, 403, '仅导师或管理员可审批请假申请');
+    }
+    const isApprove = action === 'confirm' || action === 'approve';
+    result = db.confirmSessionLeave(req.params.id, sessionId, isApprove);
   } else {
-    result = db.requestSessionLeave(req.params.id, sessionId, body.byRole || 'parent');
+    result = db.requestSessionLeave(req.params.id, sessionId, req.user.role || 'parent');
   }
   if (!result || result.ok === false) {
     return res.status(400).json(result || { ok: false, error: 'leave failed' });
@@ -1511,13 +1660,70 @@ app.get('/api/subject-catalog', (req, res) => {
 
 /* ========== Proof file uploads (mini program + web) ========== */
 proofUpload.ensureDirs();
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, '..', 'uploads'), {
-    maxAge: isProduction ? '7d' : 0,
-    fallthrough: true
-  })
-);
+
+function setUploadSecurityHeaders(res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Cache-Control', isProduction ? 'private, max-age=604800' : 'no-store');
+}
+
+function resolveProofAccessUser(req) {
+  const q = req.query || {};
+  const queryToken = q.access_token || q.token || '';
+  const headerToken = auth.extractTokenFromRequest(req);
+  const token = headerToken || String(queryToken || '').trim();
+  const user = auth.verifyToken(token, db);
+  if (user) return user;
+  const adminToken = process.env.ADMIN_TOKEN;
+  const provided = String(req.headers['x-admin-token'] || '').trim();
+  if (adminToken && provided && auth.safeCompare(provided, adminToken)) {
+    return { userId: 'ADMIN-STATIC', role: 'admin', phone: '' };
+  }
+  return null;
+}
+
+function mentorOwnsProof(mentor, storedName) {
+  if (!mentor || !storedName) return false;
+  const files = mentor.proofFiles || [];
+  return files.some((f) => {
+    if (!f) return false;
+    if (f.id === storedName) return true;
+    if (f.url && String(f.url).endsWith('/' + storedName)) return true;
+    if (f.path && String(f.path).endsWith(storedName)) return true;
+    return false;
+  });
+}
+
+function canAccessProof(user, storedName, meta) {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (meta && meta.ownerId && meta.ownerId === user.userId) return true;
+  if (user.role === 'mentor') {
+    const mentor = db.getMentorById(user.userId) || db.getMentorByPhone(user.phone);
+    if (mentorOwnsProof(mentor, storedName)) return true;
+  }
+  return false;
+}
+
+app.get('/uploads/proofs/:file', (req, res) => {
+  setUploadSecurityHeaders(res);
+  const resolved = proofUpload.resolveProofFile(req.params.file);
+  if (!resolved.ok) {
+    return fail(res, 404, 'file not found');
+  }
+  const user = resolveProofAccessUser(req);
+  if (!canAccessProof(user, resolved.storedName, resolved.meta)) {
+    return fail(res, user ? 403 : 401, user ? '无权限查看该佐证材料' : '未登录或会话已过期');
+  }
+  res.setHeader('Content-Type', resolved.mimeType);
+  res.sendFile(resolved.absPath);
+});
+
+app.use('/uploads', (req, res) => {
+  setUploadSecurityHeaders(res);
+  fail(res, 404, 'not found');
+});
 
 app.post(
   '/api/uploads/proof',
@@ -1525,13 +1731,16 @@ app.post(
   express.raw({ type: () => true, limit: '12mb' }),
   (req, res) => {
     try {
+      if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
+        return fail(res, 403, '仅导师或管理员可上传佐证材料');
+      }
       const contentType = req.headers['content-type'] || '';
       if (!contentType.toLowerCase().includes('multipart/form-data')) {
         return fail(res, 400, '请使用 multipart 上传文件');
       }
       const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || '');
       const { fields, file } = proofUpload.parseMultipart(body, contentType);
-      const result = proofUpload.saveProofUpload(file, fields);
+      const result = proofUpload.saveProofUpload(file, fields, req.user);
       if (!result.ok) {
         return fail(res, 400, result.error || '上传失败');
       }
@@ -1771,8 +1980,13 @@ app.listen(PORT, HOST, () => {
   console.log('');
   console.log('  短信服务:');
   console.log(`    Provider:   ${sms.getProvider()}`);
+  sms.warnDevOtpAtStartup();
   if (sms.isDevOtpEnabled()) {
-    console.log(`    Status:     ⚠️  DEV OTP ON (code=${sms.getDevOtpCode()}, ALLOW_DEV_OTP=true)`);
+    console.log(
+      `    Status:     ⚠️  DEV OTP ON (code=${sms.getDevOtpCode()}, ALLOW_DEV_OTP=true${
+        isProduction ? ', 生产环境管理员已禁用' : ''
+      })`
+    );
   } else {
     console.log(`    Status:     ${sms.getProvider() === 'mock' ? '演示模式 (非生产可用 888888)' : '生产模式'}`);
   }
