@@ -268,8 +268,8 @@ async function runTests() {
     // Test 10: Audit log
     console.log('\n10. Audit log...');
     const auditResult = await request('POST', '/api/auth/phone/audit', {
-      action: 'test_action',
-      source: 'test_source',
+      action: 'authorize_deny',
+      source: 'wechat_auth',
       success: true
     }, authToken);
     if (auditResult.status === 200) {

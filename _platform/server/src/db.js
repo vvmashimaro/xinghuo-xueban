@@ -2059,6 +2059,17 @@ function getFeatureFlags() {
   return Object.assign({}, DEFAULT_FEATURE_FLAGS, s.featureFlags || {});
 }
 
+const PUBLIC_FEATURE_FLAG_KEYS = ['FEATURE_SMART_WAREHOUSE'];
+
+function getPublicFeatureFlags() {
+  const all = getFeatureFlags();
+  const out = {};
+  PUBLIC_FEATURE_FLAG_KEYS.forEach((key) => {
+    out[key] = !!all[key];
+  });
+  return out;
+}
+
 function updateFeatureFlags(patch) {
   const s = getState();
   if (!s.featureFlags || typeof s.featureFlags !== 'object') {
@@ -2394,19 +2405,19 @@ function cancelPhone(userId, meta) {
 function logPhoneAudit(entry) {
   const s = getState();
   if (!s.phoneAuditLogs) s.phoneAuditLogs = [];
-  
-  const log = Object.assign({
+  const src = entry || {};
+  const log = {
     id: _uid('AUDIT'),
     timestamp: _now(),
-    userId: '',
-    action: '',
-    source: '',
-    phoneHash: '',
-    ip: '',
-    ua: '',
-    success: false,
-    error: ''
-  }, entry || {});
+    userId: String(src.userId || '').slice(0, 64),
+    action: String(src.action || '').slice(0, 64),
+    source: String(src.source || '').slice(0, 32),
+    phoneHash: String(src.phoneHash || '').slice(0, 128),
+    ip: String(src.ip || '').slice(0, 64),
+    ua: String(src.ua || '').slice(0, 256),
+    success: src.success !== false && src.success !== 0,
+    error: String(src.error || '').slice(0, 200)
+  };
   
   s.phoneAuditLogs.unshift(log);
   
@@ -2534,6 +2545,7 @@ module.exports = {
   addFeedbackTicket,
   updateFeedbackTicket,
   getFeatureFlags,
+  getPublicFeatureFlags,
   updateFeatureFlags,
   bookingAmountFen: pricing.bookingAmountFen,
   bookingAmountYuan: pricing.bookingAmountYuan,

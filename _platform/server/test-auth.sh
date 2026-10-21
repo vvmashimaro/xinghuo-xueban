@@ -210,15 +210,18 @@ PARENT_TOKEN=$(echo "$PARENT_LOGIN" | jq -r '.token')
 MENTORS_LIST=$(curl -s "$API_BASE/api/mentors" \
   -H "Authorization: Bearer $PARENT_TOKEN")
 
-# Check that first mentor has no phone/idCard/bankCardNumber
+# Check that first mentor has no phone/idCard/bankCardNumber/chsiCode/reviewComment/proof URLs
 HAS_PHONE=$(echo "$MENTORS_LIST" | jq -r '.[0].phone // ""')
 HAS_IDCARD=$(echo "$MENTORS_LIST" | jq -r '.[0].idCard // ""')
 HAS_BANK=$(echo "$MENTORS_LIST" | jq -r '.[0].bankCardNumber // ""')
+HAS_CHSI=$(echo "$MENTORS_LIST" | jq -r '.[0].chsiCode // ""')
+HAS_REVIEW=$(echo "$MENTORS_LIST" | jq -r '.[0].reviewComment // ""')
+HAS_PROOF_URL=$(echo "$MENTORS_LIST" | jq -r '.[0].proofFiles[0].url // ""')
 
-if [ -z "$HAS_PHONE" ] && [ -z "$HAS_IDCARD" ] && [ -z "$HAS_BANK" ]; then
+if [ -z "$HAS_PHONE" ] && [ -z "$HAS_IDCARD" ] && [ -z "$HAS_BANK" ] && [ -z "$HAS_CHSI" ] && [ -z "$HAS_REVIEW" ] && [ -z "$HAS_PROOF_URL" ]; then
   echo "✓ 家长查看导师列表无敏感信息"
 else
-  echo "✗ 错误：导师列表泄露敏感信息 (phone: $HAS_PHONE, idCard: $HAS_IDCARD, bank: $HAS_BANK)"
+  echo "✗ 错误：导师列表泄露敏感信息 (phone: $HAS_PHONE, idCard: $HAS_IDCARD, bank: $HAS_BANK, chsi: $HAS_CHSI, review: $HAS_REVIEW, proofUrl: $HAS_PROOF_URL)"
   exit 1
 fi
 echo ""

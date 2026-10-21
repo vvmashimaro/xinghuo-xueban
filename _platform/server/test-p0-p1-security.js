@@ -16,6 +16,7 @@ process.env.SMS_PROVIDER = 'mock';
 process.env.SMS_COOLDOWN_MS = '0';
 process.env.ADMIN_TOKEN = 'static-admin-token-p0p1-test';
 process.env.ALLOW_MOCK_PAY = 'true';
+process.env.PHONE_AUDIT_MAX_PER_MIN = '5';
 
 const db = require('./src/db');
 const auth = require('./src/auth');
@@ -330,7 +331,81 @@ async function main() {
   assert.strictEqual(mentorApprove.status, 200);
   console.log('✓ P1-06 leave approve requires mentor/admin');
 
-  console.log('=== P0/P1 security tests passed ===');
+  // P2-01 public flags subset; admin flags require admin
+  const pubFlags = await request(base, 'GET', '/api/feature-flags');
+  assert.strictEqual(pubFlags.status, 200);
+  assert.strictEqual(typeof pubFlags.json.FEATURE_SMART_WAREHOUSE, 'boolean');
+  assert.strictEqual(Object.keys(pubFlags.json).join(','), 'FEATURE_SMART_WAREHOUSE');
+  const parentFlags = await request(base, 'GET', '/api/admin/feature-flags', null, parentToken);
+  assert.strictEqual(parentFlags.status, 403);
+  const mentorFlags = await request(base, 'GET', '/api/admin/feature-flags', null, mentorToken);
+  assert.strictEqual(mentorFlags.status, 403);
+  const adminFlags = await request(base, 'GET', '/api/admin/feature-flags', null, adminToken);
+  assert.strictEqual(adminFlags.status, 200);
+  assert.strictEqual(typeof adminFlags.json.FEATURE_SMART_WAREHOUSE, 'boolean');
+  console.log('✓ P2-01 admin feature flags are admin-only; public subset is minimal');
+
+  const forgedAudit = await request(
+    base,
+    'POST',
+    '/api/auth/phone/audit',
+    { action: 'wipe_all', userId: 'ADMIN-SEC', phoneHash: 'evil' },
+    parentToken
+  );
+  assert.strictEqual(forgedAudit.status, 400);
+  const okAudit = await request(
+    base,
+    'POST',
+    '/api/auth/phone/audit',
+    { action: 'authorize_deny', source: 'wechat_auth_login', success: true, userId: 'HACKED' },
+    parentToken
+  );
+  assert.strictEqual(okAudit.status, 200);
+  const ownLogs = db.getPhoneAuditLogs(parent.id, 20);
+  assert.ok(ownLogs.some((l) => l.action === 'authorize_deny' && l.userId === parent.id));
+  assert.ok(!ownLogs.some((l) => l.userId === 'HACKED'));
+  let rateLimited = false;
+  for (let i = 0; i < 25; i++) {
+    const r = await request(
+      base,
+      'POST',
+      '/api/auth/phone/audit',
+      { action: 'view_privacy', source: 'client' },
+      parentToken
+    );
+    if (r.status === 429) {
+      rateLimited = true;
+      break;
+    }
+  }
+  assert.ok(rateLimited, 'phone audit must rate-limit floods');
+  console.log('✓ P2-01 phone audit allowlisted, bound to caller, rate-limited');
+
+  // P2-02 public mentor whitelist
+  const parentMentors = await request(base, 'GET', '/api/mentors', null, parentToken);
+  assert.strictEqual(parentMentors.status, 200);
+  assert.ok(Array.isArray(parentMentors.json) && parentMentors.json.length);
+  parentMentors.json.forEach((m) => {
+    assert.strictEqual(m.phone, undefined);
+    assert.strictEqual(m.idCard, undefined);
+    assert.strictEqual(m.bankName, undefined);
+    assert.strictEqual(m.bankCardNumber, undefined);
+    assert.strictEqual(m.chsiCode, undefined);
+    assert.strictEqual(m.reviewComment, undefined);
+    assert.strictEqual(m.sensitiveChangePending, undefined);
+    assert.ok(m.realName && m.realName.indexOf('老师') >= 0);
+    (m.proofFiles || []).forEach((f) => {
+      assert.strictEqual(f.url, undefined);
+      assert.strictEqual(f.path, undefined);
+    });
+  });
+  const selfMentor = await request(base, 'GET', '/api/mentors/' + mentor.id, null, mentorToken);
+  assert.strictEqual(selfMentor.status, 200);
+  assert.ok(selfMentor.json.phone || selfMentor.json.bankCardNumber !== undefined);
+  assert.ok(!String(selfMentor.json.realName || '').endsWith('老师') || (mentor.realName && mentor.realName.indexOf('老师') >= 0));
+  console.log('✓ P2-02 public mentor profile is a whitelist; owner still sees full record');
+
+  console.log('=== P0/P1/P2 security tests passed ===');
   process.exit(0);
 }
 

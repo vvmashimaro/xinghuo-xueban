@@ -58,10 +58,45 @@ function fail(res, status, message) {
   res.status(status).json({ error: message || 'error' });
 }
 
-// 工具函数：返回导师公开资料（隐藏敏感信息）
+// 工具函数：返回导师公开资料（白名单；不含手机号、证件、银行卡、学信网码、审核评语、原件 URL）
 function publicMentorProfile(mentor) {
-  const { phone, idCard, bankName, bankCardNumber, ...publicFields } = mentor;
-  return publicFields;
+  if (!mentor || typeof mentor !== 'object') return mentor;
+  const surname = String(mentor.realName || '导').charAt(0) || '导';
+  const maskedName = surname + '老师';
+  const proofFiles = Array.isArray(mentor.proofFiles)
+    ? mentor.proofFiles.map((f) => ({
+        name: f && f.name ? String(f.name) : '',
+        tag: f && f.tag ? String(f.tag) : '佐证材料',
+        verified: !!(f && f.verified)
+      }))
+    : [];
+  return {
+    id: mentor.id,
+    code: mentor.code || '',
+    status: mentor.status || '',
+    acceptingOrders: mentor.acceptingOrders !== false,
+    realName: maskedName,
+    maskedName: maskedName,
+    university: mentor.university || '',
+    province: mentor.province || '',
+    degree: mentor.degree || '',
+    chsiStatus: mentor.chsiStatus || '',
+    publicTeacherCompliance: !!mentor.publicTeacherCompliance,
+    subjects: Array.isArray(mentor.subjects) ? mentor.subjects.slice() : [],
+    customSubjects: Array.isArray(mentor.customSubjects) ? mentor.customSubjects.slice() : [],
+    hourlyRate: mentor.hourlyRate,
+    rateDifficulty: mentor.rateDifficulty || '',
+    rateTierNote: mentor.rateTierNote || '',
+    scoreHighlight: mentor.scoreHighlight || '',
+    styles: Array.isArray(mentor.styles) ? mentor.styles.slice() : [],
+    lectureUrl: mentor.lectureUrl || '',
+    evalGrade: mentor.evalGrade || '',
+    spacePreference: mentor.spacePreference || '',
+    preferredSpaces: Array.isArray(mentor.preferredSpaces) ? mentor.preferredSpaces.slice() : [],
+    availability: Array.isArray(mentor.availability) ? mentor.availability.slice() : [],
+    availableSlots: Array.isArray(mentor.availableSlots) ? mentor.availableSlots.slice() : [],
+    proofFiles
+  };
 }
 
 // 工具函数：脱敏手机号
@@ -474,15 +509,57 @@ app.post('/api/auth/phone/cancel', requireAuth, (req, res) => {
   }
 });
 
+const ALLOWED_PHONE_AUDIT_ACTIONS = new Set([
+  'view_privacy',
+  'click_wechat_phone',
+  'consent_agreed',
+  'authorize_deny',
+  'authorize_allow'
+]);
+const PHONE_AUDIT_WINDOW_MS = 60 * 1000;
+const PHONE_AUDIT_MAX_PER_WINDOW = Math.max(
+  1,
+  parseInt(process.env.PHONE_AUDIT_MAX_PER_MIN || '20', 10) || 20
+);
+const phoneAuditRate = new Map();
+
+function checkPhoneAuditRate(userId) {
+  const key = String(userId || '');
+  const now = Date.now();
+  const rec = phoneAuditRate.get(key);
+  if (!rec || now - rec.windowStart >= PHONE_AUDIT_WINDOW_MS) {
+    phoneAuditRate.set(key, { count: 1, windowStart: now });
+    return { ok: true };
+  }
+  if (rec.count >= PHONE_AUDIT_MAX_PER_WINDOW) {
+    return { ok: false };
+  }
+  rec.count += 1;
+  return { ok: true };
+}
+
 app.post('/api/auth/phone/audit', requireAuth, (req, res) => {
   try {
-    const entry = Object.assign({}, req.body || {}, {
+    const body = req.body || {};
+    const action = String(body.action || '')
+      .trim()
+      .slice(0, 64);
+    if (!ALLOWED_PHONE_AUDIT_ACTIONS.has(action)) {
+      return fail(res, 400, '不支持的审计动作类型');
+    }
+    if (!checkPhoneAuditRate(req.user.userId).ok) {
+      return fail(res, 429, '操作过于频繁，请稍后再试');
+    }
+    const sourceRaw = String(body.source || 'client').trim().slice(0, 32);
+    const source = /^[a-zA-Z0-9_.-]{1,32}$/.test(sourceRaw) ? sourceRaw : 'client';
+    db.logPhoneAudit({
       userId: req.user.userId,
-      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
-      ua: req.headers['user-agent'] || ''
+      action,
+      source,
+      ip: clientIpFromReq(req).slice(0, 64),
+      ua: String(req.headers['user-agent'] || '').slice(0, 256),
+      success: body.success !== false
     });
-    
-    db.logPhoneAudit(entry);
     ok(res, { success: true });
   } catch (error) {
     console.error('[Audit Log Error]', error);
@@ -1792,10 +1869,10 @@ app.get('/api/admin/teaching-points/:id/occupancy', requireAdmin, (req, res) => 
 
 /* ========== Feature flags ========== */
 app.get('/api/feature-flags', (req, res) => {
-  ok(res, db.getFeatureFlags());
+  ok(res, db.getPublicFeatureFlags());
 });
 
-app.get('/api/admin/feature-flags', requireAuth, (req, res) => {
+app.get('/api/admin/feature-flags', requireAdmin, (req, res) => {
   ok(res, db.getFeatureFlags());
 });
 
