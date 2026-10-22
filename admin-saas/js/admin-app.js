@@ -59,7 +59,7 @@
   function subjectFilterBarHtml() {
     const chips = subjectCatalogChips();
     if (!chips.length) {
-      return '<p class="text-xs text-slate-400">学科目录加载中…</p>';
+      return '<p class="text-xs text-slate-500">学科目录加载中…</p>';
     }
     return (
       '<div class="flex flex-wrap gap-2 items-center">' +
@@ -94,7 +94,7 @@
     if (!b || !b.hasTimeConflict) return '';
     const note = b.timeConflictNote || '与学员其他课程时间冲突';
     return (
-      '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-900" title="' +
+      '<span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-900" title="' +
       esc(note) +
       '">' +
       (b.timeConflictForced ? '强制约课' : '时间冲突') +
@@ -236,7 +236,7 @@
             )
             .join('') +
           '</ul>'
-        : '<p class="text-sm text-slate-400">暂无预约</p>') +
+        : '<p class="text-sm text-slate-500">暂无预约</p>') +
       '</section></div>'
     );
   }
@@ -277,7 +277,7 @@
         );
       })
       .join('');
-    let detail = '<p class="text-slate-400 text-sm">请选择左侧导师</p>';
+    let detail = '<p class="text-slate-500 text-sm">请选择左侧导师</p>';
     if (sel) {
       detail =
         '<div class="space-y-3">' +
@@ -469,7 +469,7 @@
                 '</td><td class="p-3">' +
                 (b.hasTimeConflict
                   ? bookingConflictBadge(b) +
-                    '<div class="text-[10px] text-amber-800 mt-1 max-w-[180px]">' +
+                    '<div class="text-xs text-amber-800 mt-1 max-w-[180px]">' +
                     esc(b.timeConflictNote || '') +
                     '</div>'
                   : '—') +
@@ -482,7 +482,7 @@
                 '</td></tr>'
             )
             .join('')
-        : '<tr><td colspan="8" class="p-6 text-center text-slate-400">暂无符合条件的预约</td></tr>') +
+        : '<tr><td colspan="8" class="p-6 text-center text-slate-500">暂无符合条件的预约</td></tr>') +
       '</tbody></table></div></div>'
     );
   }
@@ -492,7 +492,7 @@
     const selId = state.tpOccupancyTpId || (tps[0] && tps[0].id) || '';
     const occ = state.tpOccupancy;
     let occHtml =
-      '<p class="text-sm text-slate-400">选择教学点与日期后点击「查询占用」</p>';
+      '<p class="text-sm text-slate-500">选择教学点与日期后点击「查询占用」</p>';
     if (occ && occ.booths) {
       occHtml =
         '<div class="text-xs text-slate-500 mb-2">日期：' +
@@ -513,7 +513,7 @@
                   ' · ' +
                   esc(x.subject) +
                   (x.hasTimeConflict ? ' <span class="text-amber-700">冲突</span>' : '') +
-                  '<div class="font-mono text-[10px] text-slate-400">' +
+                  '<div class="font-mono text-xs text-slate-500">' +
                   esc(x.bookingId) +
                   '</div></li>'
               )
@@ -545,7 +545,7 @@
         .map((tp) => {
           const count = (tp.booths && tp.booths.length) || tp.boothCount || 3;
           const boothTags = (tp.booths || [])
-            .map((b) => '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">' + esc(b.label) + '</span>')
+            .map((b) => '<span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">' + esc(b.label) + '</span>')
             .join(' ');
           return (
             '<div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">' +
@@ -628,7 +628,7 @@
                 '</div>'
             )
             .join('')
-        : '<p class="text-slate-400">暂无合约</p>') +
+        : '<p class="text-slate-500">暂无合约</p>') +
       '</div></div>'
     );
   }
@@ -652,7 +652,7 @@
                 '</div>'
             )
             .join('')
-        : '<p class="text-slate-400">暂无测评记录</p>') +
+        : '<p class="text-slate-500">暂无测评记录</p>') +
       '</div></div>'
     );
   }
@@ -698,7 +698,7 @@
           })
           .join('') +
         '</tbody></table></div>';
-      if (!state.payOrders.length) wrap.innerHTML = '<p class="text-slate-400">暂无支付订单</p>';
+      if (!state.payOrders.length) wrap.innerHTML = '<p class="text-slate-500">暂无支付订单</p>';
     } catch (e) {
       wrap.innerHTML = '<p class="text-rose-600">加载失败：' + esc(e.message) + '</p>';
     }

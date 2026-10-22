@@ -121,6 +121,9 @@ Page({
     escrowShow: false,
     escrowAmount: '0.00',
     contractShow: false,
+    contractAgreed: false,
+    contractSignName: '',
+    courseBadgeCount: 0,
     timeConflictShow: false,
     timeConflictMessage: '',
     pendingForceBook: false,
@@ -141,8 +144,7 @@ Page({
     iotBtnDisabled: false,
     featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
     settingsDrawerShow: false,
-    consoleSection: 'courses',
-    consoleFabShow: false
+    consoleSection: 'courses'
   },
 
   onLoad() {
@@ -316,6 +318,9 @@ Page({
       : (filteredBookings.length === 0
         ? (bookingFilter === 'unpaid' ? '暂无未支付预约' : '该状态下暂无约课')
         : '');
+    const courseBadgeCount = bookings.filter((b) =>
+      b.unpaid || b.status === 'pending_accept' || b.status === 'escrow_locked'
+    ).length;
 
     const wallet = Storage.getParentWalletSummary(parent);
 
@@ -346,6 +351,7 @@ Page({
       myBookings: bookings,
       filteredBookings,
       bookingEmptyText,
+      courseBadgeCount,
       parentId: parent.id,
       parentPhone: parent.phone,
       phoneAuthorized,
@@ -405,20 +411,6 @@ Page({
   onConsoleTab(e) {
     const id = e.currentTarget.dataset.id;
     if (id) this.setData({ consoleSection: id });
-  },
-  toggleConsoleFab() {
-    this.setData({ consoleFabShow: !this.data.consoleFabShow });
-  },
-  closeConsoleFab() {
-    this.setData({ consoleFabShow: false });
-  },
-  pickConsoleSection(e) {
-    const id = e.currentTarget.dataset.id;
-    this.setData({ consoleSection: id || 'courses', consoleFabShow: false });
-  },
-  openSettingsDrawerFromFab() {
-    this.setData({ consoleFabShow: false });
-    this.openSettingsDrawer();
   },
   openSettingsDrawer() {
     this.setData({ settingsDrawerShow: true });
@@ -523,12 +515,24 @@ Page({
       hours: 2,
       spaceIndex,
       escrowShow: false,
+      contractShow: false,
+      contractAgreed: false,
+      contractSignName: (this._parent && this._parent.parentName) || this.data.parentName || '',
       escrowAmount: (tutor.hourlyRate * 2).toFixed(2)
     }, () => this.refreshSlotOptions());
   },
 
   closeBooking() {
-    this.setData({ bookingShow: false, escrowShow: false, contractShow: false });
+    this.setData({ bookingShow: false, escrowShow: false, contractShow: false, contractAgreed: false });
+  },
+  hideEscrow() {
+    this.setData({ escrowShow: false, contractAgreed: false });
+  },
+  onToggleContractAgree() {
+    this.setData({ contractAgreed: !this.data.contractAgreed });
+  },
+  onContractSign(e) {
+    this.setData({ contractSignName: e.detail.value });
   },
   onSlot(e) {
     const value = e.detail.value;
@@ -611,12 +615,6 @@ Page({
     this.setData({ escrowShow: true });
     showToast('托管锁定摘要已生成');
   },
-  openContract() {
-    this.setData({ contractShow: true });
-  },
-  closeContract() {
-    this.setData({ contractShow: false });
-  },
 
   _sessionsFromSlot(slot, hours) {
     const raw = String(slot || '');
@@ -688,6 +686,19 @@ Page({
       showToast('所选时段不在导师可约时间内，请调整时间或更换导师', 'error');
       return;
     }
+    if (!this.data.escrowShow) {
+      this.showEscrow();
+      return;
+    }
+    if (!this.data.contractAgreed) {
+      showToast('请勾选同意《三方托管服务居间协议》', 'warning');
+      return;
+    }
+    const signName = String(this.data.contractSignName || '').trim();
+    if (!signName || signName.length < 2) {
+      showToast('请输入电子签名姓名', 'warning');
+      return;
+    }
 
     const booking = await Storage.addBooking({
       mentorId: tutor.mentorId,
@@ -728,7 +739,7 @@ Page({
       await Storage.saveContract({
         bookingId: booking.id,
         title: '三方托管服务居间协议',
-        signer: parent.parentName,
+        signer: signName,
         tutorName: tutor.maskedName,
         amount,
         space,

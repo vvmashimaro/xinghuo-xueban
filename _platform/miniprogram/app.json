@@ -10,7 +10,8 @@
     "pages/parent-settings-passport/parent-settings-passport",
     "pages/parent-settings-assessment/parent-settings-assessment",
     "pages/privacy/privacy",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/admin-audit/admin-audit"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0f172a",

@@ -1,10 +1,15 @@
 <view class="console-tab-bar">
-  <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">我的课程</view>
-  <view class="console-tab {{consoleSection==='workspace'?'on':''}}" data-id="workspace" bindtap="onConsoleTab">工作台</view>
-  <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+  <view class="console-tab-seg">
+    <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">
+      我的课程
+      <text class="console-tab-badge" wx:if="{{courseBadgeCount>0}}">{{courseBadgeCount}}</text>
+    </view>
+    <view class="console-tab {{consoleSection==='workspace'?'on':''}}" data-id="workspace" bindtap="onConsoleTab">工作台</view>
+    <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+  </view>
 </view>
 
-<view class="container container-with-fab">
+<view class="container">
   <block wx:if="{{consoleSection==='workspace'}}">
   <view class="hero">
     <view class="hero-title">{{mentorName}} 的工作台</view>
@@ -23,7 +28,7 @@
     <view class="detail-line">教研定级：{{evalGrade}}</view>
     <view class="detail-line">学信网：{{chsiStatusShort}}</view>
     <view class="detail-line">审核意见：{{reviewComment}}</view>
-    <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="openSettingsDrawer">打开功能侧栏 · 资料与资质</button>
+    <button class="btn-ghost" style="width:100%;margin-top:16rpx;" bindtap="openSettingsDrawer">资料与资质设置</button>
   </view>
   </block>
 
@@ -33,8 +38,14 @@
       <view class="card-title" style="margin:0;">约课申请箱</view>
       <text class="badge badge-teal">{{pendingInbox}} 待处理</text>
     </view>
-    <view wx:if="{{inbox.length===0}}" class="muted" style="margin-top:12rpx;text-align:center;">暂无约课申请。家长预约后将出现在此处。</view>
-    <view class="inbox-row" wx:for="{{inbox}}" wx:key="id">
+    <view class="chip-wrap" style="margin-top:12rpx;">
+      <view class="chip {{inboxFilter==='all'?'chip-on':''}}" data-v="all" bindtap="setInboxFilter">全部</view>
+      <view class="chip {{inboxFilter==='pending'?'chip-on':''}}" data-v="pending" bindtap="setInboxFilter">待接单</view>
+      <view class="chip {{inboxFilter==='accepted'?'chip-on':''}}" data-v="accepted" bindtap="setInboxFilter">已接单</view>
+      <view class="chip {{inboxFilter==='completed'?'chip-on':''}}" data-v="completed" bindtap="setInboxFilter">已完课</view>
+    </view>
+    <view wx:if="{{filteredInbox.length===0}}" class="muted" style="margin-top:12rpx;text-align:center;">{{inboxEmptyText}}</view>
+    <view class="inbox-row" wx:for="{{filteredInbox}}" wx:key="id">
       <view class="row-between">
         <text style="font-weight:800;">{{item.parentName}} · {{item.subject}}</text>
         <text class="badge {{item.statusBadge}}">{{item.statusText}}</text>
@@ -45,6 +56,18 @@
       <view class="flex-row gap-8" style="margin-top:12rpx;" wx:if="{{item.canAct}}">
         <button class="btn-primary" style="flex:1;" data-id="{{item.id}}" bindtap="acceptBooking">接单</button>
         <button class="btn-danger" style="flex:1;" data-id="{{item.id}}" bindtap="openDecline">婉拒</button>
+      </view>
+      <view wx:for="{{item.sessionRows}}" wx:for-item="sess" wx:key="id" class="sess-row">
+        <view class="row-between">
+          <text class="muted">{{sess.label}}</text>
+          <text class="badge">{{sess.statusText}}</text>
+        </view>
+        <view class="flex-row gap-8" style="margin-top:8rpx;" wx:if="{{sess.canComplete || sess.canLeaveAct || sess.canEditSummary}}">
+          <button wx:if="{{sess.canComplete}}" class="btn-primary" size="mini" data-bid="{{item.id}}" data-sid="{{sess.id}}" bindtap="openComplete">确认结课</button>
+          <button wx:if="{{sess.canEditSummary}}" class="btn-ghost" size="mini" data-bid="{{item.id}}" data-sid="{{sess.id}}" bindtap="openComplete">填写课后小结</button>
+          <button wx:if="{{sess.canLeaveAct}}" class="btn-ghost" size="mini" data-bid="{{item.id}}" data-sid="{{sess.id}}" data-ok="1" bindtap="onLeaveDecide">确认请假</button>
+          <button wx:if="{{sess.canLeaveAct}}" class="btn-danger" size="mini" data-bid="{{item.id}}" data-sid="{{sess.id}}" data-ok="0" bindtap="onLeaveDecide">驳回请假</button>
+        </view>
       </view>
     </view>
   </view>
@@ -62,15 +85,6 @@
       </view>
     </view>
   </block>
-</view>
-
-<view class="fab-settings" bindtap="toggleConsoleFab" aria-role="button">☰</view>
-<view class="settings-drawer-mask" wx:if="{{consoleFabShow}}" bindtap="closeConsoleFab"></view>
-<view class="console-fab-sheet" wx:if="{{consoleFabShow}}">
-  <view class="console-fab-sheet-item {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="pickConsoleSection">我的课程</view>
-  <view class="console-fab-sheet-item {{consoleSection==='workspace'?'on':''}}" data-id="workspace" bindtap="pickConsoleSection">工作台</view>
-  <view class="console-fab-sheet-item {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="pickConsoleSection">我的账户</view>
-  <view class="console-fab-sheet-item" bindtap="openSettingsDrawerFromFab">功能设置侧栏</view>
 </view>
 
 <view class="settings-drawer-mask" wx:if="{{settingsDrawerShow}}" bindtap="closeSettingsDrawer"></view>
@@ -95,6 +109,30 @@
       <text>退出登录</text><text class="settings-item-arrow">›</text>
     </view>
   </scroll-view>
+</view>
+
+<!-- 确认结课 + 课后小结 -->
+<view class="modal-mask" wx:if="{{completeShow}}">
+  <view class="modal-panel">
+    <view class="modal-head"><view style="font-weight:900;">确认结课 · 课后小结</view></view>
+    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
+      <view class="muted">{{completeMeta}}</view>
+      <view class="muted" style="margin:12rpx 0;">确认后进入 48 小时无投诉划拨观察期。可同步填写课后小结供家长查看。</view>
+      <view class="field">
+        <text class="label">小结标题（可选）</text>
+        <input class="input" placeholder="例：二次函数最值专题复盘" value="{{summaryTitle}}" bindinput="onSummaryTitle" />
+      </view>
+      <view class="field">
+        <text class="label">课后小结</text>
+        <textarea class="input" style="min-height:140rpx;" placeholder="本课掌握情况、作业布置、下次建议…" value="{{summaryContent}}" bindinput="onSummaryContent" />
+      </view>
+    </scroll-view>
+    <view class="modal-foot">
+      <button class="btn-ghost" bindtap="closeComplete">取消</button>
+      <button class="btn-ghost" bindtap="confirmCompleteOnly">仅确认结课</button>
+      <button class="btn-primary" bindtap="confirmCompleteWithSummary">结课并保存小结</button>
+    </view>
+  </view>
 </view>
 
 <!-- 婉拒 -->

@@ -7,14 +7,14 @@
   'use strict';
 
   var DEMO_BANNER =
-    '<div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-[11px] text-teal-950 leading-relaxed">' +
+    '<div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-xs text-teal-950 leading-relaxed">' +
     '<i class="fa-solid fa-info-circle text-teal-600 mr-1"></i>' +
     '<strong>运营主体：</strong>成都励德科技发展有限公司。正式上线前请委托专业律师审定本文本。' +
     '</div>';
 
   var SERVICE_HTML =
     DEMO_BANNER +
-    '<p class="text-[11px] text-slate-500">版本：v1.0 · 更新日期：2026年9月23日</p>' +
+    '<p class="text-xs text-slate-500">版本：v1.0 · 更新日期：2026年9月23日</p>' +
     '<p class="text-slate-800 font-bold">第一条 定义</p>' +
     '<p>1. <strong>平台 / 「星火学伴」</strong>：指由成都励德科技发展有限公司运营的课业辅导撮合、预约调度、资金托管对接及可选智能教学微空间（IoT 教学仓）相关技术服务系统。</p>' +
     '<p>2. <strong>用户</strong>：指注册并使用平台的家长/学员、大学生导师及其他经许可的使用主体。</p>' +
@@ -60,7 +60,7 @@
 
   var PRIVACY_HTML =
     DEMO_BANNER +
-    '<p class="text-[11px] text-slate-500">版本：v1.0 · 更新日期：2026年9月23日 · 文中「反洗钱与资金清算授权」为政策专节，登录页统一以《个人信息保护政策》指称。</p>' +
+    '<p class="text-xs text-slate-500">版本：v1.0 · 更新日期：2026年9月23日 · 文中「反洗钱与资金清算授权」为政策专节，登录页统一以《个人信息保护政策》指称。</p>' +
     '<p>我们深知个人信息对您的重要性。本政策说明我们如何收集、使用、存储、共享与保护您的信息，以及您享有的权利。</p>' +
     '<p class="text-slate-800 font-bold">一、我们如何收集与使用个人信息</p>' +
     '<p>为实现导师入驻审核、家长/学员注册匹配、约课履约、资金托管结算及可选 IoT 教学仓服务，我们可能在征得同意或依法具备其他合法性基础时处理下列信息：</p>' +
@@ -127,7 +127,7 @@
       '  <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white shrink-0">' +
       '    <div class="min-w-0 pr-2">' +
       '      <h3 class="font-black text-sm truncate" id="legalDocModalTitle">法律文件</h3>' +
-      '      <p class="text-[10px] text-teal-200/90 mt-0.5 truncate" id="legalDocModalSubtitle"></p>' +
+      '      <p class="text-xs text-teal-200/90 mt-0.5 truncate" id="legalDocModalSubtitle"></p>' +
       '    </div>' +
       '    <button type="button" data-legal-close class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0" aria-label="关闭">' +
       '      <i class="fa-solid fa-xmark text-xs"></i>' +

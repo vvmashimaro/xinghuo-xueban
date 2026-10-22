@@ -273,7 +273,7 @@ async function testMentorWizardSubsteps(browser) {
     const page = await browser.newPage();
     try {
       await page.setViewport(viewport);
-      await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 15000 });
+      await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle0', timeout: 15000 });
       await delay(1500);
       await assertL1SubstepShowsField(page, 1, 'realName');
       await assertL1SubstepShowsField(page, 2, 'chsiCode');
@@ -300,7 +300,7 @@ async function testNewMentorOnboarding(browser) {
   });
   
   try {
-    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle0', timeout: 10000 });
     await delay(1000);
 
     await assertL1SubstepShowsField(page, 2, 'provinceSelect');
@@ -721,7 +721,7 @@ async function testUIChanges(browser) {
   
   try {
     // Test 1: Check CHSI button exists on mentor onboarding page
-    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 10000 });
+    await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle0', timeout: 10000 });
     
     const chsiButton = await page.evaluate(() => {
       const link = document.querySelector('a[href*="chsi.com.cn"]');
@@ -948,7 +948,7 @@ async function testWizardL2SubmitButton(browser) {
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: 1280, height: 800 });
-    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 15000 });
+    await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle0', timeout: 15000 });
     await delay(1500);
     const called = await page.evaluate(() => {
       if (typeof goToStep !== 'function' || typeof goToL2SubStep !== 'function' || typeof completeL2AndSubmit !== 'function') {
@@ -988,7 +988,7 @@ async function testNoDuplicateWizardNav(browser) {
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: 390, height: 844 });
-    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle0', timeout: 15000 });
+    await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle0', timeout: 15000 });
     await delay(1500);
     const counts = await page.evaluate(() => {
       const l1 = document.getElementById('l1-substep-1');

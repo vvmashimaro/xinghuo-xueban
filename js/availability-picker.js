@@ -133,8 +133,8 @@
             ? 'bg-teal-600 text-white border-teal-600 shadow-sm ring-2 ring-teal-300/60'
             : 'bg-teal-50 text-teal-800 border-teal-300')
           : 'bg-white text-slate-500 border-slate-200';
-        return '<button type="button" data-wd="' + wd + '" class="avail-wd-btn inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2.5 py-1.5 rounded-xl border transition cursor-pointer select-none ' + boxCls + '">' +
-          '<span class="inline-flex w-3.5 h-3.5 rounded border ' + (on ? (active ? 'bg-white border-white text-teal-700' : 'bg-teal-600 border-teal-600 text-white') : 'bg-white border-slate-300') + ' items-center justify-center text-[8px] leading-none">' +
+        return '<button type="button" data-wd="' + wd + '" class="avail-wd-btn inline-flex items-center gap-1.5 text-xs sm:text-xs font-bold px-2.5 py-1.5 rounded-xl border transition cursor-pointer select-none ' + boxCls + '">' +
+          '<span class="inline-flex w-3.5 h-3.5 rounded border ' + (on ? (active ? 'bg-white border-white text-teal-700' : 'bg-teal-600 border-teal-600 text-white') : 'bg-white border-slate-300') + ' items-center justify-center text-xs leading-none">' +
             (on ? '✓' : '') +
           '</span>' +
           '<span>周' + WEEKDAY_SHORT[wd] + '</span></button>';
@@ -145,7 +145,7 @@
       var gridHtml = '';
       if (!activeOn) {
         gridHtml =
-          '<div class="text-[11px] text-slate-400 py-6 text-center leading-relaxed">' +
+          '<div class="text-xs text-slate-500 py-6 text-center leading-relaxed">' +
             '请先在上方勾选可约的周几<br>' +
             '<span class="text-slate-500">仅在已勾选并选中的日期下显示半小时拖选格</span>' +
           '</div>';
@@ -154,11 +154,11 @@
         var rangeText = rangesFromSelected(sel).map(function (r) { return r.start + '-' + r.end; }).join('、') || '未选时段';
         gridHtml =
           '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">' +
-            '<div class="text-[11px] font-bold text-teal-900">' +
+            '<div class="text-xs font-bold text-teal-900">' +
               '正在设置：' + activeLabel +
               ' <span class="font-normal text-slate-500">（仅影响当天）</span>' +
             '</div>' +
-            '<button type="button" class="avail-uncheck-day text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">取消勾选' + activeLabel + '</button>' +
+            '<button type="button" class="avail-uncheck-day text-xs font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">取消勾选' + activeLabel + '</button>' +
           '</div>' +
           '<div class="avail-grid grid grid-cols-4 sm:grid-cols-6 gap-1 select-none" data-day="' + state.activeDay + '">' +
             slotLabels.map(function (lab, idx) {
@@ -166,10 +166,10 @@
               var cellCls = on
                 ? 'bg-teal-500 text-white border-teal-600'
                 : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-teal-300';
-              return '<div class="avail-cell text-[10px] font-mono text-center py-1.5 rounded-lg border cursor-pointer transition ' + cellCls + '" data-idx="' + idx + '" data-label="' + lab + '">' + lab + '</div>';
+              return '<div class="avail-cell text-xs font-mono text-center py-1.5 rounded-lg border cursor-pointer transition ' + cellCls + '" data-idx="' + idx + '" data-label="' + lab + '">' + lab + '</div>';
             }).join('') +
           '</div>' +
-          '<p class="text-[10px] text-slate-400 mt-1.5">拖拽勾选/取消半小时格 · ' + activeLabel + '已选：' + rangeText + '</p>';
+          '<p class="text-xs text-slate-500 mt-1.5">拖拽勾选/取消半小时格 · ' + activeLabel + '已选：' + rangeText + '</p>';
       }
 
       var summary = getValue().map(function (item) {
@@ -184,27 +184,27 @@
           '<div class="flex items-start justify-between gap-2">' +
             '<div>' +
               '<div class="text-xs font-bold text-teal-900 flex items-center gap-1.5"><i class="fa-regular fa-calendar-check text-teal-600"></i>可约时段 · 以周为循环</div>' +
-              '<p class="text-[10px] text-slate-500 mt-0.5">每周重复同一套规则：勾选周几 → 再为<strong class="text-teal-800">当天</strong>拖选半小时格（08:00–22:00）</p>' +
+              '<p class="text-xs text-slate-500 mt-0.5">每周重复同一套规则：勾选周几 → 再为<strong class="text-teal-800">当天</strong>拖选半小时格（08:00–22:00）</p>' +
             '</div>' +
-            '<button type="button" class="avail-clear text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-lg cursor-pointer shrink-0">清空全部</button>' +
+            '<button type="button" class="avail-clear text-xs font-bold text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-lg cursor-pointer shrink-0">清空全部</button>' +
           '</div>' +
           '<div>' +
-            '<div class="text-[10px] font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">' +
-              '<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white text-[9px]">①</span>' +
+            '<div class="text-xs font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">' +
+              '<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white text-xs">①</span>' +
               '选择每周哪几天可约' +
               '<span class="font-normal text-slate-400">（已勾选 ' + checkedCount + ' 天）</span>' +
             '</div>' +
             '<div class="flex flex-wrap gap-1.5">' + daysHtml + '</div>' +
-            '<p class="text-[10px] text-slate-400 mt-1.5">点击周几：勾选并进入该日；已勾选的切换芯片可查看/编辑当日时段</p>' +
+            '<p class="text-xs text-slate-500 mt-1.5">点击周几：勾选并进入该日；已勾选的切换芯片可查看/编辑当日时段</p>' +
           '</div>' +
           '<div>' +
-            '<div class="text-[10px] font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">' +
-              '<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white text-[9px]">②</span>' +
+            '<div class="text-xs font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">' +
+              '<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white text-xs">②</span>' +
               '为当天拖选时段（半小时）' +
             '</div>' +
             '<div class="bg-white/80 rounded-xl border border-teal-100/80 p-2 sm:p-2.5">' + gridHtml + '</div>' +
           '</div>' +
-          '<div class="text-[10px] text-teal-800 bg-white/70 border border-teal-100 rounded-xl px-2.5 py-1.5 leading-relaxed">' +
+          '<div class="text-xs text-teal-800 bg-white/70 border border-teal-100 rounded-xl px-2.5 py-1.5 leading-relaxed">' +
             '<span class="font-bold">每周循环已设：</span>' + summary +
           '</div>' +
         '</div>';
@@ -262,7 +262,7 @@
             var idx = parseInt(cell.getAttribute('data-idx'), 10);
             var lab = slotLabels[idx];
             var on = !!state.byDay[day][lab];
-            cell.className = 'avail-cell text-[10px] font-mono text-center py-1.5 rounded-lg border cursor-pointer transition ' +
+            cell.className = 'avail-cell text-xs font-mono text-center py-1.5 rounded-lg border cursor-pointer transition ' +
               (on ? 'bg-teal-500 text-white border-teal-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-teal-300');
           });
         }

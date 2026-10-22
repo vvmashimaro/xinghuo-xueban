@@ -213,8 +213,8 @@ function injectL1SubStepUI() {
     <div class="flex items-center justify-between text-xs mt-4 pt-4 border-t border-slate-100">
       ${Object.keys(L1_SUBSTEPS).map(i => `
         <button type="button" onclick="goToL1SubStep(${i})" id="l1SubTab${i}" 
-          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-teal-700' : 'text-slate-400'} cursor-pointer transition-colors">
-          <span id="l1SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-[10px] font-bold transition-all">${i}</span>
+          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-teal-700' : 'text-slate-500'} cursor-pointer transition-colors">
+          <span id="l1SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-xs font-bold transition-all">${i}</span>
           <span class="hidden sm:inline">${L1_SUBSTEPS[i].title}</span>
         </button>
         ${i < 4 ? '<div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l1SubProgress' + i + '" class="h-full bg-teal-600 transition-all w-0"></div></div>' : ''}
@@ -357,8 +357,8 @@ function injectL2SubStepUI() {
     <div class="flex items-center justify-between text-xs mt-4 pt-4 border-t border-slate-100">
       ${Object.keys(L2_SUBSTEPS).map(i => `
         <button type="button" onclick="goToL2SubStep(${i})" id="l2SubTab${i}" 
-          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-teal-700' : 'text-slate-400'} cursor-pointer transition-colors">
-          <span id="l2SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-[10px] font-bold transition-all">${i}</span>
+          class="flex items-center gap-1.5 font-bold ${i == 1 ? 'text-teal-700' : 'text-slate-500'} cursor-pointer transition-colors">
+          <span id="l2SubIcon${i}" class="w-5 h-5 rounded-full ${i == 1 ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-xs font-bold transition-all">${i}</span>
           <span class="hidden sm:inline">${L2_SUBSTEPS[i].title}</span>
         </button>
         ${i < 3 ? '<div class="flex-1 h-0.5 bg-slate-200 mx-1.5 relative"><div id="l2SubProgress' + i + '" class="h-full bg-teal-600 transition-all w-0"></div></div>' : ''}
@@ -490,7 +490,7 @@ function goToL1SubStep(step) {
         tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
       }
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold transition-all';
         icon.innerHTML = '<i class="fa-solid fa-check"></i>';
       }
       const progress = document.getElementById(`l1SubProgress${i}`);
@@ -501,16 +501,16 @@ function goToL1SubStep(step) {
         tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
       }
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold transition-all';
         icon.textContent = i;
       }
     } else {
       // Future step
       if (tab) {
-        tab.className = 'flex items-center gap-1.5 font-bold text-slate-400 cursor-pointer transition-colors';
+        tab.className = 'flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer transition-colors';
       }
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold transition-all';
         icon.textContent = i;
       }
     }
@@ -546,7 +546,7 @@ function goToL2SubStep(step) {
       // Completed
       if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold transition-all';
         icon.innerHTML = '<i class="fa-solid fa-check"></i>';
       }
       const progress = document.getElementById(`l2SubProgress${i}`);
@@ -555,14 +555,14 @@ function goToL2SubStep(step) {
       // Current
       if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-teal-700 cursor-pointer transition-colors';
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold transition-all';
         icon.textContent = i;
       }
     } else {
       // Future
-      if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-slate-400 cursor-pointer transition-colors';
+      if (tab) tab.className = 'flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer transition-colors';
       if (icon) {
-        icon.className = 'w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold transition-all';
+        icon.className = 'w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold transition-all';
         icon.textContent = i;
       }
     }

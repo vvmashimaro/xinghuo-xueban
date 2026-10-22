@@ -865,6 +865,71 @@ const StorageService = {
     }
   },
 
+  async confirmSessionLeave(bookingId, sessionId, approve) {
+    try {
+      const result = await _request('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/leave', {
+        sessionId,
+        action: approve === false ? 'reject' : 'confirm'
+      });
+      if (result && result.booking) {
+        const list = this.getBookings();
+        const idx = list.findIndex((b) => b.id === bookingId);
+        if (idx >= 0) {
+          list[idx] = result.booking;
+          this.saveBookings(list);
+        }
+        return Object.assign({ ok: true }, result);
+      }
+      return result || { ok: false, error: '请假审批失败' };
+    } catch (e) {
+      return (e && e.data) || { ok: false, error: '请假审批失败' };
+    }
+  },
+
+  async completeSession(bookingId, sessionId, meta) {
+    const opts = meta || {};
+    try {
+      const result = await _request('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/complete', {
+        sessionId,
+        completedBy: opts.completedBy || 'mentor',
+        classSummary: opts.classSummary || null
+      });
+      if (result && result.booking) {
+        const list = this.getBookings();
+        const idx = list.findIndex((b) => b.id === bookingId);
+        if (idx >= 0) {
+          list[idx] = result.booking;
+          this.saveBookings(list);
+        }
+        return Object.assign({ ok: true }, result);
+      }
+      return result || { ok: false, error: '结课失败' };
+    } catch (e) {
+      return (e && e.data) || { ok: false, error: '结课失败' };
+    }
+  },
+
+  async saveClassSummary(bookingId, sessionId, classSummary) {
+    try {
+      const result = await _request('POST', '/api/bookings/' + encodeURIComponent(bookingId) + '/summary', {
+        sessionId,
+        classSummary
+      });
+      if (result && result.booking) {
+        const list = this.getBookings();
+        const idx = list.findIndex((b) => b.id === bookingId);
+        if (idx >= 0) {
+          list[idx] = result.booking;
+          this.saveBookings(list);
+        }
+        return Object.assign({ ok: true }, result);
+      }
+      return result || { ok: false, error: '小结保存失败' };
+    } catch (e) {
+      return (e && e.data) || { ok: false, error: '小结保存失败' };
+    }
+  },
+
   getParentWalletSummary(parent) {
     if (!parent) {
       return { frozenYuan: 0, hasFrozen: false, label: '资金保障 · 一课一消' };

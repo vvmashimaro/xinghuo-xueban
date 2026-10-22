@@ -29,13 +29,22 @@ Page({
     bannerText: '',
     bannerClass: 'banner-warn',
     inbox: [],
+    filteredInbox: [],
+    inboxFilter: 'all',
+    inboxEmptyText: '暂无约课申请。家长预约后将出现在此处。',
     pendingInbox: 0,
+    courseBadgeCount: 0,
     declineShow: false,
     declineReason: '',
     declineId: '',
+    completeShow: false,
+    completeMeta: '',
+    completeBid: '',
+    completeSid: '',
+    summaryTitle: '',
+    summaryContent: '',
     settingsDrawerShow: false,
-    consoleSection: 'courses',
-    consoleFabShow: false
+    consoleSection: 'courses'
   },
 
   async onShow() {
@@ -82,17 +91,56 @@ Page({
     const pendingInbox = inboxRaw.filter(
       (b) => !isUnpaid(b) && (b.status === 'pending_accept' || b.status === 'escrow_locked')
     ).length;
+    const sessStatusText = {
+      scheduled: '已排课',
+      completed: '已结课',
+      leave_pending: '请假待确认',
+      leave_approved: '已批准请假',
+      leave_too_late: '请假过晚',
+      cancelled: '已取消'
+    };
     const inbox = inboxRaw.map((b) => {
       const unpaid = isUnpaid(b);
       const meta = unpaid
         ? { text: '待家长支付', badge: 'badge-teal' }
         : (BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' });
+      const sessionRows = (b.sessions || []).map((s) => {
+        const canComplete = !unpaid && b.status === 'accepted' && s.status === 'scheduled';
+        const canLeaveAct = !unpaid && s.status === 'leave_pending';
+        const canEditSummary = !unpaid && s.status === 'completed' && !s.classSummary;
+        return {
+          id: s.id,
+          label: (s.date || '') + ' ' + (s.timeLabel || s.timeStart || ''),
+          statusText: sessStatusText[s.status] || s.status || '',
+          canComplete,
+          canLeaveAct,
+          canEditSummary
+        };
+      });
       return Object.assign({}, b, {
         statusText: meta.text,
         statusBadge: meta.badge,
-        canAct: !unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked')
+        canAct: !unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked'),
+        hasCompleted: (b.sessions || []).some((s) => s.status === 'completed'),
+        sessionRows
       });
     });
+    const inboxFilter = this.data.inboxFilter || 'all';
+    let filteredInbox = inbox.slice();
+    if (inboxFilter === 'pending') {
+      filteredInbox = inbox.filter((b) => !isUnpaid(b) && (b.status === 'pending_accept' || b.status === 'escrow_locked'));
+    } else if (inboxFilter === 'accepted') {
+      filteredInbox = inbox.filter((b) => b.status === 'accepted');
+    } else if (inboxFilter === 'completed') {
+      filteredInbox = inbox.filter((b) => b.hasCompleted);
+    }
+    const inboxEmptyText = inbox.length === 0
+      ? '暂无约课申请。家长预约后将出现在此处。'
+      : (filteredInbox.length === 0 ? '该状态下暂无约课' : '');
+    const leavePendingCount = inboxRaw.reduce(
+      (n, b) => n + ((b.sessions || []).filter((s) => s.status === 'leave_pending').length),
+      0
+    );
 
     this.setData({
       mentorName: (mentor.realName || '导').charAt(0) + '老师',
@@ -107,27 +155,20 @@ Page({
       bannerText,
       bannerClass,
       inbox,
-      pendingInbox
+      filteredInbox,
+      inboxEmptyText,
+      pendingInbox,
+      courseBadgeCount: pendingInbox + leavePendingCount
     });
+  },
+
+  setInboxFilter(e) {
+    this.setData({ inboxFilter: e.currentTarget.dataset.v || 'all' }, () => this.reload());
   },
 
   onConsoleTab(e) {
     const id = e.currentTarget.dataset.id;
     if (id) this.setData({ consoleSection: id });
-  },
-  toggleConsoleFab() {
-    this.setData({ consoleFabShow: !this.data.consoleFabShow });
-  },
-  closeConsoleFab() {
-    this.setData({ consoleFabShow: false });
-  },
-  pickConsoleSection(e) {
-    const id = e.currentTarget.dataset.id;
-    this.setData({ consoleSection: id || 'courses', consoleFabShow: false });
-  },
-  openSettingsDrawerFromFab() {
-    this.setData({ consoleFabShow: false });
-    this.openSettingsDrawer();
   },
   openSettingsDrawer() {
     this.setData({ settingsDrawerShow: true });
@@ -161,6 +202,72 @@ Page({
     Storage.respondToBooking(this.data.declineId, { decline: true, reason });
     this.setData({ declineShow: false });
     showToast('已婉拒', 'warning');
+    this.reload();
+  },
+
+  openComplete(e) {
+    const bid = e.currentTarget.dataset.bid;
+    const sid = e.currentTarget.dataset.sid;
+    const booking = (this.data.inbox || []).find((b) => b.id === bid) || {};
+    const sess = (booking.sessionRows || []).find((s) => s.id === sid) || {};
+    this.setData({
+      completeShow: true,
+      completeBid: bid,
+      completeSid: sid,
+      completeMeta: (booking.studentNickname || '学员') + ' · ' + (booking.subject || '') + ' · ' + (sess.label || ''),
+      summaryTitle: '',
+      summaryContent: ''
+    });
+  },
+  closeComplete() {
+    this.setData({ completeShow: false, completeBid: '', completeSid: '' });
+  },
+  onSummaryTitle(e) { this.setData({ summaryTitle: e.detail.value }); },
+  onSummaryContent(e) { this.setData({ summaryContent: e.detail.value }); },
+  async confirmCompleteOnly() {
+    await this._completeSession(false);
+  },
+  async confirmCompleteWithSummary() {
+    await this._completeSession(true);
+  },
+  async _completeSession(withSummary) {
+    const bid = this.data.completeBid;
+    const sid = this.data.completeSid;
+    if (!bid || !sid) return;
+    const content = String(this.data.summaryContent || '').trim();
+    if (withSummary && !content) {
+      showToast('请填写课后小结内容，或选择「仅确认结课」', 'warning');
+      return;
+    }
+    const classSummary = withSummary
+      ? {
+        title: String(this.data.summaryTitle || '').trim(),
+        content,
+        tags: []
+      }
+      : null;
+    const res = await Storage.completeSession(bid, sid, {
+      completedBy: 'mentor',
+      classSummary
+    });
+    this.closeComplete();
+    if (res && res.ok !== false && !res.error) {
+      showToast(withSummary ? '已确认结课并保存小结' : '已确认结课 · 进入 48 小时观察期');
+    } else {
+      showToast((res && (res.error || res.message)) || '结课失败', 'warning');
+    }
+    this.reload();
+  },
+  async onLeaveDecide(e) {
+    const bid = e.currentTarget.dataset.bid;
+    const sid = e.currentTarget.dataset.sid;
+    const ok = String(e.currentTarget.dataset.ok) !== '0';
+    const res = await Storage.confirmSessionLeave(bid, sid, ok);
+    if (res && res.ok !== false && !res.error) {
+      showToast(ok ? '已确认请假' : '已驳回请假，课次恢复');
+    } else {
+      showToast((res && (res.error || res.message)) || '操作失败', 'warning');
+    }
     this.reload();
   },
 
