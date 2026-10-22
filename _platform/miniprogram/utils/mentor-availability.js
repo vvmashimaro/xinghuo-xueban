@@ -114,13 +114,71 @@ function availabilityToArray(availability) {
   return result;
 }
 
+const WD_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+/**
+ * 从导师 availability 生成可落入窗口的约课时段（开始+时长须完全落在某一 range 内）。
+ * 与服务端 assertMentorAvailability 判定一致。
+ */
+function bookableWindowsFromAvailability(availability, hours) {
+  const duration = Math.max(1, Number(hours) || 2) * 60;
+  const out = [];
+  const seen = {};
+  (availability || []).forEach((item) => {
+    const wd = parseInt(item.weekday, 10);
+    if (isNaN(wd)) return;
+    (item.ranges || []).forEach((range) => {
+      const rs = timeToMinutes(range.start);
+      const re = timeToMinutes(range.end);
+      if (re - rs < duration) return;
+      for (let start = rs; start + duration <= re; start += 30) {
+        const timeStart = minutesToTime(start);
+        const timeEnd = minutesToTime(start + duration);
+        const label = (WD_NAMES[wd] || '') + ' ' + timeStart + '-' + timeEnd;
+        if (seen[label]) continue;
+        seen[label] = true;
+        out.push({
+          weekday: wd,
+          weekdayLabel: WD_NAMES[wd] || '',
+          timeStart,
+          timeEnd,
+          label
+        });
+      }
+    });
+  });
+  return out;
+}
+
+function windowCoversSession(availability, session) {
+  const windows = bookableWindowsFromAvailability(
+    availability,
+    session && session.hours != null
+      ? session.hours
+      : Math.max(
+        1,
+        Math.round(
+          (timeToMinutes((session && session.timeEnd) || '') -
+            timeToMinutes((session && session.timeStart) || '')) / 60
+        ) || 2
+      )
+  );
+  const wd = parseInt(session && session.weekday, 10);
+  const start = String((session && session.timeStart) || '');
+  const end = String((session && session.timeEnd) || '');
+  return windows.some((w) => w.weekday === wd && w.timeStart === start && w.timeEnd === end);
+}
+
 module.exports = {
   WEEKDAY_RANGE,
   TIME_SLOTS,
+  WD_NAMES,
   timeToMinutes,
   minutesToTime,
   mergeSlots,
   loadAvailabilityFromStorage,
   summarizeAvailability,
-  availabilityToArray
+  availabilityToArray,
+  bookableWindowsFromAvailability,
+  windowCoversSession
 };

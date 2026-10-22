@@ -111,6 +111,17 @@
     }
   }
 
+  function _readList(key) {
+    const v = _read(key, []);
+    return Array.isArray(v) ? v : [];
+  }
+
+  function _prepend(list, item) {
+    const arr = Array.isArray(list) ? list : [];
+    arr.unshift(item);
+    return arr;
+  }
+
   function _write(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
@@ -182,6 +193,110 @@
       weekday: parseInt(k, 10),
       ranges: byDay[k]
     }));
+  }
+
+  function _parseTimeToMinutes(t) {
+    const m = String(t || '').trim().match(/(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }
+
+  function _minutesToTime(mins) {
+    const h = Math.floor(mins / 60);
+    const mm = mins % 60;
+    return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+  }
+
+  const WD_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+  /** 与服务端 assertMentorAvailability 一致：课时须完全落入某一可约 range。 */
+  function bookableWindowsFromAvailability(availability, hours) {
+    const duration = Math.max(1, Number(hours) || 2) * 60;
+    const out = [];
+    const seen = {};
+    (availability || []).forEach((item) => {
+      const wd = parseInt(item.weekday, 10);
+      if (isNaN(wd)) return;
+      (item.ranges || []).forEach((range) => {
+        const rs = _parseTimeToMinutes(range.start);
+        const re = _parseTimeToMinutes(range.end);
+        if (rs == null || re == null || re - rs < duration) return;
+        for (let start = rs; start + duration <= re; start += 30) {
+          const timeStart = _minutesToTime(start);
+          const timeEnd = _minutesToTime(start + duration);
+          const label = (WD_NAMES[wd] || '') + ' ' + timeStart + '-' + timeEnd;
+          if (seen[label]) continue;
+          seen[label] = true;
+          out.push({
+            weekday: wd,
+            weekdayLabel: WD_NAMES[wd] || '',
+            timeStart,
+            timeEnd,
+            label
+          });
+        }
+      });
+    });
+    return out;
+  }
+
+  function upcomingDateSlotsFromAvailability(availability, hours, options) {
+    const opts = options || {};
+    const days = opts.days || 14;
+    const limit = opts.limit || 6;
+    const windows = bookableWindowsFromAvailability(availability, hours);
+    const byWd = {};
+    windows.forEach((w) => {
+      if (!byWd[w.weekday]) byWd[w.weekday] = [];
+      byWd[w.weekday].push(w);
+    });
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const out = [];
+    for (let i = 0; i < days && out.length < limit; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const wd = d.getDay();
+      (byWd[wd] || []).forEach((w) => {
+        if (out.length >= limit) return;
+        const end = new Date(d);
+        const eh = parseInt(String(w.timeEnd).split(':')[0], 10) || 0;
+        const em = parseInt(String(w.timeEnd).split(':')[1], 10) || 0;
+        end.setHours(eh, em, 0, 0);
+        if (end.getTime() <= now.getTime()) return;
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const da = String(d.getDate()).padStart(2, '0');
+        out.push(Object.assign({}, w, {
+          date: d,
+          isoDate: y + '-' + mo + '-' + da
+        }));
+      });
+    }
+    return out;
+  }
+
+  function sessionCoveredByAvailability(availability, session) {
+    if (!availability || !availability.length) return true;
+    if (!session) return false;
+    let wd = session.weekday;
+    if ((wd == null || wd === '') && session.date) {
+      wd = new Date(session.date + 'T12:00:00').getDay();
+    }
+    wd = parseInt(wd, 10);
+    if (isNaN(wd)) return false;
+    const start = _parseTimeToMinutes(session.timeStart);
+    let end = _parseTimeToMinutes(session.timeEnd);
+    if (start == null) return false;
+    if (end == null || end <= start) end = start + 120;
+    const day = (availability || []).find((a) => parseInt(a.weekday, 10) === wd);
+    if (!day || !day.ranges || !day.ranges.length) return false;
+    return day.ranges.some((r) => {
+      const rs = _parseTimeToMinutes(r.start);
+      const re = _parseTimeToMinutes(r.end);
+      if (rs == null || re == null) return false;
+      return rs <= start && re >= end;
+    });
   }
 
   function _withMentorDefaults(m) {
@@ -695,11 +810,11 @@
             const contracts = await _apiSafe('GET', '/api/contracts');
             const assessments = await _apiSafe('GET', '/api/assessments');
             const feedback = await _apiSafe('GET', '/api/feedback');
-            if (mentors) _write(KEYS.mentors, mentors);
-            if (parents) _write(KEYS.parents, parents);
-            if (bookings) _write(KEYS.bookings, bookings);
-            if (contracts) _write(KEYS.contracts, contracts);
-            if (assessments) _write(KEYS.assessments, assessments);
+            if (Array.isArray(mentors)) _write(KEYS.mentors, mentors);
+            if (Array.isArray(parents)) _write(KEYS.parents, parents);
+            if (Array.isArray(bookings)) _write(KEYS.bookings, bookings);
+            if (Array.isArray(contracts)) _write(KEYS.contracts, contracts);
+            if (Array.isArray(assessments)) _write(KEYS.assessments, assessments);
             if (feedback && Array.isArray(feedback)) _write(KEYS.feedbackTickets, feedback);
             _hydrated = true;
             return { mentors, parents, bookings, contracts, assessments, feedback };
@@ -717,14 +832,14 @@
               _write(KEYS.feedbackTickets, feedback);
             }
 
-            if (mentors) _write(KEYS.mentors, mentors);
-            if (bookings) _write(KEYS.bookings, bookings);
-            if (assessments) _write(KEYS.assessments, assessments);
+            if (Array.isArray(mentors)) _write(KEYS.mentors, mentors);
+            if (Array.isArray(bookings)) _write(KEYS.bookings, bookings);
+            if (Array.isArray(assessments)) _write(KEYS.assessments, assessments);
             
             // 如果是家长，拉取自己的资料
             if (user.role === 'parent') {
               const parents = await _apiSafe('GET', '/api/parents');
-              if (parents) _write(KEYS.parents, parents);
+              if (Array.isArray(parents)) _write(KEYS.parents, parents);
               const session = this.getSession() || {};
               const parentId = user.userId || (user.profile && user.profile.id);
               if (parentId) session.parentId = parentId;
@@ -826,7 +941,7 @@
     /* ---------- Mentors ---------- */
     getMentors: function () {
       this.seedIfEmptyLocal();
-      return _read(KEYS.mentors, []);
+      return _readList(KEYS.mentors);
     },
 
     saveMentors: function (list) {
@@ -952,7 +1067,7 @@
     /* ---------- Parents ---------- */
     getParents: function () {
       this.seedIfEmptyLocal();
-      return _read(KEYS.parents, []);
+      return _readList(KEYS.parents);
     },
 
     normalizeParentProfile: function (p) {
@@ -1079,7 +1194,7 @@
     /* ---------- Bookings & Contracts ---------- */
     getBookings: function () {
       this.seedIfEmptyLocal();
-      return _read(KEYS.bookings, []);
+      return _readList(KEYS.bookings);
     },
 
     saveBookings: function (list) {
@@ -1130,8 +1245,7 @@
           if (normalized.type === 'trial') {
             normalized.escrowStatus = normalized.escrowStatus || 'waived';
           }
-          list.unshift(normalized);
-          this.saveBookings(list);
+          this.saveBookings(_prepend(list, normalized));
           return normalized;
         } catch (e) {
           console.warn('[StorageService] addBooking API failed', e.message || e);
@@ -1165,8 +1279,7 @@
         record.trialLabel = '首次试课 · 1小时免费';
         record.sessionCount = 1;
       }
-      list.unshift(record);
-      this.saveBookings(list);
+      this.saveBookings(_prepend(list, record));
       return record;
     },
 
@@ -1676,6 +1789,18 @@
       return hints;
     },
 
+    bookableWindowsFromAvailability: bookableWindowsFromAvailability,
+    upcomingDateSlotsFromAvailability: upcomingDateSlotsFromAvailability,
+
+    sessionFitsMentorAvailability: function (mentorId, sessions, fallbackAvail) {
+      let avail = this.getMentorAvailability(mentorId);
+      if ((!avail || !avail.length) && Array.isArray(fallbackAvail) && fallbackAvail.length) {
+        avail = fallbackAvail;
+      }
+      if (!avail.length) return true;
+      return (sessions || []).every((s) => sessionCoveredByAvailability(avail, s));
+    },
+
     processEscrowReleases: function () {
       const list = this.getBookings();
       let changed = false;
@@ -1703,7 +1828,7 @@
     },
 
     getContracts: function () {
-      return _read(KEYS.contracts, []);
+      return _readList(KEYS.contracts);
     },
 
     saveContract: async function (contract) {
@@ -1715,8 +1840,7 @@
           const remote = await _api('POST', '/api/contracts', body);
           if (remote && remote.id) {
             const list = this.getContracts();
-            list.unshift(remote);
-            _write(KEYS.contracts, list);
+            _write(KEYS.contracts, _prepend(list, remote));
             return remote;
           }
           return null;
@@ -1728,8 +1852,7 @@
 
       const list = this.getContracts();
       const record = Object.assign({ id: _uid('CT'), signedAt: _now() }, contract);
-      list.unshift(record);
-      _write(KEYS.contracts, list);
+      _write(KEYS.contracts, _prepend(list, record));
       return record;
     },
 

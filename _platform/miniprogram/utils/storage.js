@@ -5,6 +5,7 @@
 'use strict';
 
 const config = require('./config.js');
+const Avail = require('./mentor-availability.js');
 const API_BASE = (config && config.API_BASE) || 'http://127.0.0.1:8787';
 
 const KEYS = {
@@ -33,6 +34,17 @@ function _read(key, fallback) {
     console.warn('[StorageService] read fail', key, e);
     return fallback;
   }
+}
+
+function _readList(key) {
+  const v = _read(key, []);
+  return Array.isArray(v) ? v : [];
+}
+
+function _prepend(list, item) {
+  const arr = Array.isArray(list) ? list : [];
+  arr.unshift(item);
+  return arr;
 }
 
 function _write(key, value) {
@@ -477,9 +489,9 @@ const StorageService = {
         parents = await _apiSafe('GET', '/api/parents', null);
       }
 
-      if (mentors) _write(KEYS.mentors, (mentors || []).map(_withMentorDefaults));
-      if (parents) _write(KEYS.parents, parents || []);
-      if (bookings) _write(KEYS.bookings, bookings || []);
+      if (Array.isArray(mentors)) _write(KEYS.mentors, mentors.map(_withMentorDefaults));
+      if (Array.isArray(parents)) _write(KEYS.parents, parents);
+      if (Array.isArray(bookings)) _write(KEYS.bookings, bookings);
 
       const session = this.getSession() || {};
       session.role = user.role || session.role;
@@ -507,7 +519,7 @@ const StorageService = {
 
   getMentors() {
     this.seedIfEmptyLocal();
-    return _read(KEYS.mentors, []);
+    return _readList(KEYS.mentors);
   },
   saveMentors(list) { return _write(KEYS.mentors, list || []); },
   getMentorById(id) { return this.getMentors().find((m) => m.id === id) || null; },
@@ -543,8 +555,7 @@ const StorageService = {
       mentor
     );
     const normalized = _withMentorDefaults(record);
-    list.unshift(normalized);
-    this.saveMentors(list);
+    this.saveMentors(_prepend(list, normalized));
     const session = this.getSession() || {};
     session.role = 'mentor';
     session.mentorId = normalized.id;
@@ -553,8 +564,7 @@ const StorageService = {
     _apiSafe('POST', '/api/mentors', mentor || {}).then((remote) => {
       if (remote && remote.id) {
         const all = this.getMentors().filter((m) => m.id !== normalized.id);
-        all.unshift(_withMentorDefaults(remote));
-        this.saveMentors(all);
+        this.saveMentors(_prepend(all, _withMentorDefaults(remote)));
         const s = this.getSession() || {};
         s.mentorId = remote.id;
         s.phone = remote.phone || s.phone;
@@ -591,7 +601,7 @@ const StorageService = {
 
   getParents() {
     this.seedIfEmptyLocal();
-    return _read(KEYS.parents, []);
+    return _readList(KEYS.parents);
   },
 
   addParent(profile) {
@@ -616,7 +626,7 @@ const StorageService = {
       record.createdAt = list[idx].createdAt || record.createdAt;
       list[idx] = record;
     } else {
-      list.unshift(record);
+      _prepend(list, record);
     }
     _write(KEYS.parents, list);
     const session = this.getSession() || {};
@@ -700,17 +710,15 @@ const StorageService = {
     return found ? this.normalizeParentProfile(found) : null;
   },
 
-  getBookings() { return _read(KEYS.bookings, []); },
-  saveBookings(list) { return _write(KEYS.bookings, list || []); },
+  getBookings() { return _readList(KEYS.bookings); },
+  saveBookings(list) { return _write(KEYS.bookings, Array.isArray(list) ? list : []); },
   getBookingById(id) { return this.getBookings().find((b) => b.id === id) || null; },
 
   async addBooking(booking) {
     try {
       const result = await _request('POST', '/api/bookings', booking);
       if (result && result.id) {
-        const list = this.getBookings();
-        list.unshift(result);
-        this.saveBookings(list);
+        this.saveBookings(_prepend(this.getBookings(), result));
         return result;
       }
       return result && result.error ? result : null;
@@ -874,15 +882,13 @@ const StorageService = {
     }
   },
 
-  getContracts() { return _read(KEYS.contracts, []); },
+  getContracts() { return _readList(KEYS.contracts); },
 
   async saveContract(contract) {
     try {
       const result = await _request('POST', '/api/contracts', contract);
       if (result) {
-        const list = this.getContracts();
-        list.unshift(result);
-        _write(KEYS.contracts, list);
+        _write(KEYS.contracts, _prepend(this.getContracts(), result));
         return result;
       }
       return null;
@@ -954,12 +960,14 @@ const StorageService = {
       lectureUrl: mentor.lectureUrl || '#', isTopMatch: matchScore >= 95,
       tagBadge: matchScore >= 96 ? matchScore + '% AI高契合' : mentor.evalGrade || '金牌导师',
       evalGrade: mentor.evalGrade || 'V2 级金牌导师',
-      chsiStatus: mentor.chsiStatus || ''
+      chsiStatus: mentor.chsiStatus || '',
+      availableSlots: mentor.availableSlots || [],
+      availability: mentor.availability || []
     };
   },
 
   getTutorListForParent(parentProfile) {
-    const parent = parentProfile || this.normalizeParentProfile(_read(KEYS.parents, [])[0]);
+    const parent = parentProfile || this.normalizeParentProfile(this.getParents()[0]);
     const approved = this.getApprovedMentors();
     let tutors = approved.map((m) => this.mentorToTutorCard(m, parent));
     tutors.sort((a, b) => b.matchScore - a.matchScore);
@@ -983,6 +991,33 @@ const StorageService = {
     if (!m) return [];
     if (Array.isArray(m.availability) && m.availability.length) return m.availability;
     return _parseSlotLabelToAvailability(m.availableSlots || []);
+  },
+
+  sessionFitsMentorAvailability(mentorId, sessions, fallbackAvail) {
+    let avail = this.getMentorAvailability(mentorId);
+    if ((!avail || !avail.length) && Array.isArray(fallbackAvail) && fallbackAvail.length) {
+      avail = fallbackAvail;
+    }
+    if (!avail.length) return true;
+    return (sessions || []).every((s) => {
+      let wd = s && s.weekday;
+      if ((wd == null || wd === '') && s && s.date) {
+        wd = new Date(s.date + 'T12:00:00').getDay();
+      }
+      wd = parseInt(wd, 10);
+      if (isNaN(wd)) return false;
+      const start = Avail.timeToMinutes(s && s.timeStart);
+      let end = Avail.timeToMinutes(s && s.timeEnd);
+      if (start == null) return false;
+      if (end == null || end <= start) end = start + 120;
+      const day = avail.find((a) => parseInt(a.weekday, 10) === wd);
+      if (!day || !day.ranges || !day.ranges.length) return false;
+      return day.ranges.some((r) => {
+        const rs = Avail.timeToMinutes(r.start);
+        const re = Avail.timeToMinutes(r.end);
+        return rs != null && re != null && rs <= start && re >= end;
+      });
+    });
   },
 
   // Phone-related operations
@@ -1043,20 +1078,15 @@ const StorageService = {
 
   // Booking operations
   async createBooking(bookingData) {
-    try {
-      const result = await _request('POST', '/api/bookings', bookingData);
-      return result;
-    } catch (e) {
-      return { success: false, error: e.message || '创建预约失败' };
-    }
+    return this.addBooking(bookingData);
   },
 
-  async getBookings() {
+  async fetchBookingsRemote() {
     try {
       const result = await _request('GET', '/api/bookings', null);
-      return result;
+      return Array.isArray(result) ? result : [];
     } catch (e) {
-      return { success: false, error: e.message || '获取预约列表失败' };
+      return [];
     }
   },
 
