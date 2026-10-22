@@ -84,6 +84,7 @@ node test-admin-teaching-points.js
 echo ""
 echo "=== Running WeChat pay / DEV OTP / proof / P0-P1 security tests ==="
 node test-wechat-pay.js
+node test-booking-sms-notify.js
 node test-dev-otp.js
 node test-proof-upload.js
 node test-p0-p1-security.js

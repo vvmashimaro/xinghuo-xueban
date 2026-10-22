@@ -340,10 +340,39 @@ function buildJsapiPayParams(prepayId) {
   };
 }
 
-function registerMockOrder(order) {
-  if (order && order.outTradeNo) {
-    mockOrders.set(order.outTradeNo, order);
+function isMockLedgerOrder(order) {
+  return !!(order && order.mock === true && isMockPayAllowed());
+}
+
+function registerMockOrder(order, options) {
+  if (!order || !order.outTradeNo) return;
+  const force = options && options.force === true;
+  // Real WeChat prepays must never enter the in-memory mock ledger.
+  // A stale NOTPAY entry would short-circuit refund/query and skip WeChat.
+  // `{ force: true }` is for tests that replay leftover pre-fix memory.
+  if (!force) {
+    if (order.mock !== true) return;
+    if (!isMockPayAllowed()) return;
   }
+  mockOrders.set(order.outTradeNo, Object.assign({}, order));
+}
+
+/**
+ * After a real or mock payment SUCCESS: keep mock ledger in sync, or drop
+ * any leftover non-mock entry so refund cannot treat NOTPAY as authoritative.
+ */
+function markOrderPaid(outTradeNo, extra) {
+  if (!outTradeNo) return;
+  const order = mockOrders.get(outTradeNo);
+  if (!order) return;
+  if (!isMockLedgerOrder(order)) {
+    mockOrders.delete(outTradeNo);
+    return;
+  }
+  order.status = 'SUCCESS';
+  if (extra && extra.transactionId) order.transactionId = extra.transactionId;
+  order.successTime = (extra && extra.successTime) || new Date().toISOString();
+  if (extra && extra.amount != null) order.amount = extra.amount;
 }
 
 /**
@@ -363,6 +392,7 @@ function parseBookingIdFromOutTradeNo(outTradeNo) {
 }
 
 function hydrateMockOrders(orders) {
+  if (!isMockPayAllowed()) return;
   if (!Array.isArray(orders)) return;
   orders.forEach((o) => registerMockOrder(o));
 }
@@ -587,16 +617,21 @@ async function refundOrder(outTradeNoOrParams, reason) {
     return { success: false, error: '缺少商户订单号' };
   }
 
-  if (mockOrders.has(outTradeNo)) {
-    const order = mockOrders.get(outTradeNo);
-    if (order.status !== 'SUCCESS') {
+  const local = mockOrders.get(outTradeNo);
+  // Only the mock ledger may short-circuit refund. A real payOrder SUCCESS
+  // (or leftover real NOTPAY from prepay) must fall through to WeChat.
+  if (isMockLedgerOrder(local)) {
+    if (local.status !== 'SUCCESS') {
       return { success: false, error: '订单未支付，无法退款' };
     }
-    order.status = 'REFUND';
-    order.refundTime = new Date().toISOString();
-    order.refundReason = refundReason;
+    local.status = 'REFUND';
+    local.refundTime = new Date().toISOString();
+    local.refundReason = refundReason;
     console.log(`[WeChat Pay Mock] 退款成功: ${outTradeNo}`);
     return { success: true, outTradeNo, mock: true };
+  }
+  if (local && local.mock !== true) {
+    mockOrders.delete(outTradeNo);
   }
 
   if (!isConfigComplete()) {
@@ -686,20 +721,20 @@ function interpretRefundStatus(json) {
 }
 
 function getLocalOrderStatus(outTradeNo) {
-  if (mockOrders.has(outTradeNo)) {
-    const order = mockOrders.get(outTradeNo);
-    return {
-      outTradeNo,
-      bookingId: order.bookingId,
-      amount: order.amount,
-      status: order.status,
-      transactionId: order.transactionId,
-      createTime: order.createTime,
-      successTime: order.successTime,
-      mock: true
-    };
+  const order = mockOrders.get(outTradeNo);
+  if (!isMockLedgerOrder(order)) {
+    return null;
   }
-  return null;
+  return {
+    outTradeNo,
+    bookingId: order.bookingId,
+    amount: order.amount,
+    status: order.status,
+    transactionId: order.transactionId,
+    createTime: order.createTime,
+    successTime: order.successTime,
+    mock: true
+  };
 }
 
 async function queryTransactionByOutTradeNo(outTradeNo) {
@@ -761,6 +796,7 @@ module.exports = {
   isConfigComplete,
   isMockPayAllowed,
   registerMockOrder,
+  markOrderPaid,
   hydrateMockOrders,
   refundOrder,
   interpretRefundStatus,

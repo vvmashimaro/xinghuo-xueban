@@ -68,6 +68,29 @@ async function main() {
   });
   assert.strictEqual(refund.message, sms.NOTIFICATION_FIXED_COPY.refund);
 
+  assert.strictEqual(
+    bookingSmsNotify.shouldSendRefundSmsOnCancel(null, { paymentStatus: 'unpaid' }),
+    false
+  );
+  assert.strictEqual(
+    bookingSmsNotify.shouldSendRefundSmsOnCancel(
+      { amountYuan: 110, outTradeNo: 'BK-X' },
+      { paymentStatus: 'unpaid' }
+    ),
+    false
+  );
+  assert.strictEqual(
+    bookingSmsNotify.shouldSendRefundSmsOnCancel(
+      { amountYuan: 110, outTradeNo: 'BK-X' },
+      { paymentStatus: 'paid' }
+    ),
+    true
+  );
+  assert.ok(
+    sms.NOTIFICATION_FIXED_COPY.refund.indexOf('退款将原路退回') >= 0,
+    'refund copy still used for paid cancels only'
+  );
+
   console.log('test-booking-sms-notify: OK');
 }
 

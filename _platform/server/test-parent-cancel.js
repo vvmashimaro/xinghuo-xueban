@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const db = require('./src/db');
+const bookingSchedule = require('./src/booking-schedule');
 
 function nextSundayAtLeast(daysAhead) {
   const d = new Date();
@@ -128,6 +129,69 @@ function main() {
 
   const deny = db.parentCancelBooking(soonBooking.id, parent);
   assert(!deny.ok && deny.tooLate, 'cancel within 2h should fail');
+
+  assert.strictEqual(typeof bookingSchedule.parseOneOffSessionFromSchedule, 'function');
+  const parsed = bookingSchedule.parseOneOffSessionFromSchedule({
+    schedule: `${far.dateStr} 周日 20:00-21:00`
+  });
+  assert(parsed, 'schedule-only booking must parse');
+  assert.strictEqual(parsed.timeStart, '20:00');
+  assert.strictEqual(parsed.date, far.dateStr);
+
+  const farSchedule = nextSundayAtLeast(12);
+  const scheduleOnly = db.addBooking({
+    mentorId: mentor.id,
+    tutorId: mentor.id,
+    tutorName: mentor.realName || '导师',
+    parentId: parent.id,
+    parentPhone: parent.phone,
+    studentNickname: parent.studentNickname || '学员',
+    studentGrade: parent.studentGrade || '初三',
+    subject: '物理',
+    space: '青羊金沙文化微网点',
+    schedule: `${farSchedule.dateStr} 周日 19:00-21:00`,
+    sessionDate: farSchedule.dateStr,
+    hours: 2,
+    weekday: 0,
+    time: '19:00',
+    sessions: []
+  });
+  assert(scheduleOnly && scheduleOnly.id, scheduleOnly && scheduleOnly.error || 'schedule-only booking');
+  db.updateBooking(scheduleOnly.id, { sessions: [] }, { trust: 'admin' });
+  const scheduleOnlyCancel = db.validateParentCancelBooking(scheduleOnly.id, parent);
+  assert(scheduleOnlyCancel.ok, scheduleOnlyCancel.error || 'schedule-only cancel must not TypeError');
+
+  const farUnpaid = nextSundayAtLeast(19);
+  const unpaid = db.addBooking({
+    mentorId: mentor.id,
+    tutorId: mentor.id,
+    tutorName: mentor.realName || '导师',
+    parentId: parent.id,
+    parentPhone: parent.phone,
+    studentNickname: parent.studentNickname || '学员',
+    studentGrade: parent.studentGrade || '初三',
+    subject: '物理',
+    space: '青羊金沙文化微网点',
+    schedule: `${farUnpaid.dateStr} 周日 19:00-21:00`,
+    sessionDate: farUnpaid.dateStr,
+    hours: 2,
+    weekday: 0,
+    time: '19:00',
+    sessions: [
+      {
+        date: farUnpaid.dateStr,
+        weekday: 0,
+        timeStart: '19:00',
+        timeEnd: '21:00',
+        status: 'scheduled'
+      }
+    ]
+  });
+  assert(unpaid && unpaid.id, unpaid && unpaid.error || 'unpaid booking');
+  const unpaidCancel = db.parentCancelBooking(unpaid.id, parent);
+  assert(unpaidCancel.ok, unpaidCancel.error || 'unpaid cancel should succeed');
+  assert.strictEqual(unpaidCancel.booking.escrowStatus, 'pending_payment');
+  assert.strictEqual(unpaidCancel.booking.paymentStatus, 'unpaid');
 
   console.log('=== parent cancel tests passed ===');
 }

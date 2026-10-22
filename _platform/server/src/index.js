@@ -636,6 +636,11 @@ function applyWeChatPaySuccess(payOrder, result) {
     return { ok: false, http: 404, message: '订单不存在' };
   }
   if (payOrder.status === 'SUCCESS') {
+    wechatPay.markOrderPaid(payOrder.outTradeNo, {
+      transactionId: result.transactionId || payOrder.transactionId,
+      successTime: result.successTime || payOrder.successTime,
+      amount: result.amount || payOrder.amount
+    });
     return { ok: true, idempotent: true };
   }
   if (!amountsMatchFen(payOrder.amount, result.amount)) {
@@ -649,6 +654,11 @@ function applyWeChatPaySuccess(payOrder, result) {
     status: 'SUCCESS',
     transactionId: result.transactionId,
     successTime: result.successTime || new Date().toISOString()
+  });
+  wechatPay.markOrderPaid(payOrder.outTradeNo, {
+    transactionId: result.transactionId,
+    successTime: result.successTime || new Date().toISOString(),
+    amount: result.amount || payOrder.amount
   });
   const booking = payOrder.bookingId
     ? db.getBookings().find((b) => b.id === payOrder.bookingId)
@@ -902,7 +912,9 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
         mock: !!result.mock,
         createTime: new Date().toISOString()
       });
-      wechatPay.registerMockOrder(payOrder);
+      if (payOrder.mock) {
+        wechatPay.registerMockOrder(payOrder);
+      }
     }
     
     ok(res, Object.assign({}, result, { amountFen, amountYuan: payable.amountYuan }));
@@ -1456,16 +1468,15 @@ app.post('/api/bookings/:id/cancel', requireAuth, async (req, res) => {
   }
 
   const notifyPhone = booking.parentPhone || (parentRef && parentRef.phone);
-  if (notifyPhone) {
+  // 仅真实/ mock 已支付并完成退款时发「退款将原路退回」；未支付撤销不得误导家长
+  if (notifyPhone && bookingSmsNotify.shouldSendRefundSmsOnCancel(refundNotice, booking)) {
     try {
       await sms.sendRefundNotification(notifyPhone, {
         subject: booking.subject || '课程',
         schedule: booking.schedule || '',
-        amountYuan: refundNotice && refundNotice.amountYuan != null
-          ? refundNotice.amountYuan
-          : booking.amount,
+        amountYuan: refundNotice.amountYuan != null ? refundNotice.amountYuan : booking.amount,
         reason: '家长开课前撤销',
-        refunded: !!(payOrder && payOrder.outTradeNo)
+        refunded: true
       });
     } catch (error) {
       console.error('[Cancel Refund SMS Error]', error);
