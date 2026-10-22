@@ -573,7 +573,7 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-[11px] font-bold text-slate-600 mb-1">固定星期</label>
-              <select id="weeklyWeekday" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="updateBookingCost()">
+              <select id="weeklyWeekday" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="onWeeklyWeekdayChange()">
                 <option value="1">周一</option>
                 <option value="2">周二</option>
                 <option value="3" selected>周三</option>
@@ -1657,50 +1657,133 @@
 
     function onBookingDurationChange() {
       generateBookingDateSlots();
+      syncWeeklyAvailabilityOptions();
       updateBookingCost();
+    }
+
+    function onWeeklyWeekdayChange() {
+      syncWeeklyTimeOptions();
+      updateBookingCost();
+    }
+
+    function syncWeeklyAvailabilityOptions() {
+      const wdEl = document.getElementById('weeklyWeekday');
+      if (!wdEl) return;
+      const hours = getSelectedBookingHours();
+      const mentorAvail = bookingMentorAvailability();
+      const avail = mentorAvail.length ? mentorAvail : defaultAvailabilityWindows();
+      const windows = (window.StorageService && StorageService.bookableWindowsFromAvailability)
+        ? StorageService.bookableWindowsFromAvailability(avail, hours)
+        : [];
+      const prevWd = wdEl.value;
+      const weekdays = [];
+      const seen = {};
+      windows.forEach(function (w) {
+        if (seen[w.weekday]) return;
+        seen[w.weekday] = true;
+        weekdays.push({ value: String(w.weekday), label: w.weekdayLabel });
+      });
+      if (!weekdays.length) {
+        weekdays.push(
+          { value: '1', label: '周一' }, { value: '2', label: '周二' }, { value: '3', label: '周三' },
+          { value: '4', label: '周四' }, { value: '5', label: '周五' }, { value: '6', label: '周六' },
+          { value: '0', label: '周日' }
+        );
+      }
+      const keepWd = weekdays.some(function (d) { return d.value === prevWd; }) ? prevWd : weekdays[0].value;
+      wdEl.innerHTML = weekdays.map(function (d) {
+        return '<option value="' + d.value + '"' + (d.value === keepWd ? ' selected' : '') + '>' + d.label + '</option>';
+      }).join('');
+      wdEl.value = keepWd;
+      syncWeeklyTimeOptions();
+    }
+
+    function syncWeeklyTimeOptions() {
+      const tmEl = document.getElementById('weeklyTime');
+      const wdEl = document.getElementById('weeklyWeekday');
+      if (!tmEl || !wdEl) return;
+      const hours = getSelectedBookingHours();
+      const mentorAvail = bookingMentorAvailability();
+      const avail = mentorAvail.length ? mentorAvail : defaultAvailabilityWindows();
+      const wd = parseInt(wdEl.value, 10);
+      const windows = (window.StorageService && StorageService.bookableWindowsFromAvailability)
+        ? StorageService.bookableWindowsFromAvailability(avail, hours).filter(function (w) { return w.weekday === wd; })
+        : [];
+      const prev = tmEl.value;
+      let options = windows.map(function (w) {
+        return { value: w.timeStart, label: w.timeStart + ' – ' + w.timeEnd };
+      });
+      if (!options.length) {
+        ['09:00', '10:00', '14:00', '16:00', '18:30', '19:00', '19:30'].forEach(function (t) {
+          options.push({ value: t, label: t });
+        });
+      }
+      const keep = options.some(function (o) { return o.value === prev; }) ? prev : options[0].value;
+      tmEl.innerHTML = options.map(function (o) {
+        return '<option value="' + o.value + '"' + (o.value === keep ? ' selected' : '') + '>' + o.label + '</option>';
+      }).join('');
+      tmEl.value = keep;
+    }
+
+    function bookingMentorId() {
+      const tutor = selectedTutorForBooking;
+      if (!tutor) return '';
+      return tutor.mentorId || tutor.id || '';
+    }
+
+    function bookingMentorAvailability() {
+      const mentorId = bookingMentorId();
+      if (mentorId && window.StorageService && StorageService.getMentorAvailability) {
+        const avail = StorageService.getMentorAvailability(mentorId);
+        if (Array.isArray(avail) && avail.length) return avail;
+      }
+      const tutor = selectedTutorForBooking || {};
+      if (Array.isArray(tutor.availability) && tutor.availability.length) return tutor.availability;
+      return [];
+    }
+
+    function defaultAvailabilityWindows() {
+      const labels = (window.StorageService && StorageService.DEFAULT_SLOTS) || [
+        '周六 09:00-11:00', '周六 14:00-16:00', '周日 09:00-11:00', '周日 19:00-21:00', '周三 19:00-21:00'
+      ];
+      const wdMap = { '周日': 0, '周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6 };
+      const byDay = {};
+      labels.forEach(function (raw) {
+        const s = String(raw || '').trim();
+        let wd = null;
+        Object.keys(wdMap).forEach(function (name) {
+          if (s.indexOf(name) === 0) wd = wdMap[name];
+        });
+        const m = s.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+        if (wd == null || !m) return;
+        if (!byDay[wd]) byDay[wd] = [];
+        byDay[wd].push({ start: m[1], end: m[2] });
+      });
+      return Object.keys(byDay).map(function (k) {
+        return { weekday: parseInt(k, 10), ranges: byDay[k] };
+      });
     }
 
     function generateBookingDateSlots() {
       const container = document.getElementById('bookingDateSlots');
       if (!container) return;
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const hours = getSelectedBookingHours();
-      // 保留原选中的「日期标签 + 开始时刻」，时长变化时只重算结束时间
       const prev = document.querySelector('input[name="bookingDate"]:checked');
       const prevDay = prev ? (prev.getAttribute('data-day-label') || '') : '';
       const prevStart = prev ? (prev.getAttribute('data-time-start') || '') : '';
+      const mentorAvail = bookingMentorAvailability();
+      const avail = mentorAvail.length ? mentorAvail : defaultAvailabilityWindows();
 
-      // 候选开始时刻模板（来自导师常见可约窗口）；结束时刻随所选时长自动伸缩
-      const candidates = [];
-      for (let i = 0; i < 14; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        const dow = d.getDay();
-        let timeStart = null;
-        let kind = '';
-        if (dow === 6) { timeStart = '10:00'; kind = 'weekend-am'; }
-        else if (dow === 0) { timeStart = '14:30'; kind = 'weekend-pm'; }
-        else if (dow === 3 || dow === 5) { timeStart = '18:30'; kind = 'weekday-eve'; }
-        if (!timeStart) continue;
-        const timeEnd = addHoursToTimeLabel(timeStart, hours);
-        const timeLabel = timeStart + ' – ' + timeEnd;
-        const y = d.getFullYear();
-        const mo = String(d.getMonth() + 1).padStart(2, '0');
-        const da = String(d.getDate()).padStart(2, '0');
-        const isoDate = y + '-' + mo + '-' + da;
-        candidates.push({ date: d, isoDate: isoDate, timeLabel: timeLabel, timeStart: timeStart, timeEnd: timeEnd, kind: kind });
+      let usable = [];
+      if (window.StorageService && StorageService.upcomingDateSlotsFromAvailability) {
+        usable = StorageService.upcomingDateSlotsFromAvailability(avail, hours, { days: 14, limit: 6 });
       }
-      // 过滤已过去的时段（同日且结束时间已过）
-      const usable = candidates.filter(c => {
-        const end = new Date(c.date);
-        const [eh, em] = c.timeEnd.split(':').map(Number);
-        end.setHours(eh, em, 0, 0);
-        return end.getTime() > now.getTime();
-      }).slice(0, 3);
 
       if (usable.length === 0) {
-        container.innerHTML = '<div class="col-span-3 text-[11px] text-slate-500 text-center py-2">暂无可用时段，请稍后再试</div>';
+        const msg = mentorAvail.length
+          ? '当前时长无法落入该导师可约窗口，请改为 1 小时或更换导师'
+          : '暂无可用时段，请稍后再试';
+        container.innerHTML = '<div class="col-span-3 text-[11px] text-slate-500 text-center py-2">' + msg + '</div>';
         return;
       }
 
@@ -1709,13 +1792,14 @@
 
       container.innerHTML = usable.map((c, idx) => {
         const label = formatSlotLabel(c.date);
-        const value = label + ' ' + c.timeLabel;
+        const timeLabel = c.timeStart + ' – ' + c.timeEnd;
+        const value = label + ' ' + timeLabel;
         const checked = idx === matchedIdx ? 'checked' : '';
         return (
           '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
-            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-date="' + c.isoDate + '" data-time-label="' + c.timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
+            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-date="' + c.isoDate + '" data-time-label="' + timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
             '<div class="font-bold">' + label + '</div>' +
-            '<div class="text-[10px] text-slate-400">' + c.timeLabel + '</div>' +
+            '<div class="text-[10px] text-slate-400">' + timeLabel + '</div>' +
           '</label>'
         );
       }).join('');
@@ -1747,6 +1831,7 @@
       if (typeOne) typeOne.checked = true;
       onBookingTypeChange();
       generateBookingDateSlots();
+      syncWeeklyAvailabilityOptions();
       refreshBookingBoothOptions();
       hideEscrowSummary();
       updateBookingCost();
@@ -1809,6 +1894,7 @@
         }
       }
       generateBookingDateSlots();
+      syncWeeklyAvailabilityOptions();
       updateBookingCost();
     }
 
@@ -1991,6 +2077,14 @@
       if (meta.type === 'weekly' && (!meta.sessions || !meta.sessions.length)) {
         showToast('未能生成每周课次，请重选档期', 'warning');
         return;
+      }
+      const mentorId = selectedTutorForBooking && (selectedTutorForBooking.mentorId || selectedTutorForBooking.id);
+      if (mentorId && window.StorageService && StorageService.sessionFitsMentorAvailability && meta.sessions && meta.sessions.length) {
+        const tutorAvail = selectedTutorForBooking && selectedTutorForBooking.availability;
+        if (!StorageService.sessionFitsMentorAvailability(mentorId, meta.sessions, tutorAvail)) {
+          showToast('所选时段不在导师可约时间内，请调整时间或更换导师', 'warning');
+          return;
+        }
       }
       // 试课：每位导师同一学科仅一次
       if (meta.type === 'trial' && window.StorageService) {
@@ -2192,6 +2286,13 @@
             const parent = CURRENT_PARENT || StorageService.getCurrentParent();
             const bookingType = meta.type || 'one_off';
             assessmentSubject = (tutor.subjects && tutor.subjects[0]) || '学科辅导';
+            if (mentorId && StorageService.sessionFitsMentorAvailability && meta.sessions && meta.sessions.length) {
+              const tutorAvail = tutor && tutor.availability;
+              if (!StorageService.sessionFitsMentorAvailability(mentorId, meta.sessions, tutorAvail)) {
+                showToast('所选时段不在导师可约时间内，请调整时间或更换导师', 'warning');
+                return;
+              }
+            }
             createdBooking = await StorageService.addBooking({
               mentorId: mentorId,
               tutorId: mentorId,

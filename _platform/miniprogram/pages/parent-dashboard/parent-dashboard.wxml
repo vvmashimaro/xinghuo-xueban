@@ -279,7 +279,8 @@
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
       <view class="section-h">选择时段</view>
-      <radio-group bindchange="onSlot">
+      <view class="muted" wx:if="{{slotsEmptyText}}" style="margin-bottom:12rpx;">{{slotsEmptyText}}</view>
+      <radio-group bindchange="onSlot" wx:if="{{slots.length}}">
         <label class="pace-row" wx:for="{{slots}}" wx:key="value">
           <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#0d9488" />
           <text>{{item.label}}</text>

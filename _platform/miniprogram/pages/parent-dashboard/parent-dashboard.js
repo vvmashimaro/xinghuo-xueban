@@ -1,4 +1,5 @@
 const Storage = require('../../utils/storage');
+const Avail = require('../../utils/mentor-availability');
 const { showToast } = require('../../utils/toast');
 const appConfig = require('../../utils/config');
 
@@ -65,6 +66,7 @@ Page({
     bookingTutor: {},
     slots: [],
     selectedSlot: '',
+    slotsEmptyText: '',
     hours: 2,
     spaces: Storage.SPACE_OPTIONS || ['青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'],
     spaceIndex: 0,
@@ -113,8 +115,8 @@ Page({
   async reload() {
     if (Storage.ready) await Storage.ready();
     Storage.seedIfEmpty();
-    const parent = Storage.getCurrentParent();
-    if (!parent) {
+    const parent = await Storage.getCurrentParent();
+    if (!parent || !parent.id) {
       showToast('请先完成学情建档', 'warning');
       wx.reLaunch({ url: '/pages/parent-register/parent-register?mode=create' });
       return;
@@ -360,14 +362,33 @@ Page({
   },
 
   buildSlots() {
-    const slots = (Storage.DEFAULT_SLOTS || [
+    const tutor = this.data.bookingTutor || {};
+    const mentorId = tutor.mentorId || tutor.id;
+    let availability = [];
+    if (mentorId && Storage.getMentorAvailability) {
+      availability = Storage.getMentorAvailability(mentorId) || [];
+    }
+    if ((!availability || !availability.length) && Array.isArray(tutor.availability)) {
+      availability = tutor.availability;
+    }
+    const hours = Number(this.data.hours) || 2;
+    if (availability && availability.length) {
+      return Avail.bookableWindowsFromAvailability(availability, hours).map((w) => ({
+        value: w.label,
+        label: w.label,
+        weekday: w.weekday,
+        timeStart: w.timeStart,
+        timeEnd: w.timeEnd
+      }));
+    }
+    const fallback = Storage.DEFAULT_SLOTS || [
       '周六 09:00-11:00',
       '周六 14:00-16:00',
       '周日 09:00-11:00',
       '周日 19:00-21:00',
       '周三 19:00-21:00'
-    ]).map((s) => ({ value: s, label: s }));
-    return slots;
+    ];
+    return fallback.map((s) => ({ value: s, label: s }));
   },
 
   openBooking(e) {
@@ -386,7 +407,6 @@ Page({
     const tutor = this.data.tutors.find((t) => t.mentorId === id)
       || this.data.topTutors.find((t) => t.mentorId === id);
     if (!tutor) return;
-    const slots = this.buildSlots();
     const spaces = this.data.spaces;
     let spaceIndex = spaces.indexOf(tutor.space);
     if (spaceIndex < 0 && this._parent && this._parent.selectedSpace) {
@@ -396,13 +416,11 @@ Page({
     this.setData({
       bookingShow: true,
       bookingTutor: tutor,
-      slots,
-      selectedSlot: slots[0].value,
       hours: 2,
       spaceIndex,
       escrowShow: false,
       escrowAmount: (tutor.hourlyRate * 2).toFixed(2)
-    });
+    }, () => this.refreshSlotOptions());
   },
 
   closeBooking() {
@@ -412,7 +430,23 @@ Page({
     this.setData({ selectedSlot: e.detail.value }, () => this.refreshEscrowAmount());
   },
   onHours(e) {
-    this.setData({ hours: Number(e.detail.value) }, () => this.refreshEscrowAmount());
+    this.setData({ hours: Number(e.detail.value) }, () => {
+      this.refreshSlotOptions();
+      this.refreshEscrowAmount();
+    });
+  },
+  refreshSlotOptions() {
+    const slots = this.buildSlots();
+    const prev = this.data.selectedSlot;
+    const keep = slots.some((s) => s.value === prev);
+    const emptyText = slots.length
+      ? ''
+      : '当前时长无法落入该导师可约窗口，请改为 1 小时或更换导师';
+    this.setData({
+      slots,
+      selectedSlot: keep ? prev : (slots[0] ? slots[0].value : ''),
+      slotsEmptyText: emptyText
+    });
   },
   onBookSpace(e) {
     this.setData({ spaceIndex: Number(e.detail.value) });
@@ -446,10 +480,36 @@ Page({
       if (s.indexOf(name) >= 0) weekday = wdMap[name];
     });
     const m = s.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
-    const timeStart = m ? m[1] : '14:00';
-    const timeEnd = m ? m[2] : timeStart;
+    const pad = (t) => {
+      const p = String(t || '').split(':');
+      return String(p[0] || '0').padStart(2, '0') + ':' + String(p[1] || '00').padStart(2, '0');
+    };
+    const timeStart = pad(m ? m[1] : '14:00');
+    let timeEnd = pad(m ? m[2] : timeStart);
+    if (hours && Avail.timeToMinutes) {
+      const startMins = Avail.timeToMinutes(timeStart);
+      timeEnd = Avail.minutesToTime(startMins + Math.max(1, Number(hours) || 2) * 60);
+    }
+    let date = '';
+    if (weekday !== '') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        if (d.getDay() === weekday) {
+          const y = d.getFullYear();
+          const mo = String(d.getMonth() + 1).padStart(2, '0');
+          const da = String(d.getDate()).padStart(2, '0');
+          date = y + '-' + mo + '-' + da;
+          break;
+        }
+      }
+    }
     return [{
+      date,
       weekday,
+      weekdayLabel: s.slice(0, 2),
       timeStart,
       timeEnd,
       timeLabel: timeStart + '-' + timeEnd
@@ -466,11 +526,27 @@ Page({
 
   async confirmBook() {
     const tutor = this.data.bookingTutor;
-    const parent = this._parent || Storage.getCurrentParent();
+    const parent = this._parent && this._parent.id
+      ? this._parent
+      : await Storage.getCurrentParent();
+    if (!parent || !parent.id) {
+      showToast('请先完成学情建档', 'warning');
+      return;
+    }
+    this._parent = parent;
     const hours = Number(this.data.hours) || 2;
     const space = this.data.spaces[this.data.spaceIndex];
     const slot = this.data.selectedSlot;
+    if (!slot) {
+      showToast('请选择导师可约时段', 'warning');
+      return;
+    }
     const sessions = this._sessionsFromSlot(slot, hours);
+    const mentorId = tutor.mentorId || tutor.id;
+    if (Storage.sessionFitsMentorAvailability && !Storage.sessionFitsMentorAvailability(mentorId, sessions, tutor.availability)) {
+      showToast('所选时段不在导师可约时间内，请调整时间或更换导师', 'error');
+      return;
+    }
 
     const booking = await Storage.addBooking({
       mentorId: tutor.mentorId,
