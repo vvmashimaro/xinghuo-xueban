@@ -1168,13 +1168,20 @@ const StorageService = {
     const opts = options || {};
     const maxMs = Number(opts.maxMs) > 0 ? Number(opts.maxMs) : 90000;
     const intervalMs = Number(opts.intervalMs) > 0 ? Number(opts.intervalMs) : 1500;
+    const shouldAbort = typeof opts.shouldAbort === 'function' ? opts.shouldAbort : null;
     const started = Date.now();
     while (Date.now() - started < maxMs) {
+      if (shouldAbort && shouldAbort()) {
+        return { success: false, aborted: true, userDeferred: true, error: '已取消等待支付确认' };
+      }
       const result = await this.syncPaymentStatus(outTradeNo);
       if (result && (result.paid || result.status === 'SUCCESS')) {
         return Object.assign({ success: true }, result);
       }
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+    if (shouldAbort && shouldAbort()) {
+      return { success: false, aborted: true, userDeferred: true, error: '已取消等待支付确认' };
     }
     return { success: false, error: '支付确认超时，请稍后在「我的预约」查看' };
   }

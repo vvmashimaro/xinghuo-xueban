@@ -1,17 +1,27 @@
-/* 星火学伴 · 全局设计令牌 (teal / slate) */
+/* 星火学伴 · 全局设计令牌 (teal / slate · danger=rose) */
 page {
   --color-primary: #0d9488;
   --color-primary-dark: #0f766e;
+  --color-primary-soft: #f0fdfa;
+  --color-primary-border: #99f6e4;
   --color-slate-900: #0f172a;
   --color-slate-800: #1e293b;
+  --color-slate-600: #475569;
   --color-slate-500: #64748b;
   --color-surface: #f8fafc;
   --color-surface-2: #f1f5f9;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #e11d48;
+  --color-danger-soft: #fff1f2;
+  --color-danger-text: #be123c;
+  --color-wechat: #07c160;
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
   background: var(--color-surface);
   color: var(--color-slate-800);
+  font-family: var(--font-sans);
   font-size: 28rpx;
   line-height: 1.5;
   box-sizing: border-box;
@@ -33,6 +43,17 @@ view, text, button, input, textarea, picker, label, scroll-view {
   padding-top: 24rpx;
 }
 
+.match-banner-compact {
+  padding: calc(12rpx + env(safe-area-inset-top)) 28rpx 12rpx;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.match-banner-go { color: #5eead4; font-weight: 700; }
 .match-banner-wrap {
   padding-top: env(safe-area-inset-top);
   background: linear-gradient(180deg, #0f172a 0%, #f8fafc 72%);
@@ -287,8 +308,8 @@ view, text, button, input, textarea, picker, label, scroll-view {
 }
 
 .muted {
-  color: var(--color-slate-500);
-  font-size: 22rpx;
+  color: var(--color-slate-600);
+  font-size: 24rpx;
 }
 
 .btn-primary {
@@ -391,7 +412,8 @@ textarea {
 }
 .badge-pending { background: #fef3c7; color: #b45309; border-color: #fde68a; }
 .badge-approved { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
-.badge-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+.badge-rejected { background: var(--color-danger-soft); color: var(--color-danger-text); border-color: #fecdd3; }
+.badge-cancelled { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
 .badge-supplement { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
 .badge-teal { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
 
@@ -485,8 +507,8 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: 12rpx;
-  font-size: 22rpx;
-  color: #475569;
+  font-size: 24rpx;
+  color: var(--color-slate-600);
   line-height: 1.5;
   padding: 8rpx;
   min-height: 56rpx;

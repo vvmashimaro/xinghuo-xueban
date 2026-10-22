@@ -99,9 +99,13 @@
         <input class="input" type="number" placeholder="例：621483********8000" placeholder-class="input-placeholder" value="{{form.bankCardNumber}}" data-k="bankCardNumber" bindinput="onField" />
       </view>
 
-      <view class="check-row field" bindtap="onTogglePrivacy">
-        <view class="check-box {{form.privacy?'on':''}}">{{form.privacy?'✓':''}}</view>
-        <text>同意《个人信息保护与法定核查授权条款》，授权学信网/公安三要素核验</text>
+      <view class="consent-card field">
+        <view class="consent-title">《个人信息保护与法定核查授权条款》 <text class="consent-req">* 必选</text></view>
+        <view class="consent-desc">为履行教育合规审查、实名与学籍资质审核及课酬结算职责，在您自愿提交入驻申请期间，平台将严格根据《中华人民共和国个人信息保护法》<text class="consent-emph">脱敏传输与加密存储您的相关信息。</text></view>
+        <view class="check-row" bindtap="onTogglePrivacy">
+          <view class="check-box {{form.privacy?'on':''}}">{{form.privacy?'✓':''}}</view>
+          <text class="consent-line">我已阅读并完全同意《个人信息查询授权协议》，授权平台将本人姓名、身份证号码及学籍编号用于依法开展的身份与学籍资质核验及课酬结算所需的一致性核对。</text>
+        </view>
       </view>
 
       <view class="progress-box">

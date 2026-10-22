@@ -211,7 +211,7 @@
     const recentBk = state.bookings.slice(0, 5);
     return (
       '<div class="space-y-6">' +
-      '<h1 class="text-2xl font-black text-slate-900">运营总览</h1>' +
+      '<h1 class="text-xl font-semibold text-slate-900">运营总览</h1>' +
       '<div class="grid sm:grid-cols-3 gap-4">' +
       cardStat('待审核导师', pending, 'amber') +
       cardStat('待处理反馈', openFb, 'blue') +
@@ -248,7 +248,7 @@
       bg +
       '"><div class="text-xs font-medium opacity-80">' +
       esc(title) +
-      '</div><div class="text-3xl font-black mt-1">' +
+      '</div><div class="text-2xl font-semibold mt-1">' +
       value +
       '</div></div>'
     );
@@ -281,7 +281,7 @@
     if (sel) {
       detail =
         '<div class="space-y-3">' +
-        '<h2 class="text-xl font-black">' +
+        '<h2 class="text-lg font-semibold">' +
         esc(sel.realName) +
         ' <span class="text-sm font-normal text-slate-500">' +
         esc(sel.code) +
@@ -322,7 +322,7 @@
       })
       .join('');
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">导师审核工作台</h1>' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">导师审核工作台</h1>' +
       '<div class="flex flex-wrap gap-2">' +
       tabs +
       '</div>' +
@@ -353,13 +353,13 @@
       return matchesSubjectTag(subs + ' ' + (p.studentGrade || ''), tag);
     });
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">家长用户</h1>' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">家长用户</h1>' +
       subjectFilterBarHtml() +
       '<input id="parentSearch" placeholder="手机号 / 姓名" class="border border-slate-300 rounded-xl px-3 py-2 text-sm w-full max-w-xs" value="' +
       esc(needle) +
       '"/>' +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学员</th><th class="text-left p-3">目标学科</th></tr></thead><tbody>' +
+      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学员</th><th class="text-left p-3">目标学科</th></tr></thead><tbody>' +
       rows
         .map(
           (p) =>
@@ -382,10 +382,10 @@
 
   function renderMentorsList() {
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">导师用户</h1>' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">导师用户</h1>' +
       subjectFilterBarHtml() +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
+      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
       state.mentors
         .filter((m) => {
           const tag = state.subjectTagFilter;
@@ -442,14 +442,14 @@
     });
     return (
       '<div class="space-y-4"><div class="flex flex-wrap items-center justify-between gap-3">' +
-      '<h1 class="text-2xl font-black">预约订单</h1>' +
+      '<h1 class="text-xl font-semibold">预约订单</h1>' +
       '<button type="button" id="btnProcessEscrow" class="text-sm bg-slate-900 text-white px-4 py-2 rounded-xl font-bold">执行托管释放扫描</button></div>' +
       subjectFilterBarHtml() +
       '<div class="flex flex-wrap gap-2">' +
       filters +
       '</div>' +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto">' +
-      '<table class="w-full text-sm min-w-[960px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
+      '<table class="admin-dense w-full text-sm min-w-[960px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
       '<th class="text-left p-3">ID</th><th class="text-left p-3">学科</th><th class="text-left p-3">导师</th><th class="text-left p-3">教学点/仓位</th><th class="text-left p-3">冲突</th><th class="text-left p-3">状态</th><th class="text-left p-3">支付</th><th class="text-left p-3">托管</th></tr></thead><tbody>' +
       (list.length
         ? list
@@ -538,7 +538,7 @@
     }
     return (
       '<div class="space-y-6">' +
-      '<h1 class="text-2xl font-black">教学点仓位管理</h1>' +
+      '<h1 class="text-xl font-semibold">教学点仓位管理</h1>' +
       '<p class="text-sm text-slate-500">默认每网点 3 个编号仓位；缩减仓位前须确保无有效预约占用将被移除的仓位。智能仓 IoT 功能保持关闭。</p>' +
       '<div class="space-y-4">' +
       tps
@@ -613,7 +613,7 @@
 
   function renderContracts() {
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">合约</h1>' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">合约</h1>' +
       '<div class="bg-white border border-slate-200 rounded-2xl p-4 text-sm space-y-2">' +
       (state.contracts.length
         ? state.contracts
@@ -635,7 +635,7 @@
 
   function renderAssessments() {
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">学情测评</h1>' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">学情测评</h1>' +
       '<div class="bg-white border border-slate-200 rounded-2xl p-4 text-sm space-y-2">' +
       (state.assessments.length
         ? state.assessments
@@ -660,7 +660,7 @@
   function renderPayments() {
     return (
       '<div class="space-y-4"><div class="flex flex-wrap items-center justify-between gap-3">' +
-      '<h1 class="text-2xl font-black">支付订单</h1>' +
+      '<h1 class="text-xl font-semibold">支付订单</h1>' +
       '<button type="button" id="btnReloadPay" class="text-sm border border-slate-300 px-3 py-2 rounded-xl">刷新</button></div>' +
       '<div id="payTableWrap" class="text-sm text-slate-500">加载中…</div></div>'
     );
@@ -673,7 +673,7 @@
       const res = await AdminApi.listPayOrders({ limit: 100 });
       state.payOrders = res.orders || [];
       wrap.innerHTML =
-        '<div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto"><table class="w-full min-w-[720px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
+        '<div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto"><table class="admin-dense w-full min-w-[720px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
         '<th class="text-left p-3">商户单号</th><th class="text-left p-3">预约</th><th class="text-left p-3">金额(分)</th><th class="text-left p-3">状态</th><th class="text-left p-3">创建</th><th></th></tr></thead><tbody>' +
         state.payOrders
           .map((o) => {
@@ -724,7 +724,7 @@
       })
       .join('');
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">反馈与投诉</h1><div class="flex flex-wrap gap-2">' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">反馈与投诉</h1><div class="flex flex-wrap gap-2">' +
       filters +
       '</div><div class="space-y-3">' +
       (filtered.length
@@ -779,7 +779,7 @@
   function renderSystem() {
     const wh = !!state.flags.FEATURE_SMART_WAREHOUSE;
     return (
-      '<div class="space-y-4"><h1 class="text-2xl font-black">系统 · 功能开关</h1>' +
+      '<div class="space-y-4"><h1 class="text-xl font-semibold">系统 · 功能开关</h1>' +
       '<div class="bg-white border border-slate-200 rounded-2xl p-5 max-w-lg">' +
       '<label class="flex items-center justify-between gap-4 cursor-pointer">' +
       '<span><span class="font-bold block">智能教学仓 (FEATURE_SMART_WAREHOUSE)</span>' +

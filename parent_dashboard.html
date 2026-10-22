@@ -8,28 +8,10 @@
   <title>星火学伴 - 家长/学员主控中心与导师智能匹配平台</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="css/tokens.css">
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdfa',
-              100: '#ccfbf1',
-              200: '#99f6e4',
-              500: '#14b8a6',
-              600: '#0d9488',
-              700: '#0f766e',
-              800: '#115e59',
-              900: '#134e4a',
-            }
-          }
-        }
-      }
-    }
-  </script>
   <style>
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -58,24 +40,11 @@
       100% { background-position: -200% 0; }
     }
 
-    /* 复选/单选选项字号加大，便于阅读 */
-    label:has(> input[type="checkbox"]),
-    label:has(> input[type="radio"]),
-    label.subject-tag,
-    .opt-chip-label {
-      font-size: 16px !important;
-      line-height: 1.4;
-    }
-    label:has(> input[type="checkbox"]) span,
-    label:has(> input[type="radio"]) span {
-      font-size: 16px !important;
-      line-height: 1.4;
-    }
-    input[type="checkbox"] + span,
-    input[type="checkbox"] ~ span {
-      font-size: 16px !important;
-      line-height: 1.45;
-    }
+    .booking-mode-card > span:first-of-type { font-size: 14px; }
+    .booking-mode-card > span:last-of-type { font-size: 12px; line-height: 1.4; }
+    .matching-banner-compact { display: none; }
+    .matching-banner-compact.is-on { display: block; }
+    [data-matching-banner].is-compact { display: none; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
@@ -148,7 +117,17 @@
     </div>
   </header>
 
-  <section data-matching-banner class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
+  <section data-matching-banner-compact class="matching-banner-compact is-on bg-slate-900 text-white border-b border-teal-900/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
+      <p class="text-sm text-slate-200">
+        已为您精准召回 <strong id="matchRecallCountCompact" class="text-teal-300">0</strong> 位 &gt;95% 契合度导师
+      </p>
+      <button type="button" onclick="goDiscoverTab()" class="text-sm font-semibold text-teal-300 hover:text-white shrink-0 cursor-pointer">
+        去查看 →
+      </button>
+    </div>
+  </section>
+  <section data-matching-banner class="hidden is-compact bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
     <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto relative z-10 space-y-4">
 
@@ -201,6 +180,7 @@
         <button type="button" data-filter="accepted" onclick="setParentBookingFilter('accepted', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
         <button type="button" data-filter="completed" onclick="setParentBookingFilter('completed', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
         <button type="button" data-filter="declined" onclick="setParentBookingFilter('declined', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
+        <button type="button" data-filter="cancelled" onclick="setParentBookingFilter('cancelled', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已取消</button>
       </div>
       <div id="parentBookingsList" class="space-y-2.5 text-xs">
         <div class="text-slate-400 text-center py-4">加载中…</div>
@@ -463,26 +443,39 @@
           </div>
         </div>
 
-        <!-- 智能微空间排期选择提示 -->
-        <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200/80 text-[11px] text-teal-950 flex items-center justify-between">
+        <!-- 线下网点 / 智能仓提示（随 FEATURE_SMART_WAREHOUSE 显隐） -->
+        <div class="hidden bg-teal-50/70 p-3 rounded-xl border border-teal-200/80 text-xs text-teal-950 flex items-center justify-between" data-warehouse-only>
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-cube text-teal-700 text-sm"></i>
             <div>
               <div class="font-bold">线下教学专属智能自习仓</div>
-              <div class="text-slate-500 text-[10px]">成都市青羊金沙、武侯望江、高新大源微网点均可自由排期</div>
+              <div class="text-slate-600 text-xs">成都市青羊金沙、武侯望江、高新大源微网点均可自由排期</div>
             </div>
           </div>
-          <span class="text-[10px] bg-teal-600 text-white px-2 py-0.5 rounded font-bold">支持单次试听</span>
+          <span class="text-xs bg-teal-700 text-white px-2 py-0.5 rounded font-bold">支持预约试课</span>
+        </div>
+        <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200/80 text-xs text-teal-950 flex items-center justify-between" data-warehouse-off>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-location-dot text-teal-700 text-sm"></i>
+            <div>
+              <div class="font-bold">线下合规教学网点</div>
+              <div class="text-slate-600 text-xs">成都市青羊金沙、武侯望江、高新大源微网点均可预约</div>
+            </div>
+          </div>
+          <span class="text-xs bg-teal-700 text-white px-2 py-0.5 rounded font-bold">首次试课免费</span>
         </div>
 
       </div>
 
       <!-- 弹窗底栏操作 -->
       <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
-        <div class="text-xs">
-          <span class="text-slate-400">试听单次预估：</span>
-          <span class="font-black text-slate-900 font-mono text-sm" id="modalEstimatedCost">¥135.00</span>
-          <span class="text-[10px] text-slate-400">(1小时 / 银行锁定)</span>
+        <div class="text-sm text-slate-600">
+          <span>首次试课：</span>
+          <span class="font-bold text-emerald-700">免费 (1h)</span>
+          <span class="mx-1 text-slate-400">·</span>
+          <span>正式课：</span>
+          <span class="font-black text-slate-900 font-mono" id="modalEstimatedCost">¥135</span>
+          <span class="text-xs text-slate-600">/h</span>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" onclick="closeTutorDetailModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">
@@ -543,20 +536,20 @@
         <div class="space-y-1.5">
           <label class="block font-bold text-slate-700">0. 约课模式</label>
           <div class="grid grid-cols-3 gap-2">
-            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="booking-mode-card border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="trial" class="hidden" onchange="onBookingTypeChange()">
-              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-gift text-teal-600"></i>试课</span>
-              <span class="text-[9px] text-emerald-700 font-medium leading-tight">首次试课 · 1小时免费</span>
+              <span class="flex items-center gap-1.5 font-bold text-sm"><i class="fa-solid fa-gift text-teal-600"></i>试课</span>
+              <span class="text-xs text-emerald-700 font-medium leading-tight">首次试课 · 1小时免费</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="booking-mode-card border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="one_off" checked class="hidden" onchange="onBookingTypeChange()">
-              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-day text-teal-600"></i>单次约课</span>
-              <span class="text-[9px] text-slate-500 font-medium leading-tight">适合特定知识点巩固答疑</span>
+              <span class="flex items-center gap-1.5 font-bold text-sm"><i class="fa-solid fa-calendar-day text-teal-600"></i>单次约课</span>
+              <span class="text-xs text-slate-600 font-medium leading-tight">按课时计费 · 专题巩固</span>
             </label>
-            <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+            <label class="booking-mode-card border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingType" value="weekly" class="hidden" onchange="onBookingTypeChange()">
-              <span class="flex items-center gap-1.5 font-bold text-[12px]"><i class="fa-solid fa-calendar-week text-teal-600"></i>每周固定</span>
-              <span class="text-[9px] text-slate-500 font-medium leading-tight">适合系统学习、强化</span>
+              <span class="flex items-center gap-1.5 font-bold text-sm"><i class="fa-solid fa-calendar-week text-teal-600"></i>每周固定</span>
+              <span class="text-xs text-slate-600 font-medium leading-tight">适合系统学习、强化</span>
             </label>
           </div>
           <div id="trialBookingHint" class="hidden text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed">
@@ -614,39 +607,39 @@
           <div id="mentorAvailabilityHints" class="hidden text-[10px] text-teal-800 bg-white/80 border border-teal-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
         </div>
 
-        <!-- 辅导日期与时段选择：左日期 / 右该日可约时段 -->
-        <div class="space-y-1.5" id="oneOffDatePanel">
-          <label class="block font-bold text-slate-700">1. 预约辅导日期与时间</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="bookingDateSlots">
-            <div>
-              <div class="text-[11px] font-bold text-slate-600 mb-1">选择日期</div>
-              <select id="bookingDateSelect" onchange="onBookingDateSelectChange()" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
-              </select>
-            </div>
-            <div>
-              <div class="text-[11px] font-bold text-slate-600 mb-1">可约时段</div>
-              <div id="bookingTimeSlots" class="grid grid-cols-1 gap-1.5 max-h-44 overflow-y-auto pr-0.5">
-              </div>
-            </div>
-          </div>
-          <p class="text-[10px] text-slate-400">仅展示该导师未来约两个月内的空闲档期；无空档日期不列出。</p>
-        </div>
-
-        <!-- 课时时长单选 -->
+        <!-- 课时时长单选（先选时长，再生成可约时段） -->
         <div class="space-y-1.5" id="bookingDurationPanel">
-          <label class="block font-bold text-slate-700">2. 单次辅导时长</label>
+          <label class="block font-bold text-slate-700">1. 单次辅导时长</label>
           <div class="grid grid-cols-2 gap-2">
             <label id="durLabel2h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingDuration" value="2" checked class="hidden" onchange="onBookingDurationChange()">
-              <span class="font-bold">2 小时 (推荐·专题突破)</span>
+              <span class="font-bold text-sm">2 小时 (推荐·专题突破)</span>
               <span class="text-teal-700 font-mono font-bold" id="labelCost2h">¥270</span>
             </label>
             <label id="durLabel1h" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
               <input type="radio" name="bookingDuration" value="1" class="hidden" onchange="onBookingDurationChange()">
-              <span class="font-bold">1 小时 (体验试听/答疑)</span>
+              <span class="font-bold text-sm">1 小时 (答疑 / 短课时)</span>
               <span class="text-teal-700 font-mono font-bold" id="labelCost1h">¥135</span>
             </label>
           </div>
+        </div>
+
+        <!-- 辅导日期与时段选择：左日期 / 右该日可约时段 -->
+        <div class="space-y-1.5" id="oneOffDatePanel">
+          <label class="block font-bold text-slate-700">2. 预约辅导日期与时间</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="bookingDateSlots">
+            <div>
+              <div class="text-xs font-bold text-slate-600 mb-1">选择日期</div>
+              <select id="bookingDateSelect" onchange="onBookingDateSelectChange()" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
+              </select>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-600 mb-1">可约时段</div>
+              <div id="bookingTimeSlots" class="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto pr-0.5">
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-600">仅展示该导师未来约两个月内的空闲档期；切换时长后将按新窗口重算。</p>
         </div>
 
         <!-- 线下上课网点 -->
@@ -694,6 +687,10 @@
           <div>预约时段：<strong id="escrowSumDate" class="text-slate-900">—</strong></div>
           <div class="col-span-2">教学空间：<strong id="escrowSumSpace" class="text-slate-900">—</strong></div>
           <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-sm">—</strong></div>
+          <div class="col-span-2 flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded bg-[#07c160] text-white inline-flex items-center justify-center text-[10px]"><i class="fa-brands fa-weixin"></i></span>
+            支付方式：<strong class="text-slate-900">微信支付 · 课次托管冻结</strong>
+          </div>
         </div>
         <p class="text-[10px] text-slate-500 leading-relaxed border-t border-teal-100 pt-1.5">
           <span class="hidden" data-warehouse-only>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
@@ -818,83 +815,6 @@
           已保存凭证，前往工作台
         </button>
       </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 支付方式选择 -->
-  <div id="paymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="paymentMethodContent">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-teal-600 text-white">
-        <div>
-          <h3 class="font-black text-sm">选择支付方式</h3>
-          <p class="text-[10px] text-blue-100/90 mt-0.5">托管资金将冻结至课程完成</p>
-        </div>
-        <button type="button" onclick="closePaymentMethodModal()" class="text-white/80 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      
-      <div class="px-5 py-4 space-y-3">
-        <!-- 金额摘要 -->
-        <div class="rounded-xl border border-teal-100 bg-teal-50/50 p-3 text-center">
-          <div class="text-[10px] text-slate-500 mb-1">托管金额</div>
-          <div class="text-2xl font-black text-teal-700 font-mono" id="paymentAmountDisplay">¥0.00</div>
-        </div>
-
-        <!-- 支付方式选项 -->
-        <div class="space-y-2">
-          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-emerald-300 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50">
-            <input type="radio" name="paymentMethod" value="微信支付" checked class="w-4 h-4 text-emerald-600">
-            <div class="flex items-center gap-2.5 flex-1">
-              <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <i class="fa-brands fa-weixin text-xl"></i>
-              </div>
-              <div>
-                <div class="text-sm font-bold text-slate-900">微信支付</div>
-                <div class="text-[10px] text-slate-500">快捷安全 · 即时到账</div>
-              </div>
-            </div>
-          </label>
-
-          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 opacity-50 cursor-not-allowed">
-            <input type="radio" name="paymentMethod" value="支付宝" disabled class="w-4 h-4 text-slate-400">
-            <div class="flex items-center gap-2.5 flex-1">
-              <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                <i class="fa-brands fa-alipay text-xl"></i>
-              </div>
-              <div>
-                <div class="text-sm font-bold text-slate-500">支付宝</div>
-                <div class="text-[10px] text-slate-400">即将开放</div>
-              </div>
-            </div>
-          </label>
-
-          <label class="payment-method-option flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 opacity-50 cursor-not-allowed">
-            <input type="radio" name="paymentMethod" value="银行卡" disabled class="w-4 h-4 text-slate-400">
-            <div class="flex items-center gap-2.5 flex-1">
-              <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                <i class="fa-solid fa-credit-card text-lg"></i>
-              </div>
-              <div>
-                <div class="text-sm font-bold text-slate-500">银行卡 / 网银</div>
-                <div class="text-[10px] text-slate-400">即将开放</div>
-              </div>
-            </div>
-          </label>
-        </div>
-
-        <p class="text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
-          <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>
-          课酬在平台资金保障流程中锁定，导师下课确认后 48 小时内按规则划拨。
-        </p>
-      </div>
-
-      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-        <button type="button" onclick="closePaymentMethodModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">
-          取消
-        </button>
-        <button type="button" onclick="confirmPaymentMethod()" class="text-xs font-bold px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white cursor-pointer">
-          <i class="fa-solid fa-check mr-1"></i>确认支付方式
-        </button>
       </div>
     </div>
   </div>
@@ -1192,6 +1112,79 @@
     let currentMaxRate = 180;
     let selectedTutorForBooking = null;
 
+    function parentBookingCtaLabel() {
+      return (window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()) ? '约仓试听' : '预约试课';
+    }
+
+    function goDiscoverTab() {
+      if (window.UserConsoleNav && typeof window.UserConsoleNav.setSection === 'function') {
+        window.UserConsoleNav.setSection('discover', true);
+      }
+    }
+
+    function parentHasFreeTrialWithTutor(tutor) {
+      if (!tutor || !window.StorageService || !StorageService.hasUsedFreeTrial) return true;
+      const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+      if (!parent) return true;
+      const mentorId = tutor.mentorId || tutor.id;
+      const subject = (tutor.subjects && tutor.subjects[0]) || '';
+      return !StorageService.hasUsedFreeTrial(parent.id || parent.phone, mentorId, subject);
+    }
+
+    function parentBookingFundCopy(b, unpaid) {
+      const isTrial = b && b.type === 'trial';
+      const isWeekly = b && b.type === 'weekly';
+      const warehouseOn = window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled();
+      if (unpaid) {
+        return {
+          reason: '尚未完成微信支付，资金未托管冻结。可继续付款或撤销预约。',
+          amountCaption: '待支付 · 未冻结',
+          sessionEscrow: '待支付',
+          reasonCls: 'text-rose-700'
+        };
+      }
+      if (b.status === 'cancelled') {
+        const neverPaid = b.paymentStatus === 'unpaid' || b.escrowStatus === 'pending_payment';
+        return {
+          reason: neverPaid
+            ? '约课已关闭，资金未冻结。'
+            : '约课已撤销；已支付课酬已发起微信原路退款（预计 1-3 分钟到账）。',
+          amountCaption: neverPaid ? '已关闭' : '已原路退款',
+          sessionEscrow: neverPaid ? '已关闭' : '已原路退款',
+          reasonCls: 'text-slate-600'
+        };
+      }
+      if (b.status === 'declined') {
+        const why = b.declineReason
+          ? ('婉拒原因：' + String(b.declineReason).replace(/</g, '&lt;') + ' · ')
+          : '';
+        return {
+          reason: why + '托管资金已自动解冻并原路退回微信。',
+          amountCaption: '已解冻退回',
+          sessionEscrow: '已解冻退回',
+          reasonCls: 'text-rose-700'
+        };
+      }
+      if (b.status === 'accepted') {
+        return {
+          reason: warehouseOn
+            ? '导师已接单，可使用 IoT 通行凭证履约开仓 · 结课后 48h 无异议自动划拨。'
+            : '导师已接单，请按时上课 · 结课后 48h 无异议自动划拨。',
+          amountCaption: isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '课次托管冻结中' : '课次托管冻结中'),
+          sessionEscrow: isTrial ? '试课免费' : '费用已冻结',
+          reasonCls: 'text-emerald-700'
+        };
+      }
+      return {
+        reason: isTrial
+          ? '试课免费，等待导师确认档期（开课前 2h 外可免费撤销）。'
+          : '资金已托管冻结，等待导师确认档期（开课前 2h 外可免费撤销并原路退款）。',
+        amountCaption: isTrial ? '试课免费' : (isWeekly ? '系列包提前冻结' : '已托管冻结'),
+        sessionEscrow: isTrial ? '试课免费' : '已托管冻结',
+        reasonCls: 'text-slate-600'
+      };
+    }
+
     /* ==========================================================================
        2. 渲染顶部 AI 智能算力推荐导师
        ========================================================================== */
@@ -1247,7 +1240,7 @@
                 试讲视频
               </button>
               <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="text-[10px] bg-teal-500 hover:bg-teal-400 text-slate-950 px-2.5 py-1 rounded-lg font-bold transition shadow-xs cursor-pointer">
-                约仓试听
+                ${parentBookingCtaLabel()}
               </button>
             </div>
           </div>
@@ -1314,6 +1307,8 @@
       if (countBadge) countBadge.innerText = results.length;
       const recallEl = document.getElementById('matchRecallCount');
       if (recallEl) recallEl.innerText = results.length;
+      const recallCompact = document.getElementById('matchRecallCountCompact');
+      if (recallCompact) recallCompact.innerText = results.length;
 
       renderTutorGrid(results);
     }
@@ -1422,7 +1417,7 @@
                 <span>试讲视频</span>
               </button>
               <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-1 cursor-pointer">
-                <span>约仓试听</span>
+                <span>${parentBookingCtaLabel()}</span>
                 <i class="fa-solid fa-angle-right text-[10px]"></i>
               </button>
             </div>
@@ -1553,7 +1548,7 @@
       document.getElementById('modalRatingScore').innerText = `${tutor.rating} ★`;
       document.getElementById('modalTotalHours').innerText = tutor.totalHours;
       document.getElementById('modalHourlyRate').innerText = tutor.hourlyRate;
-      document.getElementById('modalEstimatedCost').innerText = `¥${tutor.hourlyRate}.00`;
+      document.getElementById('modalEstimatedCost').innerText = `¥${tutor.hourlyRate}`;
       document.getElementById('modalHighlightBadge').innerText = tutor.scoreHighlight;
       document.getElementById('modalVideoTitle').innerText = tutor.videoTitle;
 
@@ -1910,8 +1905,11 @@
         spaceSelect.value = tutor.space;
       }
 
+      const preferTrial = parentHasFreeTrialWithTutor(tutor);
+      const typeTrial = document.querySelector('input[name="bookingType"][value="trial"]');
       const typeOne = document.querySelector('input[name="bookingType"][value="one_off"]');
-      if (typeOne) typeOne.checked = true;
+      if (preferTrial && typeTrial) typeTrial.checked = true;
+      else if (typeOne) typeOne.checked = true;
       onBookingTypeChange();
       generateBookingDateSlots();
       syncWeeklyAvailabilityOptions();
@@ -2177,57 +2175,8 @@
         }
       }
       pendingBookingMeta = meta;
-      
-      // For trial bookings, skip payment method selection
-      if (meta.type === 'trial') {
-        showEscrowSummaryAfterPayment();
-        return;
-      }
-      
-      // Show payment method selection first
-      openPaymentMethodModal(meta);
-    }
-
-    function openPaymentMethodModal(meta) {
-      const modal = document.getElementById('paymentMethodModal');
-      const content = document.getElementById('paymentMethodContent');
-      const amountEl = document.getElementById('paymentAmountDisplay');
-      if (amountEl) {
-        amountEl.innerText = '¥' + (meta.total || 0).toFixed(2);
-      }
-      // Reset to WeChat by default
-      const wechatRadio = document.querySelector('input[name="paymentMethod"][value="微信支付"]');
-      if (wechatRadio) wechatRadio.checked = true;
-      
-      modal.classList.remove('hidden');
-      requestAnimationFrame(function() {
-        modal.classList.remove('opacity-0');
-        content.classList.remove('scale-95');
-      });
-    }
-
-    function closePaymentMethodModal() {
-      const modal = document.getElementById('paymentMethodModal');
-      const content = document.getElementById('paymentMethodContent');
-      modal.classList.add('opacity-0');
-      content.classList.add('scale-95');
-      setTimeout(function() { modal.classList.add('hidden'); }, 200);
-    }
-
-    function confirmPaymentMethod() {
-      const selected = document.querySelector('input[name="paymentMethod"]:checked');
-      if (!selected) {
-        showToast('请选择支付方式', 'warning');
-        return;
-      }
-      selectedPaymentMethod = selected.value;
-      closePaymentMethodModal();
-      // Store payment method in pending booking metadata
-      if (pendingBookingMeta) {
-        pendingBookingMeta.paymentMethod = selectedPaymentMethod;
-      }
-      showToast('已选择：' + selectedPaymentMethod);
-      // Continue to escrow summary
+      selectedPaymentMethod = meta.type === 'trial' ? '免费' : '微信支付';
+      if (pendingBookingMeta) pendingBookingMeta.paymentMethod = selectedPaymentMethod;
       showEscrowSummaryAfterPayment();
     }
 
@@ -2446,6 +2395,10 @@
             paymentOk = !!(payResult && payResult.success);
             if (!paymentOk) {
               closeWeChatNativeQr();
+              if (payResult && payResult.userDeferred) {
+                try { renderParentBookings(); } catch (_) {}
+                return;
+              }
               showToast(
                 (payResult && payResult.error ? payResult.error + '。' : '') +
                 '预约已保存为「未支付」，可在我的约课中继续付款或撤销',
@@ -2453,6 +2406,10 @@
               );
               try { renderParentBookings(); } catch (_) {}
               closeBookingDrawer();
+              if (window.UserConsoleNav && typeof window.UserConsoleNav.setSection === 'function') {
+                window.UserConsoleNav.setSection('courses', true);
+              }
+              setParentBookingFilter('unpaid');
               return;
             }
             try {
@@ -2505,9 +2462,27 @@
       return /MicroMessenger/i.test(navigator.userAgent || '');
     }
 
+    let wechatPayWaitAborted = false;
+    let wechatPayManualResult = null;
+    let wechatPayOutTradeNo = '';
+
     function closeWeChatNativeQr() {
       const modal = document.getElementById('wechatNativePayModal');
       if (modal) modal.classList.add('hidden');
+    }
+
+    function deferWeChatNativePay() {
+      wechatPayWaitAborted = true;
+      closeWeChatNativeQr();
+      const drawer = document.getElementById('bookingDrawerModal');
+      if (drawer && !drawer.classList.contains('hidden')) {
+        closeBookingDrawer();
+      }
+      if (window.UserConsoleNav && typeof window.UserConsoleNav.setSection === 'function') {
+        window.UserConsoleNav.setSection('courses', true);
+      }
+      setParentBookingFilter('unpaid');
+      showToast('已移入「我的约课 · 未支付」，可稍后继续付款', 'warning');
     }
 
     function markWeChatNativeQrPaidAndClose() {
@@ -2527,25 +2502,70 @@
       });
     }
 
-    function showWeChatNativeQr(codeUrl) {
+    async function refreshWeChatNativePayNow() {
+      if (!wechatPayOutTradeNo || !window.StorageService) return;
+      showToast('正在查询支付结果…');
+      try {
+        const result = await StorageService.api('POST', '/api/pay/wechat/sync', { outTradeNo: wechatPayOutTradeNo });
+        if (result && (result.paid || result.status === 'SUCCESS')) {
+          wechatPayManualResult = Object.assign({ success: true }, result);
+        } else {
+          showToast('尚未查询到支付成功，请稍候再试或稍后在未支付列表继续', 'warning');
+        }
+      } catch (e) {
+        showToast('查询失败，请稍后重试', 'warning');
+      }
+    }
+
+    function showWeChatNativeQr(codeUrl, summary) {
+      wechatPayWaitAborted = false;
+      wechatPayManualResult = null;
+      wechatPayOutTradeNo = (summary && summary.outTradeNo) || '';
+      const amountText = summary && summary.amount != null
+        ? ('¥' + Number(summary.amount).toFixed(2))
+        : '';
+      const lineText = (summary && summary.line) || '课酬托管冻结';
       let modal = document.getElementById('wechatNativePayModal');
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'wechatNativePayModal';
-        modal.className = 'fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 p-4';
-        modal.innerHTML =
-          '<div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">' +
-          '<p class="text-sm font-bold text-slate-800 mb-3">微信扫码支付</p>' +
-          '<img id="wechatNativePayQr" alt="微信支付二维码" class="mx-auto w-52 h-52 border border-slate-100 rounded-lg" />' +
-          '<p id="wechatNativePayWaiting" class="text-xs text-slate-500 mt-3">支付完成后请稍候，系统将通过回调确认订单</p>' +
-          '<p id="wechatNativePaySuccess" class="hidden text-sm font-bold text-emerald-700 mt-3">支付成功，正在确认订单…</p>' +
-          '<button type="button" id="wechatNativePayClose" class="mt-4 text-xs text-teal-700 font-semibold">关闭</button>' +
-          '</div>';
         document.body.appendChild(modal);
-        modal.querySelector('#wechatNativePayClose').addEventListener('click', () => {
-          closeWeChatNativeQr();
-        });
       }
+      modal.className = 'fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 p-4';
+      modal.innerHTML =
+        '<div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">' +
+          '<div class="bg-slate-900 px-5 py-3.5 text-white flex items-center justify-between">' +
+            '<div class="flex items-center gap-2">' +
+              '<span class="w-6 h-6 rounded-lg bg-[#07c160] flex items-center justify-center text-white text-sm"><i class="fa-brands fa-weixin"></i></span>' +
+              '<span class="font-bold text-sm">微信扫码支付 · 课酬托管</span>' +
+            '</div>' +
+            '<span class="text-xs text-teal-300 bg-teal-500/20 px-2 py-0.5 rounded-full border border-teal-400/30">一课一消</span>' +
+          '</div>' +
+          '<div class="p-6 text-center space-y-4">' +
+            '<div>' +
+              '<div class="text-sm text-slate-600" id="qrOrderSubject">' + lineText.replace(/</g, '&lt;') + '</div>' +
+              '<div class="text-3xl font-black text-slate-900 font-mono mt-1" id="qrOrderAmount">' + amountText + '</div>' +
+            '</div>' +
+            '<div class="mx-auto w-52 h-52 p-2.5 border-2 border-teal-500/30 rounded-2xl bg-slate-50 flex items-center justify-center">' +
+              '<img id="wechatNativePayQr" alt="微信支付二维码" class="w-full h-full rounded-lg bg-white" />' +
+            '</div>' +
+            '<p id="wechatNativePayWaiting" class="text-sm text-slate-600 flex items-center justify-center gap-1.5">' +
+              '<i class="fa-solid fa-spinner fa-spin text-teal-600"></i>' +
+              '<span>请使用微信扫一扫，支付成功后将自动关闭</span>' +
+            '</p>' +
+            '<p id="wechatNativePaySuccess" class="hidden text-sm font-bold text-emerald-700">支付成功，正在确认订单…</p>' +
+            '<div class="bg-teal-50/80 border border-teal-200 rounded-xl p-2.5 text-xs text-teal-900 text-left leading-relaxed">' +
+              '<i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>' +
+              '资金将冻结于托管专户，导师结课确认满 <strong>48 小时</strong>无异议后方才划拨。' +
+            '</div>' +
+            '<div class="flex gap-2 pt-1">' +
+              '<button type="button" id="wechatNativePayClose" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">稍后支付</button>' +
+              '<button type="button" id="wechatNativePayCheckNow" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 cursor-pointer">我已支付，刷新</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      modal.querySelector('#wechatNativePayClose').addEventListener('click', deferWeChatNativePay);
+      modal.querySelector('#wechatNativePayCheckNow').addEventListener('click', refreshWeChatNativePayNow);
       const img = modal.querySelector('#wechatNativePayQr');
       const waiting = modal.querySelector('#wechatNativePayWaiting');
       const success = modal.querySelector('#wechatNativePaySuccess');
@@ -2591,6 +2611,8 @@
 
     // 微信支付处理
     async function handleWeChatPayment(bookingId, _displayAmountYuan, tutorName, subject) {
+      wechatPayWaitAborted = false;
+      wechatPayManualResult = null;
       try {
         const payMode = window.XH_CONFIG?.PAY_MODE || 'demo';
         const inWeChat = isWeChatBrowser();
@@ -2641,16 +2663,27 @@
             return { success: false, error: '无法确认支付状态' };
           }
           showToast('正在确认支付结果…');
-          const synced = await StorageService.waitForPaymentConfirmed(outTradeNo, { maxMs: 90000 });
+          const synced = await StorageService.waitForPaymentConfirmed(outTradeNo, {
+            maxMs: 90000,
+            shouldAbort: function () { return wechatPayWaitAborted; },
+            peekResult: function () { return wechatPayManualResult; }
+          });
           if (synced && synced.success) {
             return { success: true, outTradeNo };
+          }
+          if (synced && synced.userDeferred) {
+            return { success: false, userDeferred: true, error: synced.error };
           }
           return { success: false, error: (synced && synced.error) || '支付尚未确认' };
         }
 
         if (prepayResult.codeUrl) {
-          showWeChatNativeQr(prepayResult.codeUrl);
-          showToast('请使用微信扫描二维码完成支付');
+          showWeChatNativeQr(prepayResult.codeUrl, {
+            amount: _displayAmountYuan,
+            line: (tutorName || '导师') + ' · ' + (subject || '学科辅导'),
+            outTradeNo: outTradeNo
+          });
+          showToast('请使用微信扫一扫完成支付');
           const paid = await confirmPaidOnServer();
           if (paid && paid.success) {
             await markWeChatNativeQrPaidAndClose();
@@ -3091,7 +3124,10 @@
       }, 2500);
     }
 
-    function sessionStatusBadge(st) {
+    function sessionStatusBadge(st, bookingStatus) {
+      if ((bookingStatus === 'pending_accept' || bookingStatus === 'escrow_locked') && (!st || st === 'scheduled')) {
+        return { text: '待确认档期', cls: 'bg-amber-50 text-amber-800 border-amber-200' };
+      }
       const map = {
         scheduled: { text: '已排课', cls: 'bg-slate-50 text-slate-600 border-slate-200' },
         completed: { text: '已结课', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
@@ -3434,6 +3470,8 @@
         filtered = list.filter(function(b) { return b.status === 'accepted'; });
       } else if (parentBookingFilter === 'declined') {
         filtered = list.filter(function(b) { return b.status === 'declined'; });
+      } else if (parentBookingFilter === 'cancelled') {
+        filtered = list.filter(function(b) { return b.status === 'cancelled'; });
       }
       if (!filtered.length) {
         box.innerHTML = '<div class="text-slate-400 text-center py-3">' +
@@ -3445,7 +3483,7 @@
         escrow_locked: { text: '待导师接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         accepted: { text: '导师已接单', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
         declined: { text: '导师已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
-        cancelled: { text: '已取消', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
+        cancelled: { text: '已撤销 · 已退款', cls: 'bg-slate-100 text-slate-600 border-slate-200' }
       };
       box.innerHTML = filtered.map(function(raw) {
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
@@ -3455,42 +3493,37 @@
           : (statusMap[b.status] || { text: b.status || '未知', cls: 'bg-slate-50 text-slate-600 border-slate-200' });
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
+        const fund = parentBookingFundCopy(b, unpaid);
         const typePill = isTrial
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
+          ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
           : (isWeekly
-            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
-            : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
+            ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+            : '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         const hasCompleted = (b.sessions || []).some(function(s) { return s.status === 'completed'; });
         const canRenew = !unpaid && (b.status === 'accepted' || hasCompleted);
-        const reason = unpaid
-          ? '<div class="mt-1.5 text-[11px] text-rose-700">尚未完成微信支付，资金未托管冻结。可继续付款或撤销预约。</div>'
-          : ((b.status === 'declined' && b.declineReason)
-            ? '<div class="mt-1.5 text-[11px] text-rose-700">婉拒原因：' + String(b.declineReason).replace(/</g,'&lt;') + '</div>'
-            : (b.status === 'accepted'
-              ? (window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()
-                ? '<div class="mt-1.5 text-[11px] text-emerald-700">可使用 IoT 通行凭证履约开仓 · 结课后 48h 无投诉划拨</div>'
-                : '<div class="mt-1.5 text-[11px] text-emerald-700">导师已接单，请按时上课 · 结课后 48h 无投诉划拨</div>')
-              : '<div class="mt-1.5 text-[11px] text-slate-400">资金已托管冻结，等待导师确认档期</div>'));
+        const reason = '<div class="mt-1.5 text-xs ' + fund.reasonCls + '">' + fund.reason + '</div>';
         let sessionsHtml = '';
         if (Array.isArray(b.sessions) && b.sessions.length) {
           sessionsHtml = '<div class="mt-2 space-y-1.5 border-t border-slate-100 pt-2">' +
-            (isWeekly ? '<div class="text-[10px] font-bold text-teal-800 mb-1">每周系列课次</div>' : '') +
+            (isWeekly ? '<div class="text-xs font-bold text-teal-800 mb-1">每周系列课次</div>' : '') +
             b.sessions.map(function(s) {
-              const sb = sessionStatusBadge(s.status);
-              const canLeave = !unpaid && (b.status === 'accepted' || b.status === 'pending_accept') &&
+              const sb = sessionStatusBadge(s.status, b.status);
+              const canLeave = !unpaid && b.status === 'accepted' &&
                 (s.status === 'scheduled' || s.status === 'leave_too_late');
               let acts = '';
               if (canLeave) {
-                acts += '<button type="button" onclick="requestLeaveForSession(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">申请请假</button>';
+                acts += '<button type="button" onclick="requestLeaveForSession(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">申请请假</button>';
               }
               if (s.classSummary) {
-                acts += '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>';
+                acts += '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>';
               }
               const escrow = unpaid
-                ? '<span class="text-[10px] text-rose-600">待支付</span>'
+                ? '<span class="text-xs text-rose-600">待支付</span>'
                 : (s.escrowStatus === 'released'
-                  ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
-                  : (s.status === 'completed' ? '<span class="text-[10px] text-amber-700">48h观察中</span>' : '<span class="text-[10px] text-slate-400">费用已冻结</span>'));
+                  ? '<span class="text-xs text-emerald-700">已划拨</span>'
+                  : (s.status === 'completed'
+                    ? '<span class="text-xs text-amber-700">48h观察中</span>'
+                    : '<span class="text-xs text-slate-600">' + fund.sessionEscrow + '</span>'));
               return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
                 '<div class="flex items-center gap-1.5 flex-wrap">' +
                   '<span class="font-medium text-slate-800">' + (s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '') + '</span>' +
@@ -3510,20 +3543,18 @@
         const renewBtn = canRenew
           ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'
           : ((payBtn || cancelBtn) ? '<div class="mt-2 flex flex-wrap gap-2 items-center">' + payBtn + cancelBtn + '</div>' : '');
-        const amountCaption = unpaid
-          ? '未支付 · 未冻结'
-          : (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包提前冻结' : '单次冻结'));
+        const amountCaption = fund.amountCaption;
         return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
               '<div class="flex items-center gap-2 flex-wrap">' +
                 '<span class="font-bold text-slate-900">' + (b.tutorName || '导师') + '</span>' +
                 typePill +
-                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
-                (b.sourceBookingId ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-800 border-violet-200">续课</span>' : '') +
+                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+                (b.sourceBookingId ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-800 border-violet-200">续课</span>' : '') +
               '</div>' +
-              '<div class="text-[11px] text-slate-500">' + (b.subject || '') + ' · ' + (b.studentGrade || '') + '</div>' +
-              '<div class="text-[11px] text-slate-600"><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + (b.space || '—') +
+              '<div class="text-xs text-slate-600">' + (b.subject || '') + ' · ' + (b.studentGrade || '') + '</div>' +
+              '<div class="text-xs text-slate-600"><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + (b.space || '—') +
                 (b.boothLabel ? (' · ' + b.boothLabel) : '') +
                 ' · <i class="fa-regular fa-clock text-teal-600 mx-1"></i>' + (b.schedule || b.timeSlot || '—') + '</div>' +
               (b.hasTimeConflict ? '<div class="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (b.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程') + '</div>' : '') +
@@ -3531,8 +3562,8 @@
             '</div>' +
             '<div class="text-right shrink-0">' +
               '<div class="font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
-              '<div class="text-[10px] text-slate-400">' + amountCaption + '</div>' +
-              '<div class="text-[10px] text-slate-400">' + (b.createdAt || '') + '</div>' +
+              '<div class="text-xs text-slate-600">' + amountCaption + '</div>' +
+              '<div class="text-xs text-slate-500">' + (b.createdAt || '') + '</div>' +
             '</div>' +
           '</div>' +
           sessionsHtml +

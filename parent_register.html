@@ -8,28 +8,10 @@
   <title>星火学伴 - 家长/学员建档注册与智能匹配中心</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="css/tokens.css">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdfa',
-              100: '#ccfbf1',
-              200: '#99f6e4',
-              500: '#14b8a6',
-              600: '#0d9488',
-              700: '#0f766e',
-              800: '#115e59',
-              900: '#134e4a',
-            }
-          }
-        }
-      }
-    }
-  </script>
   <style>
     /* 优雅平滑微滚动条 */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -114,30 +96,6 @@
     }
     .wizard-step-dot.active { background: #0d9488; color: #fff; }
     .wizard-step-dot.done { background: #ccfbf1; color: #0f766e; }
-  
-    /* 复选/单选选项字号加大，便于阅读 */
-    label:has(> input[type="checkbox"]),
-    label:has(> input[type="radio"]),
-    label.subject-tag,
-    .opt-chip-label,
-    .filter-tab {
-      font-size: 16px !important;
-      line-height: 1.4;
-    }
-    label:has(> input[type="checkbox"]) span,
-    label:has(> input[type="radio"]) span,
-    label.subject-tag span {
-      font-size: 16px !important;
-      line-height: 1.4;
-    }
-    input[type="checkbox"] + span,
-    input[type="checkbox"] ~ span {
-      font-size: 16px !important;
-      line-height: 1.45;
-    }
-    #subjectCheckboxGroup label {
-      font-size: 16px !important;
-    }
     .field-readonly {
       background: #f8fafc !important;
       color: #475569 !important;
@@ -1387,7 +1345,7 @@
       }
       topics.forEach((topic) => {
         const label = document.createElement('label');
-        label.className = 'border border-slate-200 rounded-lg py-1 px-2.5 text-[11px] cursor-pointer hover:border-teal-400 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 inline-flex items-center gap-1.5 select-none';
+        label.className = 'opt-chip-label border border-slate-200 rounded-lg py-1 px-2.5 text-sm cursor-pointer hover:border-teal-400 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 inline-flex items-center gap-1.5 select-none';
         const isOn = checked.has(topic);
         label.innerHTML = `<input type="checkbox" class="wizard-topic-cb w-3.5 h-3.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="${topic.replace(/"/g, '&quot;')}" ${isOn ? 'checked' : ''}><span>${topic}</span>`;
         container.appendChild(label);

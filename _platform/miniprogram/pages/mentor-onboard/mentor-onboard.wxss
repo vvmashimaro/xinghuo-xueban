@@ -26,3 +26,20 @@
 .subject-group { margin-bottom: 20rpx; padding: 16rpx; background: #f8fafc; border-radius: 16rpx; border: 1px solid #e2e8f0; }
 .subject-group-head { display: flex; flex-direction: column; gap: 4rpx; margin-bottom: 12rpx; }
 .subject-group-title { font-size: 24rpx; font-weight: 800; color: #334155; }
+
+.consent-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+.consent-title { font-size: 28rpx; font-weight: 700; color: #0f172a; margin-bottom: 8rpx; }
+.consent-req { color: #be123c; font-size: 24rpx; font-weight: 600; }
+.consent-desc,
+.consent-line {
+  font-size: 28rpx;
+  line-height: 1.55;
+  color: #1e293b;
+}
+.consent-emph { font-weight: 800; color: #0f172a; }
+.consent-card .check-row { margin-top: 12rpx; padding: 0; font-size: 28rpx; }

@@ -82,6 +82,10 @@ echo "=== Running admin teaching-point API tests ==="
 node test-admin-teaching-points.js
 
 echo ""
+echo "=== Running UI P0 static copy tests ==="
+node test-ui-p0-copy.js
+
+echo ""
 echo "=== Running WeChat pay / DEV OTP / proof / P0-P1 security tests ==="
 node test-wechat-pay.js
 node test-booking-sms-notify.js
