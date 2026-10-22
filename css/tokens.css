@@ -77,3 +77,36 @@ body {
   color: var(--color-ink);
   font-size: inherit;
 }
+
+/* 字阶下限：正文/规则 ≥14px，徽章/标签 ≥12px */
+.xh-copy,
+.xh-rule {
+  font-size: var(--type-sm);
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+.xh-badge,
+.xh-label {
+  font-size: var(--type-xs);
+  line-height: 1.4;
+}
+
+.xh-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.35rem;
+  border-radius: 9999px;
+  font-size: var(--type-xs);
+  font-weight: 800;
+  line-height: 1;
+  background: #fbbf24;
+  color: #0f172a;
+}
+.xh-tab-badge.is-muted {
+  background: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}

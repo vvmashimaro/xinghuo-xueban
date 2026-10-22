@@ -1,4 +1,4 @@
-<view class="match-banner-compact" wx:if="{{consoleSection!=='discover'}}">
+<view class="match-banner-compact" wx:if="{{consoleSection==='courses'}}">
   <text>已为您精准召回 {{recallCount}} 位 &gt;95% 契合度导师</text>
   <text class="match-banner-go" data-id="discover" bindtap="onConsoleTab">去查看 ›</text>
 </view>
@@ -14,7 +14,18 @@
       <view class="card-title" style="margin:0;">优选推荐</view>
       <text class="badge badge-teal">契合度 ≥ 95%</text>
     </view>
-    <scroll-view scroll-x class="top-strip" enable-flex>
+    <view wx:if="{{topTutors.length===1}}" class="top-single">
+      <view class="flex-row gap-8">
+        <view class="avatar">{{topTutors[0].avatarLetter}}</view>
+        <view style="flex:1;">
+          <view style="font-weight:900;">{{topTutors[0].maskedName}}</view>
+          <view class="muted">{{topTutors[0].university}} · {{topTutors[0].matchScore}}% 契合</view>
+          <view class="muted" style="margin-top:8rpx;">匹配维度：{{topTutors[0].syllabusText}}</view>
+        </view>
+      </view>
+      <button class="btn-primary" style="width:100%;margin-top:16rpx;" data-id="{{topTutors[0].mentorId}}" bindtap="openBooking">预约该导师</button>
+    </view>
+    <scroll-view wx:else scroll-x class="top-strip" enable-flex>
       <view class="top-card" wx:for="{{topTutors}}" wx:key="mentorId">
         <view class="flex-row gap-8">
           <view class="avatar sm">{{item.avatarLetter}}</view>
@@ -32,12 +43,17 @@
 </view>
 
 <view class="console-tab-bar">
-  <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">我的课程</view>
-  <view class="console-tab {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="onConsoleTab">查找导师</view>
-  <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+  <view class="console-tab-seg">
+    <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">
+      我的课程
+      <text class="console-tab-badge" wx:if="{{courseBadgeCount>0}}">{{courseBadgeCount}}</text>
+    </view>
+    <view class="console-tab {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="onConsoleTab">查找导师</view>
+    <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+  </view>
 </view>
 
-<view class="container container-with-fab">
+<view class="container">
   <block wx:if="{{consoleSection==='courses'}}">
   <!-- 托管钱包示意 -->
   <view class="card wallet-card">
@@ -180,15 +196,6 @@
 
 </view>
 
-<view class="fab-settings" bindtap="toggleConsoleFab">☰</view>
-<view class="settings-drawer-mask" wx:if="{{consoleFabShow}}" bindtap="closeConsoleFab"></view>
-<view class="console-fab-sheet" wx:if="{{consoleFabShow}}">
-  <view class="console-fab-sheet-item {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="pickConsoleSection">我的课程</view>
-  <view class="console-fab-sheet-item {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="pickConsoleSection">查找导师</view>
-  <view class="console-fab-sheet-item {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="pickConsoleSection">我的账户</view>
-  <view class="console-fab-sheet-item" bindtap="openSettingsDrawerFromFab">功能设置侧栏</view>
-</view>
-
 <view class="settings-drawer-mask" wx:if="{{settingsDrawerShow}}" bindtap="closeSettingsDrawer"></view>
 <view class="settings-drawer" wx:if="{{settingsDrawerShow}}">
   <view class="settings-drawer-head">
@@ -323,40 +330,35 @@
       </picker>
 
       <view class="escrow-box" wx:if="{{escrowShow}}">
-        <view style="font-weight:800;color:#0f766e;">托管锁定摘要</view>
+        <view style="font-weight:800;color:#0f766e;">确认摘要并签署协议</view>
         <view class="muted">课时：{{hours}} 小时 · 时段：{{selectedSlotLabel || selectedSlot}}</view>
         <view class="muted">空间：{{spaces[spaceIndex]}}</view>
+        <view class="muted">支付方式：微信支付 · 课次托管冻结</view>
         <view style="font-weight:900;margin-top:8rpx;">锁定金额 ¥{{escrowAmount}}</view>
         <view class="muted">课后 48 小时无异议自动解冻：导师 92% / 平台 8%</view>
+        <view class="agr-p" style="margin-top:16rpx;font-weight:800;color:#0f172a;">《三方托管服务居间协议》</view>
+        <view class="agr-p">甲方（平台）：星火学伴</view>
+        <view class="agr-p">乙方（家长/学员）：{{parentName}}</view>
+        <view class="agr-p">丙方（导师）：{{bookingTutor.maskedName}}</view>
+        <view class="agr-p" style="margin-top:12rpx;" wx:if="{{featureSmartWarehouse}}">1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</view>
+        <view class="agr-p" style="margin-top:12rpx;" wx:else>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</view>
+        <view class="agr-p">2. 单次课酬按「一课一约、一课一消」锁定；课后 48 小时无异议自动按 92%/8% 划拨。</view>
+        <view class="agr-p" wx:if="{{featureSmartWarehouse}}">3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</view>
+        <view class="check-row" style="margin-top:16rpx;" bindtap="onToggleContractAgree">
+          <view class="check-box {{contractAgreed?'on':''}}">{{contractAgreed?'✓':''}}</view>
+          <text>我已阅读并同意签署本协议，授权锁定本次课酬资金。</text>
+        </view>
+        <view class="field" style="margin-top:12rpx;">
+          <text class="label">电子签名（输入姓名确认）</text>
+          <input class="input" placeholder="请输入家长姓名作为电子签" value="{{contractSignName}}" bindinput="onContractSign" />
+        </view>
       </view>
     </scroll-view>
     <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeBooking">取消</button>
-      <button class="btn-ghost" wx:if="{{!escrowShow}}" bindtap="showEscrow">生成托管摘要</button>
-      <button class="btn-primary" wx:if="{{escrowShow}}" bindtap="openContract">签署电子协议并锁资</button>
-    </view>
-  </view>
-</view>
-
-<!-- 电子合同 -->
-<view class="modal-mask" wx:if="{{contractShow}}">
-  <view class="modal-panel">
-    <view class="modal-head">
-      <view style="font-weight:900;">三方托管服务居间协议</view>
-    </view>
-    <scroll-view scroll-y class="modal-body" style="max-height:55vh;">
-      <view class="agr-p">甲方（平台）：星火学伴</view>
-      <view class="agr-p">乙方（家长/学员）：{{parentName}}</view>
-      <view class="agr-p">丙方（导师）：{{bookingTutor.maskedName}}</view>
-      <view class="agr-p" style="margin-top:12rpx;" wx:if="{{featureSmartWarehouse}}">1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</view>
-      <view class="agr-p" style="margin-top:12rpx;" wx:else>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</view>
-      <view class="agr-p">2. 单次课酬存入商业银行托管子账户锁定；课后 48 小时无异议自动按 92%/8% 划拨。</view>
-      <view class="agr-p" wx:if="{{featureSmartWarehouse}}">3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</view>
-      <view class="agr-tip">支付成功后状态为「待导师接单」；未支付不会冻结课酬。</view>
-    </scroll-view>
-    <view class="modal-foot">
-      <button class="btn-ghost" bindtap="closeContract">返回</button>
-      <button class="btn-primary" bindtap="confirmBook">确认签署并完成约课</button>
+      <button class="btn-ghost" wx:if="{{escrowShow}}" bindtap="hideEscrow">返回修改</button>
+      <button class="btn-ghost" wx:else bindtap="closeBooking">取消</button>
+      <button class="btn-ghost" wx:if="{{!escrowShow}}" bindtap="showEscrow">下一步：确认并签署</button>
+      <button class="btn-primary" wx:if="{{escrowShow}}" bindtap="confirmBook">确认签署并支付</button>
     </view>
   </view>
 </view>

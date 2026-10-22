@@ -293,7 +293,7 @@ async function testNewMentorOnboarding(browser) {
   const page = await browser.newPage();
   
   try {
-    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle2' });
+    await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle2' });
     
     // Fill L1
     await page.type('#realName', '新导师');

@@ -28,22 +28,22 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
-            <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">MENTOR-HUB</span>
+            <span class="text-xs bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">MENTOR-HUB</span>
           </div>
           <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 truncate">
-            <i class="fa-solid fa-circle-user text-teal-600 text-[11px]"></i>
+            <i class="fa-solid fa-circle-user text-teal-600 text-xs"></i>
             <span class="font-bold text-slate-800" id="headerMentorName">导师</span>
-            <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 rounded font-medium truncate" id="headerMentorMeta">工作台</span>
+            <span class="text-xs bg-slate-100 text-slate-600 px-1.5 rounded font-medium truncate" id="headerMentorMeta">工作台</span>
           </div>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button type="button" onclick="safeNavigate('index.html', '导师认证与建库')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer hidden sm:inline-flex items-center gap-1">
-          <i class="fa-solid fa-id-card text-teal-600 text-[11px]"></i>
+        <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer hidden sm:inline-flex items-center gap-1">
+          <i class="fa-solid fa-id-card text-teal-600 text-xs"></i>
           <span>补件 / 重新建档</span>
         </button>
         <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
-          <i class="fa-solid fa-arrow-right-from-bracket text-slate-400"></i>
+          <i class="fa-solid fa-arrow-right-from-bracket text-slate-500"></i>
         </button>
       </div>
     </div>
@@ -57,11 +57,11 @@
           <h1 class="text-lg sm:text-xl font-black tracking-tight text-slate-900">导师工作台</h1>
           <p class="text-xs text-slate-500 mt-1">审核进度 · 资料维护 · 约课申请箱</p>
         </div>
-        <div id="heroStatusPill" class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+        <div id="heroStatusPill" class="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
           审核状态加载中…
         </div>
       </div>
-      <div id="statusBanner" class="hidden rounded-2xl border px-4 py-3 text-xs leading-relaxed"></div>
+      <div id="statusBanner" class="hidden rounded-2xl border px-4 py-3 text-sm leading-relaxed"></div>
     </div>
   </section>
 
@@ -74,7 +74,7 @@
       </div>
       <h2 class="text-base font-black text-slate-900">尚未建立导师档案</h2>
       <p class="text-xs text-slate-500 max-w-md mx-auto">请先完成 L1/L2 资质认证与入库申请。提交后可在此查看审核进度并维护资料。</p>
-      <button type="button" onclick="safeNavigate('index.html', '导师认证与建库')" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-teal-600/20 cursor-pointer">
+      <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库')" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-teal-600/20 cursor-pointer">
         <i class="fa-solid fa-arrow-right text-xs"></i>
         <span>前往认证建档</span>
       </button>
@@ -90,30 +90,30 @@
             <i class="fa-solid fa-clipboard-check text-teal-600"></i>
             审核状态
           </h2>
-          <span id="auditStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">—</span>
+          <span id="auditStatusBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">—</span>
         </div>
         <div class="p-4 sm:p-5 space-y-3">
           <div class="grid sm:grid-cols-3 gap-3 text-xs">
             <div class="rounded-xl bg-teal-50/60 border border-teal-100 p-3">
-              <div class="text-[10px] text-slate-400 mb-0.5">档案编号</div>
+              <div class="text-xs text-slate-500 mb-0.5">档案编号</div>
               <div id="auditCode" class="font-mono font-bold text-slate-800">—</div>
             </div>
             <div class="rounded-xl bg-slate-50 border border-slate-100 p-3">
-              <div class="text-[10px] text-slate-400 mb-0.5">提交时间</div>
+              <div class="text-xs text-slate-500 mb-0.5">提交时间</div>
               <div id="auditSubmitTime" class="font-medium text-slate-800">—</div>
             </div>
             <div class="rounded-xl bg-slate-50 border border-slate-100 p-3">
-              <div class="text-[10px] text-slate-400 mb-0.5">教研评级</div>
+              <div class="text-xs text-slate-500 mb-0.5">教研评级</div>
               <div id="auditGrade" class="font-medium text-slate-800">—</div>
             </div>
           </div>
-          <div id="auditCommentBox" class="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3 text-xs text-slate-600 leading-relaxed">
-            <span class="text-slate-400">审核意见：</span>
+          <div id="auditCommentBox" class="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3 text-sm text-slate-600 leading-relaxed">
+            <span class="text-slate-500">审核意见：</span>
             <span id="auditComment">暂无</span>
           </div>
           <div id="supplementEntry" class="hidden flex flex-wrap gap-2">
-            <button type="button" onclick="safeNavigate('index.html', '补件重填')" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl cursor-pointer inline-flex items-center gap-1.5">
-              <i class="fa-solid fa-cloud-arrow-up text-[11px]"></i>
+            <button type="button" onclick="safeNavigate('index.html?entry=mentor', '补件重填')" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl cursor-pointer inline-flex items-center gap-1.5">
+              <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
               进入补件 / 重填资料
             </button>
           </div>
@@ -127,7 +127,7 @@
             <i class="fa-solid fa-user-pen text-teal-600"></i>
             资料维护
           </h2>
-          <span class="text-[10px] text-slate-400">非敏感字段可直接保存；敏感信息需申请变更</span>
+          <span class="text-xs text-slate-500">非敏感字段可直接保存；敏感信息需申请变更</span>
         </div>
         <div class="p-4 sm:p-5 space-y-5">
 
@@ -135,25 +135,25 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <h3 class="text-xs font-bold text-slate-700">敏感信息（只读）</h3>
-              <button type="button" id="btnRequestSensitiveChange" onclick="openSensitiveChangeModal()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg cursor-pointer">
+              <button type="button" id="btnRequestSensitiveChange" onclick="openSensitiveChangeModal()" class="text-xs font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg cursor-pointer">
                 申请变更
               </button>
             </div>
             <div class="grid sm:grid-cols-2 gap-3 text-xs">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-1">真实姓名</label>
+                <label class="block text-xs text-slate-500 mb-1">真实姓名</label>
                 <input id="roRealName" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 cursor-not-allowed">
               </div>
               <div>
-                <label class="block text-[10px] text-slate-400 mb-1">身份证号</label>
+                <label class="block text-xs text-slate-500 mb-1">身份证号</label>
                 <input id="roIdCard" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-mono cursor-not-allowed">
               </div>
               <div>
-                <label class="block text-[10px] text-slate-400 mb-1">学信网验证码</label>
+                <label class="block text-xs text-slate-500 mb-1">学信网验证码</label>
                 <input id="roChsi" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-mono cursor-not-allowed">
               </div>
               <div>
-                <label class="block text-[10px] text-slate-400 mb-1">收款银行卡</label>
+                <label class="block text-xs text-slate-500 mb-1">收款银行卡</label>
                 <input id="roBank" type="text" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-mono cursor-not-allowed">
               </div>
             </div>
@@ -164,41 +164,41 @@
             <h3 class="text-xs font-bold text-slate-700">可编辑服务画像</h3>
 
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5">擅长学科（逗号分隔）</label>
-              <input id="edSubjects" type="text" placeholder="例：初中数学, 高中数学, 考研数学(一)" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+              <label class="block text-xs font-bold text-slate-500 mb-1.5">擅长学科（逗号分隔）</label>
+              <input id="edSubjects" type="text" placeholder="例：初中数学, 高中数学, 考研数学(一)" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
             </div>
 
             <div class="grid sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-1.5">期望时薪（元/小时）</label>
-                <input id="edHourlyRate" type="number" min="50" max="600" placeholder="例：135" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">期望时薪（元/小时）</label>
+                <input id="edHourlyRate" type="number" min="50" max="600" placeholder="例：135" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-1.5">试讲 / 板书网盘链接</label>
-                <input id="edLectureUrl" type="url" placeholder="例：https://pan.baidu.com/s/示例链接" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">试讲 / 板书网盘链接</label>
+                <input id="edLectureUrl" type="url" placeholder="例：https://pan.baidu.com/s/示例链接" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
               </div>
             </div>
 
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5">教学风格标签（逗号分隔）</label>
-              <input id="edStyles" type="text" placeholder="例：引导启发解题, 大题压轴模型归纳" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+              <label class="block text-xs font-bold text-slate-500 mb-1.5">教学风格标签（逗号分隔）</label>
+              <input id="edStyles" type="text" placeholder="例：引导启发解题, 大题压轴模型归纳" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
             </div>
 
             <div>
-              <div class="text-[10px] font-bold text-slate-500 mb-1.5">可约时段（主控 · 以周为循环）</div>
+              <div class="text-xs font-bold text-slate-500 mb-1.5">可约时段（主控 · 以周为循环）</div>
               <div id="edAvailabilityPicker"></div>
-              <p class="text-[10px] text-slate-400 mt-1.5">按「每周循环」设置：先勾选周几，再仅为当天拖选半小时格。保存后家长预约「每周固定」时可见可约提示。此为唯一时段设置入口。</p>
+              <p class="text-xs text-slate-500 mt-1.5">按「每周循环」设置：先勾选周几，再仅为当天拖选半小时格。保存后家长预约「每周固定」时可见可约提示。此为唯一时段设置入口。</p>
             </div>
 
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5 hidden" data-warehouse-only>偏好教学仓（可多选）</label>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1.5" data-warehouse-off>偏好上课网点（可多选）</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 hidden" data-warehouse-only>偏好教学仓（可多选）</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5" data-warehouse-off>偏好上课网点（可多选）</label>
               <div id="spaceCheckboxes" class="flex flex-wrap gap-2"></div>
             </div>
 
             <div class="flex flex-wrap gap-2 pt-1">
               <button type="button" onclick="saveProfileEdits()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-teal-600/15 cursor-pointer inline-flex items-center gap-1.5">
-                <i class="fa-solid fa-floppy-disk text-[11px]"></i>
+                <i class="fa-solid fa-floppy-disk text-xs"></i>
                 保存服务画像
               </button>
               <button type="button" onclick="reloadDashboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer">
@@ -218,14 +218,14 @@
             <i class="fa-solid fa-inbox text-teal-600"></i>
             约课申请箱
           </h2>
-          <span id="inboxCountBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">0 待处理</span>
+          <span id="inboxCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">0 待处理</span>
         </div>
         <div class="px-4 sm:px-5 pt-3 flex flex-wrap gap-1.5" id="mentorBookingFilterBar">
-          <button type="button" data-filter="all" onclick="setMentorBookingFilter('all', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
-          <button type="button" data-filter="pending" onclick="setMentorBookingFilter('pending', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
-          <button type="button" data-filter="accepted" onclick="setMentorBookingFilter('accepted', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
-          <button type="button" data-filter="completed" onclick="setMentorBookingFilter('completed', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
-          <button type="button" data-filter="declined" onclick="setMentorBookingFilter('declined', this)" class="mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
+          <button type="button" data-filter="all" onclick="setMentorBookingFilter('all', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
+          <button type="button" data-filter="pending" onclick="setMentorBookingFilter('pending', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
+          <button type="button" data-filter="accepted" onclick="setMentorBookingFilter('accepted', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
+          <button type="button" data-filter="completed" onclick="setMentorBookingFilter('completed', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
+          <button type="button" data-filter="declined" onclick="setMentorBookingFilter('declined', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
         </div>
         <div id="bookingInbox" class="p-4 sm:p-5 space-y-3">
           <!-- 动态注入 -->
@@ -236,7 +236,7 @@
               <i class="fa-solid fa-circle-check text-emerald-600"></i>
               已完课
             </h3>
-            <span id="completedSessionsCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
+            <span id="completedSessionsCount" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
           </div>
           <div id="completedSessionsList" class="space-y-2.5"></div>
         </div>
@@ -251,11 +251,14 @@
         </h2>
         <p class="text-xs text-slate-500">课酬按一课一消托管；结课确认后进入 48 小时观察期再划拨。</p>
         <div class="grid sm:grid-cols-2 gap-2">
-          <button type="button" onclick="safeNavigate('index.html', '导师认证与建库')" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+          <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库')" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
             <i class="fa-solid fa-id-card mr-1.5"></i>补件 / 重新建档
           </button>
           <button type="button" onclick="openSensitiveChangeModal()" class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
             <i class="fa-solid fa-shield-halved mr-1.5 text-amber-600"></i>申请变更敏感信息
+          </button>
+          <button type="button" onclick="openMentorSettings()" class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
+            <i class="fa-solid fa-user-pen mr-1.5 text-teal-600"></i>服务画像与可约时段
           </button>
         </div>
       </section>
@@ -268,13 +271,13 @@
             反馈与投诉
           </h2>
           <button type="button" onclick="openFeedbackModal()" class="text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1.5">
-            <i class="fa-solid fa-plus text-[10px]"></i>
+            <i class="fa-solid fa-plus text-xs"></i>
             <span>提交反馈</span>
           </button>
         </div>
         <div id="feedbackTicketsList" class="p-4 sm:p-5 space-y-3">
           <!-- 动态注入 -->
-          <div class="text-center text-xs text-slate-400 py-6">
+          <div class="text-center text-xs text-slate-500 py-6">
             暂无反馈记录
           </div>
         </div>
@@ -284,7 +287,7 @@
     </div>
   </main>
 
-  <footer class="w-full py-4 text-center text-[11px] text-slate-400 border-t border-slate-200 bg-white/60">
+  <footer class="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-200 bg-white/60">
     <p>© 2026 星火学伴 · 导师工作台 · 阳光合规课辅</p>
     <p><a href="https://beian.miit.gov.cn/" target="_blank" class="text-slate-500 hover:text-teal-700">蜀ICP备2026058908号-2</a></p>
   </footer>
@@ -294,7 +297,7 @@
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="feedbackModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-sm font-black text-slate-900">提交反馈与投诉</h3>
-        <button type="button" onclick="closeFeedbackModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="closeFeedbackModal()" class="text-slate-500 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="px-5 py-4 space-y-3">
         <div>
@@ -345,38 +348,38 @@
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="sensitiveModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-sm font-black text-slate-900">申请变更敏感信息</h3>
-        <button type="button" onclick="closeSensitiveChangeModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="closeSensitiveChangeModal()" class="text-slate-500 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+      <div class="px-5 py-4 space-y-3 text-sm text-slate-600 leading-relaxed">
         <p>变更真实姓名、身份证、学信网验证码或银行卡后，档案将<strong class="text-amber-700">回退为「待审核」</strong>，需教研复审通过后方可再次接单展示。</p>
         <div class="space-y-2">
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更姓名</label>
-            <input id="sensRealName" type="text" placeholder="例：张若愚" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            <label class="block text-xs font-bold text-slate-500 mb-1">拟变更姓名</label>
+            <input id="sensRealName" type="text" placeholder="例：张若愚" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更身份证号</label>
-            <input id="sensIdCard" type="text" placeholder="例：510107************" maxlength="18" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            <label class="block text-xs font-bold text-slate-500 mb-1">拟变更身份证号</label>
+            <input id="sensIdCard" type="text" placeholder="例：510107************" maxlength="18" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">拟变更学信网验证码（选填）</label>
-            <input id="sensChsi" type="text" maxlength="16" placeholder="例：A98F72KL50198821，留空表示暂不更新" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+            <label class="block text-xs font-bold text-slate-500 mb-1">拟变更学信网验证码（选填）</label>
+            <input id="sensChsi" type="text" maxlength="16" placeholder="例：A98F72KL50198821，留空表示暂不更新" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
             <div class="flex flex-wrap items-center gap-2 mt-2">
-              <a href="https://my.chsi.com.cn/archive/bab/index.action?" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1.5 rounded-lg">
-                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              <a href="https://my.chsi.com.cn/archive/bab/index.action?" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1.5 rounded-lg">
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                 去学信网查验证码
               </a>
             </div>
-            <p class="text-[10px] text-slate-400 mt-1">登录学信档案申请「教育部学籍在线验证报告」后复制 16 位在线验证码</p>
+            <p class="text-xs text-slate-500 mt-1">登录学信档案申请「教育部学籍在线验证报告」后复制 16 位在线验证码</p>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1">开户行</label>
-              <input id="sensBankName" type="text" placeholder="例：招商银行" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+              <label class="block text-xs font-bold text-slate-500 mb-1">开户行</label>
+              <input id="sensBankName" type="text" placeholder="例：招商银行" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
             </div>
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-1">银行卡号</label>
-              <input id="sensBankCard" type="text" placeholder="例：621483********8000" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+              <label class="block text-xs font-bold text-slate-500 mb-1">银行卡号</label>
+              <input id="sensBankCard" type="text" placeholder="例：621483********8000" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
             </div>
           </div>
         </div>
@@ -393,10 +396,10 @@
     <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden" id="declineModalContent">
       <div class="px-5 py-4 border-b border-slate-100">
         <h3 class="text-sm font-black text-slate-900">婉拒约课申请</h3>
-        <p class="text-[11px] text-slate-500 mt-1">请填写原因，家长端将可见。</p>
+        <p class="text-xs text-slate-500 mt-1">请填写原因，家长端将可见。</p>
       </div>
       <div class="px-5 py-4">
-        <textarea id="declineReasonInput" rows="3" placeholder="例：该时段已有排课，请改约周日下午" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400 resize-y"></textarea>
+        <textarea id="declineReasonInput" rows="3" placeholder="例：该时段已有排课，请改约周日下午" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500 resize-y"></textarea>
       </div>
       <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
         <button type="button" onclick="closeDeclineModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">取消</button>
@@ -416,14 +419,14 @@
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="viewSummaryModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>查看小结</h3>
-        <button type="button" onclick="closeViewSummaryModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="closeViewSummaryModal()" class="text-slate-500 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="px-5 py-4 space-y-2.5">
-        <div id="viewSummaryMeta" class="text-[11px] text-slate-400"></div>
+        <div id="viewSummaryMeta" class="text-xs text-slate-500"></div>
         <h4 id="viewSummaryTitle" class="text-sm font-bold text-slate-900"></h4>
         <div id="viewSummaryTags" class="flex flex-wrap gap-1.5"></div>
         <div id="viewSummaryBody" class="rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap"></div>
-        <p id="viewSummaryTime" class="text-[10px] text-slate-400"></p>
+        <p id="viewSummaryTime" class="text-xs text-slate-500"></p>
       </div>
       <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
         <button type="button" onclick="closeViewSummaryModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 cursor-pointer">关闭</button>
@@ -436,25 +439,25 @@
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="completeSessionModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-teal-600"></i>确认结课 · 课后小结</h3>
-        <button type="button" onclick="closeCompleteSessionModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="closeCompleteSessionModal()" class="text-slate-500 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="px-5 py-4 space-y-3 text-xs text-slate-600">
-        <p class="text-[11px] text-slate-500 leading-relaxed">确认后进入 <strong class="text-teal-800">48 小时</strong> 无投诉划拨观察期。可同步填写课后小结供家长查看。</p>
-        <div id="completeSessionMeta" class="rounded-xl border border-teal-100 bg-teal-50/50 px-3 py-2 text-[11px] text-teal-900"></div>
+        <p class="text-sm text-slate-500 leading-relaxed">确认后进入 <strong class="text-teal-800">48 小时</strong> 无投诉划拨观察期。可同步填写课后小结供家长查看。</p>
+        <div id="completeSessionMeta" class="rounded-xl border border-teal-100 bg-teal-50/50 px-3 py-2 text-xs text-teal-900"></div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 mb-1">小结标题（可选）</label>
-          <input id="summaryTitle" type="text" placeholder="例：二次函数最值专题复盘" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400">
+          <label class="block text-xs font-bold text-slate-500 mb-1">小结标题（可选）</label>
+          <input id="summaryTitle" type="text" placeholder="例：二次函数最值专题复盘" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 mb-1">课后小结 <span class="text-rose-500">*</span></label>
-          <textarea id="summaryContent" rows="4" placeholder="本课掌握情况、作业布置、下次建议…" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400 resize-y"></textarea>
+          <label class="block text-xs font-bold text-slate-500 mb-1">课后小结 <span class="text-rose-500">*</span></label>
+          <textarea id="summaryContent" rows="4" placeholder="本课掌握情况、作业布置、下次建议…" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-500 resize-y"></textarea>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 mb-1.5">标签（可多选）</label>
+          <label class="block text-xs font-bold text-slate-500 mb-1.5">标签（可多选）</label>
           <div class="flex flex-wrap gap-1.5" id="summaryTagBox">
-            <label class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="掌握情况" class="summary-tag hidden">掌握情况</label>
-            <label class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="作业" class="summary-tag hidden">作业</label>
-            <label class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="下次建议" class="summary-tag hidden">下次建议</label>
+            <label class="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="掌握情况" class="summary-tag hidden">掌握情况</label>
+            <label class="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="作业" class="summary-tag hidden">作业</label>
+            <label class="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-white cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-800"><input type="checkbox" value="下次建议" class="summary-tag hidden">下次建议</label>
           </div>
         </div>
       </div>
@@ -565,11 +568,11 @@
       const st = mentor.status || 'pending';
       const meta = STATUS_META[st] || STATUS_META.pending;
       const pill = document.getElementById('heroStatusPill');
-      pill.className = 'text-[11px] font-bold px-3 py-1.5 rounded-full border ' + meta.pill;
+      pill.className = 'text-xs font-bold px-3 py-1.5 rounded-full border ' + meta.pill;
       pill.innerText = meta.label + (mentor.sensitiveChangePending ? ' · 敏感变更复审' : '');
 
       const badge = document.getElementById('auditStatusBadge');
-      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full ' + meta.badge;
+      badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full ' + meta.badge;
       badge.innerText = meta.label;
 
       document.getElementById('auditCode').innerText = mentor.code || mentor.id || '—';
@@ -579,7 +582,7 @@
 
       const banner = document.getElementById('statusBanner');
       banner.classList.remove('hidden');
-      banner.className = 'rounded-2xl border px-4 py-3 text-xs leading-relaxed ' + meta.banner;
+      banner.className = 'rounded-2xl border px-4 py-3 text-sm leading-relaxed ' + meta.banner;
       if (st === 'approved' && !mentor.sensitiveChangePending) {
         banner.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i>您已正式入库，可接单并维护服务画像。家长端可匹配到您的卡片。';
       } else if (st === 'pending') {
@@ -759,7 +762,7 @@
       mentorBookingFilter = key || 'all';
       Array.prototype.forEach.call(document.querySelectorAll('.mentor-bk-filter'), function (el) {
         const on = el.getAttribute('data-filter') === mentorBookingFilter;
-        el.className = 'mentor-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
+        el.className = 'mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
           (on ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50');
       });
       if (CURRENT_MENTOR) renderInbox(CURRENT_MENTOR);
@@ -793,8 +796,8 @@
       document.getElementById('viewSummaryTitle').innerText = (summary && summary.title) || '课后小结';
       const tags = (summary && summary.tags) || [];
       document.getElementById('viewSummaryTags').innerHTML = tags.map(function (t) {
-        return '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">' + escapeHtml(t) + '</span>';
-      }).join('') || '<span class="text-[10px] text-slate-400">无标签</span>';
+        return '<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">' + escapeHtml(t) + '</span>';
+      }).join('') || '<span class="text-xs text-slate-500">无标签</span>';
       document.getElementById('viewSummaryBody').innerText = (summary && summary.content) || '（暂无内容）';
       document.getElementById('viewSummaryTime').innerText = (summary && summary.createdAt) ? ('填写于 ' + summary.createdAt) : '';
       const modal = document.getElementById('viewSummaryModal');
@@ -824,7 +827,7 @@
       if (!rows.length) {
         if (mentorBookingFilter === 'completed') {
           panel.classList.remove('hidden');
-          box.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">暂无已完课记录</div>';
+          box.innerHTML = '<div class="text-center py-6 text-xs text-slate-500">暂无已完课记录</div>';
         } else {
           panel.classList.add('hidden');
           box.innerHTML = '';
@@ -837,26 +840,26 @@
         const b = row.booking;
         const s = row.session;
         const escrow = s.escrowStatus === 'released'
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
-          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
+          ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
+          : '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
         const sumBtn = s.classSummary
-          ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
-          : '<span class="text-[10px] text-slate-400">暂无小结</span>';
+          ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
+          : '<span class="text-xs text-slate-500">暂无小结</span>';
         const typePill = b.type === 'trial'
-          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
+          ? '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
           : (b.type === 'weekly'
-            ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
-            : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>');
+            ? '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+            : '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>');
         return '<div class="rounded-xl border border-emerald-100 bg-white p-3 space-y-1.5">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
               '<div class="flex items-center gap-1.5 flex-wrap">' +
                 '<span class="text-sm font-bold text-slate-900">' + escapeHtml(b.studentNickname || '学员') + '</span>' +
                 typePill +
-                '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
+                '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
               '</div>' +
-              '<div class="text-[11px] text-slate-500">' + escapeHtml(b.subject || '') + ' · 家长 ' + escapeHtml(b.parentName || '—') + '</div>' +
-              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
+              '<div class="text-xs text-slate-500">' + escapeHtml(b.subject || '') + ' · 家长 ' + escapeHtml(b.parentName || '—') + '</div>' +
+              '<div class="text-xs text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
                 escapeHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</div>' +
             '</div>' +
             '<div class="flex flex-col items-end gap-1.5 shrink-0">' + escrow + sumBtn + '</div>' +
@@ -877,12 +880,15 @@
       const leavePendingCount = list.reduce((n, b) => n + ((b.sessions || []).filter((s) => s.status === 'leave_pending').length), 0);
       const completedCount = collectCompletedSessions(list).length;
       document.getElementById('inboxCountBadge').innerText = pending.length + ' 待处理' + (leavePendingCount ? ' · ' + leavePendingCount + ' 请假' : '') + (completedCount ? ' · ' + completedCount + ' 已完课' : '');
+      if (window.UserConsoleNav && typeof UserConsoleNav.setTabBadge === 'function') {
+        UserConsoleNav.setTabBadge('courses', pending.length + leavePendingCount);
+      }
 
       renderCompletedSessionsPanel(list);
 
       const box = document.getElementById('bookingInbox');
       if (mentorBookingFilter === 'completed') {
-        box.innerHTML = '<div class="text-[11px] text-slate-400 text-center py-2">下方「已完课」面板展示结课明细</div>';
+        box.innerHTML = '<div class="text-xs text-slate-500 text-center py-2">下方「已完课」面板展示结课明细</div>';
         return;
       }
 
@@ -898,11 +904,11 @@
       }
 
       if (!list.length) {
-        box.innerHTML = '<div class="text-center py-8 text-xs text-slate-400"><i class="fa-regular fa-inbox text-2xl mb-2 block text-slate-300"></i>暂无约课申请。家长预约后将出现在此处。</div>';
+        box.innerHTML = '<div class="text-center py-8 text-xs text-slate-500"><i class="fa-regular fa-inbox text-2xl mb-2 block text-slate-300"></i>暂无约课申请。家长预约后将出现在此处。</div>';
         return;
       }
       if (!filtered.length) {
-        box.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">该状态下暂无约课</div>';
+        box.innerHTML = '<div class="text-center py-6 text-xs text-slate-500">该状态下暂无约课</div>';
         return;
       }
 
@@ -916,52 +922,52 @@
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
         const typePill = isTrial
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
+          ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课·免费</span>'
           : (isWeekly
-            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
-            : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>');
+            ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
+            : '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-white text-slate-600 border-slate-200">单次</span>');
         const actions = canAct
           ? '<div class="flex flex-wrap gap-2 mt-3">' +
-              '<button type="button" onclick="acceptBooking(\'' + b.id + '\')" class="text-[11px] font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-check"></i>接单</button>' +
-              '<button type="button" onclick="openDeclineModal(\'' + b.id + '\')" class="text-[11px] font-bold bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i>婉拒</button>' +
+              '<button type="button" onclick="acceptBooking(\'' + b.id + '\')" class="text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-check"></i>接单</button>' +
+              '<button type="button" onclick="openDeclineModal(\'' + b.id + '\')" class="text-xs font-bold bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-lg cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i>婉拒</button>' +
             '</div>'
           : (b.status === 'declined' && b.declineReason
-            ? '<div class="mt-2 text-[11px] text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-2.5 py-1.5">婉拒原因：' + escapeHtml(b.declineReason) + '</div>'
+            ? '<div class="mt-2 text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-2.5 py-1.5">婉拒原因：' + escapeHtml(b.declineReason) + '</div>'
             : (b.status === 'accepted'
               ? (window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()
-                ? '<div class="mt-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单 · 家长端可开启 IoT 通行凭证 · 结课后 48h 划拨</div>'
-                : '<div class="mt-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单，请按时上课 · 结课后 48h 划拨</div>')
+                ? '<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单 · 家长端可开启 IoT 通行凭证 · 结课后 48h 划拨</div>'
+                : '<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">已接单，请按时上课 · 结课后 48h 划拨</div>')
               : ''));
 
         let sessionsHtml = '';
         if (Array.isArray(b.sessions) && b.sessions.length) {
           sessionsHtml = '<div class="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2">' +
-            (isWeekly ? '<div class="text-[10px] font-bold text-teal-800 mb-1">每周系列课次 · 费用已提前冻结</div>' : '') +
+            (isWeekly ? '<div class="text-xs font-bold text-teal-800 mb-1">每周系列课次 · 费用已提前冻结</div>' : '') +
             b.sessions.map((s) => {
               const sb = sessionStatusBadge(s.status);
               let leaveActs = '';
               if (s.status === 'leave_pending') {
-                leaveActs = '<button type="button" onclick="mentorConfirmLeave(\'' + b.id + '\',\'' + s.id + '\',true)" class="text-[10px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-2 py-0.5 rounded-lg cursor-pointer">确认请假</button>' +
-                  '<button type="button" onclick="mentorConfirmLeave(\'' + b.id + '\',\'' + s.id + '\',false)" class="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">驳回</button>';
+                leaveActs = '<button type="button" onclick="mentorConfirmLeave(\'' + b.id + '\',\'' + s.id + '\',true)" class="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-2 py-0.5 rounded-lg cursor-pointer">确认请假</button>' +
+                  '<button type="button" onclick="mentorConfirmLeave(\'' + b.id + '\',\'' + s.id + '\',false)" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">驳回</button>';
               } else if (s.status === 'scheduled' && b.status === 'accepted') {
-                leaveActs = '<button type="button" onclick="mentorRequestLeave(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">代请假</button>' +
-                  '<button type="button" onclick="markSessionCompletedFromMentor(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">确认结课</button>';
+                leaveActs = '<button type="button" onclick="mentorRequestLeave(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg cursor-pointer">代请假</button>' +
+                  '<button type="button" onclick="markSessionCompletedFromMentor(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">确认结课</button>';
               } else if (s.status === 'completed') {
                 leaveActs = (s.classSummary
-                  ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>' +
-                    '<button type="button" onclick="openEditSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">编辑小结</button>'
-                  : '<button type="button" onclick="openEditSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">补写小结</button>');
+                  ? '<button type="button" onclick="openViewSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>' +
+                    '<button type="button" onclick="openEditSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg cursor-pointer">编辑小结</button>'
+                  : '<button type="button" onclick="openEditSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">补写小结</button>');
               }
               const escrow = s.escrowStatus === 'released'
-                ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
-                : (s.status === 'completed' ? '<span class="text-[10px] text-amber-700">48h观察中</span>' : '<span class="text-[10px] text-slate-400">冻结中</span>');
+                ? '<span class="text-xs text-emerald-700">已划拨</span>'
+                : (s.status === 'completed' ? '<span class="text-xs text-amber-700">48h观察中</span>' : '<span class="text-xs text-slate-500">冻结中</span>');
               const sumHint = s.classSummary
-                ? '<div class="w-full text-[10px] text-slate-500 mt-0.5 truncate">小结：' + escapeHtml((s.classSummary.title ? s.classSummary.title + ' · ' : '') + (s.classSummary.content || '').slice(0, 40)) + '</div>'
+                ? '<div class="w-full text-xs text-slate-500 mt-0.5 truncate">小结：' + escapeHtml((s.classSummary.title ? s.classSummary.title + ' · ' : '') + (s.classSummary.content || '').slice(0, 40)) + '</div>'
                 : '';
-              return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
+              return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-xs bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
                 '<div class="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">' +
                   '<span class="font-medium text-slate-800">' + escapeHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</span>' +
-                  '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border ' + sb.cls + '">' + sb.text + '</span>' +
+                  '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border ' + sb.cls + '">' + sb.text + '</span>' +
                   sumHint +
                 '</div>' +
                 '<div class="flex items-center gap-1.5">' + escrow + leaveActs + '</div>' +
@@ -975,21 +981,21 @@
               '<div class="flex items-center gap-2 flex-wrap">' +
                 '<span class="text-sm font-bold text-slate-900">' + escapeHtml(b.studentNickname || '学员') + '</span>' +
                 typePill +
-                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
               '</div>' +
-              '<div class="text-[11px] text-slate-500">' +
+              '<div class="text-xs text-slate-500">' +
                 escapeHtml(b.studentGrade || '年级待填') + ' · ' + escapeHtml(b.subject || '学科待定') +
               '</div>' +
             '</div>' +
             '<div class="text-right shrink-0">' +
               '<div class="text-sm font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
-              '<div class="text-[10px] text-slate-400">' + (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包冻结' : '托管锁定')) + ' · ' + (isTrial ? 1 : (b.hours || 2)) + 'h' + (isWeekly && b.sessionCount ? ' ×' + b.sessionCount : '') + '</div>' +
+              '<div class="text-xs text-slate-500">' + (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包冻结' : '托管锁定')) + ' · ' + (isTrial ? 1 : (b.hours || 2)) + 'h' + (isWeekly && b.sessionCount ? ' ×' + b.sessionCount : '') + '</div>' +
             '</div>' +
           '</div>' +
-          '<div class="mt-2.5 grid sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600">' +
+          '<div class="mt-2.5 grid sm:grid-cols-2 gap-1.5 text-xs text-slate-600">' +
             '<div><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + escapeHtml(b.space || '—') + '</div>' +
             '<div><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' + escapeHtml(b.schedule || b.timeSlot || '—') + '</div>' +
-            '<div class="sm:col-span-2 text-slate-400">家长：' + escapeHtml(b.parentName || '—') + (b.createdAt ? ' · 申请于 ' + escapeHtml(b.createdAt) : '') + '</div>' +
+            '<div class="sm:col-span-2 text-slate-500">家长：' + escapeHtml(b.parentName || '—') + (b.createdAt ? ' · 申请于 ' + escapeHtml(b.createdAt) : '') + '</div>' +
           '</div>' +
           sessionsHtml +
           actions +
@@ -1266,7 +1272,7 @@
       const list = StorageService.getTicketsForMentor(mentor.id);
       const box = document.getElementById('feedbackTicketsList');
       if (!list || !list.length) {
-        box.innerHTML = '<div class="text-center text-xs text-slate-400 py-6">暂无反馈记录</div>';
+        box.innerHTML = '<div class="text-center text-xs text-slate-500 py-6">暂无反馈记录</div>';
         return;
       }
 
@@ -1280,10 +1286,10 @@
       box.innerHTML = list.map((t) => {
         const st = STATUS_MAP[t.status] || STATUS_MAP['待处理'];
         const handlerNote = t.handlerNote && t.handlerNote.trim()
-          ? '<div class="mt-2 text-[11px] bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 text-blue-900"><strong>处理备注：</strong>' + escapeHtml(t.handlerNote) + '</div>'
+          ? '<div class="mt-2 text-xs bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 text-blue-900"><strong>处理备注：</strong>' + escapeHtml(t.handlerNote) + '</div>'
           : '';
         const handledInfo = t.handledAt
-          ? '<div class="text-[10px] text-slate-400 mt-1">处理时间：' + escapeHtml(t.handledAt) + (t.handledBy ? ' · ' + escapeHtml(t.handledBy) : '') + '</div>'
+          ? '<div class="text-xs text-slate-500 mt-1">处理时间：' + escapeHtml(t.handledAt) + (t.handledBy ? ' · ' + escapeHtml(t.handledBy) : '') + '</div>'
           : '';
 
         return '<div class="rounded-2xl border border-slate-200 bg-white p-3.5">' +
@@ -1291,15 +1297,15 @@
             '<div class="space-y-1 min-w-0 flex-1">' +
               '<div class="flex items-center gap-2 flex-wrap">' +
                 '<span class="text-sm font-bold text-slate-900">' + escapeHtml(t.title) + '</span>' +
-                '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
               '</div>' +
-              '<div class="text-[11px] text-slate-500">' +
+              '<div class="text-xs text-slate-500">' +
                 escapeHtml(t.type) + (t.bookingId ? ' · 关联订单 ' + escapeHtml(t.bookingId) : '') +
               '</div>' +
             '</div>' +
-            '<div class="text-[10px] text-slate-400">' + escapeHtml(t.createdAt || '') + '</div>' +
+            '<div class="text-xs text-slate-500">' + escapeHtml(t.createdAt || '') + '</div>' +
           '</div>' +
-          '<div class="text-xs text-slate-700 leading-relaxed">' + escapeHtml(t.detail) + '</div>' +
+          '<div class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(t.detail) + '</div>' +
           handlerNote +
           handledInfo +
         '</div>';

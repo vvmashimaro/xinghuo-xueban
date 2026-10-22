@@ -15,6 +15,7 @@ Page({
     list: [],
     selectedId: '',
     current: null,
+    detailShow: false,
     pendingCount: 0,
     approvedCount: 0,
     totalCount: 0,
@@ -60,8 +61,8 @@ Page({
       const order = { pending: 0, supplement: 1, approved: 2, rejected: 3 };
       return (order[a.status] || 9) - (order[b.status] || 9);
     });
-    const selectedId = this.data.selectedId || (list[0] && list[0].id) || '';
-    const current = list.find((m) => m.id === selectedId) || list[0] || null;
+    const keepId = this.data.detailShow ? this.data.selectedId : '';
+    const current = keepId ? (list.find((m) => m.id === keepId) || null) : null;
     this.setData({
       list,
       pendingCount,
@@ -69,7 +70,8 @@ Page({
       totalCount: all.length,
       selectedId: current ? current.id : '',
       current,
-      reviewComment: (current && current.reviewComment) || ''
+      reviewComment: (current && current.reviewComment) || '',
+      detailShow: !!(this.data.detailShow && current)
     });
   },
 
@@ -85,8 +87,12 @@ Page({
     this.setData({
       selectedId: id,
       current,
-      reviewComment: (current && current.reviewComment) || ''
+      reviewComment: (current && current.reviewComment) || '',
+      detailShow: true
     });
+  },
+  closeDetail() {
+    this.setData({ detailShow: false });
   },
   onComment(e) { this.setData({ reviewComment: e.detail.value }); },
   onGrade(e) { this.setData({ gradeIndex: Number(e.detail.value) }); },
@@ -127,8 +133,18 @@ Page({
   },
   goLogin() { wx.reLaunch({ url: '/pages/login/login' }); },
   resetDemo() {
-    Storage.resetDemoData();
-    showToast('本地数据已重置');
-    this.setData({ selectedId: '' }, () => this.reload());
+    wx.showModal({
+      title: '重置本地数据',
+      content: '将清空本机演示数据并恢复初始样例，不可撤销。确定继续？',
+      confirmText: '确认重置',
+      confirmColor: '#e11d48',
+      cancelText: '取消',
+      success: (res) => {
+        if (!res.confirm) return;
+        Storage.resetDemoData();
+        showToast('本地数据已重置');
+        this.setData({ selectedId: '', current: null, detailShow: false }, () => this.reload());
+      }
+    });
   }
 });

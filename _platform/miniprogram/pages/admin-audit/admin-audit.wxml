@@ -36,8 +36,18 @@
     <view class="muted" style="margin-top:8rpx;">{{item.subjectsText}} · ¥{{item.hourlyRate}}/h</view>
   </view>
 
-  <view class="card" wx:if="{{current}}">
-    <view class="card-title">案卷详情 · {{current.id}}</view>
+  <button class="btn-ghost" style="width:100%;" bindtap="goLogin">返回登录</button>
+  <button class="btn-danger-ghost" bindtap="resetDemo">重置本地数据</button>
+</view>
+
+<view class="modal-mask audit-drawer-mask" wx:if="{{detailShow}}" bindtap="closeDetail"></view>
+<view class="audit-drawer" wx:if="{{detailShow && current}}">
+  <view class="audit-drawer-handle" bindtap="closeDetail"></view>
+  <view class="row-between" style="margin-bottom:16rpx;">
+    <view class="card-title" style="margin:0;">案卷详情 · {{current.id}}</view>
+    <text class="muted" bindtap="closeDetail">关闭</text>
+  </view>
+  <scroll-view scroll-y class="audit-drawer-body">
     <view class="detail-line">手机：{{current.phone}}（尾号 {{current.phoneLast4}}）</view>
     <view class="detail-line">身份证：{{current.idCard}}</view>
     <view class="detail-line">学信网：{{current.chsiCode}} · {{current.chsiStatus}}</view>
@@ -63,8 +73,5 @@
       <button class="btn-ghost" style="flex:1;" bindtap="onSupplement">打回补件</button>
       <button class="btn-primary" style="flex:2;" bindtap="onApprove">核准入库</button>
     </view>
-  </view>
-
-  <button class="btn-ghost" style="width:100%;" bindtap="goLogin">返回登录</button>
-  <button class="btn-ghost" style="width:100%;margin-top:12rpx;" bindtap="resetDemo">重置本地数据</button>
+  </scroll-view>
 </view>

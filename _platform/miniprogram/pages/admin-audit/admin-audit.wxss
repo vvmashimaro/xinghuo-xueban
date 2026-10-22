@@ -3,7 +3,7 @@
 .filter-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 20rpx; }
 .ftab {
   padding: 10rpx 18rpx; border-radius: 12rpx; background: #f1f5f9;
-  font-size: 22rpx; color: #64748b; font-weight: 600;
+  font-size: 24rpx; color: #64748b; font-weight: 600;
 }
 .ftab.on { background: #0d9488; color: #fff; }
 .mentor-row.sel { border-color: #14b8a6; box-shadow: 0 0 0 2px rgba(13,148,136,0.2); }
@@ -14,10 +14,47 @@
 }
 .name { font-weight: 800; font-size: 28rpx; }
 .phone-tail {
-  font-size: 20rpx; font-family: monospace; background: #f8fafc;
+  font-size: 24rpx; font-family: monospace; background: #f8fafc;
   border: 1px solid #e2e8f0; padding: 4rpx 12rpx; border-radius: 8rpx; color: #64748b;
 }
 .detail-line { font-size: 24rpx; color: #475569; margin-bottom: 8rpx; word-break: break-all; }
+.btn-danger-ghost {
+  width: 100%;
+  margin-top: 16rpx;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  border-radius: 16rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  padding: 18rpx 24rpx;
+}
+.btn-danger-ghost::after { border: none; }
+.audit-drawer-mask { z-index: 980; }
+.audit-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 990;
+  max-height: 78vh;
+  background: #fff;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 16rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -12rpx 40rpx rgba(15, 23, 42, 0.16);
+  display: flex;
+  flex-direction: column;
+}
+.audit-drawer-handle {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: #cbd5e1;
+  margin: 0 auto 16rpx;
+}
+.audit-drawer-body {
+  max-height: 62vh;
+}
 
 picker {
   position: relative;

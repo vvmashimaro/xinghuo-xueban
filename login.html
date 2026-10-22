@@ -45,21 +45,21 @@
       <div class="min-w-0">
         <div class="flex items-center gap-2">
           <span class="font-black text-white text-base tracking-tight leading-none">星火学伴</span>
-          <span class="text-[10px] bg-teal-500/20 text-teal-300 px-1.5 py-0.5 rounded font-mono">AUTH</span>
+          <span class="text-xs bg-teal-500/20 text-teal-300 px-1.5 py-0.5 rounded font-mono">AUTH</span>
         </div>
-        <span class="text-[10px] text-slate-400 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
+        <span class="text-xs text-slate-400 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
       </div>
     </div>
 
     <!-- 角色切换：右上角紧凑分段控件 -->
     <div id="roleSwitchBar" class="flex items-center gap-0.5 p-0.5 rounded-full bg-white/10 backdrop-blur-md shrink-0" role="tablist" aria-label="登录角色">
-      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false">
-        <i class="fa-solid fa-user-group text-[10px] opacity-70"></i>
+      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false">
+        <i class="fa-solid fa-user-group text-xs opacity-70"></i>
         <span class="hidden xs:inline sm:inline">家长学员端</span>
         <span class="sm:hidden">家长</span>
       </button>
-      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer" role="tab" aria-selected="true">
-        <i class="fa-solid fa-chalkboard-user text-[10px] text-teal-600"></i>
+      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer" role="tab" aria-selected="true">
+        <i class="fa-solid fa-chalkboard-user text-xs text-teal-600"></i>
         <span class="hidden xs:inline sm:inline">导师端</span>
         <span class="sm:hidden">导师</span>
       </button>
@@ -73,7 +73,7 @@
       <!-- 动态标题说明 -->
       <div class="space-y-1">
         <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">伴读导师端登录</h1>
-        <p id="roleSubtitle" class="text-xs text-slate-300/80 leading-relaxed">
+        <p id="roleSubtitle" class="text-sm text-slate-300/80 leading-relaxed">
           资金保障 · 阳光透明接单授课
         </p>
       </div>
@@ -104,7 +104,7 @@
               获取验证码
             </button>
           </div>
-          <div id="smsDemoHint" class="text-[10px] text-slate-400 flex items-center gap-1 pt-0.5">
+          <div id="smsDemoHint" class="text-xs text-slate-400 flex items-center gap-1 pt-0.5">
             <i class="fa-solid fa-circle-info text-teal-400"></i>
             <span id="smsDemoHintText">请先点击「获取验证码」，验证码将发送至您的手机</span>
           </div>
@@ -125,7 +125,7 @@
         <!-- 登录方式切换链接与忘记密码 -->
         <div class="flex items-center justify-between text-xs pt-0.5">
           <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-300 hover:text-teal-200 font-semibold flex items-center gap-1 transition cursor-pointer">
-            <i class="fa-solid fa-rotate text-[10px]"></i>
+            <i class="fa-solid fa-rotate text-xs"></i>
             <span id="toggleLoginModeText">改用账号密码登录</span>
           </button>
           <button type="button" onclick="showToast('请联系平台教研客服或使用免密短信重置')" class="text-slate-400 hover:text-slate-200 transition cursor-pointer">
@@ -154,7 +154,7 @@
 
         <!-- 跳转失败时的手动进入兜底 -->
         <div id="manualEnterFallback" class="hidden mt-2 text-center">
-          <p class="text-[11px] text-amber-200/90 bg-amber-500/15 rounded-xl px-3 py-2 mb-2">
+          <p class="text-xs text-amber-200/90 bg-amber-500/15 rounded-xl px-3 py-2 mb-2">
             页面未自动跳转？请点击下方手动进入
           </p>
           <a id="manualEnterLink" href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-teal-200 hover:text-white bg-teal-500/20 hover:bg-teal-500/30 px-4 py-2 rounded-xl transition">
@@ -168,9 +168,9 @@
       <!-- 底部入驻指引（无分割线） -->
       <div id="registerPromptBox" class="pt-2 flex items-center justify-between text-xs gap-2">
         <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
-        <button type="button" onclick="safeNavigate('index.html', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+        <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
           <span>进入导师认证与建库 (L1/L2)</span>
-          <i class="fa-solid fa-angle-right text-[10px]"></i>
+          <i class="fa-solid fa-angle-right text-xs"></i>
         </button>
       </div>
 
@@ -193,7 +193,7 @@
   </main>
 
   <!-- 极简页脚 -->
-  <footer class="w-full py-4 text-center text-[11px] text-slate-500 relative z-10">
+  <footer class="w-full py-4 text-center text-xs text-slate-500 relative z-10">
     <p>© 2026 星火学伴 · 阳光课业辅导匹配与智能微空间生态系统</p>
     <p><a href="https://beian.miit.gov.cn/" target="_blank">蜀ICP备2026058908号-2</a></p>
   </footer>
@@ -231,8 +231,8 @@
     let pendingNavUrl = null;
     let pendingNavWatch = null;
 
-    const ROLE_TAB_ACTIVE = "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer";
-    const ROLE_TAB_IDLE = "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer";
+    const ROLE_TAB_ACTIVE = "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer";
+    const ROLE_TAB_IDLE = "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer";
 
     function showManualEnterFallback(targetUrl) {
       const box = document.getElementById('manualEnterFallback');
@@ -296,9 +296,9 @@
           : '资金保障 · 阳光透明接单授课';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
-          <button type="button" onclick="safeNavigate('index.html', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
             <span>进入导师认证与建库 (L1/L2)</span>
-            <i class="fa-solid fa-angle-right text-[10px]"></i>
+            <i class="fa-solid fa-angle-right text-xs"></i>
           </button>
         `;
       } else {
@@ -312,7 +312,7 @@
           <span class="text-slate-400 shrink-0">首次约课辅导？</span>
           <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
             <span>前往学情建档注册</span>
-            <i class="fa-solid fa-angle-right text-[10px]"></i>
+            <i class="fa-solid fa-angle-right text-xs"></i>
           </button>
         `;
       }
@@ -450,7 +450,7 @@
         } catch (e) {
           console.warn('Failed to fetch mentors:', e);
         }
-        return { url: 'index.html', title: '导师入库招募页' };
+        return { url: 'index.html?entry=mentor', title: '导师入库招募页' };
       }
       try {
         const parents = await StorageService.getParents();
@@ -625,6 +625,10 @@
       const rs = document.getElementById('roleSubtitle');
       if (rs) rs.innerText = window.getLoginRoleSubtitle(currentRole);
     }
+    try {
+      var bootRole = new URLSearchParams(window.location.search || '').get('role');
+      if (bootRole === 'parent' || bootRole === 'mentor') switchRole(bootRole);
+    } catch (e) {}
   </script>
 </body>
 </html>

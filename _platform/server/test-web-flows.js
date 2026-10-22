@@ -90,7 +90,7 @@ async function testParentRegistrationForm(browser) {
 async function testMentorOnboardingForm(browser) {
   console.log('\n[3] 测试导师入库表单加载...');
   const page = await browser.newPage();
-  await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle2' });
+  await page.goto(`${BASE_URL}/index.html?entry=mentor`, { waitUntil: 'networkidle2' });
 
   // 检查页面标题
   const title = await page.title();

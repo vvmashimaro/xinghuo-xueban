@@ -59,16 +59,16 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
-            <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">
+            <span class="text-xs bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">
               PARENT-HUB
             </span>
           </div>
           <!-- 快捷学情档案切换 -->
           <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-            <i class="fa-solid fa-circle-user text-teal-600 text-[11px]"></i>
+            <i class="fa-solid fa-circle-user text-teal-600 text-xs"></i>
             <span class="font-bold text-slate-800" id="headerStudentName">乐乐同学</span>
-            <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 rounded font-medium" id="headerGradeBadge">初三 · 中考冲刺</span>
-            <button type="button" onclick="openPassportDrawer()" class="text-teal-700 hover:text-teal-900 font-medium text-[11px] underline ml-1 cursor-pointer">
+            <span class="text-xs bg-slate-100 text-slate-600 px-1.5 rounded font-medium" id="headerGradeBadge">初三 · 中考冲刺</span>
+            <button type="button" onclick="openPassportDrawer()" class="text-teal-700 hover:text-teal-900 font-medium text-xs underline ml-1 cursor-pointer">
               查阅学情护照
             </button>
           </div>
@@ -83,10 +83,10 @@
             <i class="fa-solid fa-shield-halved"></i>
           </div>
           <div class="min-w-0">
-            <div class="text-[10px] text-slate-400 font-medium leading-none truncate" id="headerEscrowLabel">资金保障 · 一课一消</div>
+            <div class="text-xs text-slate-500 font-medium leading-none truncate" id="headerEscrowLabel">资金保障 · 一课一消</div>
             <div class="text-xs font-black text-slate-900 mt-0.5">
               <span id="headerEscrowFrozenWrap" class="hidden text-amber-700 font-mono">课次冻结 ¥<span id="headerEscrowFrozen">0.00</span></span>
-              <span id="headerEscrowEmpty" class="text-[11px] font-medium text-slate-500">暂无冻结课款</span>
+              <span id="headerEscrowEmpty" class="text-xs font-medium text-slate-500">暂无冻结课款</span>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@
         </button>
 
         <button type="button" onclick="safeNavigate('login.html', '登录认证中心')" class="text-xs text-slate-600 hover:text-teal-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
-          <i class="fa-solid fa-arrow-right-from-bracket text-slate-400"></i>
+          <i class="fa-solid fa-arrow-right-from-bracket text-slate-500"></i>
         </button>
       </div>
     </div>
@@ -169,21 +169,21 @@
           <i class="fa-solid fa-calendar-check text-teal-600"></i>
           我的约课
         </h2>
-        <button type="button" onclick="renderParentBookings()" class="text-[11px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg cursor-pointer">
+        <button type="button" onclick="renderParentBookings()" class="text-xs font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg cursor-pointer">
           刷新状态
         </button>
       </div>
       <div class="flex flex-wrap gap-1.5" id="parentBookingFilterBar">
-        <button type="button" data-filter="all" onclick="setParentBookingFilter('all', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
-        <button type="button" data-filter="unpaid" onclick="setParentBookingFilter('unpaid', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">未支付</button>
-        <button type="button" data-filter="pending" onclick="setParentBookingFilter('pending', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
-        <button type="button" data-filter="accepted" onclick="setParentBookingFilter('accepted', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
-        <button type="button" data-filter="completed" onclick="setParentBookingFilter('completed', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
-        <button type="button" data-filter="declined" onclick="setParentBookingFilter('declined', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
-        <button type="button" data-filter="cancelled" onclick="setParentBookingFilter('cancelled', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已取消</button>
+        <button type="button" data-filter="all" onclick="setParentBookingFilter('all', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
+        <button type="button" data-filter="unpaid" onclick="setParentBookingFilter('unpaid', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">未支付</button>
+        <button type="button" data-filter="pending" onclick="setParentBookingFilter('pending', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
+        <button type="button" data-filter="accepted" onclick="setParentBookingFilter('accepted', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
+        <button type="button" data-filter="completed" onclick="setParentBookingFilter('completed', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
+        <button type="button" data-filter="declined" onclick="setParentBookingFilter('declined', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
+        <button type="button" data-filter="cancelled" onclick="setParentBookingFilter('cancelled', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已取消</button>
       </div>
       <div id="parentBookingsList" class="space-y-2.5 text-xs">
-        <div class="text-slate-400 text-center py-4">加载中…</div>
+        <div class="text-slate-500 text-center py-4">加载中…</div>
       </div>
       <div id="parentCompletedPanel" class="hidden border-t border-slate-100 pt-3 space-y-2.5 bg-emerald-50/20 -mx-1 px-1 rounded-xl">
         <div class="flex items-center justify-between gap-2">
@@ -191,7 +191,7 @@
             <i class="fa-solid fa-circle-check text-emerald-600"></i>
             已完课
           </h3>
-          <span id="parentCompletedCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
+          <span id="parentCompletedCount" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
         </div>
         <div id="parentCompletedList" class="space-y-2"></div>
       </div>
@@ -208,9 +208,9 @@
       <!-- 主搜索输入框 + 搜索按钮 -->
       <div class="flex flex-col sm:flex-row gap-2.5">
         <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
           <input type="text" id="mainSearchInput" oninput="applyFilterAndSearch()" placeholder="搜索导师姓名、川大/电子科大、初中数学压轴模型、电学实验、艺考文化课..." class="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium transition">
-          <button type="button" onclick="clearSearchInput()" id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+          <button type="button" onclick="clearSearchInput()" id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 cursor-pointer">
             <i class="fa-solid fa-circle-xmark text-sm"></i>
           </button>
         </div>
@@ -231,7 +231,7 @@
         
         <!-- 学科分类筛选条 -->
         <div class="flex items-start sm:items-center gap-2">
-          <span class="text-slate-400 font-bold shrink-0 w-16 text-[11px]">学科方向：</span>
+          <span class="text-slate-500 font-bold shrink-0 w-16 text-xs">学科方向：</span>
           <div class="flex flex-wrap gap-1.5" id="subjectFilterGroup">
             <button type="button" onclick="setSubjectFilter('all', this)" class="filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer">全部学科</button>
             <button type="button" onclick="setSubjectFilter('数学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中数学</button>
@@ -247,7 +247,7 @@
 
         <!-- 空间网点筛选条 -->
         <div class="flex items-start sm:items-center gap-2">
-          <span class="text-slate-400 font-bold shrink-0 w-16 text-[11px]">空间网点：</span>
+          <span class="text-slate-500 font-bold shrink-0 w-16 text-xs">空间网点：</span>
           <div class="flex flex-wrap gap-1.5" id="spaceFilterGroup">
             <button type="button" onclick="setSpaceFilter('all', this)" class="space-chip px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer">全部成都市网点</button>
             <button type="button" onclick="setSpaceFilter('青羊金沙', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">青羊金沙微网点</button>
@@ -259,7 +259,7 @@
         <!-- 综合排序与高级滑块面板 -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 text-xs">
           <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium">排序维度：</span>
+            <span class="text-slate-500 font-medium">排序维度：</span>
             <select id="sortSelect" onchange="applyFilterAndSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-700 text-xs cursor-pointer">
               <option value="matchDesc" selected>AI 学情契合度最高</option>
               <option value="ratingDesc">家长好评率最高 (5.0★)</option>
@@ -271,7 +271,7 @@
 
           <!-- 时薪区间过滤（与家长建档 budgetMin/Max 对齐，可再收窄） -->
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-slate-400 font-medium">时薪预算区间：</span>
+            <span class="text-slate-500 font-medium">时薪预算区间：</span>
             <span class="font-mono font-bold text-teal-700">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">180</span>/h</span>
             <input type="range" id="rateMinFilter" min="70" max="260" step="10" value="80" oninput="onMinRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="下限">
             <input type="range" id="rateRangeFilter" min="70" max="260" step="10" value="180" oninput="onMaxRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="上限">
@@ -288,9 +288,9 @@
         <div class="flex items-center gap-2 font-bold text-slate-800">
           <i class="fa-solid fa-list text-teal-600"></i>
           <span>可约双一流导师库</span>
-          <span class="text-[11px] font-mono text-slate-400">（共 <strong id="tutorCountBadge" class="text-teal-700">6</strong> 位符合条件）</span>
+          <span class="text-xs font-mono text-slate-500">（共 <strong id="tutorCountBadge" class="text-teal-700">6</strong> 位符合条件）</span>
         </div>
-        <div class="flex items-center gap-2 text-[11px] text-slate-400">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
           <i class="fa-solid fa-shield-check text-emerald-600"></i>
           <span>导师学籍资质审核 · 课酬资金保障</span>
         </div>
@@ -314,7 +314,7 @@
         </h2>
         <p class="text-xs text-slate-500">一课一消托管；开课前 2 小时外撤销将原路退回微信支付账户。</p>
         <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs">
-          <div class="text-[10px] text-slate-400">当前冻结课款</div>
+          <div class="text-xs text-slate-500">当前冻结课款</div>
           <div class="text-lg font-black text-amber-700 font-mono mt-1" id="accountWalletFrozen">暂无冻结课款</div>
         </div>
         <div class="grid sm:grid-cols-2 gap-2 pt-1">
@@ -347,9 +347,9 @@
           <div>
             <h3 class="font-bold text-sm leading-tight flex items-center gap-1.5">
               <span id="modalTutorName">张老师</span>
-              <span class="text-[10px] bg-teal-500/30 text-teal-300 px-1.5 py-0.2 rounded font-mono" id="modalTutorCode">CD-2026-8809</span>
+              <span class="text-xs bg-teal-500/30 text-teal-300 px-1.5 py-0.2 rounded font-mono" id="modalTutorCode">CD-2026-8809</span>
             </h3>
-            <div class="text-[10px] text-slate-300">官方实名存证已备案 · 试讲教研综合评分 4.9/5.0</div>
+            <div class="text-xs text-slate-300">官方实名存证已备案 · 试讲教研综合评分 4.9/5.0</div>
           </div>
         </div>
         <button type="button" onclick="closeTutorDetailModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
@@ -369,20 +369,20 @@
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-base font-black text-slate-900" id="modalDetailName">张老师</span>
-                <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">学信网在籍有效</span>
-                <span class="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.2 rounded font-mono" id="modalRatingScore">5.0 ★</span>
+                <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">学信网在籍有效</span>
+                <span class="text-xs bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.2 rounded font-mono" id="modalRatingScore">5.0 ★</span>
               </div>
               <div class="text-slate-600 mt-1" id="modalUniversityAndDegree">四川大学 · 应用数学硕士在读</div>
-              <div class="text-[11px] text-slate-400 mt-0.5">授课累计：<span class="text-teal-700 font-bold" id="modalTotalHours">142</span> 课时 · 0 差评违约记录</div>
+              <div class="text-xs text-slate-500 mt-0.5">授课累计：<span class="text-teal-700 font-bold" id="modalTotalHours">142</span> 课时 · 0 差评违约记录</div>
             </div>
           </div>
 
           <div class="text-right sm:border-l sm:border-slate-200 sm:pl-4">
-            <span class="text-[10px] text-slate-400 block">课酬直划费率</span>
+            <span class="text-xs text-slate-500 block">课酬直划费率</span>
             <div class="text-xl font-black text-teal-700 font-mono">
               ¥<span id="modalHourlyRate">135</span><span class="text-xs font-normal text-slate-500"> /h</span>
             </div>
-            <span class="text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">一课一消 · 零大额预存</span>
+            <span class="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">一课一消 · 零大额预存</span>
           </div>
         </div>
 
@@ -393,14 +393,14 @@
               <i class="fa-solid fa-circle-play text-teal-600"></i>
               <span>5-10分钟真题实景试讲视频（板书与解题思路复核）</span>
             </span>
-            <span class="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+            <span class="text-xs text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
               教研组全流程打分合格
             </span>
           </div>
 
           <!-- 模拟播放器容器 -->
           <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-video border border-slate-800 shadow-inner flex flex-col justify-between p-4 group">
-            <div class="flex items-center justify-between text-white/80 text-[11px]">
+            <div class="flex items-center justify-between text-white/80 text-xs">
               <span class="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                 <span>试讲录像 · <span id="modalVideoTitle">中考二次函数动点压轴模型解题法</span></span>
@@ -416,7 +416,7 @@
             </div>
 
             <!-- 底部板书亮点 -->
-            <div class="bg-black/60 backdrop-blur-xs -mx-4 -mb-4 p-2.5 px-4 flex items-center justify-between text-[11px] text-slate-300">
+            <div class="bg-black/60 backdrop-blur-xs -mx-4 -mb-4 p-2.5 px-4 flex items-center justify-between text-xs text-slate-300">
               <span>核心提炼：三步建系法 + 韦达定理联立速解技巧</span>
               <span class="text-teal-400 font-medium cursor-pointer" onclick="showToast('已调阅试讲板书讲义 PDF')">查阅教案课件</span>
             </div>
@@ -426,14 +426,14 @@
         <!-- 擅长考纲专项与教学亮点标签 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-            <span class="text-slate-400 text-[10px] block font-medium">攻坚专项考点</span>
+            <span class="text-slate-500 text-xs block font-medium">攻坚专项考点</span>
             <div class="flex flex-wrap gap-1" id="modalSyllabusTags">
               <!-- 考点标签 -->
             </div>
           </div>
 
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-            <span class="text-slate-400 text-[10px] block font-medium">实证成绩与荣誉</span>
+            <span class="text-slate-500 text-xs block font-medium">实证成绩与荣誉</span>
             <div class="font-bold text-slate-800" id="modalHighlightBadge">
               高考数学145分 · 全国数学竞赛二等奖
             </div>
@@ -472,7 +472,7 @@
         <div class="text-sm text-slate-600">
           <span>首次试课：</span>
           <span class="font-bold text-emerald-700">免费 (1h)</span>
-          <span class="mx-1 text-slate-400">·</span>
+          <span class="mx-1 text-slate-500">·</span>
           <span>正式课：</span>
           <span class="font-black text-slate-900 font-mono" id="modalEstimatedCost">¥135</span>
           <span class="text-xs text-slate-600">/h</span>
@@ -503,7 +503,7 @@
           <div>
             <h3 class="font-bold text-sm hidden" data-warehouse-only>预约辅导与智能隔音仓选座</h3>
             <h3 class="font-bold text-sm" data-warehouse-off>预约辅导与上课网点</h3>
-            <p class="text-[10px] text-slate-400">单次 / 每周固定 · 费用提前冻结 · 结课后 48h 划拨</p>
+            <p class="text-xs text-slate-500">单次 / 每周固定 · 费用提前冻结 · 结课后 48h 划拨</p>
           </div>
         </div>
         <button type="button" onclick="closeBookingDrawer()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
@@ -512,7 +512,7 @@
       </div>
 
       <!-- 约课配置表单 -->
-      <div class="p-5 overflow-y-auto space-y-4 text-xs flex-1">
+      <div id="bookingConfigScroll" class="p-5 overflow-y-auto space-y-4 text-sm flex-1">
         
         <!-- 所选导师简况条 -->
         <div class="bg-teal-50/60 p-3 rounded-xl border border-teal-200/80 flex items-center justify-between">
@@ -522,12 +522,12 @@
             </div>
             <div>
               <div class="font-black text-slate-900" id="bookingTutorName">张老师</div>
-              <div class="text-[10px] text-slate-500" id="bookingTutorInfo">初中数学 / 几何函数压轴模型</div>
+              <div class="text-xs text-slate-500" id="bookingTutorInfo">初中数学 / 几何函数压轴模型</div>
             </div>
           </div>
           <div class="text-right">
             <div class="font-bold text-teal-700 font-mono" id="bookingTutorRate">¥135/h</div>
-            <span class="text-[9px] text-slate-400">单次约</span>
+            <span class="text-xs text-slate-500">单次约</span>
           </div>
         </div>
 
@@ -552,7 +552,7 @@
               <span class="text-xs text-slate-600 font-medium leading-tight">适合系统学习、强化</span>
             </label>
           </div>
-          <div id="trialBookingHint" class="hidden text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed">
+          <div id="trialBookingHint" class="hidden text-sm text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed">
             <i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>
             <strong>首次试课 · 1小时免费</strong>：时长固定 1 小时，金额 ¥0，每位导师同一学科仅可预约一次；试课后建议完成对应学科测评以便老师了解真实水平。
           </div>
@@ -560,13 +560,13 @@
 
         <!-- 每周固定配置（默认隐藏） -->
         <div id="weeklyBookingPanel" class="space-y-3 hidden rounded-xl border border-teal-100 bg-teal-50/40 p-3">
-          <div class="text-[11px] text-teal-900 font-bold flex items-center gap-1.5">
+          <div class="text-xs text-teal-900 font-bold flex items-center gap-1.5">
             <i class="fa-solid fa-repeat text-teal-600"></i>
             每周固定档期 · 费用按课次包提前冻结
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">固定星期</label>
+              <label class="block text-xs font-bold text-slate-600 mb-1">固定星期</label>
               <select id="weeklyWeekday" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="onWeeklyWeekdayChange()">
                 <option value="1">周一</option>
                 <option value="2">周二</option>
@@ -578,7 +578,7 @@
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">固定开课时间</label>
+              <label class="block text-xs font-bold text-slate-600 mb-1">固定开课时间</label>
               <select id="weeklyTime" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="updateBookingCost()">
                 <option value="09:00">09:00</option>
                 <option value="10:00">10:00</option>
@@ -590,7 +590,7 @@
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">连续课次</label>
+              <label class="block text-xs font-bold text-slate-600 mb-1">连续课次</label>
               <select id="weeklySessionCount" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 bg-white" onchange="updateBookingCost()">
                 <option value="4" selected>4 次（约一个月）</option>
                 <option value="6">6 次</option>
@@ -599,12 +599,12 @@
               </select>
             </div>
             <div class="flex items-end">
-              <div class="w-full text-[10px] text-slate-500 leading-relaxed bg-white/70 border border-teal-100 rounded-xl px-2.5 py-2">
+              <div class="w-full text-sm text-slate-500 leading-relaxed bg-white/70 border border-teal-100 rounded-xl px-2.5 py-2">
                 请假须<strong class="text-teal-800">提前一日</strong>确认；结课后 48 小时无投诉自动划拨导师。
               </div>
             </div>
           </div>
-          <div id="mentorAvailabilityHints" class="hidden text-[10px] text-teal-800 bg-white/80 border border-teal-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
+          <div id="mentorAvailabilityHints" class="hidden text-sm text-teal-800 bg-white/80 border border-teal-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
         </div>
 
         <!-- 课时时长单选（先选时长，再生成可约时段） -->
@@ -657,11 +657,11 @@
           <select id="bookingBoothSelect" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
             <option value="">系统自动分配空闲仓位</option>
           </select>
-          <p class="text-[10px] text-slate-500">同一仓位在重叠时段不可重复预约；须与导师可约时间一致。</p>
+          <p class="text-xs text-slate-500">同一仓位在重叠时段不可重复预约；须与导师可约时间一致。</p>
         </div>
 
         <!-- 银行托管与资金安全承诺 -->
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1">
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
           <div class="flex items-center justify-between font-bold text-slate-800">
             <span class="flex items-center gap-1">
               <i class="fa-solid fa-lock text-teal-600"></i>
@@ -669,52 +669,75 @@
             </span>
             <span class="text-teal-700 font-mono" id="confirmLockAmount">¥270.00</span>
           </div>
-          <p class="text-slate-500 text-[10px] leading-relaxed">
+          <p class="text-slate-500 text-sm leading-relaxed">
             约课成功后，对应课时费将在平台资金保障流程中锁定（单次或每周系列课次费用<strong class="text-teal-800">提前冻结</strong>）。每次结课后进入 <strong class="text-teal-800">48 小时</strong> 解冻观察期，期满无投诉则按 92% 导师 / 8% 平台自动划拨；开课前 2 小时可撤销，每周固定课请假须提前一日确认。
           </p>
         </div>
 
       </div>
 
-      <!-- 托管锁定前摘要 -->
-      <div id="escrowLockSummary" class="mx-4 mb-2 p-3 rounded-xl border border-teal-200 bg-teal-50/70 text-[11px] space-y-1.5 hidden">
+      <!-- 托管摘要 + 电子协议（合并为支付前一步确认） -->
+      <div id="escrowLockSummary" class="mx-4 mb-2 p-3 rounded-xl border border-teal-200 bg-teal-50/70 text-sm space-y-2 hidden max-h-[58vh] overflow-y-auto">
         <div class="font-black text-teal-900 flex items-center gap-1.5">
           <i class="fa-solid fa-receipt text-teal-600"></i>
-          <span>银行托管锁定摘要（请确认后继续）</span>
+          <span>确认摘要并签署协议</span>
         </div>
-        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-700">
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-700 text-sm">
           <div>课时时长：<strong id="escrowSumDuration" class="text-slate-900">—</strong></div>
           <div>预约时段：<strong id="escrowSumDate" class="text-slate-900">—</strong></div>
           <div class="col-span-2">教学空间：<strong id="escrowSumSpace" class="text-slate-900">—</strong></div>
-          <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-sm">—</strong></div>
+          <div class="col-span-2">锁定金额：<strong id="escrowSumAmount" class="text-teal-800 font-mono text-base">—</strong></div>
           <div class="col-span-2 flex items-center gap-1.5">
-            <span class="w-4 h-4 rounded bg-[#07c160] text-white inline-flex items-center justify-center text-[10px]"><i class="fa-brands fa-weixin"></i></span>
+            <span class="w-4 h-4 rounded bg-[#07c160] text-white inline-flex items-center justify-center text-xs"><i class="fa-brands fa-weixin"></i></span>
             支付方式：<strong class="text-slate-900">微信支付 · 课次托管冻结</strong>
           </div>
         </div>
-        <p class="text-[10px] text-slate-500 leading-relaxed border-t border-teal-100 pt-1.5">
+        <p class="text-sm text-slate-600 leading-relaxed border-t border-teal-100 pt-1.5 xh-rule">
           <span class="hidden" data-warehouse-only>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；双方扫码核销后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
           <span data-warehouse-off>退改规则：开课前 2 小时可原路撤销；开课后未授课可协商退款；导师结课确认后进入 48 小时观察期，无异议则自动划拨至导师（92%/8%）。</span>
         </p>
+        <div class="rounded-xl border border-slate-200 bg-white p-3 space-y-2 text-sm text-slate-600 leading-relaxed">
+          <p class="text-slate-900 font-black text-sm">《三方托管服务居间协议》</p>
+          <p class="text-slate-800 font-bold">甲方（平台）：星火学伴技术中立撮合与空间运营者</p>
+          <p class="text-slate-800 font-bold">乙方（家长/学员）：<span id="contractParentName">刘女士</span></p>
+          <p class="text-slate-800 font-bold">丙方（导师）：<span id="contractTutorName">张老师</span></p>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-sm">
+            <p class="hidden" data-contract-iot-clause>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
+            <p data-warehouse-off>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</p>
+            <p class="hidden" data-warehouse-only>2. 单次课酬按「一课一消」在平台资金保障流程中锁定；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+            <p data-warehouse-off>2. 单次课酬按「一课一约、一课一消」在平台资金保障流程中锁定；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
+            <p class="hidden" data-contract-warehouse-clause>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
+            <p>4. 开课前 2 小时可原路撤销；观察期内遇质量投诉，资金继续冻结并由平台协调处理。</p>
+            <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>
+          </div>
+          <label class="flex items-start gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="eContractAgreeCheck" class="mt-0.5 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+            <span class="text-sm text-slate-700">我已阅读并同意签署本协议，授权按本协议锁定本次课酬资金。</span>
+          </label>
+          <div>
+            <label class="text-xs text-slate-600 font-medium xh-label">电子签名（输入姓名确认）</label>
+            <input type="text" id="eContractSignName" placeholder="请输入家长姓名作为电子签" class="mt-1 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
+          </div>
+        </div>
         <div class="flex gap-2 pt-1">
-          <button type="button" onclick="hideEscrowSummary()" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">返回修改</button>
-          <button type="button" onclick="proceedAfterEscrowSummary()" id="btnEscrowProceed" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer">确认摘要 · 签署协议</button>
+          <button type="button" onclick="hideEscrowSummary()" class="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">返回修改</button>
+          <button type="button" onclick="confirmCombinedEscrowAndContract()" id="btnEscrowProceed" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-2 rounded-lg text-sm cursor-pointer">确认签署并支付</button>
         </div>
       </div>
 
       <!-- 约课提交栏 -->
       <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
         <div>
-          <span class="text-slate-400 text-[10px] block">合约托管总额</span>
+          <span class="text-slate-500 text-xs block">合约托管总额</span>
           <span class="text-lg font-black text-teal-700 font-mono" id="finalBookingCost">¥270.00</span>
         </div>
         <div class="flex gap-2">
           <button type="button" onclick="closeBookingDrawer()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">
             取消
           </button>
-          <button type="button" onclick="showEscrowSummaryBeforeLock()" id="btnConfirmBooking" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
+          <button type="button" onclick="showEscrowSummaryBeforeLock()" id="btnConfirmBooking" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-file-signature text-xs"></i>
-            <span>确认摘要 · 锁定托管</span>
+            <span>下一步：确认并签署</span>
           </button>
         </div>
       </div>
@@ -729,7 +752,7 @@
           <i class="fa-solid fa-circle-check"></i>
         </div>
         <h3 class="text-base font-black text-slate-900">预约成功，等待导师接单</h3>
-        <p class="text-xs text-slate-500 leading-relaxed px-2">导师接单后会通知您，可在「我的预约」中查看进度。</p>
+        <p class="text-sm text-slate-500 leading-relaxed px-2">导师接单后会通知您，可在「我的预约」中查看进度。</p>
         <button type="button" onclick="closePodPasscodeModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
           前往我的预约
         </button>
@@ -751,7 +774,7 @@
             <i class="fa-solid fa-qrcode"></i>
             <span>智能隔音微仓通行码</span>
           </div>
-          <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.2 rounded font-mono">
+          <span class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.2 rounded font-mono">
             IoT-ACTIVE
           </span>
         </div>
@@ -761,17 +784,17 @@
           <div class="w-32 h-32 bg-white rounded-xl p-2 flex flex-col items-center justify-center shadow-md">
             <div class="w-full h-full bg-slate-900 rounded-lg flex flex-col items-center justify-center text-white space-y-1">
               <i class="fa-solid fa-qrcode text-4xl text-teal-400"></i>
-              <span class="text-[8px] font-mono text-slate-400 tracking-wider">动态防伪刷新</span>
+              <span class="text-xs font-mono text-slate-500 tracking-wider">动态防伪刷新</span>
             </div>
           </div>
         </div>
 
         <div class="text-center space-y-0.5">
-          <span class="text-[10px] text-slate-400">门锁备用数字口令 (有效时长 2小时)</span>
+          <span class="text-xs text-slate-500">门锁备用数字口令 (有效时长 2小时)</span>
           <div class="text-xl font-black font-mono tracking-widest text-amber-400" id="passcodeDisplay">890214</div>
         </div>
 
-        <div class="pt-2 border-t border-teal-800/40 text-[10px] text-slate-300 space-y-1">
+        <div class="pt-2 border-t border-teal-800/40 text-xs text-slate-300 space-y-1">
           <div class="flex justify-between">
             <span>网点仓位：</span>
             <span class="font-bold text-white" id="passcodeSpaceName">青羊金沙文化微网点-01仓</span>
@@ -787,15 +810,15 @@
       <div id="iotStatusPanel" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 space-y-2">
         <div class="flex items-center justify-between text-xs">
           <span class="font-black text-slate-800 flex items-center gap-1.5"><i class="fa-solid fa-microchip text-teal-600"></i>IoT 教学仓联动</span>
-          <span id="iotStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">STANDBY</span>
+          <span id="iotStatusBadge" class="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">STANDBY</span>
         </div>
-        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
           <div class="bg-white rounded-xl border border-slate-200 p-2">
-            <i id="iotDoorIcon" class="fa-solid fa-door-closed text-slate-400 text-sm"></i>
+            <i id="iotDoorIcon" class="fa-solid fa-door-closed text-slate-500 text-sm"></i>
             <div id="iotDoorText" class="mt-1 text-slate-500 font-medium">门禁关闭</div>
           </div>
           <div class="bg-white rounded-xl border border-slate-200 p-2">
-            <i id="iotLightIcon" class="fa-solid fa-lightbulb text-slate-400 text-sm"></i>
+            <i id="iotLightIcon" class="fa-solid fa-lightbulb text-slate-500 text-sm"></i>
             <div id="iotLightText" class="mt-1 text-slate-500 font-medium">灯光关闭</div>
           </div>
           <div class="bg-white rounded-xl border border-slate-200 p-2">
@@ -803,7 +826,7 @@
             <div id="iotCountdownText" class="mt-1 text-slate-700 font-mono font-bold">--:--:--</div>
           </div>
         </div>
-        <p class="text-[10px] text-slate-500 leading-relaxed">系统将在 <strong class="text-rose-600">20:30</strong> 强制断电断电通风停机，保障合规收课。</p>
+        <p class="text-sm text-slate-500 leading-relaxed">系统将在 <strong class="text-rose-600">20:30</strong> 强制断电断电通风停机，保障合规收课。</p>
       </div>
 
       <div class="flex flex-col gap-2">
@@ -819,51 +842,7 @@
     </div>
   </div>
 
-  <!-- 三方托管服务居间协议 E-Contract -->
-  <div id="eContractModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4 hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="eContractContent">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-900 text-white">
-        <div>
-          <h3 class="font-black text-sm">《三方托管服务居间协议》</h3>
-          <p class="text-[10px] text-teal-200/90 mt-0.5">在线签署 · 课酬资金保障</p>
-        </div>
-        <button type="button" onclick="closeEContractModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer">
-          <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
-      </div>
-      <div class="px-5 py-4 overflow-y-auto text-xs text-slate-600 space-y-3 leading-relaxed flex-1">
-        <p class="text-slate-800 font-bold">甲方（平台）：星火学伴技术中立撮合与空间运营者</p>
-        <p class="text-slate-800 font-bold">乙方（家长/学员）：<span id="contractParentName">刘女士</span></p>
-        <p class="text-slate-800 font-bold">丙方（导师）：<span id="contractTutorName">张老师</span></p>
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-[11px]">
-          <p class="hidden" data-contract-iot-clause>1. 平台仅提供信息撮合、合规教学仓空间与 IoT 门禁通电服务，定位为技术中立撮合与空间运营者，不设资金池。</p>
-          <p data-warehouse-off>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</p>
-          <p class="hidden" data-warehouse-only>2. 单次课酬按「一课一消」在平台资金保障流程中锁定；双方扫码核销后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
-          <p data-warehouse-off>2. 单次课酬按「一课一约、一课一消」在平台资金保障流程中锁定；导师结课确认后进入 <strong>48 小时</strong> 解冻观察期，期满无投诉或其他法定/约定冻结事由，按 92% 导师 / 8% 平台运营维护费自动划拨。</p>
-          <p class="hidden" data-contract-warehouse-clause>3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</p>
-          <p>4. 开课前 2 小时可原路撤销；观察期内遇质量投诉，资金继续冻结并由平台协调处理。</p>
-          <p>5. 各方确认：课酬<strong>非课后立即/秒级划拨</strong>，而以课后 48 小时无异议自动解冻为默认规则。</p>
-        </div>
-        <label class="flex items-start gap-2 cursor-pointer select-none">
-          <input type="checkbox" id="eContractAgreeCheck" class="mt-0.5 w-3.5 h-3.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
-          <span class="text-[11px] text-slate-700">我已阅读并同意签署本协议，授权按本协议锁定本次课酬资金。</span>
-        </label>
-        <div>
-          <label class="text-[10px] text-slate-500 font-medium">电子签名（输入姓名确认）</label>
-          <input type="text" id="eContractSignName" placeholder="请输入家长姓名作为电子签" class="mt-1 w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
-        </div>
-      </div>
-      <div class="px-5 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
-        <button type="button" onclick="closeEContractModal()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer">取消</button>
-        <button type="button" onclick="confirmEContractAndBook()" id="btnSignContract" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer">
-          <i class="fa-solid fa-pen-fancy text-xs"></i>
-          <span>确认签署并锁定托管</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="passportDrawerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-end hidden opacity-0 transition-opacity duration-300">
+  <div id="passportDrawerModal"> class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-end hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white w-full max-w-md h-full shadow-2xl p-5 overflow-y-auto space-y-4 transform transition-all duration-300 translate-x-full" id="passportDrawerContent">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
@@ -872,7 +851,7 @@
           </div>
           <div>
             <h3 class="font-black text-slate-900 text-sm">孩子 AI 学情电子护照</h3>
-            <span class="text-[10px] text-slate-400 font-mono">SPK-PASSPORT-2026</span>
+            <span class="text-xs text-slate-500 font-mono">SPK-PASSPORT-2026</span>
           </div>
         </div>
         <button type="button" onclick="closePassportDrawer()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer">
@@ -884,9 +863,9 @@
       <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 p-4 rounded-2xl space-y-3 shadow-sm border border-teal-100">
         <div class="flex items-center justify-between text-xs">
           <span class="font-bold text-teal-800">乐乐同学 (初三中考)</span>
-          <span class="text-[10px] bg-white/80 text-slate-600 px-2 py-0.5 rounded font-mono border border-teal-100">成都市 · 青羊区</span>
+          <span class="text-xs bg-white/80 text-slate-600 px-2 py-0.5 rounded font-mono border border-teal-100">成都市 · 青羊区</span>
         </div>
-        <div class="text-[11px] text-slate-600 space-y-1">
+        <div class="text-xs text-slate-600 space-y-1">
           <div>目标科目：<span class="text-slate-900 font-bold">数学 (压轴题) / 物理 (动态电路)</span></div>
           <div>推进模式：<span class="text-teal-700 font-medium">紧贴校内进度 · 随堂查漏补缺</span></div>
           <div>期望课酬：<span class="text-amber-600 font-bold font-mono">¥100–160/小时</span></div>
@@ -897,9 +876,9 @@
       <div class="space-y-2 text-xs">
         <div class="font-bold text-slate-800">已标注薄弱大纲考点（导师重点备课）：</div>
         <div class="flex flex-wrap gap-1.5" id="passportSyllabusChips">
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">二次函数图象性质与最值求法</span>
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">圆的切线性质与辅助线综合证明</span>
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">动态电路欧姆定律综合计算</span>
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-xs">二次函数图象性质与最值求法</span>
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-xs">圆的切线性质与辅助线综合证明</span>
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-xs">动态电路欧姆定律综合计算</span>
         </div>
       </div>
 
@@ -916,7 +895,7 @@
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform" id="parentFeedbackModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-sm font-black text-slate-900">提交反馈与投诉</h3>
-        <button type="button" onclick="closeParentFeedbackModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="closeParentFeedbackModal()" class="text-slate-500 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="px-5 py-4 space-y-3">
         <div>
@@ -984,11 +963,11 @@
   </div>
 
   <!-- 极简页脚 -->
-  <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-400">
+  <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-500">
     <div class="max-w-7xl mx-auto px-4 space-y-1">
       <p>© 2026 星火学伴 · 中学O2O课业辅导匹配与智能分布式空间体系</p>
       <p><a href="https://beian.miit.gov.cn/" target="_blank" class="text-slate-500 hover:text-teal-700">蜀ICP备2026058908号-2</a></p>
-      <p class="text-[10px] text-slate-400">课酬资金保障与一课一消 · 严格执行中小学课外辅导合规治理规范</p>
+      <p class="text-xs text-slate-500">课酬资金保障与一课一消 · 严格执行中小学课外辅导合规治理规范</p>
     </div>
   </footer>
 
@@ -998,7 +977,7 @@
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform scale-95 transition-transform max-h-[90vh] overflow-y-auto" id="classSummaryModalContent">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
         <h3 class="text-sm font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-book-open text-teal-600"></i>课后互动</h3>
-        <button type="button" onclick="closeClassSummaryModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="closeClassSummaryModal()" class="text-slate-500 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       
       <!-- 导师课后小结 -->
@@ -1007,11 +986,11 @@
           <i class="fa-solid fa-chalkboard-user text-teal-600"></i>
           <span class="font-bold text-slate-800">导师课后小结</span>
         </div>
-        <div id="classSummaryMeta" class="text-[11px] text-slate-400"></div>
+        <div id="classSummaryMeta" class="text-xs text-slate-500"></div>
         <h4 id="classSummaryTitle" class="text-sm font-bold text-slate-900"></h4>
         <div id="classSummaryTags" class="flex flex-wrap gap-1.5"></div>
         <div id="classSummaryBody" class="rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap"></div>
-        <p id="classSummaryTime" class="text-[10px] text-slate-400"></p>
+        <p id="classSummaryTime" class="text-xs text-slate-500"></p>
       </div>
 
       <!-- 家长/学员留言 -->
@@ -1024,7 +1003,7 @@
         <!-- 显示已有留言 -->
         <div id="parentMessageDisplay" class="hidden">
           <div class="rounded-xl border border-blue-100 bg-blue-50/40 px-3.5 py-3 text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap" id="parentMessageContent"></div>
-          <p id="parentMessageTime" class="text-[10px] text-slate-400 mt-1.5"></p>
+          <p id="parentMessageTime" class="text-xs text-slate-500 mt-1.5"></p>
         </div>
 
         <!-- 留言表单 -->
@@ -1048,7 +1027,7 @@
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
       <div class="px-5 py-4 border-b border-amber-100 bg-amber-50">
         <h3 class="font-black text-sm text-amber-900 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i>上课时间冲突</h3>
-        <p class="text-[11px] text-amber-800/90 mt-1">该学员已有其他课程与所选时段重叠。</p>
+        <p class="text-xs text-amber-800/90 mt-1">该学员已有其他课程与所选时段重叠。</p>
       </div>
       <div class="px-5 py-4 text-xs text-slate-600 space-y-2">
         <p id="timeConflictDetail" class="leading-relaxed"></p>
@@ -1195,6 +1174,14 @@
 
       const topTutors = TUTOR_DATABASE.filter(t => t.isTopMatch).slice(0, 3);
       container.innerHTML = '';
+      const n = topTutors.length;
+      container.className = n <= 1
+        ? 'grid grid-cols-1 lg:grid-cols-2 gap-3'
+        : (n === 2 ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'grid grid-cols-1 md:grid-cols-3 gap-3');
+      if (!n) {
+        container.innerHTML = '<div class="col-span-full rounded-2xl border border-white/15 bg-white/5 px-4 py-5 text-sm text-slate-300">暂无 ≥95% 契合导师，可在下方列表放宽筛选后预约。</div>';
+        return;
+      }
 
       topTutors.forEach((tutor, idx) => {
         const card = document.createElement('div');
@@ -1209,23 +1196,23 @@
                 <div>
                   <div class="flex items-center gap-1.5">
                     <span class="font-black text-sm text-white">${tutor.maskedName}</span>
-                    <span class="text-[9px] bg-teal-500/30 text-teal-200 px-1.5 py-0.2 rounded font-mono">${tutor.degreeShort}</span>
+                    <span class="text-xs bg-teal-500/30 text-teal-200 px-1.5 py-0.2 rounded font-mono">${tutor.degreeShort}</span>
                   </div>
-                  <div class="text-[10px] text-slate-300 mt-0.5 truncate max-w-[150px]">
+                  <div class="text-xs text-slate-300 mt-0.5 truncate max-w-[150px]">
                     ${tutor.scoreHighlight}
                   </div>
                 </div>
               </div>
               <div class="text-right shrink-0">
-                <span class="text-[10px] font-mono font-bold text-amber-300">${tutor.matchScore}% 契合</span>
-                <div class="text-sm font-black text-white font-mono">¥${tutor.hourlyRate}<span class="text-[10px] font-normal text-slate-300">/h</span></div>
+                <span class="text-xs font-mono font-bold text-amber-300">${tutor.matchScore}% 契合</span>
+                <div class="text-sm font-black text-white font-mono">¥${tutor.hourlyRate}<span class="text-xs font-normal text-slate-300">/h</span></div>
               </div>
             </div>
 
             <!-- 考点匹配微胶囊 -->
             <div class="flex flex-wrap gap-1 mb-2.5">
               ${tutor.syllabusTopics.slice(0, 2).map(topic => `
-                <span class="text-[9px] bg-black/30 text-teal-200 border border-white/10 px-1.5 py-0.5 rounded truncate max-w-[140px]">
+                <span class="text-xs bg-black/30 text-teal-200 border border-white/10 px-1.5 py-0.5 rounded truncate max-w-[140px]">
                   ${topic}
                 </span>
               `).join('')}
@@ -1233,14 +1220,14 @@
           </div>
 
           <div class="flex items-center justify-between pt-2 border-t border-white/10">
-            <span class="text-[10px] text-slate-300 truncate max-w-[130px]">
+            <span class="text-xs text-slate-300 truncate max-w-[130px]">
               <i class="fa-solid fa-cube text-teal-400 mr-1"></i>${tutor.space.split('微网点')[0]}
             </span>
             <div class="flex gap-1.5">
-              <button type="button" onclick="openTutorDetail('${tutor.id}')" class="text-[10px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg transition font-medium cursor-pointer">
+              <button type="button" onclick="openTutorDetail('${tutor.id}')" class="text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg transition font-medium cursor-pointer">
                 试讲视频
               </button>
-              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="text-[10px] bg-teal-500 hover:bg-teal-400 text-slate-950 px-2.5 py-1 rounded-lg font-bold transition shadow-xs cursor-pointer">
+              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="text-xs bg-teal-500 hover:bg-teal-400 text-slate-950 px-2.5 py-1 rounded-lg font-bold transition shadow-xs cursor-pointer">
                 ${parentBookingCtaLabel()}
               </button>
             </div>
@@ -1248,6 +1235,17 @@
         `;
         container.appendChild(card);
       });
+      if (n === 1) {
+        const dim = document.createElement('div');
+        dim.className = 'bg-white/8 border border-dashed border-teal-400/35 rounded-2xl p-4 flex flex-col justify-center gap-2';
+        const t = topTutors[0];
+        dim.innerHTML =
+          '<div class="text-xs font-bold text-teal-300 tracking-wide">学情匹配维度</div>' +
+          '<div class="text-sm font-black text-white leading-snug">' + (t.syllabusTopics || []).slice(0, 3).join(' · ') + '</div>' +
+          '<p class="text-sm text-slate-300 leading-relaxed">基于学段、薄弱考点与时薪预算召回。仅 1 位高契合导师时展示匹配说明，避免空列黑洞。</p>' +
+          '<button type="button" onclick="openTutorDetail(\'' + t.id + '\')" class="self-start text-sm font-bold text-teal-200 hover:text-white cursor-pointer">查看试讲与详情 →</button>';
+        container.appendChild(dim);
+      }
     }
 
     /* ==========================================================================
@@ -1310,6 +1308,10 @@
       if (recallEl) recallEl.innerText = results.length;
       const recallCompact = document.getElementById('matchRecallCountCompact');
       if (recallCompact) recallCompact.innerText = results.length;
+      if (window.UserConsoleNav && typeof UserConsoleNav.setTabBadge === 'function') {
+        const high = results.filter(function (t) { return t.matchScore >= 95; }).length;
+        UserConsoleNav.setTabBadge('discover', high, 'muted');
+      }
 
       renderTutorGrid(results);
     }
@@ -1321,11 +1323,11 @@
       if (list.length === 0) {
         grid.innerHTML = `
           <div class="col-span-full bg-white rounded-3xl p-10 text-center border border-slate-200 space-y-3">
-            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl">
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto text-2xl">
               <i class="fa-solid fa-user-slash"></i>
             </div>
             <h4 class="font-bold text-slate-800 text-sm">暂无符合当前筛选条件的导师</h4>
-            <p class="text-xs text-slate-400 max-w-sm mx-auto">
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
               建议放宽时薪预算区间，或切换空间网点尝试更宽泛的匹配方案
             </p>
             <button type="button" onclick="resetAllFilters()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">
@@ -1353,11 +1355,11 @@
                 <div>
                   <div class="flex items-center gap-1.5">
                     <h3 class="font-black text-slate-900 text-sm sm:text-base">${tutor.maskedName}</h3>
-                    <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-semibold">
+                    <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-semibold">
                       学信网在籍
                     </span>
                   </div>
-                  <div class="text-[11px] text-slate-600 font-medium mt-0.5">
+                  <div class="text-xs text-slate-600 font-medium mt-0.5">
                     ${tutor.university} · <span class="text-slate-500">${tutor.degree.split(' ')[0]}</span>
                   </div>
                 </div>
@@ -1366,9 +1368,9 @@
               <!-- 价格与契合度 -->
               <div class="text-right shrink-0">
                 <div class="text-base font-black text-teal-700 font-mono">
-                  ¥${tutor.hourlyRate}<span class="text-[10px] font-normal text-slate-500">/h</span>
+                  ¥${tutor.hourlyRate}<span class="text-xs font-normal text-slate-500">/h</span>
                 </div>
-                <span class="text-[9px] text-teal-700 bg-teal-50 border border-teal-200 font-bold px-1.5 py-0.2 rounded font-mono">
+                <span class="text-xs text-teal-700 bg-teal-50 border border-teal-200 font-bold px-1.5 py-0.2 rounded font-mono">
                   ${tutor.matchScore}% 契合
                 </span>
               </div>
@@ -1378,17 +1380,17 @@
             <div class="mt-3 bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between text-xs">
               <div class="flex items-center gap-1.5 truncate mr-2">
                 <i class="fa-solid fa-award text-amber-500 text-xs shrink-0"></i>
-                <span class="font-bold text-slate-800 text-[11px] truncate">${tutor.scoreHighlight}</span>
+                <span class="font-bold text-slate-800 text-xs truncate">${tutor.scoreHighlight}</span>
               </div>
-              <span class="text-[10px] text-slate-400 font-mono shrink-0">${tutor.totalHours}课时</span>
+              <span class="text-xs text-slate-500 font-mono shrink-0">${tutor.totalHours}课时</span>
             </div>
 
             <!-- 攻坚大纲专项考点胶囊 -->
             <div class="mt-2.5">
-              <span class="text-[10px] text-slate-400 block mb-1">主辅考纲重点：</span>
+              <span class="text-xs text-slate-500 block mb-1">主辅考纲重点：</span>
               <div class="flex flex-wrap gap-1">
                 ${tutor.syllabusTopics.map(topic => `
-                  <span class="text-[10px] bg-teal-50/80 text-teal-900 border border-teal-200/80 px-2 py-0.5 rounded font-medium truncate max-w-[150px]" title="${topic}">
+                  <span class="text-xs bg-teal-50/80 text-teal-900 border border-teal-200/80 px-2 py-0.5 rounded font-medium truncate max-w-[150px]" title="${topic}">
                     ${topic}
                   </span>
                 `).join('')}
@@ -1398,7 +1400,7 @@
             <!-- 教学风格标签 -->
             <div class="mt-2 flex flex-wrap gap-1">
               ${tutor.styles.map(st => `
-                <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200">
+                <span class="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200">
                   ${st}
                 </span>
               `).join('')}
@@ -1407,19 +1409,19 @@
 
           <!-- 底栏：网点空间与操作按钮 -->
           <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
-            <div class="text-[11px] text-slate-500 truncate mr-1">
-              <i class="fa-solid fa-location-dot text-teal-600 mr-1 text-[10px]"></i>
+            <div class="text-xs text-slate-500 truncate mr-1">
+              <i class="fa-solid fa-location-dot text-teal-600 mr-1 text-xs"></i>
               <span class="truncate">${tutor.space.split('微网点')[0]}</span>
             </div>
 
             <div class="flex items-center gap-1.5 shrink-0">
               <button type="button" onclick="openTutorDetail('${tutor.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1">
-                <i class="fa-solid fa-circle-play text-teal-600 text-[10px]"></i>
+                <i class="fa-solid fa-circle-play text-teal-600 text-xs"></i>
                 <span>试讲视频</span>
               </button>
               <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-1 cursor-pointer">
                 <span>${parentBookingCtaLabel()}</span>
-                <i class="fa-solid fa-angle-right text-[10px]"></i>
+                <i class="fa-solid fa-angle-right text-xs"></i>
               </button>
             </div>
           </div>
@@ -1557,7 +1559,7 @@
       const syllabusContainer = document.getElementById('modalSyllabusTags');
       if (syllabusContainer) {
         syllabusContainer.innerHTML = tutor.syllabusTopics.map(t => `
-          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-0.5 rounded text-[11px] font-medium">${t}</span>
+          <span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-0.5 rounded text-xs font-medium">${t}</span>
         `).join('');
       }
 
@@ -1565,7 +1567,7 @@
       const styleContainer = document.getElementById('modalStyleTags');
       if (styleContainer) {
         styleContainer.innerHTML = tutor.styles.map(s => `
-          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 text-[10px] font-medium">${s}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 text-xs font-medium">${s}</span>
         `).join('');
       }
 
@@ -1618,7 +1620,6 @@
       const map = {
         tutorDetailModal: { content: 'tutorModalContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
         bookingDrawerModal: { content: 'bookingDrawerContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
-        eContractModal: { content: 'eContractContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
         podPasscodeModal: { content: 'podPasscodeContent', hide: ['opacity-0'], contentHide: ['scale-95'] },
         passportDrawerModal: { content: 'passportDrawerContent', hide: ['opacity-0'], contentHide: ['translate-x-full'] }
       };
@@ -1822,7 +1823,7 @@
       if (!timeBox) return;
       const day = __bookingCalendar.find(function (d) { return d.isoDate === __bookingSelectedDate; });
       if (!day || !day.times || !day.times.length) {
-        timeBox.innerHTML = '<div class="text-[11px] text-slate-500 py-2">该日暂无空闲时段</div>';
+        timeBox.innerHTML = '<div class="text-xs text-slate-500 py-2">该日暂无空闲时段</div>';
         return;
       }
       const label = formatSlotLabel(day.date || new Date(day.isoDate + 'T12:00:00'));
@@ -1867,7 +1868,7 @@
           ? '当前时长无法落入该导师可约窗口，请改为 1 小时或更换导师'
           : '暂无可用时段，请稍后再试';
         dateSelect.innerHTML = '';
-        timeBox.innerHTML = '<div class="text-[11px] text-slate-500 py-2">' + msg + '</div>';
+        timeBox.innerHTML = '<div class="text-xs text-slate-500 py-2">' + msg + '</div>';
         return;
       }
 
@@ -1917,6 +1918,9 @@
       refreshBookingBoothOptions();
       hideEscrowSummary();
       updateBookingCost();
+      window.__eContractSignedForSession = false;
+      const agree = document.getElementById('eContractAgreeCheck');
+      if (agree) agree.checked = false;
       window.__renewalSourceBookingId = null;
       if (tutor && tutor.mentorId) renderMentorAvailabilityHints(tutor.mentorId);
       else if (typeof renderMentorAvailabilityHints === 'function') renderMentorAvailabilityHints(null);
@@ -1931,6 +1935,7 @@
     }
 
     function closeBookingDrawer() {
+      hideEscrowSummary();
       const modal = document.getElementById('bookingDrawerModal');
       const content = document.getElementById('bookingDrawerContent');
       modal?.classList.add('opacity-0');
@@ -1963,8 +1968,10 @@
         }
         const btn = document.getElementById('btnConfirmBooking');
         if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-gift text-xs"></i><span>确认试课 · 免费预约</span>';
+          btn.innerHTML = '<i class="fa-solid fa-gift text-xs"></i><span>下一步：确认试课</span>';
         }
+        const payBtn = document.getElementById('btnEscrowProceed');
+        if (payBtn) payBtn.textContent = '确认签署并预约试课';
         const lockLabel = document.querySelector('#confirmLockAmount')?.previousElementSibling
           || document.querySelector('#finalBookingCost')?.parentElement?.querySelector('span');
       } else {
@@ -1972,8 +1979,10 @@
         if (lab2) lab2.classList.remove('opacity-40', 'pointer-events-none');
         const btn = document.getElementById('btnConfirmBooking');
         if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
+          btn.innerHTML = '<i class="fa-solid fa-file-signature text-xs"></i><span>下一步：确认并签署</span>';
         }
+        const payBtn = document.getElementById('btnEscrowProceed');
+        if (payBtn) payBtn.textContent = '确认签署并支付';
       }
       generateBookingDateSlots();
       syncWeeklyAvailabilityOptions();
@@ -2195,80 +2204,37 @@
         : ('¥' + meta.total.toFixed(2));
       const box = document.getElementById('escrowLockSummary');
       if (box) box.classList.remove('hidden');
+      const config = document.getElementById('bookingConfigScroll');
+      if (config) config.classList.add('hidden');
+      const cfgBtn = document.getElementById('btnConfirmBooking');
+      if (cfgBtn) cfgBtn.classList.add('hidden');
+      prepareContractFieldsInPanel();
       box?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function hideEscrowSummary() {
       const box = document.getElementById('escrowLockSummary');
       if (box) box.classList.add('hidden');
+      const config = document.getElementById('bookingConfigScroll');
+      if (config) config.classList.remove('hidden');
+      const cfgBtn = document.getElementById('btnConfirmBooking');
+      if (cfgBtn) cfgBtn.classList.remove('hidden');
     }
 
-    function proceedAfterEscrowSummary() {
-      hideEscrowSummary();
-      // 若尚未签署则打开协议；已有会话内签署标记则直接锁定
-      if (window.__eContractSignedForSession) {
-        confirmBookingSubmit();
-      } else {
-        openEContractModal();
-      }
-    }
-
-    function openEContractModal() {
-      if (!selectedTutorForBooking) {
-        showToast('请先选择导师', 'warning');
-        return;
-      }
-      closeAllStackedModals('eContractModal');
-      // 保持约课抽屉信息，但隐藏以免遮挡；协议确认后继续锁定
-      const bookingModal = document.getElementById('bookingDrawerModal');
-      if (bookingModal) {
-        bookingModal.classList.add('opacity-0');
-        bookingModal.classList.add('hidden');
-      }
-
+    function prepareContractFieldsInPanel() {
       const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
       const parentName = (parent && (parent.parentName || parent.studentNickname)) || '家长用户';
-      document.getElementById('contractParentName').innerText = parentName;
-      document.getElementById('contractTutorName').innerText = selectedTutorForBooking.maskedName;
+      const pn = document.getElementById('contractParentName');
+      const tn = document.getElementById('contractTutorName');
+      if (pn) pn.innerText = parentName;
+      if (tn && selectedTutorForBooking) tn.innerText = selectedTutorForBooking.maskedName;
       const signInput = document.getElementById('eContractSignName');
       if (signInput && parent && parent.parentName) signInput.value = parent.parentName;
       const agree = document.getElementById('eContractAgreeCheck');
       if (agree) agree.checked = false;
-
-      pendingBookingMeta = collectBookingMeta();
-
-      const modal = document.getElementById('eContractModal');
-      const content = document.getElementById('eContractContent');
-      modal?.classList.remove('hidden');
-      setTimeout(() => {
-        modal?.classList.remove('opacity-0');
-        content?.classList.remove('scale-95');
-      }, 10);
     }
 
-    function closeEContractModal() {
-      const modal = document.getElementById('eContractModal');
-      const content = document.getElementById('eContractContent');
-      modal?.classList.add('opacity-0');
-      content?.classList.add('scale-95');
-      setTimeout(() => {
-        modal?.classList.add('hidden');
-        // 若尚未完成锁定，恢复约课抽屉以便关闭/继续控件可见
-        if (!window.__eContractSignedForSession && selectedTutorForBooking) {
-          const bookingModal = document.getElementById('bookingDrawerModal');
-          const bookingContent = document.getElementById('bookingDrawerContent');
-          if (bookingModal) {
-            bookingModal.classList.remove('hidden');
-            setTimeout(() => {
-              bookingModal.classList.remove('opacity-0');
-              bookingContent?.classList.remove('scale-95');
-            }, 10);
-          }
-        }
-      }, 260);
-    }
-
-    function confirmEContractAndBook() {
+    function confirmCombinedEscrowAndContract() {
       const agreed = document.getElementById('eContractAgreeCheck')?.checked;
       const signName = document.getElementById('eContractSignName')?.value.trim();
       if (!agreed) {
@@ -2279,16 +2245,15 @@
         showToast('请输入电子签名姓名', 'warning');
         return;
       }
-      if (pendingBookingMeta) {
-        pendingBookingMeta.contractSigner = signName;
-      }
+      pendingBookingMeta = collectBookingMeta();
+      pendingBookingMeta.paymentMethod = selectedPaymentMethod;
+      pendingBookingMeta.contractSigner = signName;
       window.__eContractSignedForSession = true;
-      closeEContractModal();
       confirmBookingSubmit();
     }
 
     async function confirmBookingSubmit() {
-      const btn = document.getElementById('btnConfirmBooking');
+      const btn = document.getElementById('btnEscrowProceed') || document.getElementById('btnConfirmBooking');
       const isTrial = (pendingBookingMeta && pendingBookingMeta.type === 'trial') || getSelectedBookingType() === 'trial';
       if (btn) {
         btn.disabled = true;
@@ -2452,8 +2417,8 @@
           if (btn) {
             btn.disabled = false;
             btn.innerHTML = isTrial
-              ? '<i class="fa-solid fa-gift text-xs"></i><span>确认试课 · 免费预约</span>'
-              : '<i class="fa-solid fa-file-signature text-xs"></i><span>确认摘要 · 锁定托管</span>';
+              ? '确认签署并预约试课'
+              : '确认签署并支付';
           }
         }
       }, 900);
@@ -2555,7 +2520,7 @@
               '<span>请使用微信扫一扫，支付成功后将自动关闭</span>' +
             '</p>' +
             '<p id="wechatNativePaySuccess" class="hidden text-sm font-bold text-emerald-700">支付成功，正在确认订单…</p>' +
-            '<div class="bg-teal-50/80 border border-teal-200 rounded-xl p-2.5 text-xs text-teal-900 text-left leading-relaxed">' +
+            '<div class="bg-teal-50/80 border border-teal-200 rounded-xl p-2.5 text-sm text-teal-900 text-left leading-relaxed">' +
               '<i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>' +
               '资金将冻结于托管专户，导师结课确认满 <strong>48 小时</strong>无异议后方才划拨。' +
             '</div>' +
@@ -2781,7 +2746,7 @@
       if (panel) panel.classList.remove('hidden');
       const badge = document.getElementById('iotStatusBadge');
       if (badge) {
-        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200';
+        badge.className = 'text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200';
         badge.innerText = 'DOOR-OPEN';
       }
       const doorIcon = document.getElementById('iotDoorIcon');
@@ -2811,12 +2776,12 @@
           clearInterval(iotCountdownTimer);
           iotCountdownTimer = null;
           if (badge) {
-            badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200';
+            badge.className = 'text-xs font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200';
             badge.innerText = 'FORCE-OFF';
           }
           if (doorIcon) doorIcon.className = 'fa-solid fa-door-closed text-rose-500 text-sm';
           if (doorText) { doorText.innerText = '门禁锁定'; doorText.className = 'mt-1 text-rose-600 font-medium'; }
-          if (lightIcon) lightIcon.className = 'fa-solid fa-lightbulb text-slate-400 text-sm';
+          if (lightIcon) lightIcon.className = 'fa-solid fa-lightbulb text-slate-500 text-sm';
           if (lightText) { lightText.innerText = '已强制断电'; lightText.className = 'mt-1 text-rose-600 font-medium'; }
           const cd = document.getElementById('iotCountdownText');
           if (cd) cd.innerText = '00:00:00';
@@ -3059,7 +3024,7 @@
         }
         if (topics.length) {
           topicWrap.innerHTML = topics.slice(0, 8).map(function (t) {
-            return '<span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-[11px]">' + t + '</span>';
+            return '<span class="bg-teal-50 text-teal-900 border border-teal-200 px-2 py-1 rounded-md text-xs">' + t + '</span>';
           }).join('');
         }
       }
@@ -3157,7 +3122,7 @@
       document.getElementById('classSummaryTitle').innerText = (summary && summary.title) || '课后小结';
       const tags = (summary && summary.tags) || [];
       document.getElementById('classSummaryTags').innerHTML = tags.map(function(t) {
-        return '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">' + t + '</span>';
+        return '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">' + t + '</span>';
       }).join('');
       document.getElementById('classSummaryBody').innerText = (summary && summary.content) || '（暂无内容）';
       document.getElementById('classSummaryTime').innerText = (summary && summary.createdAt) ? ('填写于 ' + summary.createdAt) : '';
@@ -3311,7 +3276,7 @@
       box.innerHTML = '<div class="font-bold text-teal-900 mb-1"><i class="fa-regular fa-calendar-check mr-1"></i>导师可约提示（点击填入）</div>' +
         '<div class="flex flex-wrap gap-1.5">' +
         hints.map(function(h) {
-          return '<button type="button" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 cursor-pointer" onclick="applyAvailabilityHint(' + h.weekday + ',\'' + h.timeStart + '\')">' +
+          return '<button type="button" class="text-xs font-bold px-2 py-1 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 cursor-pointer" onclick="applyAvailabilityHint(' + h.weekday + ',\'' + h.timeStart + '\')">' +
             h.label + '</button>';
         }).join('') + '</div>';
     }
@@ -3356,7 +3321,7 @@
       parentBookingFilter = key || 'all';
       Array.prototype.forEach.call(document.querySelectorAll('.parent-bk-filter'), function (el) {
         const on = el.getAttribute('data-filter') === parentBookingFilter;
-        el.className = 'parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
+        el.className = 'parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border cursor-pointer ' +
           (on ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50');
       });
       renderParentBookings();
@@ -3397,7 +3362,7 @@
       if (!rows.length) {
         if (parentBookingFilter === 'completed') {
           panel.classList.remove('hidden');
-          box.innerHTML = '<div class="text-center py-4 text-slate-400">暂无已完课记录</div>';
+          box.innerHTML = '<div class="text-center py-4 text-slate-500">暂无已完课记录</div>';
         } else {
           panel.classList.add('hidden');
           box.innerHTML = '';
@@ -3410,26 +3375,26 @@
         const b = row.booking;
         const s = row.session;
         const escrow = s.escrowStatus === 'released'
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
-          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
+          ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已划拨</span>'
+          : '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">48h观察中</span>';
         const sumBtn = s.classSummary
-          ? '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
-          : '<span class="text-[10px] text-slate-400">暂无小结</span>';
+          ? '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>'
+          : '<span class="text-xs text-slate-500">暂无小结</span>';
         const typePill = b.type === 'trial'
-          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课</span>'
+          ? '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">试课</span>'
           : (b.type === 'weekly'
-            ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
-            : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
+            ? '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周</span>'
+            : '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         return '<div class="rounded-xl border border-emerald-100 bg-white p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
               '<div class="flex items-center gap-1.5 flex-wrap">' +
                 '<span class="font-bold text-slate-900">' + escapeParentHtml(b.tutorName || '导师') + '</span>' +
                 typePill +
-                '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
+                '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">已完课</span>' +
               '</div>' +
-              '<div class="text-[11px] text-slate-500">' + escapeParentHtml(b.subject || '') + ' · ' + escapeParentHtml(b.studentNickname || '') + '</div>' +
-              '<div class="text-[11px] text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
+              '<div class="text-xs text-slate-500">' + escapeParentHtml(b.subject || '') + ' · ' + escapeParentHtml(b.studentNickname || '') + '</div>' +
+              '<div class="text-xs text-slate-600"><i class="fa-regular fa-clock text-teal-600 mr-1"></i>' +
                 escapeParentHtml((s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '')) + '</div>' +
             '</div>' +
             '<div class="flex flex-col items-end gap-1.5 shrink-0">' + escrow + sumBtn + '</div>' +
@@ -3438,23 +3403,39 @@
       }).join('');
     }
 
+    function refreshParentCourseTabBadge(list) {
+      if (!window.UserConsoleNav || typeof UserConsoleNav.setTabBadge !== 'function') return;
+      const isUnpaid = function (b) {
+        return !!(window.StorageService && StorageService.bookingIsUnpaid && StorageService.bookingIsUnpaid(b));
+      };
+      const arr = Array.isArray(list) ? list : [];
+      const n = arr.filter(function (b) {
+        if (!b) return false;
+        if (isUnpaid(b)) return true;
+        return b.status === 'pending_accept' || b.status === 'escrow_locked';
+      }).length;
+      UserConsoleNav.setTabBadge('courses', n);
+    }
+
     function renderParentBookings() {
       const box = document.getElementById('parentBookingsList');
       if (!box || !window.StorageService) return;
       try { StorageService.processEscrowReleases && StorageService.processEscrowReleases(); } catch (_) {}
       const parent = CURRENT_PARENT || StorageService.getCurrentParent();
       if (!parent) {
-        box.innerHTML = '<div class="text-slate-400 text-center py-3">暂无家长档案</div>';
+        refreshParentCourseTabBadge([]);
+        box.innerHTML = '<div class="text-slate-500 text-center py-3">暂无家长档案</div>';
         return;
       }
       const list = StorageService.getBookingsForParent(parent.id || parent.phone);
+      refreshParentCourseTabBadge(list);
       renderParentCompletedPanel(list);
       if (!list.length) {
-        box.innerHTML = '<div class="text-slate-400 text-center py-3">暂无约课记录。匹配导师并预约后将显示接单状态。</div>';
+        box.innerHTML = '<div class="text-slate-500 text-center py-3">暂无约课记录。匹配导师并预约后将显示接单状态。</div>';
         return;
       }
       if (parentBookingFilter === 'completed') {
-        box.innerHTML = '<div class="text-[11px] text-slate-400 text-center py-2">下方「已完课」面板展示结课明细</div>';
+        box.innerHTML = '<div class="text-xs text-slate-500 text-center py-2">下方「已完课」面板展示结课明细</div>';
         return;
       }
       const isUnpaid = function (b) {
@@ -3475,7 +3456,7 @@
         filtered = list.filter(function(b) { return b.status === 'cancelled'; });
       }
       if (!filtered.length) {
-        box.innerHTML = '<div class="text-slate-400 text-center py-3">' +
+        box.innerHTML = '<div class="text-slate-500 text-center py-3">' +
           (parentBookingFilter === 'unpaid' ? '暂无未支付预约' : '该状态下暂无约课') + '</div>';
         return;
       }
@@ -3525,10 +3506,10 @@
                   : (s.status === 'completed'
                     ? '<span class="text-xs text-amber-700">48h观察中</span>'
                     : '<span class="text-xs text-slate-600">' + fund.sessionEscrow + '</span>'));
-              return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
+              return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-xs bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
                 '<div class="flex items-center gap-1.5 flex-wrap">' +
                   '<span class="font-medium text-slate-800">' + (s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '') + '</span>' +
-                  '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border ' + sb.cls + '">' + sb.text + '</span>' +
+                  '<span class="text-xs font-bold px-1.5 py-0.5 rounded-full border ' + sb.cls + '">' + sb.text + '</span>' +
                 '</div>' +
                 '<div class="flex items-center gap-1.5">' + escrow + acts + '</div>' +
               '</div>';
@@ -3536,13 +3517,13 @@
         }
         const canCancel = StorageService.canParentCancelBooking && StorageService.canParentCancelBooking(b);
         const payBtn = unpaid
-          ? '<button type="button" onclick="resumeParentBookingPay(\'' + b.id + '\')" class="text-[10px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-2.5 py-0.5 rounded-lg cursor-pointer">继续支付</button>'
+          ? '<button type="button" onclick="resumeParentBookingPay(\'' + b.id + '\')" class="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-2.5 py-0.5 rounded-lg cursor-pointer">继续支付</button>'
           : '';
         const cancelBtn = canCancel
-          ? '<button type="button" onclick="cancelParentBooking(\'' + b.id + '\')" class="text-[10px] font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg cursor-pointer">撤销约课</button>'
+          ? '<button type="button" onclick="cancelParentBooking(\'' + b.id + '\')" class="text-xs font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg cursor-pointer">撤销约课</button>'
           : '';
         const renewBtn = canRenew
-          ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'
+          ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'
           : ((payBtn || cancelBtn) ? '<div class="mt-2 flex flex-wrap gap-2 items-center">' + payBtn + cancelBtn + '</div>' : '');
         const amountCaption = fund.amountCaption;
         return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
@@ -3558,7 +3539,7 @@
               '<div class="text-xs text-slate-600"><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i>' + (b.space || '—') +
                 (b.boothLabel ? (' · ' + b.boothLabel) : '') +
                 ' · <i class="fa-regular fa-clock text-teal-600 mx-1"></i>' + (b.schedule || b.timeSlot || '—') + '</div>' +
-              (b.hasTimeConflict ? '<div class="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (b.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程') + '</div>' : '') +
+              (b.hasTimeConflict ? '<div class="mt-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (b.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程') + '</div>' : '') +
               reason +
             '</div>' +
             '<div class="text-right shrink-0">' +
