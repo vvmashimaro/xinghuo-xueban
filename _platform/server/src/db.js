@@ -1486,7 +1486,9 @@ const CANCEL_LEAD_MS = 2 * 60 * 60 * 1000;
 
 function findSuccessPayOrderForBooking(bookingId) {
   return (getState().payOrders || []).find(
-    (o) => o.bookingId === bookingId && (o.status === 'SUCCESS' || o.status === 'PAID')
+    (o) =>
+      o.bookingId === bookingId &&
+      (o.status === 'SUCCESS' || o.status === 'PAID' || o.status === 'refund_failed')
   );
 }
 
@@ -1561,14 +1563,21 @@ function parentCancelBooking(bookingId, parentRef, options) {
   const parentId = validated.parentId;
   const sessions = Array.isArray(booking.sessions) ? booking.sessions : [];
 
+  const payOrder = validated.payOrder;
+  const moneyWasTaken =
+    booking.paymentStatus === 'paid' ||
+    booking.paymentStatus === 'refunded' ||
+    !!(payOrder && (payOrder.status === 'SUCCESS' || payOrder.status === 'PAID' || payOrder.status === 'refund_failed'));
+  const cancelEscrow =
+    booking.type === 'trial' ? 'waived' : moneyWasTaken ? 'refunded' : 'pending_payment';
+
   const cancelledSessions = sessions.map((sess) =>
     Object.assign({}, sess, {
       status: 'cancelled',
-      escrowStatus: booking.type === 'trial' ? 'waived' : 'refunded'
+      escrowStatus: cancelEscrow
     })
   );
 
-  const payOrder = validated.payOrder;
   if (!skipRefund && payOrder && payOrder.outTradeNo) {
     refundPayOrder(payOrder.outTradeNo, {
       reason: '家长开课前撤销',
@@ -1581,7 +1590,7 @@ function parentCancelBooking(bookingId, parentRef, options) {
     cancelledAt: _now(),
     cancelledBy: 'parent',
     sessions: cancelledSessions,
-    escrowStatus: booking.type === 'trial' ? 'waived' : 'refunded'
+    escrowStatus: cancelEscrow
   };
   if (!payOrder && booking.paymentStatus === 'paid') {
     patch.paymentStatus = 'refunded';

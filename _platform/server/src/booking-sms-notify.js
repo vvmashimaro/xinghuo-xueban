@@ -85,6 +85,17 @@ async function notifyBookingRespond(booking, decisionBody, db) {
   }
 }
 
+/**
+ * 家长撤销后是否给家长发「退款将原路退回」短信。
+ * 未支付 / 无真实退款结果时不得发送退款文案。
+ */
+function shouldSendRefundSmsOnCancel(refundNotice, booking) {
+  if (!refundNotice) return false;
+  const paymentStatus = booking && booking.paymentStatus;
+  if (paymentStatus === 'unpaid' || paymentStatus === 'waived') return false;
+  return true;
+}
+
 /** 家长撤销约课：通知导师（退款短信由 cancel 路由单独发送家长） */
 async function notifyParentCancel(booking, db) {
   if (!booking) return;
@@ -99,6 +110,7 @@ module.exports = {
   notifyBookingCreated,
   notifyBookingRespond,
   notifyParentCancel,
+  shouldSendRefundSmsOnCancel,
   bookingInfoFromRecord,
   mentorPhoneForBooking
 };

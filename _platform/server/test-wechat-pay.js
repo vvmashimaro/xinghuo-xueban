@@ -39,6 +39,14 @@ async function run() {
   assert.ok(mockPrepay.outTradeNo);
 
   wechatPay.mockConfirmPayment(mockPrepay.outTradeNo);
+  wechatPay.markOrderPaid(mockPrepay.outTradeNo, {
+    transactionId: 'MOCK-MARK-1',
+    successTime: '2026-10-22T10:50:54+08:00'
+  });
+  const marked = wechatPay.getLocalOrderStatus(mockPrepay.outTradeNo);
+  assert.strictEqual(marked.status, 'SUCCESS');
+  assert.strictEqual(marked.transactionId, 'MOCK-MARK-1');
+
   const mockRefund = await wechatPay.refundOrder({
     outTradeNo: mockPrepay.outTradeNo,
     reason: 'unit test refund',
@@ -46,6 +54,27 @@ async function run() {
   });
   assert.strictEqual(mockRefund.success, true);
   assert.strictEqual(mockRefund.mock, true);
+
+  const unpaidMock = await wechatPay.createPrepay({
+    bookingId: 'BK-UNPAID-MOCK',
+    amount: 11000,
+    description: 'unpaid mock refund'
+  });
+  const unpaidRefund = await wechatPay.refundOrder({
+    outTradeNo: unpaidMock.outTradeNo,
+    reason: 'should reject unpaid mock',
+    amountFen: 11000
+  });
+  assert.strictEqual(unpaidRefund.success, false);
+  assert.strictEqual(unpaidRefund.error, '订单未支付，无法退款');
+
+  wechatPay.registerMockOrder({
+    outTradeNo: 'BK-REAL-SHOULD-NOT-LEDGER',
+    status: 'NOTPAY',
+    mock: false,
+    amount: 11000
+  });
+  assert.strictEqual(wechatPay.getLocalOrderStatus('BK-REAL-SHOULD-NOT-LEDGER'), null);
 
   const apiKey = '12345678901234567890123456789012';
   const nonce = 'test-nonce-12';
@@ -168,6 +197,44 @@ async function run() {
   });
   assert.strictEqual(refundLive.success, true);
   assert.strictEqual(refundLive.mock, false);
+
+  // 生产事故复现：真实预下单曾写入 mockOrders=NOTPAY，回调只写 DB SUCCESS。
+  // ALLOW_MOCK_PAY=false 时不得再信内存 NOTPAY，必须打到微信退款 API。
+  const savedAllowMock = process.env.ALLOW_MOCK_PAY;
+  const savedProdEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'production';
+  delete process.env.ALLOW_MOCK_PAY;
+  wechatPay.registerMockOrder({
+    outTradeNo: 'BK-BK-MVIY1SS1-858-1792637444636',
+    bookingId: 'BK-MVIY1SS1-858',
+    status: 'NOTPAY',
+    mock: false,
+    amount: 11000
+  }, { force: true });
+  const staleQuery = await wechatPay.queryTransactionByOutTradeNo('BK-BK-MVIY1SS1-858-1792637444636');
+  assert.strictEqual(staleQuery.mock, false, 'stale real NOTPAY must not win over WeChat query');
+
+  const refundCallsBefore = fetchCalls.filter((c) => String(c.url).indexOf('/v3/refund/domestic/refunds') >= 0).length;
+  const staleRefund = await wechatPay.refundOrder({
+    outTradeNo: 'BK-BK-MVIY1SS1-858-1792637444636',
+    reason: '家长开课前撤销',
+    amountFen: 11000,
+    transactionId: '4500000542202610228104943666'
+  });
+  assert.strictEqual(staleRefund.success, true, staleRefund.error || 'stale NOTPAY must not block real refund');
+  assert.strictEqual(staleRefund.mock, false);
+  const refundCallsAfter = fetchCalls.filter((c) => String(c.url).indexOf('/v3/refund/domestic/refunds') >= 0).length;
+  assert.strictEqual(refundCallsAfter, refundCallsBefore + 1, 'real SUCCESS refund must call WeChat refund API');
+  const lastRefund = fetchCalls.filter((c) => String(c.url).indexOf('/v3/refund/domestic/refunds') >= 0).pop();
+  const lastRefundBody = JSON.parse(lastRefund.init.body);
+  assert.strictEqual(lastRefundBody.out_trade_no, 'BK-BK-MVIY1SS1-858-1792637444636');
+  assert.strictEqual(lastRefundBody.transaction_id, '4500000542202610228104943666');
+  assert.strictEqual(lastRefundBody.amount.refund, 11000);
+
+  if (savedAllowMock === undefined) delete process.env.ALLOW_MOCK_PAY;
+  else process.env.ALLOW_MOCK_PAY = savedAllowMock;
+  if (savedProdEnv === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = savedProdEnv;
 
   await wechatPay.queryTransactionByOutTradeNo('BK-Q-1');
 

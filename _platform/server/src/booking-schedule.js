@@ -245,6 +245,7 @@ module.exports = {
   assertMentorAvailability,
   findBoothConflicts,
   pickAvailableBooth,
+  parseOneOffSessionFromSchedule,
   ensureSessionsForBooking,
   teachingPointBySpaceName,
   studentKeyFromBooking,
