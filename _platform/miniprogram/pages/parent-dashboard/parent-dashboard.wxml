@@ -1,4 +1,8 @@
-<view class="match-banner-wrap">
+<view class="match-banner-compact" wx:if="{{consoleSection!=='discover'}}">
+  <text>已为您精准召回 {{recallCount}} 位 &gt;95% 契合度导师</text>
+  <text class="match-banner-go" data-id="discover" bindtap="onConsoleTab">去查看 ›</text>
+</view>
+<view class="match-banner-wrap" wx:if="{{consoleSection==='discover'}}">
   <view class="hero">
     <view class="hero-kicker">星火算力匹配引擎</view>
     <view class="hero-title">你好，{{parentName}}</view>
@@ -21,7 +25,7 @@
         </view>
         <view class="muted" style="margin-top:8rpx;">{{item.matchScore}}% · ¥{{item.hourlyRate}}/h</view>
         <view class="muted">{{item.syllabusText}}</view>
-        <button class="btn-primary" size="mini" style="margin-top:10rpx;" data-id="{{item.mentorId}}" bindtap="openBooking">预约</button>
+        <button class="btn-primary" size="mini" style="margin-top:10rpx;" data-id="{{item.mentorId}}" bindtap="openBooking">预约试课</button>
       </view>
     </scroll-view>
   </view>
@@ -57,6 +61,10 @@
       <view class="chip {{bookingFilter==='all'?'chip-on':''}}" data-v="all" bindtap="setBookingFilter">全部</view>
       <view class="chip {{bookingFilter==='unpaid'?'chip-on':''}}" data-v="unpaid" bindtap="setBookingFilter">未支付</view>
       <view class="chip {{bookingFilter==='pending'?'chip-on':''}}" data-v="pending" bindtap="setBookingFilter">待接单</view>
+      <view class="chip {{bookingFilter==='accepted'?'chip-on':''}}" data-v="accepted" bindtap="setBookingFilter">已接单</view>
+      <view class="chip {{bookingFilter==='completed'?'chip-on':''}}" data-v="completed" bindtap="setBookingFilter">已完课</view>
+      <view class="chip {{bookingFilter==='declined'?'chip-on':''}}" data-v="declined" bindtap="setBookingFilter">已婉拒</view>
+      <view class="chip {{bookingFilter==='cancelled'?'chip-on':''}}" data-v="cancelled" bindtap="setBookingFilter">已取消</view>
     </view>
     <view wx:if="{{filteredBookings.length===0}}" class="muted" style="margin-top:12rpx;">{{bookingEmptyText}}</view>
     <view class="bk-row" wx:for="{{filteredBookings}}" wx:key="id">
@@ -65,9 +73,12 @@
         <text class="badge {{item.statusBadge}}">{{item.statusText}}</text>
       </view>
       <view class="muted">{{item.schedule}} · {{item.space}}{{item.boothLabel?' · '+item.boothLabel:''}} · ¥{{item.amount}}</view>
-      <view class="muted" wx:if="{{item.unpaid}}" style="color:#be123c;">尚未完成微信支付，资金未托管冻结。</view>
+      <view class="muted" wx:if="{{item.amountCaption}}">{{item.amountCaption}}</view>
+      <view class="muted {{item.fundWarn?'fund-warn':''}}" wx:if="{{item.fundReason}}">{{item.fundReason}}</view>
       <view class="muted" wx:if="{{item.hasTimeConflict}}" style="color:#b45309;">⚠ {{item.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程'}}</view>
-      <view class="muted" wx:if="{{item.declineReason}}">婉拒原因：{{item.declineReason}}</view>
+      <view class="sess-badges" wx:if="{{item.sessionBadges.length}}">
+        <text class="badge" wx:for="{{item.sessionBadges}}" wx:for-item="sb" wx:key="id">{{sb.text}}</text>
+      </view>
       <view class="bk-actions" wx:if="{{item.canPay || item.canCancel || (item.sessionActions && item.sessionActions.length)}}">
         <button wx:if="{{item.canPay}}" class="btn-primary" size="mini" data-id="{{item.id}}" bindtap="onResumePay">继续支付</button>
         <button wx:if="{{item.canCancel}}" class="btn-ghost" size="mini" data-id="{{item.id}}" bindtap="onCancelBooking">撤销约课</button>
@@ -286,6 +297,11 @@
       <view style="font-size:20rpx;color:#99f6e4;">¥{{bookingTutor.hourlyRate}}/h · {{bookingTutor.subjects[0]}}</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
+      <view class="section-h">单次辅导时长</view>
+      <radio-group bindchange="onHours">
+        <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#0d9488" /><text>2 小时（推荐·专题突破）</text></label>
+        <label class="pace-row"><radio value="1" checked="{{hours===1}}" color="#0d9488" /><text>1 小时（答疑 / 短课时）</text></label>
+      </radio-group>
       <view class="section-h">选择日期与时段</view>
       <view class="muted" wx:if="{{slotsEmptyText}}" style="margin-bottom:12rpx;">{{slotsEmptyText}}</view>
       <view wx:if="{{bookingDateLabels.length}}" class="dt-split">
@@ -294,18 +310,13 @@
           <view class="input">{{bookingDateLabels[bookingDateIndex]}}</view>
         </picker>
         <view class="muted" style="margin:16rpx 0 6rpx;">该日可约时段</view>
-        <radio-group bindchange="onSlot" wx:if="{{bookingTimes.length}}">
+        <radio-group bindchange="onSlot" wx:if="{{bookingTimes.length}}" class="pace-grid">
           <label class="pace-row" wx:for="{{bookingTimes}}" wx:key="value">
             <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#0d9488" />
             <text>{{item.label}}</text>
           </label>
         </radio-group>
       </view>
-      <view class="section-h">课时</view>
-      <radio-group bindchange="onHours">
-        <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#0d9488" /><text>2 小时（推荐）</text></label>
-        <label class="pace-row"><radio value="1" checked="{{hours===1}}" color="#0d9488" /><text>1 小时</text></label>
-      </radio-group>
       <view class="section-h">教学空间</view>
       <picker mode="selector" range="{{spaces}}" value="{{spaceIndex}}" bindchange="onBookSpace">
         <view class="input">{{spaces[spaceIndex]}}</view>
@@ -431,3 +442,4 @@
     </view>
   </view>
 </view>
+<xh-loading show="{{xhLoadingShow}}"></xh-loading>

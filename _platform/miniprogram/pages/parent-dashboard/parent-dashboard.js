@@ -5,12 +5,51 @@ const appConfig = require('../../utils/config');
 
 const BOOKING_STATUS = {
   pending_accept: { text: '待导师接单', badge: 'badge-pending' },
-  escrow_locked: { text: '托管已锁', badge: 'badge-pending' },
-  accepted: { text: '已接单', badge: 'badge-approved' },
-  declined: { text: '已婉拒', badge: 'badge-rejected' },
-  cancelled: { text: '已取消', badge: 'badge-rejected' }
+  escrow_locked: { text: '待导师接单', badge: 'badge-pending' },
+  accepted: { text: '导师已接单', badge: 'badge-approved' },
+  declined: { text: '导师已婉拒', badge: 'badge-rejected' },
+  cancelled: { text: '已撤销 · 已退款', badge: 'badge-cancelled' }
 };
 const UNPAID_STATUS = { text: '未支付', badge: 'badge-rejected' };
+
+function parentBookingFundCopy(b, unpaid) {
+  const isTrial = b && b.type === 'trial';
+  const isWeekly = b && b.type === 'weekly';
+  if (unpaid) {
+    return {
+      fundReason: '尚未完成微信支付，资金未托管冻结。可继续付款或撤销预约。',
+      amountCaption: '待支付 · 未冻结'
+    };
+  }
+  if (b.status === 'cancelled') {
+    const neverPaid = b.paymentStatus === 'unpaid' || b.escrowStatus === 'pending_payment';
+    return {
+      fundReason: neverPaid
+        ? '约课已关闭，资金未冻结。'
+        : '约课已撤销；已支付课酬已发起微信原路退款（预计 1-3 分钟到账）。',
+      amountCaption: neverPaid ? '已关闭' : '已原路退款'
+    };
+  }
+  if (b.status === 'declined') {
+    const why = b.declineReason ? ('婉拒原因：' + b.declineReason + ' · ') : '';
+    return {
+      fundReason: why + '托管资金已自动解冻并原路退回微信。',
+      amountCaption: '已解冻退回'
+    };
+  }
+  if (b.status === 'accepted') {
+    return {
+      fundReason: '导师已接单，请按时上课 · 结课后 48h 无异议自动划拨。',
+      amountCaption: isTrial ? '试课免费 · 托管豁免' : '课次托管冻结中'
+    };
+  }
+  return {
+    fundReason: isTrial
+      ? '试课免费，等待导师确认档期（开课前 2h 外可免费撤销）。'
+      : '资金已托管冻结，等待导师确认档期（开课前 2h 外可免费撤销并原路退款）。',
+    amountCaption: isTrial ? '试课免费' : (isWeekly ? '系列包提前冻结' : '已托管冻结')
+  };
+}
 
 const SORT_OPTIONS = [
   { value: 'matchDesc', label: 'AI 学情契合度最高' },
@@ -223,7 +262,7 @@ Page({
         if (!s || !s.id) return;
         if (
           !unpaid &&
-          (b.status === 'accepted' || b.status === 'pending_accept' || b.status === 'escrow_locked') &&
+          b.status === 'accepted' &&
           (s.status === 'scheduled' || s.status === 'leave_too_late')
         ) {
           sessionActions.push({
@@ -232,13 +271,25 @@ Page({
           });
         }
       });
+      const fund = parentBookingFundCopy(b, unpaid);
+      const sessionBadges = (b.sessions || []).map((s) => {
+        const pending = b.status === 'pending_accept' || b.status === 'escrow_locked';
+        const text = pending && (!s.status || s.status === 'scheduled')
+          ? '待确认档期'
+          : (s.status === 'scheduled' ? '已排课' : (s.status || ''));
+        return { id: s.id, text };
+      });
       return Object.assign({}, b, {
         unpaid,
         statusText: st.text,
         statusBadge: st.badge,
         canCancel: Storage.canParentCancelBooking(b),
         canPay: unpaid,
-        sessionActions
+        sessionActions,
+        fundReason: fund.fundReason,
+        amountCaption: fund.amountCaption,
+        fundWarn: !!(unpaid || b.status === 'declined'),
+        sessionBadges
       });
     });
     const bookingFilter = this.data.bookingFilter || 'all';
@@ -249,6 +300,16 @@ Page({
       filteredBookings = bookings.filter(
         (b) => !b.unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked')
       );
+    } else if (bookingFilter === 'accepted') {
+      filteredBookings = bookings.filter((b) => b.status === 'accepted');
+    } else if (bookingFilter === 'completed') {
+      filteredBookings = bookings.filter((b) =>
+        (b.sessions || []).some((s) => s.status === 'completed')
+      );
+    } else if (bookingFilter === 'cancelled') {
+      filteredBookings = bookings.filter((b) => b.status === 'cancelled');
+    } else if (bookingFilter === 'declined') {
+      filteredBookings = bookings.filter((b) => b.status === 'declined');
     }
     const bookingEmptyText = bookings.length === 0
       ? '暂无约课记录，预约导师后将显示接单状态。'

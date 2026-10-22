@@ -17,3 +17,4 @@
   </view>
   <button class="btn-primary" style="width:100%;" bindtap="goEdit">更新学情与考纲</button>
 </view>
+<xh-loading show="{{xhLoadingShow}}"></xh-loading>

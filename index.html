@@ -8,27 +8,10 @@
   <title>星火导师入驻计划 - 阳光合规 · 资金保障 · 专属智能空间</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="css/tokens.css">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdfa',
-              100: '#ccfbf1',
-              500: '#14b8a6',
-              600: '#0d9488',
-              700: '#0f766e',
-              800: '#115e59',
-              900: '#134e4a',
-            }
-          }
-        }
-      }
-    }
-  </script>
   <style>
     .step-active { border-color: #0d9488; color: #0d9488; background-color: #f0fdfa; }
     .step-done { background-color: #0d9488; border-color: #0d9488; color: #ffffff; }
@@ -40,30 +23,6 @@
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  
-    /* 复选/单选选项字号加大，便于阅读 */
-    label:has(> input[type="checkbox"]),
-    label:has(> input[type="radio"]),
-    label.subject-tag,
-    .opt-chip-label,
-    .filter-tab {
-      font-size: 16px !important;
-      line-height: 1.4;
-    }
-    label:has(> input[type="checkbox"]) span,
-    label:has(> input[type="radio"]) span,
-    label.subject-tag span {
-      font-size: 16px !important;
-      line-height: 1.4;
-    }
-    input[type="checkbox"] + span,
-    input[type="checkbox"] ~ span {
-      font-size: 16px !important;
-      line-height: 1.45;
-    }
-    #subjectCheckboxGroup label {
-      font-size: 16px !important;
-    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
@@ -571,18 +530,18 @@
 
             <div id="l1-substep-4" data-l1-substep="4" class="space-y-4 hidden">
             <!-- 新增：个人信息保护与合规查询授权勾选（PIPL合规前置） -->
-            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+            <div class="xh-consent-card bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
               <div class="flex items-center gap-2 text-slate-800">
                 <i class="fa-solid fa-user-shield text-teal-600"></i>
-                <span class="text-xs font-bold">《个人信息保护与法定核查授权条款》</span>
-                <span class="text-[10px] text-rose-500 font-semibold">* 必选</span>
+                <span class="text-sm font-bold">《个人信息保护与法定核查授权条款》</span>
+                <span class="text-xs text-rose-700 font-semibold">* 必选</span>
               </div>
-              <p class="text-[11px] text-slate-500 leading-relaxed">
-                为履行教育合规审查、实名与学籍资质审核及课酬结算职责，在您自愿提交入驻申请期间，平台将严格根据《中华人民共和国个人信息保护法》脱敏传输与加密存储您的相关信息。
+              <p class="xh-consent-desc leading-relaxed">
+                为履行教育合规审查、实名与学籍资质审核及课酬结算职责，在您自愿提交入驻申请期间，平台将严格根据《中华人民共和国个人信息保护法》<strong class="xh-consent-emph">脱敏传输与加密存储您的相关信息。</strong>
               </p>
-              <label class="flex items-start gap-2.5 pt-1 cursor-pointer select-none text-base">
+              <label class="flex items-start gap-2.5 pt-1 cursor-pointer select-none">
                 <input type="checkbox" id="privacyAuthAgree" onchange="updateL1Progress()" class="mt-0.5 w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300">
-                <span class="text-xs text-slate-700 leading-tight">
+                <span class="xh-consent-line">
                   我已阅读并完全同意<a href="javascript:void(0)" onclick="showToast('已调阅《星火学伴导师个人信息保护与授权协议》')" class="text-teal-700 underline font-semibold">《个人信息查询授权协议》</a>，授权平台将本人姓名、身份证号码及学籍编号用于<strong>依法开展的身份与学籍资质核验</strong>及<strong>课酬结算所需的一致性核对</strong>。
                 </span>
               </label>
@@ -1243,6 +1202,7 @@
   </div>
 
     <script src="js/config.js"></script>
+    <script src="js/xh-loading.js"></script>
     <script src="js/feature-flags.js"></script>
     <script src="js/storage-service.js"></script>
     <script src="js/availability-picker.js"></script>

@@ -20,5 +20,8 @@
     "backgroundTextStyle": "dark"
   },
   "style": "v2",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "usingComponents": {
+    "xh-loading": "/components/xh-loading/xh-loading"
+  }
 }

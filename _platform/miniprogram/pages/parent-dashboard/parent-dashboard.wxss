@@ -6,18 +6,18 @@
 }
 .avatar {
   width: 72rpx; height: 72rpx; border-radius: 18rpx;
-  background: #0d9488; color: #fff; font-weight: 900;
+  background: var(--color-primary); color: #fff; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
 }
 .avatar.sm { width: 56rpx; height: 56rpx; border-radius: 14rpx; font-size: 24rpx; }
 .tutor-card { padding-bottom: 20rpx; }
-.tutor-top { border-color: #99f6e4; box-shadow: 0 4rpx 20rpx rgba(13, 148, 136, 0.12); }
+.tutor-top { border-color: var(--color-primary-border, #99f6e4); box-shadow: 0 4rpx 20rpx rgba(13, 148, 136, 0.12); }
 .bk-row {
   margin-top: 14rpx; padding: 16rpx; background: #f8fafc;
   border-radius: 14rpx; border: 1px solid #e2e8f0;
 }
 .slider-row { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
-.slider-row .val { width: 64rpx; text-align: right; font-weight: 700; color: #0f766e; font-size: 24rpx; }
+.slider-row .val { width: 64rpx; text-align: right; font-weight: 700; color: var(--color-primary-dark); font-size: 24rpx; }
 .iot-grid { display: flex; gap: 12rpx; margin-top: 16rpx; }
 .iot-cell {
   flex: 1; text-align: center; padding: 16rpx 8rpx;
@@ -25,6 +25,15 @@
   font-size: 24rpx; font-weight: 700;
 }
 .dt-split { margin-bottom: 8rpx; }
+.pace-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.pace-grid .pace-row {
+  width: calc(50% - 6rpx);
+  margin-bottom: 0;
+}
 .pace-row {
   display: flex; align-items: center; gap: 12rpx;
   padding: 14rpx; border: 1px solid #e2e8f0; border-radius: 14rpx; margin-bottom: 10rpx;
@@ -32,6 +41,8 @@
   min-height: 72rpx;
   cursor: pointer;
 }
+.sess-badges { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 8rpx; }
+.bk-row .muted.fund-warn { color: #be123c; }
 .pace-row radio {
   margin-right: 8rpx;
 }

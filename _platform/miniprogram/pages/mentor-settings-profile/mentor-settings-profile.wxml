@@ -57,3 +57,4 @@
     <button class="btn-primary" style="width:100%;" bindtap="saveProfile">保存画像（不触发复审）</button>
   </view>
 </view>
+<xh-loading show="{{xhLoadingShow}}"></xh-loading>

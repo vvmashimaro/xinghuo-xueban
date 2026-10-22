@@ -779,8 +779,17 @@
       const opts = options || {};
       const maxMs = Number(opts.maxMs) > 0 ? Number(opts.maxMs) : 90000;
       const intervalMs = Number(opts.intervalMs) > 0 ? Number(opts.intervalMs) : 1500;
+      const shouldAbort = typeof opts.shouldAbort === 'function' ? opts.shouldAbort : null;
+      const peekResult = typeof opts.peekResult === 'function' ? opts.peekResult : null;
       const started = Date.now();
       while (Date.now() - started < maxMs) {
+        if (shouldAbort && shouldAbort()) {
+          return { success: false, aborted: true, userDeferred: true, error: '已取消等待支付确认' };
+        }
+        const peeked = peekResult && peekResult();
+        if (peeked && (peeked.success || peeked.paid || peeked.status === 'SUCCESS')) {
+          return Object.assign({ success: true }, peeked);
+        }
         try {
           const result = await _api('POST', '/api/pay/wechat/sync', { outTradeNo });
           if (result && (result.paid || result.status === 'SUCCESS')) {
@@ -794,6 +803,9 @@
         await new Promise(function (resolve) {
           setTimeout(resolve, intervalMs);
         });
+      }
+      if (shouldAbort && shouldAbort()) {
+        return { success: false, aborted: true, userDeferred: true, error: '已取消等待支付确认' };
       }
       return { success: false, error: '支付确认超时，请稍后在「我的预约」查看' };
     },

@@ -25,9 +25,9 @@
     style.id = 'xh-console-nav-styles';
     style.textContent =
       '.xh-console-bar{position:sticky;top:3.25rem;z-index:35;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(226,232,240,.9);}' +
-      '.xh-console-bar-inner{max-width:80rem;margin:0 auto;padding:.35rem 1rem;display:flex;gap:.35rem;overflow-x:auto;}' +
-      '.xh-console-tab{flex:1 0 auto;min-width:5.5rem;text-align:center;font-size:11px;font-weight:800;padding:.45rem .65rem;border-radius:.75rem;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:all .15s;}' +
-      '.xh-console-tab.on{background:#0d9488;color:#fff;border-color:#0d9488;box-shadow:0 4px 14px rgba(13,148,136,.25);}' +
+      '.xh-console-bar-inner{max-width:28rem;margin:0 auto;padding:.4rem 1rem;display:flex;justify-content:center;gap:.35rem;overflow-x:auto;}' +
+      '.xh-console-tab{flex:1 1 0;max-width:10rem;text-align:center;font-size:13px;font-weight:700;padding:.45rem .65rem;border-radius:.75rem;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:all .15s;}' +
+      '.xh-console-tab.on{background:#0f766e;color:#fff;border-color:#0f766e;box-shadow:0 4px 14px rgba(15,118,110,.25);}' +
       '.xh-console-pane.hidden{display:none!important;}' +
       '.xh-console-fab{position:fixed;right:1rem;bottom:1.25rem;z-index:850;width:3.25rem;height:3.25rem;border-radius:9999px;background:linear-gradient(145deg,#0f766e,#0d9488);color:#fff;font-size:1.35rem;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(13,148,136,.45);border:2px solid rgba(255,255,255,.35);cursor:pointer;}' +
       '.xh-console-fab:active{transform:scale(.96);opacity:.92;}' +
@@ -114,6 +114,17 @@
       var match = el.getAttribute('data-console-pane') === sectionId;
       el.classList.toggle('hidden', !match);
     });
+    var fullBanner = document.querySelector('[data-matching-banner]');
+    var compactBanner = document.querySelector('[data-matching-banner-compact]');
+    var discover = sectionId === 'discover';
+    if (fullBanner) {
+      fullBanner.classList.toggle('is-compact', !discover);
+      fullBanner.classList.toggle('hidden', !discover);
+    }
+    if (compactBanner) {
+      compactBanner.classList.toggle('is-on', !discover);
+      compactBanner.classList.toggle('hidden', discover);
+    }
     if (this._tabButtons) {
       Object.keys(this._tabButtons).forEach(function (id) {
         this._tabButtons[id].classList.toggle('on', id === sectionId);

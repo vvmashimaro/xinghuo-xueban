@@ -1,0 +1,79 @@
+/**
+ * 星火学伴 · 共享设计令牌（方案 A 底座 + 家长/导师路径 B 字阶）
+ * 管理端另走克制专业（D），不在此强制营销渐变。
+ */
+:root {
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-primary-muted: #14b8a6;
+  --color-primary-soft: #f0fdfa;
+  --color-primary-border: #99f6e4;
+  --color-primary-deep: #134e4a;
+
+  --color-ink: #0f172a;
+  --color-body: #1e293b;
+  --color-muted: #475569;
+  --color-placeholder: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-surface: #f8fafc;
+  --color-surface-2: #f1f5f9;
+  --color-surface-raised: #ffffff;
+
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #e11d48;
+  --color-danger-hover: #be123c;
+  --color-danger-soft: #fff1f2;
+  --color-info: #4f46e5;
+  --color-wechat: #07c160;
+  --color-mask: rgba(15, 23, 42, 0.55);
+
+  --type-xs: 12px;
+  --type-sm: 14px;
+  --type-md: 16px;
+  --type-lg: 18px;
+  --type-xl: 20px;
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+}
+
+/* 学科/考点胶囊：显式字号，禁止全局 label span !important */
+.subject-tag,
+.opt-chip-label,
+.filter-tab,
+#subjectCheckboxGroup label,
+#spaceCheckboxes label {
+  font-size: var(--type-sm);
+  line-height: 1.4;
+}
+@media (min-width: 640px) {
+  .subject-tag,
+  .opt-chip-label,
+  .filter-tab,
+  #subjectCheckboxGroup label,
+  #spaceCheckboxes label {
+    font-size: var(--type-md);
+  }
+}
+
+.xh-consent-card p,
+.xh-consent-card .xh-consent-line {
+  font-size: var(--type-sm);
+  line-height: 1.55;
+  color: var(--color-body);
+}
+.xh-consent-emph {
+  font-weight: 800;
+  color: var(--color-ink);
+  font-size: inherit;
+}

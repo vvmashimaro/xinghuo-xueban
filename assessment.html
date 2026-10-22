@@ -5,18 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>星火学伴 · 学生学科测评</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 50:'#f0fdfa', 100:'#ccfbf1', 500:'#14b8a6', 600:'#0d9488', 700:'#0f766e', 800:'#115e59', 900:'#134e4a' }
-          }
-        }
-      }
-    }
-  </script>
   <style>
     .glass-nav { background: rgba(255,255,255,0.86); backdrop-filter: blur(14px); }
     .q-opt:has(input:checked) { border-color: #0d9488; background: #f0fdfa; }
@@ -97,6 +88,7 @@
   </div>
 
   <script src="js/config.js"></script>
+  <script src="js/xh-loading.js"></script>
   <script src="js/storage-service.js"></script>
   <script>
     /* 分学段题库：小学 / 初中 / 高中 × 学科 */
