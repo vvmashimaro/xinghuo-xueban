@@ -10,6 +10,7 @@ const BOOKING_STATUS = {
   declined: { text: '已婉拒', badge: 'badge-rejected' },
   cancelled: { text: '已取消', badge: 'badge-rejected' }
 };
+const UNPAID_STATUS = { text: '未支付', badge: 'badge-rejected' };
 
 const SORT_OPTIONS = [
   { value: 'matchDesc', label: 'AI 学情契合度最高' },
@@ -38,6 +39,13 @@ Page({
     tutors: [],
     topTutors: [],
     myBookings: [],
+    filteredBookings: [],
+    bookingFilter: 'all',
+    bookingEmptyText: '暂无约课记录，预约导师后将显示接单状态。',
+    bookingDateLabels: [],
+    bookingDateIndex: 0,
+    bookingTimes: [],
+    bookingCalendar: [],
     filterSubjects: [],
     subjectFilter: '',
     spaceFilter: '',
@@ -66,6 +74,7 @@ Page({
     bookingTutor: {},
     slots: [],
     selectedSlot: '',
+    selectedSlotLabel: '',
     slotsEmptyText: '',
     hours: 2,
     spaces: Storage.SPACE_OPTIONS || ['青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'],
@@ -205,11 +214,15 @@ Page({
     });
 
     const bookings = Storage.getBookingsForParent(parent.id).map((b) => {
-      const st = BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' };
+      const unpaid = !!(Storage.bookingIsUnpaid && Storage.bookingIsUnpaid(b));
+      const st = unpaid
+        ? UNPAID_STATUS
+        : (BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' });
       const sessionActions = [];
       (b.sessions || []).forEach((s) => {
         if (!s || !s.id) return;
         if (
+          !unpaid &&
           (b.status === 'accepted' || b.status === 'pending_accept' || b.status === 'escrow_locked') &&
           (s.status === 'scheduled' || s.status === 'leave_too_late')
         ) {
@@ -220,17 +233,35 @@ Page({
         }
       });
       return Object.assign({}, b, {
+        unpaid,
         statusText: st.text,
         statusBadge: st.badge,
         canCancel: Storage.canParentCancelBooking(b),
+        canPay: unpaid,
         sessionActions
       });
     });
+    const bookingFilter = this.data.bookingFilter || 'all';
+    let filteredBookings = bookings.slice();
+    if (bookingFilter === 'unpaid') {
+      filteredBookings = bookings.filter((b) => b.unpaid);
+    } else if (bookingFilter === 'pending') {
+      filteredBookings = bookings.filter(
+        (b) => !b.unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked')
+      );
+    }
+    const bookingEmptyText = bookings.length === 0
+      ? '暂无约课记录，预约导师后将显示接单状态。'
+      : (filteredBookings.length === 0
+        ? (bookingFilter === 'unpaid' ? '暂无未支付预约' : '该状态下暂无约课')
+        : '');
 
     const wallet = Storage.getParentWalletSummary(parent);
 
     // IoT 关联最近 pending/accepted 约课
-    const linkable = bookings.find((b) => b.status === 'accepted' || b.status === 'pending_accept');
+    const linkable = bookings.find((b) =>
+      !b.unpaid && (b.status === 'accepted' || b.status === 'pending_accept')
+    );
     const iotLinkedBooking = linkable
       ? (linkable.tutorName + ' · ' + (linkable.schedule || linkable.timeSlot || ''))
       : '';
@@ -252,6 +283,8 @@ Page({
       filterSubjects,
       spaceFilterChips,
       myBookings: bookings,
+      filteredBookings,
+      bookingEmptyText,
       parentId: parent.id,
       parentPhone: parent.phone,
       phoneAuthorized,
@@ -301,6 +334,11 @@ Page({
       filterMin: Number(parent.budgetMin) || 80,
       filterMax: Number(parent.budgetMax) || 180
     }, () => this.reload());
+  },
+
+  setBookingFilter(e) {
+    const v = (e.currentTarget.dataset.v || 'all');
+    this.setData({ bookingFilter: v }, () => this.reload());
   },
 
   onConsoleTab(e) {
@@ -361,7 +399,7 @@ Page({
     }
   },
 
-  buildSlots() {
+  _mentorAvailability() {
     const tutor = this.data.bookingTutor || {};
     const mentorId = tutor.mentorId || tutor.id;
     let availability = [];
@@ -371,24 +409,29 @@ Page({
     if ((!availability || !availability.length) && Array.isArray(tutor.availability)) {
       availability = tutor.availability;
     }
+    return availability;
+  },
+
+  buildCalendar() {
     const hours = Number(this.data.hours) || 2;
-    if (availability && availability.length) {
-      return Avail.bookableWindowsFromAvailability(availability, hours).map((w) => ({
-        value: w.label,
-        label: w.label,
-        weekday: w.weekday,
-        timeStart: w.timeStart,
-        timeEnd: w.timeEnd
-      }));
+    const availability = this._mentorAvailability();
+    if (Avail.bookableCalendarFromAvailability && availability && availability.length) {
+      return Avail.bookableCalendarFromAvailability(availability, hours, { days: 62 });
     }
-    const fallback = Storage.DEFAULT_SLOTS || [
-      '周六 09:00-11:00',
-      '周六 14:00-16:00',
-      '周日 09:00-11:00',
-      '周日 19:00-21:00',
-      '周三 19:00-21:00'
-    ];
-    return fallback.map((s) => ({ value: s, label: s }));
+    return [];
+  },
+
+  _dateLabel(day) {
+    const d = day.date || (day.isoDate ? new Date(day.isoDate + 'T12:00:00') : null);
+    if (!d || isNaN(d.getTime())) return day.isoDate || '';
+    const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()] || '';
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const da = String(d.getDate()).padStart(2, '0');
+    return wd + ' (' + mo + '/' + da + ')';
+  },
+
+  _timeValue(isoDate, t) {
+    return isoDate + '|' + t.timeStart + '-' + t.timeEnd;
   },
 
   openBooking(e) {
@@ -427,7 +470,19 @@ Page({
     this.setData({ bookingShow: false, escrowShow: false, contractShow: false });
   },
   onSlot(e) {
-    this.setData({ selectedSlot: e.detail.value }, () => this.refreshEscrowAmount());
+    const value = e.detail.value;
+    const times = this.data.bookingTimes || [];
+    const meta = times.find((t) => t.value === value);
+    const calendar = this.data.bookingCalendar || [];
+    const day = calendar[this.data.bookingDateIndex] || {};
+    this.setData({
+      selectedSlot: value,
+      selectedSlotLabel: meta ? (this._dateLabel(day) + ' ' + meta.label) : value
+    }, () => this.refreshEscrowAmount());
+  },
+  onBookingDate(e) {
+    const idx = Number(e.detail.value) || 0;
+    this.setData({ bookingDateIndex: idx }, () => this._applyTimesForDateIndex(idx));
   },
   onHours(e) {
     this.setData({ hours: Number(e.detail.value) }, () => {
@@ -435,18 +490,48 @@ Page({
       this.refreshEscrowAmount();
     });
   },
+  _applyTimesForDateIndex(idx, prevSlot) {
+    const calendar = this.data.bookingCalendar || [];
+    const day = calendar[idx] || calendar[0];
+    if (!day) {
+      this.setData({ bookingTimes: [], selectedSlot: '', slots: [] });
+      return;
+    }
+    const times = (day.times || []).map((t) => ({
+      value: this._timeValue(day.isoDate, t),
+      label: t.label || (t.timeStart + ' – ' + t.timeEnd),
+      isoDate: day.isoDate,
+      weekday: day.weekday,
+      timeStart: t.timeStart,
+      timeEnd: t.timeEnd
+    }));
+    const keep = times.some((t) => t.value === prevSlot);
+    const selected = keep ? prevSlot : (times[0] ? times[0].value : '');
+    const selectedMeta = times.find((t) => t.value === selected);
+    const dateLabel = this._dateLabel(day);
+    this.setData({
+      bookingTimes: times,
+      slots: times,
+      selectedSlot: selected,
+      selectedSlotLabel: selectedMeta ? (dateLabel + ' ' + selectedMeta.label) : ''
+    });
+  },
   refreshSlotOptions() {
-    const slots = this.buildSlots();
+    const calendar = this.buildCalendar();
     const prev = this.data.selectedSlot;
-    const keep = slots.some((s) => s.value === prev);
-    const emptyText = slots.length
+    const prevIso = prev && String(prev).indexOf('|') >= 0 ? String(prev).split('|')[0] : '';
+    let idx = calendar.findIndex((d) => d.isoDate === prevIso);
+    if (idx < 0) idx = 0;
+    const labels = calendar.map((d) => this._dateLabel(d) + ' · ' + (d.times || []).length + ' 个时段');
+    const emptyText = calendar.length
       ? ''
       : '当前时长无法落入该导师可约窗口，请改为 1 小时或更换导师';
     this.setData({
-      slots,
-      selectedSlot: keep ? prev : (slots[0] ? slots[0].value : ''),
+      bookingCalendar: calendar,
+      bookingDateLabels: labels,
+      bookingDateIndex: idx,
       slotsEmptyText: emptyText
-    });
+    }, () => this._applyTimesForDateIndex(idx, prev));
   },
   onBookSpace(e) {
     this.setData({ spaceIndex: Number(e.detail.value) });
@@ -473,13 +558,15 @@ Page({
   },
 
   _sessionsFromSlot(slot, hours) {
-    const wdMap = { 周日: 0, 周一: 1, 周二: 2, 周三: 3, 周四: 4, 周五: 5, 周六: 6 };
-    const s = String(slot || '');
-    let weekday = '';
-    Object.keys(wdMap).forEach((name) => {
-      if (s.indexOf(name) >= 0) weekday = wdMap[name];
-    });
-    const m = s.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+    const raw = String(slot || '');
+    let isoDate = '';
+    let rest = raw;
+    if (raw.indexOf('|') >= 0) {
+      isoDate = raw.split('|')[0];
+      rest = raw.split('|')[1] || '';
+    }
+    const m = rest.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/)
+      || raw.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
     const pad = (t) => {
       const p = String(t || '').split(':');
       return String(p[0] || '0').padStart(2, '0') + ':' + String(p[1] || '00').padStart(2, '0');
@@ -490,26 +577,15 @@ Page({
       const startMins = Avail.timeToMinutes(timeStart);
       timeEnd = Avail.minutesToTime(startMins + Math.max(1, Number(hours) || 2) * 60);
     }
-    let date = '';
-    if (weekday !== '') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      for (let i = 0; i < 14; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        if (d.getDay() === weekday) {
-          const y = d.getFullYear();
-          const mo = String(d.getMonth() + 1).padStart(2, '0');
-          const da = String(d.getDate()).padStart(2, '0');
-          date = y + '-' + mo + '-' + da;
-          break;
-        }
-      }
+    let weekday = '';
+    if (isoDate) {
+      weekday = new Date(isoDate + 'T12:00:00').getDay();
     }
+    const wdNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     return [{
-      date,
+      date: isoDate,
       weekday,
-      weekdayLabel: s.slice(0, 2),
+      weekdayLabel: weekday === '' ? '' : (wdNames[weekday] || ''),
       timeStart,
       timeEnd,
       timeLabel: timeStart + '-' + timeEnd
@@ -542,6 +618,10 @@ Page({
       return;
     }
     const sessions = this._sessionsFromSlot(slot, hours);
+    const sess0 = sessions[0] || {};
+    const scheduleLabel = (sess0.weekdayLabel || '') +
+      (sess0.date ? ' ' + sess0.date : '') +
+      ' ' + (sess0.timeLabel || slot);
     const mentorId = tutor.mentorId || tutor.id;
     if (Storage.sessionFitsMentorAvailability && !Storage.sessionFitsMentorAvailability(mentorId, sessions, tutor.availability)) {
       showToast('所选时段不在导师可约时间内，请调整时间或更换导师', 'error');
@@ -559,8 +639,8 @@ Page({
       studentGrade: parent.studentGrade,
       subject: (tutor.subjects && tutor.subjects[0]) || '辅导',
       space,
-      schedule: slot,
-      timeSlot: slot,
+      schedule: scheduleLabel.trim(),
+      timeSlot: scheduleLabel.trim(),
       hours,
       sessions,
       timeConflictForced: this.data.pendingForceBook || undefined,
@@ -610,7 +690,14 @@ Page({
     }
 
     if (!paymentOk) {
-      showToast('支付失败，托管未冻结', 'error');
+      showToast('尚未完成支付，预约已保存为「未支付」，可在我的约课中继续付款或撤销', 'warning');
+      this.setData({
+        bookingShow: false,
+        contractShow: false,
+        escrowShow: false,
+        bookingFilter: 'unpaid'
+      });
+      this.reload();
       return;
     }
 
@@ -988,6 +1075,31 @@ Page({
     });
     this.setData({ assessmentShow: false });
     showToast('测评意向已登记，请按导师要求完成详细测评');
+  },
+
+  async onResumePay(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    const booking = (this.data.myBookings || []).find((b) => b.id === id)
+      || Storage.getBookingById(id);
+    if (!booking) {
+      showToast('预约不存在', 'error');
+      return;
+    }
+    const tutorName = booking.tutorName || '导师';
+    const subject = booking.subject || '辅导';
+    const amount = Number(booking.amount) || 0;
+    if (amount <= 0) {
+      showToast('该预约无需支付');
+      return;
+    }
+    const ok = await this.handleWeChatPayment(booking.id, amount, tutorName, subject);
+    if (ok) {
+      showToast('支付成功，托管已锁定，等待导师接单');
+    } else {
+      showToast('尚未完成支付，可稍后继续', 'warning');
+    }
+    this.reload();
   },
 
   async onCancelBooking(e) {

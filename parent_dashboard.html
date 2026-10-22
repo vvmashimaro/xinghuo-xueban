@@ -148,8 +148,7 @@
     </div>
   </header>
 
-  <div data-console-pane="courses" class="space-y-0">
-  <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
+  <section data-matching-banner class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
     <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto relative z-10 space-y-4">
 
@@ -181,6 +180,7 @@
     </div>
   </section>
 
+  <div data-console-pane="courses" class="space-y-0">
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
 
     <!-- 我的约课状态（导师接单/婉拒/已完课可见） -->
@@ -196,6 +196,7 @@
       </div>
       <div class="flex flex-wrap gap-1.5" id="parentBookingFilterBar">
         <button type="button" data-filter="all" onclick="setParentBookingFilter('all', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-teal-600 text-white border-teal-600 cursor-pointer">全部</button>
+        <button type="button" data-filter="unpaid" onclick="setParentBookingFilter('unpaid', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">未支付</button>
         <button type="button" data-filter="pending" onclick="setParentBookingFilter('pending', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">待接单</button>
         <button type="button" data-filter="accepted" onclick="setParentBookingFilter('accepted', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已接单</button>
         <button type="button" data-filter="completed" onclick="setParentBookingFilter('completed', this)" class="parent-bk-filter text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
@@ -613,12 +614,22 @@
           <div id="mentorAvailabilityHints" class="hidden text-[10px] text-teal-800 bg-white/80 border border-teal-100 rounded-xl px-2.5 py-2 leading-relaxed"></div>
         </div>
 
-        <!-- 辅导日期与时段选择 -->
+        <!-- 辅导日期与时段选择：左日期 / 右该日可约时段 -->
         <div class="space-y-1.5" id="oneOffDatePanel">
           <label class="block font-bold text-slate-700">1. 预约辅导日期与时间</label>
-          <div class="grid grid-cols-3 gap-2" id="bookingDateSlots">
-            <!-- 由 generateBookingDateSlots() 按本地日期动态注入 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="bookingDateSlots">
+            <div>
+              <div class="text-[11px] font-bold text-slate-600 mb-1">选择日期</div>
+              <select id="bookingDateSelect" onchange="onBookingDateSelectChange()" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 bg-white font-medium text-slate-800 cursor-pointer">
+              </select>
+            </div>
+            <div>
+              <div class="text-[11px] font-bold text-slate-600 mb-1">可约时段</div>
+              <div id="bookingTimeSlots" class="grid grid-cols-1 gap-1.5 max-h-44 overflow-y-auto pr-0.5">
+              </div>
+            </div>
           </div>
+          <p class="text-[10px] text-slate-400">仅展示该导师未来约两个月内的空闲档期；无空档日期不列出。</p>
         </div>
 
         <!-- 课时时长单选 -->
@@ -1764,45 +1775,117 @@
       });
     }
 
-    function generateBookingDateSlots() {
-      const container = document.getElementById('bookingDateSlots');
-      if (!container) return;
-      const hours = getSelectedBookingHours();
-      const prev = document.querySelector('input[name="bookingDate"]:checked');
-      const prevDay = prev ? (prev.getAttribute('data-day-label') || '') : '';
-      const prevStart = prev ? (prev.getAttribute('data-time-start') || '') : '';
-      const mentorAvail = bookingMentorAvailability();
-      const avail = mentorAvail.length ? mentorAvail : defaultAvailabilityWindows();
+    let __bookingCalendar = [];
+    let __bookingSelectedDate = '';
 
-      let usable = [];
-      if (window.StorageService && StorageService.upcomingDateSlotsFromAvailability) {
-        usable = StorageService.upcomingDateSlotsFromAvailability(avail, hours, { days: 14, limit: 6 });
+    function calendarFromAvailability(avail, hours) {
+      if (window.StorageService && StorageService.bookableCalendarFromAvailability) {
+        return StorageService.bookableCalendarFromAvailability(avail, hours, { days: 62 });
       }
+      const slots = (window.StorageService && StorageService.upcomingDateSlotsFromAvailability)
+        ? StorageService.upcomingDateSlotsFromAvailability(avail, hours, { days: 62, limit: 10000 })
+        : [];
+      const byDate = {};
+      const order = [];
+      slots.forEach(function (s) {
+        if (!byDate[s.isoDate]) {
+          byDate[s.isoDate] = {
+            isoDate: s.isoDate,
+            weekday: s.weekday,
+            weekdayLabel: s.weekdayLabel,
+            date: s.date,
+            times: []
+          };
+          order.push(s.isoDate);
+        }
+        byDate[s.isoDate].times.push({
+          timeStart: s.timeStart,
+          timeEnd: s.timeEnd,
+          label: s.timeStart + ' – ' + s.timeEnd
+        });
+      });
+      return order.map(function (iso) { return byDate[iso]; });
+    }
 
-      if (usable.length === 0) {
-        const msg = mentorAvail.length
-          ? '当前时长无法落入该导师可约窗口，请改为 1 小时或更换导师'
-          : '暂无可用时段，请稍后再试';
-        container.innerHTML = '<div class="col-span-3 text-[11px] text-slate-500 text-center py-2">' + msg + '</div>';
+    function getSelectedBookingDateTime() {
+      const radio = document.querySelector('input[name="bookingTime"]:checked')
+        || document.querySelector('input[name="bookingDate"]:checked');
+      if (!radio) return null;
+      return {
+        isoDate: radio.getAttribute('data-date') || '',
+        timeStart: radio.getAttribute('data-time-start') || '',
+        timeEnd: radio.getAttribute('data-time-end') || '',
+        timeLabel: radio.getAttribute('data-time-label') || '',
+        dayLabel: radio.getAttribute('data-day-label') || '',
+        value: radio.value || ''
+      };
+    }
+
+    function renderBookingTimeSlots(prevStart) {
+      const timeBox = document.getElementById('bookingTimeSlots');
+      if (!timeBox) return;
+      const day = __bookingCalendar.find(function (d) { return d.isoDate === __bookingSelectedDate; });
+      if (!day || !day.times || !day.times.length) {
+        timeBox.innerHTML = '<div class="text-[11px] text-slate-500 py-2">该日暂无空闲时段</div>';
         return;
       }
-
-      let matchedIdx = usable.findIndex(c => formatSlotLabel(c.date) === prevDay && c.timeStart === prevStart);
+      const label = formatSlotLabel(day.date || new Date(day.isoDate + 'T12:00:00'));
+      let matchedIdx = day.times.findIndex(function (t) { return t.timeStart === prevStart; });
       if (matchedIdx < 0) matchedIdx = 0;
-
-      container.innerHTML = usable.map((c, idx) => {
-        const label = formatSlotLabel(c.date);
-        const timeLabel = c.timeStart + ' – ' + c.timeEnd;
+      timeBox.innerHTML = day.times.map(function (t, idx) {
+        const timeLabel = t.label || (t.timeStart + ' – ' + t.timeEnd);
         const value = label + ' ' + timeLabel;
         const checked = idx === matchedIdx ? 'checked' : '';
         return (
-          '<label class="border border-slate-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
-            '<input type="radio" name="bookingDate" value="' + value.replace(/"/g, '&quot;') + '" data-date="' + c.isoDate + '" data-time-label="' + timeLabel + '" data-time-start="' + c.timeStart + '" data-time-end="' + c.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
-            '<div class="font-bold">' + label + '</div>' +
-            '<div class="text-[10px] text-slate-400">' + timeLabel + '</div>' +
+          '<label class="border border-slate-200 rounded-xl px-2.5 py-2 text-left cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">' +
+            '<input type="radio" name="bookingTime" value="' + value.replace(/"/g, '&quot;') + '" data-date="' + day.isoDate + '" data-time-label="' + timeLabel + '" data-time-start="' + t.timeStart + '" data-time-end="' + t.timeEnd + '" data-day-label="' + label + '" ' + checked + ' class="hidden" onchange="updateBookingCost()">' +
+            '<div class="font-bold text-xs">' + timeLabel + '</div>' +
           '</label>'
         );
       }).join('');
+    }
+
+    function onBookingDateSelectChange() {
+      const sel = document.getElementById('bookingDateSelect');
+      __bookingSelectedDate = sel ? sel.value : '';
+      renderBookingTimeSlots();
+      updateBookingCost();
+    }
+
+    function generateBookingDateSlots() {
+      const dateSelect = document.getElementById('bookingDateSelect');
+      const timeBox = document.getElementById('bookingTimeSlots');
+      const container = document.getElementById('bookingDateSlots');
+      if (!dateSelect || !timeBox || !container) return;
+      const hours = getSelectedBookingHours();
+      const prev = getSelectedBookingDateTime();
+      const prevDate = prev ? prev.isoDate : __bookingSelectedDate;
+      const prevStart = prev ? prev.timeStart : '';
+      const mentorAvail = bookingMentorAvailability();
+      const avail = mentorAvail.length ? mentorAvail : defaultAvailabilityWindows();
+
+      __bookingCalendar = calendarFromAvailability(avail, hours);
+
+      if (!__bookingCalendar.length) {
+        const msg = mentorAvail.length
+          ? '当前时长无法落入该导师可约窗口，请改为 1 小时或更换导师'
+          : '暂无可用时段，请稍后再试';
+        dateSelect.innerHTML = '';
+        timeBox.innerHTML = '<div class="text-[11px] text-slate-500 py-2">' + msg + '</div>';
+        return;
+      }
+
+      const keepDate = __bookingCalendar.some(function (d) { return d.isoDate === prevDate; })
+        ? prevDate
+        : __bookingCalendar[0].isoDate;
+      __bookingSelectedDate = keepDate;
+      dateSelect.innerHTML = __bookingCalendar.map(function (d) {
+        const label = formatSlotLabel(d.date || new Date(d.isoDate + 'T12:00:00'));
+        return '<option value="' + d.isoDate + '"' + (d.isoDate === keepDate ? ' selected' : '') + '>' +
+          label + ' · ' + d.times.length + ' 个时段</option>';
+      }).join('');
+      dateSelect.value = keepDate;
+      renderBookingTimeSlots(prevStart);
     }
 
     /* ==========================================================================
@@ -2011,22 +2094,20 @@
         dateChoice = '每周' + (wdLabels[weekday] || '') + ' ' + timeStart + ' · 共' + sessionCount + '次';
         timeLabel = timeStart;
       } else {
-        const dateRadio = document.querySelector('input[name="bookingDate"]:checked');
-        dateChoice = dateRadio?.value || '';
-        timeLabel = dateRadio?.getAttribute('data-time-label') || '';
-        timeStart = dateRadio?.getAttribute('data-time-start') || '';
-        // endTime 随所选时长重算，保证与展示窗口一致
-        const endAttr = dateRadio?.getAttribute('data-time-end') || '';
+        const picked = getSelectedBookingDateTime();
+        dateChoice = picked ? picked.value : '';
+        timeLabel = picked ? picked.timeLabel : '';
+        timeStart = picked ? picked.timeStart : '';
+        const endAttr = picked ? picked.timeEnd : '';
         if (timeStart) {
           const recomputedEnd = addHoursToTimeLabel(timeStart, hours);
           timeLabel = timeStart + ' – ' + (endAttr || recomputedEnd);
           if (dateChoice && timeLabel && dateChoice.indexOf(timeStart) >= 0) {
-            // keep day label, refresh window portion
-            const dayPart = dateRadio?.getAttribute('data-day-label') || dateChoice.split(' ')[0];
+            const dayPart = (picked && picked.dayLabel) || dateChoice.split(' ')[0];
             dateChoice = dayPart + ' ' + timeLabel;
           }
         }
-        const sessionDate = dateRadio?.getAttribute('data-date') || '';
+        const sessionDate = picked ? picked.isoDate : '';
         const timeEndOne = timeStart ? addHoursToTimeLabel(timeStart, hours) : '';
         if (sessionDate && timeStart && type === 'one_off') {
           const wd = new Date(sessionDate + 'T12:00:00').getDay();
@@ -2067,8 +2148,7 @@
       }
       const type = getSelectedBookingType();
       if (type === 'one_off' || type === 'trial') {
-        const dateRadio = document.querySelector('input[name="bookingDate"]:checked');
-        if (!dateRadio) {
+        if (!getSelectedBookingDateTime()) {
           showToast('请选择预约日期与时段', 'warning');
           return;
         }
@@ -2270,7 +2350,7 @@
       setTimeout(async () => {
         const meta = pendingBookingMeta || {};
         const spaceName = meta.spaceName || document.getElementById('bookingSpaceSelect')?.value || '青羊金沙文化微网点';
-        const dateChoice = meta.dateChoice || document.querySelector('input[name="bookingDate"]:checked')?.value || '';
+        const dateChoice = meta.dateChoice || (getSelectedBookingDateTime() && getSelectedBookingDateTime().value) || '';
         const total = (meta.total != null) ? Number(meta.total) : 270;
         const tutor = meta.tutor || selectedTutorForBooking;
         const tutorName = tutor && (tutor.maskedName || tutor.name || tutor.realName || '导师');
@@ -2365,7 +2445,14 @@
             const payResult = await handleWeChatPayment(createdBooking.id, payYuan, tutorName, assessmentSubject);
             paymentOk = !!(payResult && payResult.success);
             if (!paymentOk) {
-              showToast(payResult && payResult.error ? payResult.error : '支付失败，托管未冻结', 'error');
+              closeWeChatNativeQr();
+              showToast(
+                (payResult && payResult.error ? payResult.error + '。' : '') +
+                '预约已保存为「未支付」，可在我的约课中继续付款或撤销',
+                'warning'
+              );
+              try { renderParentBookings(); } catch (_) {}
+              closeBookingDrawer();
               return;
             }
             try {
@@ -2418,6 +2505,28 @@
       return /MicroMessenger/i.test(navigator.userAgent || '');
     }
 
+    function closeWeChatNativeQr() {
+      const modal = document.getElementById('wechatNativePayModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function markWeChatNativeQrPaidAndClose() {
+      const modal = document.getElementById('wechatNativePayModal');
+      if (!modal || modal.classList.contains('hidden')) return Promise.resolve();
+      const waiting = modal.querySelector('#wechatNativePayWaiting');
+      const success = modal.querySelector('#wechatNativePaySuccess');
+      const img = modal.querySelector('#wechatNativePayQr');
+      if (waiting) waiting.classList.add('hidden');
+      if (img) img.classList.add('hidden');
+      if (success) success.classList.remove('hidden');
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          closeWeChatNativeQr();
+          resolve();
+        }, 900);
+      });
+    }
+
     function showWeChatNativeQr(codeUrl) {
       let modal = document.getElementById('wechatNativePayModal');
       if (!modal) {
@@ -2428,19 +2537,25 @@
           '<div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">' +
           '<p class="text-sm font-bold text-slate-800 mb-3">微信扫码支付</p>' +
           '<img id="wechatNativePayQr" alt="微信支付二维码" class="mx-auto w-52 h-52 border border-slate-100 rounded-lg" />' +
-          '<p class="text-xs text-slate-500 mt-3">支付完成后请稍候，系统将通过回调确认订单</p>' +
+          '<p id="wechatNativePayWaiting" class="text-xs text-slate-500 mt-3">支付完成后请稍候，系统将通过回调确认订单</p>' +
+          '<p id="wechatNativePaySuccess" class="hidden text-sm font-bold text-emerald-700 mt-3">支付成功，正在确认订单…</p>' +
           '<button type="button" id="wechatNativePayClose" class="mt-4 text-xs text-teal-700 font-semibold">关闭</button>' +
           '</div>';
         document.body.appendChild(modal);
         modal.querySelector('#wechatNativePayClose').addEventListener('click', () => {
-          modal.classList.add('hidden');
+          closeWeChatNativeQr();
         });
       }
       const img = modal.querySelector('#wechatNativePayQr');
+      const waiting = modal.querySelector('#wechatNativePayWaiting');
+      const success = modal.querySelector('#wechatNativePaySuccess');
       if (img) {
+        img.classList.remove('hidden');
         img.src =
           'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(codeUrl);
       }
+      if (waiting) waiting.classList.remove('hidden');
+      if (success) success.classList.add('hidden');
       modal.classList.remove('hidden');
     }
 
@@ -2536,7 +2651,11 @@
         if (prepayResult.codeUrl) {
           showWeChatNativeQr(prepayResult.codeUrl);
           showToast('请使用微信扫描二维码完成支付');
-          return await confirmPaidOnServer();
+          const paid = await confirmPaidOnServer();
+          if (paid && paid.success) {
+            await markWeChatNativeQrPaidAndClose();
+          }
+          return paid;
         }
 
         if (prepayResult.prepayId && prepayResult.paySign && inWeChat) {
@@ -2773,9 +2892,45 @@
       showToast('反馈已提交，平台将尽快处理');
     }
 
+    async function resumeParentBookingPay(bookingId) {
+      if (!window.StorageService || !bookingId) return;
+      const booking = StorageService.getBookingById(bookingId);
+      if (!booking) {
+        showToast('预约不存在', 'error');
+        return;
+      }
+      if (StorageService.bookingIsUnpaid && !StorageService.bookingIsUnpaid(booking)) {
+        if (booking.paymentStatus === 'paid') {
+          showToast('该预约已支付');
+          renderParentBookings();
+          return;
+        }
+      }
+      const amount = Number(booking.amount) || 0;
+      if (amount <= 0) {
+        showToast('该预约无需支付');
+        return;
+      }
+      showToast('正在拉起微信支付…');
+      const payResult = await handleWeChatPayment(
+        booking.id,
+        amount,
+        booking.tutorName || '导师',
+        booking.subject || '学科辅导'
+      );
+      if (payResult && payResult.success) {
+        try { await StorageService.hydrateFromServer(); } catch (_) {}
+        showToast('支付成功，托管已锁定，等待导师接单');
+      } else {
+        showToast((payResult && payResult.error) || '尚未完成支付，可稍后继续', 'warning');
+      }
+      try { renderParentBookings(); } catch (_) {}
+      refreshParentWalletHeader();
+    }
+
     function cancelParentBooking(bookingId) {
       if (!window.StorageService || !bookingId) return;
-      if (!confirm('确认撤销该约课？开课前 2 小时外可原路退回托管。')) return;
+      if (!confirm('确认撤销该约课？未支付将直接取消；已支付且开课前 2 小时外可原路退回托管。')) return;
       const res = StorageService.parentCancelBooking(bookingId);
       if (res && res.ok) {
         showToast('约课已撤销，已支付课酬将原路退回微信账户');
@@ -3265,16 +3420,24 @@
         box.innerHTML = '<div class="text-[11px] text-slate-400 text-center py-2">下方「已完课」面板展示结课明细</div>';
         return;
       }
+      const isUnpaid = function (b) {
+        return !!(window.StorageService && StorageService.bookingIsUnpaid && StorageService.bookingIsUnpaid(b));
+      };
       let filtered = list.slice();
-      if (parentBookingFilter === 'pending') {
-        filtered = list.filter(function(b) { return b.status === 'pending_accept' || b.status === 'escrow_locked'; });
+      if (parentBookingFilter === 'unpaid') {
+        filtered = list.filter(isUnpaid);
+      } else if (parentBookingFilter === 'pending') {
+        filtered = list.filter(function(b) {
+          return !isUnpaid(b) && (b.status === 'pending_accept' || b.status === 'escrow_locked');
+        });
       } else if (parentBookingFilter === 'accepted') {
         filtered = list.filter(function(b) { return b.status === 'accepted'; });
       } else if (parentBookingFilter === 'declined') {
         filtered = list.filter(function(b) { return b.status === 'declined'; });
       }
       if (!filtered.length) {
-        box.innerHTML = '<div class="text-slate-400 text-center py-3">该状态下暂无约课</div>';
+        box.innerHTML = '<div class="text-slate-400 text-center py-3">' +
+          (parentBookingFilter === 'unpaid' ? '暂无未支付预约' : '该状态下暂无约课') + '</div>';
         return;
       }
       const statusMap = {
@@ -3286,7 +3449,10 @@
       };
       box.innerHTML = filtered.map(function(raw) {
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
-        const st = statusMap[b.status] || { text: b.status || '未知', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+        const unpaid = isUnpaid(b);
+        const st = unpaid
+          ? { text: '未支付', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+          : (statusMap[b.status] || { text: b.status || '未知', cls: 'bg-slate-50 text-slate-600 border-slate-200' });
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
         const typePill = isTrial
@@ -3295,21 +3461,23 @@
             ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-teal-50 text-teal-800 border-teal-200">每周固定</span>'
             : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">单次</span>');
         const hasCompleted = (b.sessions || []).some(function(s) { return s.status === 'completed'; });
-        const canRenew = b.status === 'accepted' || hasCompleted;
-        const reason = (b.status === 'declined' && b.declineReason)
-          ? '<div class="mt-1.5 text-[11px] text-rose-700">婉拒原因：' + String(b.declineReason).replace(/</g,'&lt;') + '</div>'
-          : (b.status === 'accepted'
-            ? (window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()
-              ? '<div class="mt-1.5 text-[11px] text-emerald-700">可使用 IoT 通行凭证履约开仓 · 结课后 48h 无投诉划拨</div>'
-              : '<div class="mt-1.5 text-[11px] text-emerald-700">导师已接单，请按时上课 · 结课后 48h 无投诉划拨</div>')
-            : '<div class="mt-1.5 text-[11px] text-slate-400">资金已托管冻结，等待导师确认档期</div>');
+        const canRenew = !unpaid && (b.status === 'accepted' || hasCompleted);
+        const reason = unpaid
+          ? '<div class="mt-1.5 text-[11px] text-rose-700">尚未完成微信支付，资金未托管冻结。可继续付款或撤销预约。</div>'
+          : ((b.status === 'declined' && b.declineReason)
+            ? '<div class="mt-1.5 text-[11px] text-rose-700">婉拒原因：' + String(b.declineReason).replace(/</g,'&lt;') + '</div>'
+            : (b.status === 'accepted'
+              ? (window.isSmartWarehouseEnabled && window.isSmartWarehouseEnabled()
+                ? '<div class="mt-1.5 text-[11px] text-emerald-700">可使用 IoT 通行凭证履约开仓 · 结课后 48h 无投诉划拨</div>'
+                : '<div class="mt-1.5 text-[11px] text-emerald-700">导师已接单，请按时上课 · 结课后 48h 无投诉划拨</div>')
+              : '<div class="mt-1.5 text-[11px] text-slate-400">资金已托管冻结，等待导师确认档期</div>'));
         let sessionsHtml = '';
         if (Array.isArray(b.sessions) && b.sessions.length) {
           sessionsHtml = '<div class="mt-2 space-y-1.5 border-t border-slate-100 pt-2">' +
             (isWeekly ? '<div class="text-[10px] font-bold text-teal-800 mb-1">每周系列课次</div>' : '') +
             b.sessions.map(function(s) {
               const sb = sessionStatusBadge(s.status);
-              const canLeave = (b.status === 'accepted' || b.status === 'pending_accept') &&
+              const canLeave = !unpaid && (b.status === 'accepted' || b.status === 'pending_accept') &&
                 (s.status === 'scheduled' || s.status === 'leave_too_late');
               let acts = '';
               if (canLeave) {
@@ -3318,9 +3486,11 @@
               if (s.classSummary) {
                 acts += '<button type="button" onclick="openClassSummaryModal(\'' + b.id + '\',\'' + s.id + '\')" class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg cursor-pointer">查看小结</button>';
               }
-              const escrow = s.escrowStatus === 'released'
-                ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
-                : (s.status === 'completed' ? '<span class="text-[10px] text-amber-700">48h观察中</span>' : '<span class="text-[10px] text-slate-400">费用已冻结</span>');
+              const escrow = unpaid
+                ? '<span class="text-[10px] text-rose-600">待支付</span>'
+                : (s.escrowStatus === 'released'
+                  ? '<span class="text-[10px] text-emerald-700">已划拨</span>'
+                  : (s.status === 'completed' ? '<span class="text-[10px] text-amber-700">48h观察中</span>' : '<span class="text-[10px] text-slate-400">费用已冻结</span>'));
               return '<div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-white rounded-lg border border-slate-100 px-2 py-1.5">' +
                 '<div class="flex items-center gap-1.5 flex-wrap">' +
                   '<span class="font-medium text-slate-800">' + (s.date || '') + ' ' + (s.weekdayLabel || '') + ' ' + (s.timeLabel || s.timeStart || '') + '</span>' +
@@ -3331,12 +3501,18 @@
             }).join('') + '</div>';
         }
         const canCancel = StorageService.canParentCancelBooking && StorageService.canParentCancelBooking(b);
+        const payBtn = unpaid
+          ? '<button type="button" onclick="resumeParentBookingPay(\'' + b.id + '\')" class="text-[10px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-2.5 py-0.5 rounded-lg cursor-pointer">继续支付</button>'
+          : '';
         const cancelBtn = canCancel
           ? '<button type="button" onclick="cancelParentBooking(\'' + b.id + '\')" class="text-[10px] font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg cursor-pointer">撤销约课</button>'
           : '';
         const renewBtn = canRenew
           ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'
-          : (cancelBtn ? '<div class="mt-2">' + cancelBtn + '</div>' : '');
+          : ((payBtn || cancelBtn) ? '<div class="mt-2 flex flex-wrap gap-2 items-center">' + payBtn + cancelBtn + '</div>' : '');
+        const amountCaption = unpaid
+          ? '未支付 · 未冻结'
+          : (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包提前冻结' : '单次冻结'));
         return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
@@ -3355,7 +3531,7 @@
             '</div>' +
             '<div class="text-right shrink-0">' +
               '<div class="font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
-              '<div class="text-[10px] text-slate-400">' + (isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '系列包提前冻结' : '单次冻结')) + '</div>' +
+              '<div class="text-[10px] text-slate-400">' + amountCaption + '</div>' +
               '<div class="text-[10px] text-slate-400">' + (b.createdAt || '') + '</div>' +
             '</div>' +
           '</div>' +

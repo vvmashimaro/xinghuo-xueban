@@ -150,6 +150,67 @@ function bookableWindowsFromAvailability(availability, hours) {
   return out;
 }
 
+function upcomingDateSlotsFromAvailability(availability, hours, options) {
+  const opts = options || {};
+  const days = opts.days || 62;
+  const limit = opts.limit != null ? opts.limit : 10000;
+  const windows = bookableWindowsFromAvailability(availability, hours);
+  const byWd = {};
+  windows.forEach((w) => {
+    if (!byWd[w.weekday]) byWd[w.weekday] = [];
+    byWd[w.weekday].push(w);
+  });
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const out = [];
+  for (let i = 0; i < days && out.length < limit; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const wd = d.getDay();
+    (byWd[wd] || []).forEach((w) => {
+      if (out.length >= limit) return;
+      const end = new Date(d);
+      const eh = parseInt(String(w.timeEnd).split(':')[0], 10) || 0;
+      const em = parseInt(String(w.timeEnd).split(':')[1], 10) || 0;
+      end.setHours(eh, em, 0, 0);
+      if (end.getTime() <= now.getTime()) return;
+      const y = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      out.push(Object.assign({}, w, {
+        date: d,
+        isoDate: y + '-' + mo + '-' + da
+      }));
+    });
+  }
+  return out;
+}
+
+function bookableCalendarFromAvailability(availability, hours, options) {
+  const slots = upcomingDateSlotsFromAvailability(availability, hours, options || { days: 62 });
+  const byDate = {};
+  const order = [];
+  slots.forEach((s) => {
+    const iso = s.isoDate;
+    if (!byDate[iso]) {
+      byDate[iso] = {
+        isoDate: iso,
+        weekday: s.weekday,
+        weekdayLabel: s.weekdayLabel,
+        date: s.date,
+        times: []
+      };
+      order.push(iso);
+    }
+    byDate[iso].times.push({
+      timeStart: s.timeStart,
+      timeEnd: s.timeEnd,
+      label: s.timeStart + ' – ' + s.timeEnd
+    });
+  });
+  return order.map((iso) => byDate[iso]);
+}
+
 function windowCoversSession(availability, session) {
   const windows = bookableWindowsFromAvailability(
     availability,
@@ -180,5 +241,7 @@ module.exports = {
   summarizeAvailability,
   availabilityToArray,
   bookableWindowsFromAvailability,
+  upcomingDateSlotsFromAvailability,
+  bookableCalendarFromAvailability,
   windowCoversSession
 };

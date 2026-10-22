@@ -110,7 +110,8 @@ async function run() {
   const sess = createRes.data.sessions[0];
   assert(sess && sess.status === 'scheduled', `expected scheduled, got ${sess && sess.status}`);
   assert(sess && !sess.releaseAt, 'client releaseAt must be stripped');
-  assert(sess && sess.escrowStatus === 'frozen', 'session escrow must be server frozen');
+  assert(sess && sess.escrowStatus === 'pending_payment', 'unpaid session escrow is pending_payment not frozen');
+  assert(createRes.data.paymentStatus === 'unpaid', 'new booking paymentStatus unpaid');
   assert(sess.id !== 'SES-EVIL', 'client session id must be replaced');
   console.log('✓ Create rebuilds sessions without client lifecycle fields');
 
@@ -123,13 +124,14 @@ async function run() {
   assert(completeUnpaid.status === 400, 'complete on unpaid must fail');
   console.log('✓ Complete rejected when unpaid / not accepted');
 
-  const acceptRes = await request(
+  const acceptUnpaid = await request(
     'POST',
     `/api/bookings/${bookingId}/respond`,
     { accept: true },
     mentorToken
   );
-  assert(acceptRes.status === 200, 'accept failed');
+  assert(acceptUnpaid.status === 400, 'mentor must not accept unpaid booking');
+  console.log('✓ Mentor accept rejected while unpaid');
 
   const completeUnpaid2 = await request(
     'POST',
@@ -138,7 +140,7 @@ async function run() {
     mentorToken
   );
   assert(completeUnpaid2.status === 400, 'complete still blocked without payment');
-  console.log('✓ Complete rejected after accept without payment');
+  console.log('✓ Complete rejected while unpaid and not accepted');
 
   const prepayRes = await request(
     'POST',
@@ -153,6 +155,22 @@ async function run() {
     parentToken
   );
   assert(confirmRes.data && confirmRes.data.success, 'pay failed');
+
+  const afterPay = await request('GET', '/api/bookings', null, parentToken);
+  const paidBooking = (afterPay.data || []).find((b) => b.id === bookingId);
+  assert(paidBooking && paidBooking.paymentStatus === 'paid', 'paymentStatus paid after mock-confirm');
+  assert(paidBooking.escrowStatus === 'frozen', 'escrow frozen after pay');
+  const paidSess = (paidBooking.sessions || []).find((s) => s.id === sess.id);
+  assert(paidSess && paidSess.escrowStatus === 'frozen', 'session escrow frozen after pay');
+
+  const acceptRes = await request(
+    'POST',
+    `/api/bookings/${bookingId}/respond`,
+    { accept: true },
+    mentorToken
+  );
+  assert(acceptRes.status === 200, 'accept after pay failed');
+  console.log('✓ Mentor can accept after parent pays');
 
   const contractRes = await request(
     'POST',

@@ -14,6 +14,7 @@ const proofUpload = require('./proof-upload');
 const db = require('./db');
 const sms = require('./sms');
 const bookingSmsNotify = require('./booking-sms-notify');
+const bookingFields = require('./booking-fields');
 const auth = require('./auth');
 const wechatPay = require('./wechat-pay');
 const pricing = require('./pricing');
@@ -655,8 +656,22 @@ function applyWeChatPaySuccess(payOrder, result) {
     : null;
   if (booking && booking.paymentStatus !== 'paid') {
     markBookingPaidFromPaySuccess(booking, result);
+    const paid = db.getBookings().find((b) => b.id === booking.id) || booking;
+    notifyMentorAfterParentPaid(paid);
   }
   return { ok: true, idempotent: false };
+}
+
+function notifyMentorAfterParentPaid(booking) {
+  if (!booking || !booking.id) return;
+  if (bookingFields.bookingIsUnpaid(booking)) return;
+  Promise.resolve()
+    .then(function () {
+      return bookingSmsNotify.notifyBookingCreated(booking, db);
+    })
+    .catch(function (error) {
+      console.error('[Booking SMS Notification Error]', error);
+    });
 }
 
 const notifyLocks = new Set();
@@ -1022,6 +1037,9 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
       escrowStatus: 'frozen',
       amount: payable.amountYuan
     }, { trust: 'payment' });
+
+    const paid = db.getBookings().find((b) => b.id === booking.id) || booking;
+    notifyMentorAfterParentPaid(paid);
     
     ok(res, result);
   } catch (error) {
@@ -1332,8 +1350,8 @@ app.post('/api/bookings', requireAuth, async (req, res) => {
     return fail(res, 400, '创建预约失败');
   }
   
-  // 新约课待接单：短信通知导师（失败不影响创建）
-  if (booking && booking.id) {
+  // 已支付/免费试课才通知导师接单；未支付等到支付成功后再通知
+  if (booking && booking.id && !bookingFields.bookingIsUnpaid(booking)) {
     try {
       await bookingSmsNotify.notifyBookingCreated(booking, db);
     } catch (error) {
@@ -1389,6 +1407,9 @@ app.post('/api/bookings/:id/respond', requireAuth, async (req, res) => {
   
   const updated = db.respondToBooking(req.params.id, req.body || {});
   if (!updated) return fail(res, 404, 'booking not found');
+  if (updated.ok === false) {
+    return fail(res, 400, updated.error || '无法响应该预约');
+  }
 
   try {
     await bookingSmsNotify.notifyBookingRespond(updated, req.body || {}, db);

@@ -76,6 +76,40 @@ function run() {
   assert(tooLong.length === 0, '3h does not fit 2h window');
   console.log('✓ Custom availability filters by duration');
 
+  const calendar = Avail.bookableCalendarFromAvailability(avail, 2, { days: 62 });
+  assert(Array.isArray(calendar) && calendar.length > 0, 'calendar has dates');
+  calendar.forEach((day) => {
+    assert(day.isoDate && /^\d{4}-\d{2}-\d{2}$/.test(day.isoDate), 'iso date');
+    assert(Array.isArray(day.times) && day.times.length > 0, 'only dates with free slots');
+  });
+  const first = new Date(calendar[0].isoDate + 'T12:00:00');
+  const last = new Date(calendar[calendar.length - 1].isoDate + 'T12:00:00');
+  const spanDays = Math.round((last - first) / 86400000);
+  assert(spanDays <= 62, 'calendar stays within ~2 months');
+  const saturdays = calendar.filter((d) => d.weekday === 6);
+  assert(saturdays.length >= 4, 'multiple Saturday dates across two months');
+  console.log('✓ Date/time calendar groups free slots over ~2 months');
+
+  const bookingFields = require('./src/booking-fields');
+  assert(bookingFields.bookingIsUnpaid({ paymentStatus: 'unpaid', status: 'pending_accept', amount: 110 }), 'unpaid flag');
+  assert(!bookingFields.bookingIsUnpaid({ paymentStatus: 'paid', status: 'pending_accept' }), 'paid is not unpaid');
+  assert(!bookingFields.bookingIsUnpaid({ escrowStatus: 'frozen', status: 'pending_accept', amount: 220 }), 'legacy frozen seed is not unpaid');
+  assert(!bookingFields.bookingIsUnpaid({ type: 'trial', paymentStatus: 'waived' }), 'trial is not unpaid');
+  console.log('✓ bookingIsUnpaid keys off paymentStatus, not booking status');
+
+  const pricing = require('./src/pricing');
+  const unpaidWallet = pricing.computeParentWalletFromBookings(
+    [{ type: 'one_off', status: 'pending_accept', paymentStatus: 'unpaid', escrowStatus: 'pending_payment', amount: 110, parentId: 'P1' }],
+    { id: 'P1' }
+  );
+  assert(unpaidWallet.frozenYuan === 0 && unpaidWallet.hasFrozen === false, 'unpaid must not count as frozen wallet');
+  const paidWallet = pricing.computeParentWalletFromBookings(
+    [{ type: 'one_off', status: 'pending_accept', paymentStatus: 'paid', escrowStatus: 'frozen', amount: 110, parentId: 'P1' }],
+    { id: 'P1' }
+  );
+  assert(paidWallet.frozenYuan === 110 && paidWallet.hasFrozen === true, 'paid escrow counts as frozen');
+  console.log('✓ Wallet frozen amount ignores unpaid / pending_payment');
+
   function prepend(list, item) {
     const arr = Array.isArray(list) ? list : [];
     arr.unshift(item);
@@ -105,6 +139,23 @@ function run() {
   );
   assert(configSrc.indexOf("API_BASE: 'https://www.sparkles.com.cn'") >= 0, 'API_BASE unchanged');
   console.log('✓ Mini API_BASE stays https://www.sparkles.com.cn');
+
+  const parentHtml = fs.readFileSync(path.join(__dirname, '../../parent_dashboard.html'), 'utf8');
+  assert(parentHtml.indexOf('bookingDateSelect') >= 0, 'web split date select');
+  assert(parentHtml.indexOf('bookingTimeSlots') >= 0, 'web time list');
+  assert(parentHtml.indexOf('data-filter="unpaid"') >= 0, 'web unpaid filter');
+  assert(parentHtml.indexOf('markWeChatNativeQrPaidAndClose') >= 0, 'web QR auto-close');
+  assert(/data-matching-banner[\s\S]*xh-console-bar|data-matching-banner/.test(parentHtml), 'matching banner marker');
+  const navSrc = fs.readFileSync(path.join(__dirname, '../../js/console-nav.js'), 'utf8');
+  assert(navSrc.indexOf('data-matching-banner') >= 0, 'nav inserts after matching banner');
+  const miniWxml = fs.readFileSync(
+    path.join(__dirname, '../miniprogram/pages/parent-dashboard/parent-dashboard.wxml'),
+    'utf8'
+  );
+  assert(miniWxml.indexOf('match-banner-wrap') < miniWxml.indexOf('console-tab-bar'), 'mini nav below matching');
+  assert(miniWxml.indexOf('bookingDateLabels') >= 0, 'mini date picker');
+  assert(miniWxml.indexOf('data-v="unpaid"') >= 0, 'mini unpaid filter');
+  console.log('✓ Web/mini UX markers for picker, unpaid, QR close, nav order');
 
   console.log('=== Parent booking availability tests passed ===');
 }

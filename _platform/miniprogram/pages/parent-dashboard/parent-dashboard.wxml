@@ -1,31 +1,11 @@
-<view class="console-tab-bar">
-  <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">我的课程</view>
-  <view class="console-tab {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="onConsoleTab">查找导师</view>
-  <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
-</view>
-
-<view class="container container-with-fab">
-  <block wx:if="{{consoleSection==='courses'}}">
+<view class="match-banner-wrap">
   <view class="hero">
+    <view class="hero-kicker">星火算力匹配引擎</view>
     <view class="hero-title">你好，{{parentName}}</view>
     <view class="hero-sub">{{studentNickname}} · {{studentGrade}} · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
     <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#5eead4;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
   </view>
-
-  <!-- 托管钱包示意 -->
-  <view class="card wallet-card">
-    <view class="row-between">
-      <view>
-        <view class="muted">{{walletLabel}}</view>
-        <view class="wallet-bal" wx:if="{{walletHasFrozen}}">课次冻结 ¥{{walletFrozen}}</view>
-        <view class="wallet-bal muted" wx:else style="font-size:26rpx;font-weight:600;">暂无冻结课款</view>
-      </view>
-      <text class="badge badge-teal">一课一消</text>
-    </view>
-  </view>
-
-  <!-- 优选推荐 -->
-  <view class="card" wx:if="{{topTutors.length>0}}">
+  <view class="card" wx:if="{{topTutors.length>0}}" style="margin:0 28rpx 16rpx;">
     <view class="row-between">
       <view class="card-title" style="margin:0;">优选推荐</view>
       <text class="badge badge-teal">契合度 ≥ 95%</text>
@@ -45,6 +25,27 @@
       </view>
     </scroll-view>
   </view>
+</view>
+
+<view class="console-tab-bar">
+  <view class="console-tab {{consoleSection==='courses'?'on':''}}" data-id="courses" bindtap="onConsoleTab">我的课程</view>
+  <view class="console-tab {{consoleSection==='discover'?'on':''}}" data-id="discover" bindtap="onConsoleTab">查找导师</view>
+  <view class="console-tab {{consoleSection==='account'?'on':''}}" data-id="account" bindtap="onConsoleTab">我的账户</view>
+</view>
+
+<view class="container container-with-fab">
+  <block wx:if="{{consoleSection==='courses'}}">
+  <!-- 托管钱包示意 -->
+  <view class="card wallet-card">
+    <view class="row-between">
+      <view>
+        <view class="muted">{{walletLabel}}</view>
+        <view class="wallet-bal" wx:if="{{walletHasFrozen}}">课次冻结 ¥{{walletFrozen}}</view>
+        <view class="wallet-bal muted" wx:else style="font-size:26rpx;font-weight:600;">暂无冻结课款</view>
+      </view>
+      <text class="badge badge-teal">一课一消</text>
+    </view>
+  </view>
 
   <!-- 我的约课 -->
   <view class="card">
@@ -52,16 +53,23 @@
       <view class="card-title" style="margin:0;">我的约课</view>
       <text class="badge badge-teal">{{myBookings.length}} 单</text>
     </view>
-    <view wx:if="{{myBookings.length===0}}" class="muted" style="margin-top:12rpx;">暂无约课记录，预约导师后将显示接单状态。</view>
-    <view class="bk-row" wx:for="{{myBookings}}" wx:key="id">
+    <view class="chip-wrap" style="margin-top:12rpx;">
+      <view class="chip {{bookingFilter==='all'?'chip-on':''}}" data-v="all" bindtap="setBookingFilter">全部</view>
+      <view class="chip {{bookingFilter==='unpaid'?'chip-on':''}}" data-v="unpaid" bindtap="setBookingFilter">未支付</view>
+      <view class="chip {{bookingFilter==='pending'?'chip-on':''}}" data-v="pending" bindtap="setBookingFilter">待接单</view>
+    </view>
+    <view wx:if="{{filteredBookings.length===0}}" class="muted" style="margin-top:12rpx;">{{bookingEmptyText}}</view>
+    <view class="bk-row" wx:for="{{filteredBookings}}" wx:key="id">
       <view class="row-between">
         <text style="font-weight:800;">{{item.tutorName}} · {{item.subject}}</text>
         <text class="badge {{item.statusBadge}}">{{item.statusText}}</text>
       </view>
       <view class="muted">{{item.schedule}} · {{item.space}}{{item.boothLabel?' · '+item.boothLabel:''}} · ¥{{item.amount}}</view>
+      <view class="muted" wx:if="{{item.unpaid}}" style="color:#be123c;">尚未完成微信支付，资金未托管冻结。</view>
       <view class="muted" wx:if="{{item.hasTimeConflict}}" style="color:#b45309;">⚠ {{item.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程'}}</view>
       <view class="muted" wx:if="{{item.declineReason}}">婉拒原因：{{item.declineReason}}</view>
-      <view class="bk-actions" wx:if="{{item.canCancel || (item.sessionActions && item.sessionActions.length)}}">
+      <view class="bk-actions" wx:if="{{item.canPay || item.canCancel || (item.sessionActions && item.sessionActions.length)}}">
+        <button wx:if="{{item.canPay}}" class="btn-primary" size="mini" data-id="{{item.id}}" bindtap="onResumePay">继续支付</button>
         <button wx:if="{{item.canCancel}}" class="btn-ghost" size="mini" data-id="{{item.id}}" bindtap="onCancelBooking">撤销约课</button>
         <button wx:for="{{item.sessionActions}}" wx:for-item="sa" wx:key="sessionId" class="btn-ghost" size="mini" data-bid="{{item.id}}" data-sid="{{sa.sessionId}}" bindtap="onRequestLeave">{{sa.label}}</button>
       </view>
@@ -278,14 +286,21 @@
       <view style="font-size:20rpx;color:#99f6e4;">¥{{bookingTutor.hourlyRate}}/h · {{bookingTutor.subjects[0]}}</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
-      <view class="section-h">选择时段</view>
+      <view class="section-h">选择日期与时段</view>
       <view class="muted" wx:if="{{slotsEmptyText}}" style="margin-bottom:12rpx;">{{slotsEmptyText}}</view>
-      <radio-group bindchange="onSlot" wx:if="{{slots.length}}">
-        <label class="pace-row" wx:for="{{slots}}" wx:key="value">
-          <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#0d9488" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
+      <view wx:if="{{bookingDateLabels.length}}" class="dt-split">
+        <view class="muted" style="margin-bottom:6rpx;">日期（未来约两个月空闲档期）</view>
+        <picker mode="selector" range="{{bookingDateLabels}}" value="{{bookingDateIndex}}" bindchange="onBookingDate">
+          <view class="input">{{bookingDateLabels[bookingDateIndex]}}</view>
+        </picker>
+        <view class="muted" style="margin:16rpx 0 6rpx;">该日可约时段</view>
+        <radio-group bindchange="onSlot" wx:if="{{bookingTimes.length}}">
+          <label class="pace-row" wx:for="{{bookingTimes}}" wx:key="value">
+            <radio value="{{item.value}}" checked="{{item.value===selectedSlot}}" color="#0d9488" />
+            <text>{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
       <view class="section-h">课时</view>
       <radio-group bindchange="onHours">
         <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#0d9488" /><text>2 小时（推荐）</text></label>
@@ -298,7 +313,7 @@
 
       <view class="escrow-box" wx:if="{{escrowShow}}">
         <view style="font-weight:800;color:#0f766e;">托管锁定摘要</view>
-        <view class="muted">课时：{{hours}} 小时 · 时段：{{selectedSlot}}</view>
+        <view class="muted">课时：{{hours}} 小时 · 时段：{{selectedSlotLabel || selectedSlot}}</view>
         <view class="muted">空间：{{spaces[spaceIndex]}}</view>
         <view style="font-weight:900;margin-top:8rpx;">锁定金额 ¥{{escrowAmount}}</view>
         <view class="muted">课后 48 小时无异议自动解冻：导师 92% / 平台 8%</view>
@@ -326,7 +341,7 @@
       <view class="agr-p" style="margin-top:12rpx;" wx:else>1. 平台提供信息撮合与单次课酬资金托管对接服务，定位为技术中立撮合方，不设资金池。</view>
       <view class="agr-p">2. 单次课酬存入商业银行托管子账户锁定；课后 48 小时无异议自动按 92%/8% 划拨。</view>
       <view class="agr-p" wx:if="{{featureSmartWarehouse}}">3. 教学仓 20:30 强制断电；异常停留将触发云巡检。</view>
-      <view class="agr-tip">约课成功后状态为「待导师接单」(pending_accept)。</view>
+      <view class="agr-tip">支付成功后状态为「待导师接单」；未支付不会冻结课酬。</view>
     </scroll-view>
     <view class="modal-foot">
       <button class="btn-ghost" bindtap="closeContract">返回</button>

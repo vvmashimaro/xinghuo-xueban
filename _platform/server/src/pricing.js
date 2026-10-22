@@ -104,11 +104,9 @@ function computeParentWalletFromBookings(bookings, parentRef) {
       (parentId && b.parentId === parentId) ||
       (parentPhone && b.parentPhone === parentPhone);
     if (!owned) return;
-    const paidOrLocked =
-      b.paymentStatus === 'paid' ||
-      b.escrowStatus === 'frozen' ||
-      b.escrowStatus === 'pending_payment';
-    if (paidOrLocked) frozenYuan += bookingAmountYuan(b);
+    const ps = String(b.paymentStatus || '');
+    if (ps === 'unpaid' || ps === 'pending' || b.escrowStatus === 'pending_payment') return;
+    if (ps === 'paid' || b.escrowStatus === 'frozen') frozenYuan += bookingAmountYuan(b);
   });
   return {
     frozenYuan: roundYuan(frozenYuan),

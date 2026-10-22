@@ -78,15 +78,19 @@ Page({
     }
 
     const inboxRaw = Storage.getBookingsForMentor(mentor.id);
+    const isUnpaid = (b) => !!(Storage.bookingIsUnpaid && Storage.bookingIsUnpaid(b));
     const pendingInbox = inboxRaw.filter(
-      (b) => b.status === 'pending_accept' || b.status === 'escrow_locked'
+      (b) => !isUnpaid(b) && (b.status === 'pending_accept' || b.status === 'escrow_locked')
     ).length;
     const inbox = inboxRaw.map((b) => {
-      const meta = BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' };
+      const unpaid = isUnpaid(b);
+      const meta = unpaid
+        ? { text: '待家长支付', badge: 'badge-teal' }
+        : (BOOKING_STATUS[b.status] || { text: b.status, badge: 'badge-teal' });
       return Object.assign({}, b, {
         statusText: meta.text,
         statusBadge: meta.badge,
-        canAct: b.status === 'pending_accept' || b.status === 'escrow_locked'
+        canAct: !unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked')
       });
     });
 

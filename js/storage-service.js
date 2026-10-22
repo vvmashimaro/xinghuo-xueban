@@ -242,8 +242,8 @@
 
   function upcomingDateSlotsFromAvailability(availability, hours, options) {
     const opts = options || {};
-    const days = opts.days || 14;
-    const limit = opts.limit || 6;
+    const days = opts.days || 62;
+    const limit = opts.limit != null ? opts.limit : 10000;
     const windows = bookableWindowsFromAvailability(availability, hours);
     const byWd = {};
     windows.forEach((w) => {
@@ -274,6 +274,43 @@
       });
     }
     return out;
+  }
+
+  function bookableCalendarFromAvailability(availability, hours, options) {
+    const slots = upcomingDateSlotsFromAvailability(availability, hours, options || { days: 62 });
+    const byDate = {};
+    const order = [];
+    slots.forEach((s) => {
+      const iso = s.isoDate;
+      if (!byDate[iso]) {
+        byDate[iso] = {
+          isoDate: iso,
+          weekday: s.weekday,
+          weekdayLabel: s.weekdayLabel,
+          date: s.date,
+          times: []
+        };
+        order.push(iso);
+      }
+      byDate[iso].times.push({
+        timeStart: s.timeStart,
+        timeEnd: s.timeEnd,
+        label: s.timeStart + ' – ' + s.timeEnd
+      });
+    });
+    return order.map((iso) => byDate[iso]);
+  }
+
+  function bookingIsUnpaid(booking) {
+    if (!booking) return false;
+    const status = String(booking.status || '');
+    if (status === 'cancelled' || status === 'declined') return false;
+    if (booking.type === 'trial') return false;
+    const ps = String(booking.paymentStatus || '');
+    if (ps === 'paid' || ps === 'waived' || ps === 'refunded') return false;
+    if (ps === 'unpaid') return true;
+    if (String(booking.escrowStatus || '') === 'pending_payment') return true;
+    return false;
   }
 
   function sessionCoveredByAvailability(availability, session) {
@@ -1791,6 +1828,8 @@
 
     bookableWindowsFromAvailability: bookableWindowsFromAvailability,
     upcomingDateSlotsFromAvailability: upcomingDateSlotsFromAvailability,
+    bookableCalendarFromAvailability: bookableCalendarFromAvailability,
+    bookingIsUnpaid: bookingIsUnpaid,
 
     sessionFitsMentorAvailability: function (mentorId, sessions, fallbackAvail) {
       let avail = this.getMentorAvailability(mentorId);
@@ -2161,11 +2200,9 @@
       list.forEach(function (b) {
         if (!b || b.type === 'trial') return;
         if (active.indexOf(b.status) < 0) return;
-        if (
-          b.paymentStatus === 'paid' ||
-          b.escrowStatus === 'frozen' ||
-          b.escrowStatus === 'pending_payment'
-        ) {
+        const ps = String(b.paymentStatus || '');
+        if (ps === 'unpaid' || ps === 'pending' || b.escrowStatus === 'pending_payment') return;
+        if (ps === 'paid' || b.escrowStatus === 'frozen') {
           frozenYuan += Number(b.amount) || 0;
         }
       });
