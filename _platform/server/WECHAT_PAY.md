@@ -8,6 +8,10 @@
 - `WECHAT_PRIVATE_KEY_PATH` 或 `WECHAT_PRIVATE_KEY_PEM`
 - `WECHAT_NOTIFY_URL` — **须为公网 HTTPS**，如 `https://api.example.com/api/pay/wechat/notify`
 - `WECHAT_APP_SECRET` + `WX_SESSION_MODE=production`（或 `WX_PHONE_MODE=production`）用于 `jscode2session` 获取 `openid`
+- **微信支付公钥模式**（商户已申请「微信支付公钥」、`GET /v3/certificates` 报无可用平台证书时必配）：
+  - `WECHAT_PUBLIC_KEY_PATH`（如 `certs/wechat_pub_key.pem`）或 `WECHAT_PUBLIC_KEY_PEM`
+  - 可选 `WECHAT_PUBLIC_KEY_ID`（商户平台公钥 ID，对应回调头 `Wechatpay-Serial`）
+  - 配置后回调验签用该公钥；未配置时仍回退下载平台证书
 
 配置不完整时，非生产环境仍走 **Mock 预支付** + `POST /api/pay/wechat/mock-confirm`。
 
