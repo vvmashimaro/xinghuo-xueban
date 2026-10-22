@@ -86,6 +86,39 @@ function main() {
   assert.ok(ctaMatches.length <= 1, '约仓试听只应出现在仓位开启分支');
   assert.ok(parentDash.includes('isSmartWarehouseEnabled'), '仓位文案走开关');
 
+  const pulseGif = fs.readFileSync(path.join(ROOT, 'assets/loading/xinghuo-loading-pulse.gif'));
+  assert.strictEqual(pulseGif.slice(0, 6).toString('ascii'), 'GIF89a', 'Web pulse GIF 应为 GIF89a');
+  const svg = read('assets/loading/xinghuo-loading.svg');
+  assert.ok(svg.includes('#0d9488'), 'loading SVG 使用 teal #0d9488');
+  assert.ok(svg.includes('@keyframes pulse'), 'loading SVG 含 CSS pulse');
+  assert.ok(read('assets/loading/xinghuo-loading-overlay.css').includes('#xhLoading'), 'overlay CSS 存在');
+  const xhLoading = read('js/xh-loading.js');
+  assert.ok(xhLoading.includes('xinghuo-loading.svg'), 'Web overlay 使用 SVG');
+  assert.ok(xhLoading.includes('/api/pay/wechat/sync'), 'Web overlay 跳过支付轮询');
+  assert.ok(xhLoading.includes('/api/feature-flags'), 'Web overlay 跳过 feature-flags');
+  [
+    'index.html',
+    'login.html',
+    'mentor_dashboard.html',
+    'parent_dashboard.html',
+    'parent_register.html',
+    'assessment.html'
+  ].forEach((f) => {
+    assert.ok(read(f).includes('js/xh-loading.js'), f + ' 引入 xh-loading');
+  });
+  assert.ok(adminHtml.includes('../js/xh-loading.js'), 'admin 引入 xh-loading');
+
+  const miniGif = fs.readFileSync(path.join(ROOT, '_platform/miniprogram/assets/loading/xinghuo-loading-pulse.gif'));
+  assert.strictEqual(miniGif.slice(0, 6).toString('ascii'), 'GIF89a', '小程序 pulse GIF 应为 GIF89a');
+  assert.ok(read('_platform/miniprogram/app.json').includes('xh-loading'), '小程序全局注册 loading 组件');
+  assert.ok(miniWxml.includes('<xh-loading'), '家长工作台含 loading 组件');
+  assert.ok(storageMini.includes("require('./loading')"), '小程序 _request 接入 loading');
+  const XhLoadingMini = require('../miniprogram/utils/loading.js');
+  assert.strictEqual(XhLoadingMini.shouldTrack('/api/bookings'), true);
+  assert.strictEqual(XhLoadingMini.shouldTrack('/api/pay/wechat/sync'), false);
+  assert.strictEqual(XhLoadingMini.shouldTrack('/api/feature-flags'), false);
+  assert.strictEqual(XhLoadingMini.shouldTrack('/api/health'), false);
+
   console.log('✓ UI P0 静态文案 / 令牌断言通过');
 }
 

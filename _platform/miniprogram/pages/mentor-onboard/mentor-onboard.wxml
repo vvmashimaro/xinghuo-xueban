@@ -209,3 +209,4 @@
     </view>
   </block>
 </view>
+<xh-loading show="{{xhLoadingShow}}"></xh-loading>

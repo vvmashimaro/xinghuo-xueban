@@ -1,0 +1,41 @@
+/* 星火服务器响应加载层 — 由 js/xh-loading.js 注入，也可手动：#xhLoading.show */
+#xhLoading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: rgba(248, 250, 252, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+#xhLoading.show {
+  display: flex;
+}
+#xhLoading .xh-logo-wrap {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.18), 0 0 28px rgba(13, 148, 136, 0.22);
+}
+#xhLoading .xh-logo {
+  width: 72px;
+  height: 72px;
+  display: block;
+}
+#xhLoading .xh-tip {
+  margin-top: 12px;
+  font: 600 14px/1.4 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #475569;
+}
+@media (prefers-reduced-motion: reduce) {
+  #xhLoading .xh-logo {
+    animation: none;
+  }
+}

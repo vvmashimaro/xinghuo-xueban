@@ -8,3 +8,4 @@
     <button class="btn-primary" style="width:100%;margin-top:24rpx;" bindtap="submitQuickAssessment">登记测评</button>
   </view>
 </view>
+<xh-loading show="{{xhLoadingShow}}"></xh-loading>

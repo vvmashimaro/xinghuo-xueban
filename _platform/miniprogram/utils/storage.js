@@ -6,6 +6,7 @@
 
 const config = require('./config.js');
 const Avail = require('./mentor-availability.js');
+const XhLoading = require('./loading');
 const API_BASE = (config && config.API_BASE) || 'http://127.0.0.1:8787';
 
 const KEYS = {
@@ -197,6 +198,8 @@ function _withMentorDefaults(m) {
 
 function _request(method, path, body, options) {
   const opts = options || {};
+  const track = !opts.silent && XhLoading.shouldTrack(path);
+  if (track) XhLoading.begin();
   return new Promise((resolve, reject) => {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     const token = _read(KEYS.authToken, null);
@@ -238,6 +241,9 @@ function _request(method, path, body, options) {
       },
       fail(err) {
         reject(err || new Error('network fail'));
+      },
+      complete() {
+        if (track) XhLoading.end();
       }
     });
   });

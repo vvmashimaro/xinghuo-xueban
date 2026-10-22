@@ -1,0 +1,4 @@
+<view class="xh-loading" wx:if="{{show}}">
+  <image class="xh-logo" src="/assets/loading/xinghuo-loading-pulse.gif" mode="aspectFit" />
+  <text class="xh-tip">正在连接服务…</text>
+</view>

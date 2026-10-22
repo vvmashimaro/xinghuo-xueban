@@ -110,3 +110,4 @@
     </view>
   </view>
 </view>
+<xh-loading show="{{xhLoadingShow}}"></xh-loading>

@@ -1,0 +1,24 @@
+.xh-loading {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(248, 250, 252, 0.72);
+}
+.xh-logo {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 999rpx;
+}
+.xh-tip {
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #475569;
+}

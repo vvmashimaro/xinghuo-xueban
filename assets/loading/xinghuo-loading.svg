@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="星火加载中">
+  <style>
+    .tile { transform-origin: 64px 64px; animation: pulse 1.2s ease-in-out infinite; }
+    .star { transform-origin: 64px 64px; animation: twinkle 1.2s ease-in-out infinite; }
+    .orbit { transform-origin: 64px 64px; animation: spin 1.6s linear infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(0.94); } 50% { transform: scale(1.06); } }
+    @keyframes twinkle { 0%,100% { opacity: 1; } 50% { opacity: 0.85; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .tile, .star, .orbit { animation: none; }
+    }
+  </style>
+  <g class="orbit" fill="#0d9488">
+    <circle cx="64" cy="10" r="3.2" opacity="0.95"/>
+    <circle cx="102" cy="28" r="2.6" opacity="0.75"/>
+    <circle cx="118" cy="64" r="3.2" opacity="0.95"/>
+    <circle cx="102" cy="100" r="2.6" opacity="0.75"/>
+    <circle cx="64" cy="118" r="3.2" opacity="0.95"/>
+    <circle cx="26" cy="100" r="2.6" opacity="0.75"/>
+    <circle cx="10" cy="64" r="3.2" opacity="0.95"/>
+    <circle cx="26" cy="28" r="2.6" opacity="0.75"/>
+  </g>
+  <g class="tile">
+    <rect x="32" y="32" width="64" height="64" rx="16" fill="#0d9488"/>
+    <path class="star" fill="#fff" d="M64 42l4.4 13.6H82l-11.2 8.2 4.2 13.6L64 69.2l-11 8.2 4.2-13.6L46 55.6h13.6z"/>
+  </g>
+</svg>
