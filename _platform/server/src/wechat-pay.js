@@ -10,6 +10,7 @@ const path = require('path');
 const https = require('https');
 
 const WECHAT_API_HOST = 'api.mch.weixin.qq.com';
+const WECHAT_PAY_USER_AGENT = 'XinghuoXueban-Server/1.0';
 
 // 模拟支付订单存储（生产环境应使用数据库）
 const mockOrders = new Map();
@@ -18,6 +19,9 @@ const mockOrders = new Map();
 const platformPublicKeys = new Map();
 let platformCertsFetchedAt = 0;
 const PLATFORM_CERT_TTL_MS = 12 * 60 * 60 * 1000;
+
+// 测试可注入的 fetch（生产默认走 https.request，兼容 Node 16）
+let injectedFetch = null;
 
 function isProduction() {
   return process.env.NODE_ENV === 'production';
@@ -38,7 +42,10 @@ function getWeChatPayConfig() {
     mchSerialNo: process.env.WECHAT_MCH_SERIAL_NO,
     privateKeyPath: process.env.WECHAT_PRIVATE_KEY_PATH,
     privateKeyPem: process.env.WECHAT_PRIVATE_KEY_PEM,
-    notifyUrl: process.env.WECHAT_NOTIFY_URL
+    notifyUrl: process.env.WECHAT_NOTIFY_URL,
+    publicKeyPem: process.env.WECHAT_PUBLIC_KEY_PEM,
+    publicKeyPath: process.env.WECHAT_PUBLIC_KEY_PATH,
+    publicKeyId: process.env.WECHAT_PUBLIC_KEY_ID
   };
 }
 
@@ -69,6 +76,34 @@ function loadPrivateKey() {
   }
 
   return null;
+}
+
+/**
+ * 微信支付公钥（商户平台「API 安全 → 微信支付公钥」）。
+ * 配置后回调验签优先用该公钥，不再依赖 /v3/certificates 平台证书。
+ */
+function loadWeChatPublicKey() {
+  const config = getWeChatPayConfig();
+
+  if (config.publicKeyPem) {
+    return config.publicKeyPem.replace(/\\n/g, '\n');
+  }
+
+  if (config.publicKeyPath) {
+    const keyPath = path.isAbsolute(config.publicKeyPath)
+      ? config.publicKeyPath
+      : path.resolve(__dirname, '..', config.publicKeyPath);
+    if (fs.existsSync(keyPath)) {
+      return fs.readFileSync(keyPath, 'utf8');
+    }
+    console.warn('[WeChat Pay] 微信支付公钥文件不存在:', keyPath);
+  }
+
+  return null;
+}
+
+function isPublicKeyVerifyMode() {
+  return !!loadWeChatPublicKey();
 }
 
 function signMessage(message) {
@@ -108,9 +143,48 @@ function buildAuthorization(method, urlPath, body) {
   };
 }
 
-function wechatPayRequest(method, urlPath, bodyObj) {
+function buildWechatPayHeaders(authorization, body) {
+  return {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'User-Agent': WECHAT_PAY_USER_AGENT,
+    Authorization: authorization,
+    'Content-Length': Buffer.byteLength(body || '')
+  };
+}
+
+function setWechatPayFetch(fn) {
+  injectedFetch = typeof fn === 'function' ? fn : null;
+}
+
+function parseWechatPayResponse(statusCode, raw) {
+  const json = raw ? JSON.parse(raw) : {};
+  if (statusCode >= 200 && statusCode < 300) {
+    return json;
+  }
+  const msg = json.message || json.detail || raw || `HTTP ${statusCode}`;
+  throw new Error(msg);
+}
+
+async function wechatPayRequest(method, urlPath, bodyObj) {
   const body = bodyObj ? JSON.stringify(bodyObj) : '';
   const { authorization } = buildAuthorization(method, urlPath, body);
+  const headers = buildWechatPayHeaders(authorization, body);
+
+  if (injectedFetch) {
+    const res = await injectedFetch(`https://${WECHAT_API_HOST}${urlPath}`, {
+      method,
+      headers,
+      body: body || undefined
+    });
+    const status = res && res.status != null ? res.status : 200;
+    const raw = res && typeof res.text === 'function'
+      ? await res.text()
+      : res && res.body != null
+        ? String(res.body)
+        : '';
+    return parseWechatPayResponse(status, raw);
+  }
 
   return new Promise((resolve, reject) => {
     const req = https.request(
@@ -118,12 +192,7 @@ function wechatPayRequest(method, urlPath, bodyObj) {
         hostname: WECHAT_API_HOST,
         path: urlPath,
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: authorization,
-          'Content-Length': Buffer.byteLength(body)
-        }
+        headers
       },
       (res) => {
         let raw = '';
@@ -132,13 +201,7 @@ function wechatPayRequest(method, urlPath, bodyObj) {
         });
         res.on('end', () => {
           try {
-            const json = raw ? JSON.parse(raw) : {};
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              resolve(json);
-              return;
-            }
-            const msg = json.message || json.detail || raw || `HTTP ${res.statusCode}`;
-            reject(new Error(msg));
+            resolve(parseWechatPayResponse(res.statusCode, raw));
           } catch (err) {
             reject(err);
           }
@@ -211,6 +274,26 @@ async function ensurePlatformCertificates() {
   platformCertsFetchedAt = now;
 }
 
+async function resolveNotifyVerifyKey(serial) {
+  const publicKey = loadWeChatPublicKey();
+  if (publicKey) {
+    const expectedId = (getWeChatPayConfig().publicKeyId || '').trim();
+    if (expectedId && serial && expectedId !== serial) {
+      console.warn('[WeChat Pay] 回调 serial 与 WECHAT_PUBLIC_KEY_ID 不一致:', serial);
+    }
+    return publicKey;
+  }
+
+  await ensurePlatformCertificates();
+  let certPem = platformPublicKeys.get(serial);
+  if (!certPem) {
+    platformCertsFetchedAt = 0;
+    await ensurePlatformCertificates();
+    certPem = platformPublicKeys.get(serial);
+  }
+  return certPem || null;
+}
+
 async function verifyNotifySignature(signature, timestamp, nonce, rawBody, serial) {
   if (!signature || !timestamp || !nonce || rawBody == null || !serial) {
     return false;
@@ -222,19 +305,13 @@ async function verifyNotifySignature(signature, timestamp, nonce, rawBody, seria
     return false;
   }
   try {
-    await ensurePlatformCertificates();
-    let certPem = platformPublicKeys.get(serial);
-    if (!certPem) {
-      platformCertsFetchedAt = 0;
-      await ensurePlatformCertificates();
-      certPem = platformPublicKeys.get(serial);
-    }
-    if (!certPem) {
-      console.warn('[WeChat Pay] 未找到平台证书 serial:', serial);
+    const verifyKey = await resolveNotifyVerifyKey(serial);
+    if (!verifyKey) {
+      console.warn('[WeChat Pay] 未找到验签公钥/平台证书 serial:', serial);
       return false;
     }
     const message = `${timestamp}\n${nonce}\n${rawBody}\n`;
-    return crypto.createVerify('RSA-SHA256').update(message).verify(certPem, signature, 'base64');
+    return crypto.createVerify('RSA-SHA256').update(message).verify(verifyKey, signature, 'base64');
   } catch (err) {
     console.error('[WeChat Pay] 回调验签失败', err.message);
     return false;
@@ -693,5 +770,12 @@ module.exports = {
   decryptAes256GcmRaw,
   parsePlatformCertPem,
   generateSignature,
-  signMessage
+  signMessage,
+  wechatPayRequest,
+  buildWechatPayHeaders,
+  setWechatPayFetch,
+  verifyNotifySignature,
+  loadWeChatPublicKey,
+  isPublicKeyVerifyMode,
+  WECHAT_PAY_USER_AGENT
 };

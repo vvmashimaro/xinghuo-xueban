@@ -2071,6 +2071,13 @@ app.listen(PORT, HOST, () => {
   console.log('  微信支付:');
   console.log(`    配置状态:   ${wechatPay.isConfigComplete() ? '✓ 已配置' : '✗ 未配置'}`);
   console.log(`    Mock支付:   ${wechatPay.isMockPayAllowed() ? '✓ 允许' : '✗ 禁止'}`);
+  console.log(
+    `    验签模式:   ${
+      wechatPay.isPublicKeyVerifyMode()
+        ? '微信支付公钥 (WECHAT_PUBLIC_KEY_*)'
+        : '平台证书 (/v3/certificates)'
+    }`
+  );
   console.log('');
   if (isProduction && !process.env.ADMIN_TOKEN) {
     console.log('  ⚠️  警告: 生产环境未设置 ADMIN_TOKEN');

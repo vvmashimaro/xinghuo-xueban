@@ -6,6 +6,9 @@
 
 const assert = require('assert');
 const crypto = require('crypto');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const wechatPay = require('./src/wechat-pay');
 
 function genAesGcmPayload(plaintext, apiV3Key, associatedData, nonce) {
@@ -116,6 +119,135 @@ async function run() {
   const okVerify = crypto.createVerify('RSA-SHA256').update('POST\n/v3/pay/transactions/jsapi\n1600000000\nNONCE\n{}\n').verify(publicKey, sig, 'base64');
   assert.strictEqual(okVerify, true);
 
+  // —— User-Agent：预支付 / 退款 / 证书 / 查单走同一套请求头 ——
+  assert.strictEqual(wechatPay.WECHAT_PAY_USER_AGENT, 'XinghuoXueban-Server/1.0');
+  const headerPreview = wechatPay.buildWechatPayHeaders('WECHATPAY2-TEST', '{"a":1}');
+  assert.strictEqual(headerPreview['User-Agent'], 'XinghuoXueban-Server/1.0');
+  assert.strictEqual(headerPreview.Accept, 'application/json');
+
+  process.env.WECHAT_MCH_ID = '1230000000';
+  process.env.WECHAT_APP_ID = 'wx-unit-test';
+  process.env.WECHAT_API_V3_KEY = apiKey;
+  process.env.WECHAT_MCH_SERIAL_NO = 'MCHSERIALUNITTEST';
+  process.env.WECHAT_NOTIFY_URL = 'https://example.com/api/pay/wechat/notify';
+
+  const fetchCalls = [];
+  wechatPay.setWechatPayFetch(async (url, init) => {
+    fetchCalls.push({ url, init });
+    const pathName = String(url).replace(/^https:\/\/api\.mch\.weixin\.qq.com/, '');
+    let payload = {};
+    if (pathName.indexOf('/v3/refund/domestic/refunds') === 0) {
+      payload = { status: 'PROCESSING', refund_id: 'RF-MOCK-1', out_refund_no: 'RF-1' };
+    } else if (pathName.indexOf('/v3/pay/transactions/jsapi') === 0) {
+      payload = { prepay_id: 'wx-prepay-mock' };
+    } else if (pathName.indexOf('/v3/pay/transactions/native') === 0) {
+      payload = { code_url: 'weixin://wxpay/bizpayurl/mock' };
+    } else if (pathName.indexOf('/v3/certificates') === 0) {
+      payload = { data: [] };
+    } else if (pathName.indexOf('/v3/pay/transactions/out-trade-no/') === 0) {
+      payload = { out_trade_no: 'BK-Q-1', trade_state: 'NOTPAY' };
+    }
+    return { status: 200, text: async () => JSON.stringify(payload) };
+  });
+
+  await wechatPay.wechatPayRequest('GET', '/v3/certificates');
+  const jsapi = await wechatPay.createPrepay({
+    bookingId: 'BK-UA-JSAPI',
+    amount: 100,
+    description: 'ua test',
+    openid: 'o-test',
+    payType: 'JSAPI'
+  });
+  assert.strictEqual(jsapi.mock, false);
+  assert.strictEqual(jsapi.prepayId, 'wx-prepay-mock');
+
+  const refundLive = await wechatPay.refundOrder({
+    outTradeNo: 'BK-UA-LIVE-1',
+    reason: 'ua refund',
+    amountFen: 100
+  });
+  assert.strictEqual(refundLive.success, true);
+  assert.strictEqual(refundLive.mock, false);
+
+  await wechatPay.queryTransactionByOutTradeNo('BK-Q-1');
+
+  assert.ok(fetchCalls.length >= 4, 'prepay/refund/cert/query should share HTTP client');
+  fetchCalls.forEach((call) => {
+    const ua = call.init && call.init.headers && call.init.headers['User-Agent'];
+    assert.strictEqual(ua, 'XinghuoXueban-Server/1.0', `missing User-Agent on ${call.url}`);
+    assert.strictEqual(call.init.headers.Accept, 'application/json');
+    assert.ok(call.init.headers.Authorization, `missing Authorization on ${call.url}`);
+  });
+  const paths = fetchCalls.map((c) => String(c.url));
+  assert.ok(paths.some((u) => u.indexOf('/v3/certificates') >= 0));
+  assert.ok(paths.some((u) => u.indexOf('/v3/pay/transactions/jsapi') >= 0));
+  assert.ok(paths.some((u) => u.indexOf('/v3/refund/domestic/refunds') >= 0));
+  assert.ok(paths.some((u) => u.indexOf('/v3/pay/transactions/out-trade-no/') >= 0));
+
+  // —— 微信支付公钥模式验签（不再请求平台证书） ——
+  const wxKeyPair = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const wxPubPem = wxKeyPair.publicKey.export({ type: 'spki', format: 'pem' });
+  process.env.WECHAT_PUBLIC_KEY_PEM = wxPubPem.replace(/\n/g, '\\n');
+  assert.strictEqual(wechatPay.isPublicKeyVerifyMode(), true);
+  assert.ok(wechatPay.loadWeChatPublicKey().indexOf('BEGIN PUBLIC KEY') >= 0);
+
+  const ts = String(Math.floor(Date.now() / 1000));
+  const notifyNonce = 'PUBKEYNONCE';
+  const rawNotify = JSON.stringify(notifyBody);
+  const notifyMessage = `${ts}\n${notifyNonce}\n${rawNotify}\n`;
+  const wxSig = crypto.createSign('RSA-SHA256').update(notifyMessage).sign(wxKeyPair.privateKey, 'base64');
+
+  const certCallsBefore = fetchCalls.filter((c) => String(c.url).indexOf('/v3/certificates') >= 0).length;
+  const pubkeyOk = await wechatPay.verifyNotifySignature(
+    wxSig,
+    ts,
+    notifyNonce,
+    rawNotify,
+    'PUB_KEY_ID_UNITTEST'
+  );
+  assert.strictEqual(pubkeyOk, true);
+  const certCallsAfter = fetchCalls.filter((c) => String(c.url).indexOf('/v3/certificates') >= 0).length;
+  assert.strictEqual(certCallsAfter, certCallsBefore, 'public-key verify must not download platform certs');
+
+  const badSig = await wechatPay.verifyNotifySignature(
+    'dGVzdA==',
+    ts,
+    notifyNonce,
+    rawNotify,
+    'PUB_KEY_ID_UNITTEST'
+  );
+  assert.strictEqual(badSig, false);
+
+  const signedNotify = await wechatPay.handlePaymentNotify(
+    notifyBody,
+    {
+      'wechatpay-signature': wxSig,
+      'wechatpay-timestamp': ts,
+      'wechatpay-nonce': notifyNonce,
+      'wechatpay-serial': 'PUB_KEY_ID_UNITTEST'
+    },
+    rawNotify
+  );
+  assert.strictEqual(signedNotify.tradeState, 'SUCCESS');
+  assert.strictEqual(signedNotify.outTradeNo, 'BK-TEST-001-123');
+
+  delete process.env.WECHAT_PUBLIC_KEY_PEM;
+  const pubKeyFile = path.join(os.tmpdir(), `wechat-pub-${Date.now()}.pem`);
+  fs.writeFileSync(pubKeyFile, wxPubPem);
+  process.env.WECHAT_PUBLIC_KEY_PATH = pubKeyFile;
+  assert.strictEqual(wechatPay.isPublicKeyVerifyMode(), true);
+  const pubkeyFromFile = await wechatPay.verifyNotifySignature(
+    wxSig,
+    ts,
+    notifyNonce,
+    rawNotify,
+    'PUB_KEY_ID_UNITTEST'
+  );
+  assert.strictEqual(pubkeyFromFile, true);
+  fs.unlinkSync(pubKeyFile);
+  delete process.env.WECHAT_PUBLIC_KEY_PATH;
+
+  wechatPay.setWechatPayFetch(null);
   process.env = savedEnv;
   console.log('test-wechat-pay: OK');
 }
