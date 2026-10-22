@@ -30,21 +30,44 @@ view, text, button, input, textarea, picker, label, scroll-view {
 
 .container-with-fab {
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom) + 120rpx);
-  padding-top: calc(24rpx + 88rpx);
+  padding-top: 24rpx;
+}
+
+.match-banner-wrap {
+  padding-top: env(safe-area-inset-top);
+  background: linear-gradient(180deg, #0f172a 0%, #f8fafc 72%);
+}
+.match-banner-wrap .hero {
+  margin: 16rpx 28rpx 16rpx;
+  border-radius: 24rpx;
+}
+.hero-kicker {
+  display: inline-block;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #5eead4;
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  background: rgba(20, 184, 166, 0.16);
+  border-radius: 999rpx;
+  padding: 4rpx 14rpx;
+  margin-bottom: 12rpx;
 }
 
 .console-tab-bar {
-  position: fixed;
+  position: sticky;
   left: 0;
   right: 0;
   top: 0;
   z-index: 800;
   display: flex;
   gap: 12rpx;
-  padding: 16rpx 28rpx calc(12rpx + env(safe-area-inset-top));
+  padding: calc(12rpx + env(safe-area-inset-top)) 28rpx 12rpx;
   background: rgba(248, 250, 252, 0.97);
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.06);
+}
+.match-banner-wrap + .console-tab-bar {
+  padding-top: 12rpx;
 }
 .console-tab {
   flex: 1;

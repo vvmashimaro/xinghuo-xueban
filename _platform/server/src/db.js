@@ -1436,7 +1436,15 @@ function updateBooking(id, patch, options) {
     );
   }
 
-  s.bookings[idx] = Object.assign({}, s.bookings[idx], safePatch, { updatedAt: _now() });
+  const prev = s.bookings[idx];
+  const next = Object.assign({}, prev, safePatch, { updatedAt: _now() });
+  if (next.paymentStatus === 'paid' && prev.paymentStatus !== 'paid') {
+    next.sessions = bookingFields.freezeSessionsForPaid(next.sessions);
+    if (next.escrowStatus === 'pending_payment' || !next.escrowStatus) {
+      next.escrowStatus = 'frozen';
+    }
+  }
+  s.bookings[idx] = next;
   persist();
   return s.bookings[idx];
 }
@@ -1449,6 +1457,13 @@ function respondToBooking(id, decision) {
   const accept = d.accept === true || d.action === 'accept';
   const decline = d.accept === false || d.decline === true || d.action === 'decline';
   if (accept) {
+    if (bookingFields.bookingIsUnpaid(s.bookings[idx])) {
+      return {
+        ok: false,
+        error: '家长尚未完成支付，暂不可接单',
+        code: 'UNPAID'
+      };
+    }
     s.bookings[idx] = Object.assign({}, s.bookings[idx], {
       status: 'accepted',
       declineReason: '',
@@ -1619,7 +1634,7 @@ function buildWeeklySessions(weekday, timeStart, hours, sessionCount, startDateS
         timeEnd: timeEnd,
         timeLabel: String(timeStart || '19:00') + '-' + timeEnd,
         status: 'scheduled',
-        escrowStatus: 'frozen',
+        escrowStatus: 'pending_payment',
         leaveRequestedAt: '',
         leaveConfirmedAt: '',
         leaveRequestedBy: '',

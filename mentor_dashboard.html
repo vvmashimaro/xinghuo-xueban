@@ -897,7 +897,12 @@
     function renderInbox(mentor) {
       try { StorageService.processEscrowReleases && StorageService.processEscrowReleases(); } catch (_) {}
       const list = StorageService.getBookingsForMentor(mentor.id);
-      const pending = list.filter((b) => b.status === 'pending_accept' || b.status === 'escrow_locked');
+      const isUnpaid = function (b) {
+        return !!(StorageService.bookingIsUnpaid && StorageService.bookingIsUnpaid(b));
+      };
+      const pending = list.filter((b) =>
+        !isUnpaid(b) && (b.status === 'pending_accept' || b.status === 'escrow_locked')
+      );
       const leavePendingCount = list.reduce((n, b) => n + ((b.sessions || []).filter((s) => s.status === 'leave_pending').length), 0);
       const completedCount = collectCompletedSessions(list).length;
       document.getElementById('inboxCountBadge').innerText = pending.length + ' 待处理' + (leavePendingCount ? ' · ' + leavePendingCount + ' 请假' : '') + (completedCount ? ' · ' + completedCount + ' 已完课' : '');
@@ -912,7 +917,9 @@
 
       let filtered = list.slice();
       if (mentorBookingFilter === 'pending') {
-        filtered = list.filter((b) => b.status === 'pending_accept' || b.status === 'escrow_locked');
+        filtered = list.filter((b) =>
+          !isUnpaid(b) && (b.status === 'pending_accept' || b.status === 'escrow_locked')
+        );
       } else if (mentorBookingFilter === 'accepted') {
         filtered = list.filter((b) => b.status === 'accepted');
       } else if (mentorBookingFilter === 'declined') {
@@ -930,8 +937,11 @@
 
       box.innerHTML = filtered.map((raw) => {
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
-        const st = BOOKING_STATUS_LABEL[b.status] || { text: b.status, cls: 'bg-slate-50 text-slate-600 border-slate-200' };
-        const canAct = b.status === 'pending_accept' || b.status === 'escrow_locked';
+        const unpaid = isUnpaid(b);
+        const st = unpaid
+          ? { text: '待家长支付', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
+          : (BOOKING_STATUS_LABEL[b.status] || { text: b.status, cls: 'bg-slate-50 text-slate-600 border-slate-200' });
+        const canAct = !unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked');
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
         const typePill = isTrial

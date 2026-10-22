@@ -220,7 +220,7 @@ function ensureSessionsForBooking(booking, rebuildFromClient, buildWeeklySession
         Object.assign({}, one, {
           id: 'SES-PARSE-0',
           status: 'scheduled',
-          escrowStatus: 'frozen'
+          escrowStatus: 'pending_payment'
         })
       ];
     }

@@ -777,6 +777,18 @@ const StorageService = {
     }
   },
 
+  bookingIsUnpaid(booking) {
+    if (!booking) return false;
+    const status = String(booking.status || '');
+    if (status === 'cancelled' || status === 'declined') return false;
+    if (booking.type === 'trial') return false;
+    const ps = String(booking.paymentStatus || '');
+    if (ps === 'paid' || ps === 'waived' || ps === 'refunded') return false;
+    if (ps === 'unpaid') return true;
+    if (String(booking.escrowStatus || '') === 'pending_payment') return true;
+    return false;
+  },
+
   canParentCancelBooking(booking) {
     if (!booking) return false;
     const cancellable = ['pending_accept', 'escrow_locked', 'accepted'];
@@ -857,11 +869,9 @@ const StorageService = {
     list.forEach((b) => {
       if (!b || b.type === 'trial') return;
       if (active.indexOf(b.status) < 0) return;
-      if (
-        b.paymentStatus === 'paid' ||
-        b.escrowStatus === 'frozen' ||
-        b.escrowStatus === 'pending_payment'
-      ) {
+      const ps = String(b.paymentStatus || '');
+      if (ps === 'unpaid' || ps === 'pending' || b.escrowStatus === 'pending_payment') return;
+      if (ps === 'paid' || b.escrowStatus === 'frozen') {
         frozenYuan += Number(b.amount) || 0;
       }
     });

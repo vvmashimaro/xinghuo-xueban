@@ -143,7 +143,7 @@ function rebuildSessionsFromClientInput(rawSessions) {
       timeEnd,
       timeLabel,
       status: 'scheduled',
-      escrowStatus: 'frozen',
+      escrowStatus: 'pending_payment',
       leaveRequestedAt: '',
       leaveConfirmedAt: '',
       leaveRequestedBy: '',
@@ -209,6 +209,32 @@ function stripProtectedFields(obj) {
 
 function bookingIsPaid(booking) {
   return !!(booking && booking.paymentStatus === 'paid');
+}
+
+/**
+ * True when a payable booking has not completed WeChat pay.
+ * Seed/legacy rows without paymentStatus (escrow already frozen) are not unpaid.
+ */
+function bookingIsUnpaid(booking) {
+  if (!booking) return false;
+  const status = String(booking.status || '');
+  if (status === 'cancelled' || status === 'declined') return false;
+  if (booking.type === 'trial') return false;
+  const ps = String(booking.paymentStatus || '');
+  if (ps === 'paid' || ps === 'waived' || ps === 'refunded') return false;
+  if (ps === 'unpaid') return true;
+  if (String(booking.escrowStatus || '') === 'pending_payment') return true;
+  return false;
+}
+
+function freezeSessionsForPaid(sessions) {
+  if (!Array.isArray(sessions)) return sessions;
+  return sessions.map(function (s) {
+    if (!s || typeof s !== 'object') return s;
+    const esc = String(s.escrowStatus || '');
+    if (esc === 'released' || esc === 'refunded' || esc === 'waived' || esc === 'frozen') return s;
+    return Object.assign({}, s, { escrowStatus: 'frozen' });
+  });
 }
 
 /**
@@ -290,6 +316,8 @@ module.exports = {
   assertSessionReadyForComplete,
   bookingEscrowReleaseAllowed,
   bookingIsPaid,
+  bookingIsUnpaid,
+  freezeSessionsForPaid,
   PARENT_MESSAGE_MAX_LEN,
   BOOKING_CREATE_ALLOW,
   BOOKING_PROTECTED

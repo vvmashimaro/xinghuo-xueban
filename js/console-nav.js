@@ -89,7 +89,9 @@
       this._tabButtons[tab.id] = btn;
     }.bind(this));
     bar.appendChild(inner);
-    header.insertAdjacentElement('afterend', bar);
+    var matching = document.querySelector('[data-matching-banner]');
+    var insertAfter = matching || header;
+    insertAfter.insertAdjacentElement('afterend', bar);
     this._barEl = bar;
 
     var fab = document.createElement('button');
