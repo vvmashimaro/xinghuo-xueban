@@ -1255,20 +1255,17 @@ function addBooking(booking) {
     return { ok: false, error: computed.error, code: 'INVALID_PRICING' };
   }
   if (bookingType === 'trial') {
-    const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
-    const subject = normalizeAssessmentSubject((booking && booking.subject) || '');
-    const used = (s.bookings || []).some((b) => {
-      if (!b || b.type !== 'trial') return false;
-      if (b.status === 'declined' || b.status === 'cancelled') return false;
-      const sameMentor = !mentorId || b.mentorId === mentorId || b.tutorId === mentorId;
-      const sameParent =
-        (booking.parentId && b.parentId === booking.parentId) ||
-        (booking.parentPhone && b.parentPhone && String(b.parentPhone) === String(booking.parentPhone));
-      const sameSubject = !subject || normalizeAssessmentSubject(b.subject) === subject;
-      return sameMentor && sameParent && sameSubject;
-    });
-    if (parentKey && used) {
-      return { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
+    const parentRef = {
+      id: booking && booking.parentId,
+      phone: booking && booking.parentPhone
+    };
+    const trialGate = bookingFields.evaluateParentFreeTrialWithMentor(
+      s.bookings || [],
+      parentRef,
+      mentorId
+    );
+    if ((booking.parentId || booking.parentPhone) && trialGate.blocked) {
+      return { ok: false, error: trialGate.error, code: trialGate.code || 'TRIAL_USED' };
     }
   }
   const clientFields = bookingFields.pickBookingCreateFields(booking);

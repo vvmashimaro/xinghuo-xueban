@@ -237,7 +237,9 @@ Page({
     const recallCount = tutors.filter((t) => t.matchScore >= 95).length;
     const topTutors = tutors.filter((t) => t.isTopMatch).slice(0, 3).map((t) =>
       Object.assign({}, t, {
-        syllabusText: (t.syllabusTopics || []).slice(0, 2).join('、')
+        syllabusText: (t.syllabusTopics || []).slice(0, 2).join('、'),
+        freeTrialBlocked: t.freeTrialBlocked,
+        freeTrialBlockMessage: t.freeTrialBlockMessage
       })
     );
 
@@ -258,10 +260,15 @@ Page({
     tutors = tutors.map((t) => {
       const chsi = String(t.chsiStatus || '');
       const chsiEnrolled = chsi.indexOf('有效') >= 0 || chsi.indexOf('在籍') >= 0;
+      const trialGate = Storage.evaluateParentFreeTrialWithMentor
+        ? Storage.evaluateParentFreeTrialWithMentor(parent.id || parent.phone, t.mentorId)
+        : { blocked: false };
       return Object.assign({}, t, {
         syllabusText: (t.syllabusTopics || []).slice(0, 3).join('、'),
         hasLecture: !!(t.lectureUrl && t.lectureUrl !== '#'),
-        chsiEnrolled
+        chsiEnrolled,
+        freeTrialBlocked: !!(trialGate && trialGate.blocked),
+        freeTrialBlockMessage: trialGate && trialGate.blocked ? trialGate.error : ''
       });
     });
 
@@ -527,6 +534,13 @@ Page({
       spaceIndex = spaces.indexOf(this._parent.selectedSpace);
     }
     if (spaceIndex < 0) spaceIndex = 0;
+    const parentKey = (this._parent && (this._parent.id || this._parent.phone)) || '';
+    const trialGate = Storage.evaluateParentFreeTrialWithMentor && parentKey
+      ? Storage.evaluateParentFreeTrialWithMentor(parentKey, tutor.mentorId)
+      : {
+        blocked: !!tutor.freeTrialBlocked,
+        error: tutor.freeTrialBlockMessage || ''
+      };
     this.setData({
       bookingShow: true,
       bookingTutor: tutor,
@@ -536,7 +550,9 @@ Page({
       contractShow: false,
       contractAgreed: false,
       contractSignName: (this._parent && this._parent.parentName) || this.data.parentName || '',
-      escrowAmount: (tutor.hourlyRate * 2).toFixed(2)
+      escrowAmount: (tutor.hourlyRate * 2).toFixed(2),
+      bookingTrialBlocked: !!(trialGate && trialGate.blocked),
+      bookingTrialBlockMessage: trialGate && trialGate.blocked ? trialGate.error : ''
     }, () => this.refreshSlotOptions());
   },
 

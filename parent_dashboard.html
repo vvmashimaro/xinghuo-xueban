@@ -536,8 +536,8 @@
         <div class="space-y-1.5">
           <label class="block font-bold text-slate-700">0. 约课模式</label>
           <div class="grid grid-cols-3 gap-2">
-            <label class="booking-mode-card border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-              <input type="radio" name="bookingType" value="trial" class="hidden" onchange="onBookingTypeChange()">
+            <label id="trialModeCard" class="booking-mode-card border border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 cursor-pointer hover:border-teal-500 transition has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
+              <input type="radio" name="bookingType" value="trial" id="bookingTypeTrial" class="hidden" onchange="onBookingTypeChange()">
               <span class="flex items-center gap-1.5 font-bold text-sm"><i class="fa-solid fa-gift text-teal-600"></i>试课</span>
               <span class="text-xs text-emerald-700 font-medium leading-tight">首次试课 · 1小时免费</span>
             </label>
@@ -554,8 +554,9 @@
           </div>
           <div id="trialBookingHint" class="hidden text-sm text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed">
             <i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>
-            <strong>首次试课 · 1小时免费</strong>：时长固定 1 小时，金额 ¥0，每位导师同一学科仅可预约一次；试课后建议完成对应学科测评以便老师了解真实水平。
+            <strong>首次试课 · 1小时免费</strong>：时长固定 1 小时，金额 ¥0，每位导师仅可完成一次免费试课；试课后建议完成对应学科测评以便老师了解真实水平。
           </div>
+          <div id="trialBlockedNotice" class="hidden text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 leading-relaxed"></div>
         </div>
 
         <!-- 每周固定配置（默认隐藏） -->
@@ -1102,13 +1103,49 @@
       }
     }
 
-    function parentHasFreeTrialWithTutor(tutor) {
-      if (!tutor || !window.StorageService || !StorageService.hasUsedFreeTrial) return true;
+    function parentFreeTrialGateWithTutor(tutor) {
+      if (!tutor || !window.StorageService || !StorageService.evaluateParentFreeTrialWithMentor) {
+        return { blocked: false };
+      }
       const parent = CURRENT_PARENT || StorageService.getCurrentParent();
-      if (!parent) return true;
+      if (!parent) return { blocked: false };
       const mentorId = tutor.mentorId || tutor.id;
-      const subject = (tutor.subjects && tutor.subjects[0]) || '';
-      return !StorageService.hasUsedFreeTrial(parent.id || parent.phone, mentorId, subject);
+      return StorageService.evaluateParentFreeTrialWithMentor(parent.id || parent.phone, mentorId) || { blocked: false };
+    }
+
+    function parentCanBookFreeTrialWithTutor(tutor) {
+      return !parentFreeTrialGateWithTutor(tutor).blocked;
+    }
+
+    function syncFreeTrialModeAvailability(tutor) {
+      const gate = parentFreeTrialGateWithTutor(tutor);
+      const trialCard = document.getElementById('trialModeCard');
+      const trialInput = document.getElementById('bookingTypeTrial');
+      const blockedBox = document.getElementById('trialBlockedNotice');
+      const blocked = !!(gate && gate.blocked);
+      if (trialCard) {
+        trialCard.classList.toggle('opacity-40', blocked);
+        trialCard.classList.toggle('pointer-events-none', blocked);
+        trialCard.classList.toggle('cursor-not-allowed', blocked);
+      }
+      if (trialInput) trialInput.disabled = blocked;
+      if (blockedBox) {
+        if (blocked) {
+          blockedBox.classList.remove('hidden');
+          blockedBox.innerHTML =
+            '<i class="fa-solid fa-circle-exclamation text-amber-600 mr-1"></i>' +
+            (gate.error || '不可再次预约该导师的免费试课') +
+            ' 您仍可选择单次或每周固定课付费约课。';
+        } else {
+          blockedBox.classList.add('hidden');
+          blockedBox.innerHTML = '';
+        }
+      }
+      if (blocked && trialInput && trialInput.checked) {
+        const typeOne = document.querySelector('input[name="bookingType"][value="one_off"]');
+        if (typeOne) typeOne.checked = true;
+        onBookingTypeChange();
+      }
     }
 
     function parentBookingFundCopy(b, unpaid) {
@@ -1922,11 +1959,12 @@
         spaceSelect.value = tutor.space;
       }
 
-      const preferTrial = parentHasFreeTrialWithTutor(tutor);
+      const canTrial = parentCanBookFreeTrialWithTutor(tutor);
       const typeTrial = document.querySelector('input[name="bookingType"][value="trial"]');
       const typeOne = document.querySelector('input[name="bookingType"][value="one_off"]');
-      if (preferTrial && typeTrial) typeTrial.checked = true;
+      if (canTrial && typeTrial) typeTrial.checked = true;
       else if (typeOne) typeOne.checked = true;
+      syncFreeTrialModeAvailability(tutor);
       onBookingTypeChange();
       generateBookingDateSlots();
       syncWeeklyAvailabilityOptions();
@@ -1966,6 +2004,13 @@
 
     function onBookingTypeChange() {
       const type = getSelectedBookingType();
+      if (type === 'trial' && selectedTutorForBooking && !parentCanBookFreeTrialWithTutor(selectedTutorForBooking)) {
+        const typeOne = document.querySelector('input[name="bookingType"][value="one_off"]');
+        if (typeOne) typeOne.checked = true;
+        syncFreeTrialModeAvailability(selectedTutorForBooking);
+        showToast(parentFreeTrialGateWithTutor(selectedTutorForBooking).error || '不可预约免费试课', 'warning');
+        return onBookingTypeChange();
+      }
       const weekly = document.getElementById('weeklyBookingPanel');
       const oneOff = document.getElementById('oneOffDatePanel');
       const trialHint = document.getElementById('trialBookingHint');
@@ -2189,13 +2234,15 @@
           return;
         }
       }
-      // 试课：每位导师同一学科仅一次
-      if (meta.type === 'trial' && window.StorageService) {
+      if (meta.type === 'trial' && window.StorageService && selectedTutorForBooking) {
         const parent = CURRENT_PARENT || StorageService.getCurrentParent();
-        const mentorId = selectedTutorForBooking.mentorId || selectedTutorForBooking.id;
-        const subject = (selectedTutorForBooking.subjects && selectedTutorForBooking.subjects[0]) || '';
-        if (parent && StorageService.hasUsedFreeTrial(parent.id || parent.phone, mentorId, subject)) {
-          showToast('该导师此学科的免费试课已使用过', 'warning');
+        const trialMentorId = selectedTutorForBooking.mentorId || selectedTutorForBooking.id;
+        const gate = parent && StorageService.evaluateParentFreeTrialWithMentor
+          ? StorageService.evaluateParentFreeTrialWithMentor(parent.id || parent.phone, trialMentorId)
+          : { blocked: false };
+        if (parent && gate.blocked) {
+          showToast(gate.error || '不可再次预约该导师的免费试课', 'warning');
+          syncFreeTrialModeAvailability(selectedTutorForBooking);
           return;
         }
       }

@@ -1261,8 +1261,9 @@
       if (bookingType === 'trial') {
         const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
         const subject = (booking && booking.subject) || '';
-        if (parentKey && this.hasUsedFreeTrial(parentKey, mentorId, subject)) {
-          const err = { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
+        const trialGate = this.evaluateParentFreeTrialWithMentor(parentKey, mentorId);
+        if (parentKey && trialGate.blocked) {
+          const err = { ok: false, error: trialGate.error, code: trialGate.code || 'TRIAL_USED' };
           console.warn('[StorageService] trial blocked', err);
           return err;
         }
@@ -2100,16 +2101,60 @@
     },
 
     /* ---------- Trial class（试课） ---------- */
-    hasUsedFreeTrial: function (parentIdOrPhone, mentorId, subject) {
-      const sub = normalizeAssessmentSubject(subject);
+    evaluateParentFreeTrialWithMentor: function (parentIdOrPhone, mentorId) {
       const bookings = this.getBookingsForParent(parentIdOrPhone);
-      return bookings.some((b) => {
+      const parentRef = parentIdOrPhone;
+      let hasActive = false;
+      let hasCompleted = false;
+      const sameMentor = function (b) {
+        if (!mentorId) return true;
+        const mid = String(mentorId);
+        return String(b.mentorId || '') === mid || String(b.tutorId || '') === mid;
+      };
+      const blocks = function (b) {
         if (!b || b.type !== 'trial') return false;
-        if (b.status === 'declined' || b.status === 'cancelled') return false;
-        const sameMentor = !mentorId || b.mentorId === mentorId || b.tutorId === mentorId;
-        const sameSubject = !sub || normalizeAssessmentSubject(b.subject) === sub;
-        return sameMentor && sameSubject;
+        const st = String(b.status || '');
+        if (st === 'declined' || st === 'cancelled') return false;
+        const sessions = b.sessions || [];
+        if (sessions.some(function (s) { return s && s.status === 'completed'; })) return true;
+        return st === 'pending_accept' || st === 'escrow_locked' || st === 'accepted';
+      };
+      bookings.forEach(function (b) {
+        if (!sameMentor(b) || !blocks(b)) return;
+        const sessions = b.sessions || [];
+        if (sessions.some(function (s) { return s && s.status === 'completed'; })) {
+          hasCompleted = true;
+        } else {
+          hasActive = true;
+        }
       });
+      if (hasCompleted) {
+        return {
+          blocked: true,
+          code: 'TRIAL_USED',
+          error: '已与该导师完成免费试课，不可再次预约免费试课',
+          reason: 'completed'
+        };
+      }
+      if (hasActive) {
+        return {
+          blocked: true,
+          code: 'TRIAL_ACTIVE',
+          error: '您与该导师已有免费试课预约进行中，不可重复预约',
+          reason: 'active'
+        };
+      }
+      return { blocked: false };
+    },
+
+    hasUsedFreeTrial: function (parentIdOrPhone, mentorId, subject) {
+      const gate = this.evaluateParentFreeTrialWithMentor(parentIdOrPhone, mentorId);
+      return !!(gate && gate.blocked);
+    },
+
+    getParentFreeTrialBlockMessage: function (parentIdOrPhone, mentorId) {
+      const gate = this.evaluateParentFreeTrialWithMentor(parentIdOrPhone, mentorId);
+      return gate && gate.blocked ? gate.error : '';
     },
 
     /* ---------- Registration drafts (resume-safe) ---------- */

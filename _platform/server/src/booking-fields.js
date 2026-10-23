@@ -277,6 +277,79 @@ function bookingPendingConfirmSlotExpired(booking, nowMs) {
   return now >= earliest;
 }
 
+const ACTIVE_FREE_TRIAL_BOOKING_STATUSES = new Set(['pending_accept', 'escrow_locked', 'accepted']);
+
+function bookingOwnedByParent(booking, parentRef) {
+  if (!booking || !parentRef) return false;
+  const parentId =
+    parentRef && typeof parentRef === 'object'
+      ? parentRef.id || parentRef.parentId
+      : parentRef;
+  const parentPhone = parentRef && typeof parentRef === 'object' ? parentRef.phone : '';
+  const key = parentId != null ? String(parentId) : '';
+  if (key && booking.parentId && String(booking.parentId) === key) return true;
+  if (parentPhone && booking.parentPhone && String(booking.parentPhone) === String(parentPhone)) {
+    return true;
+  }
+  if (key && booking.parentPhone && String(booking.parentPhone) === key) return true;
+  return false;
+}
+
+function bookingSameMentor(booking, mentorId) {
+  if (!mentorId) return true;
+  const mid = String(mentorId);
+  return String(booking.mentorId || '') === mid || String(booking.tutorId || '') === mid;
+}
+
+function trialSessionCompleted(booking) {
+  const sessions = Array.isArray(booking && booking.sessions) ? booking.sessions : [];
+  return sessions.some((s) => s && s.status === 'completed');
+}
+
+/**
+ * Existing trial row that should block another free trial with the same tutor.
+ * Cancelled/declined trials do not block (parent may retry).
+ */
+function trialBookingBlocksNewFreeTrial(booking) {
+  if (!booking || booking.type !== 'trial') return false;
+  const st = String(booking.status || '');
+  if (st === 'declined' || st === 'cancelled') return false;
+  if (trialSessionCompleted(booking)) return true;
+  return ACTIVE_FREE_TRIAL_BOOKING_STATUSES.has(st);
+}
+
+/**
+ * @returns {{ blocked: boolean, code?: string, error?: string, reason?: 'completed'|'active' }}
+ */
+function evaluateParentFreeTrialWithMentor(bookings, parentRef, mentorId) {
+  let hasActive = false;
+  let hasCompleted = false;
+  for (const b of bookings || []) {
+    if (!bookingOwnedByParent(b, parentRef)) continue;
+    if (!bookingSameMentor(b, mentorId)) continue;
+    if (!trialBookingBlocksNewFreeTrial(b)) continue;
+    if (trialSessionCompleted(b)) hasCompleted = true;
+    else hasActive = true;
+  }
+  if (hasCompleted) {
+    return {
+      blocked: true,
+      code: 'TRIAL_USED',
+      error: '已与该导师完成免费试课，不可再次预约免费试课',
+      reason: 'completed'
+    };
+  }
+  if (hasActive) {
+    return {
+      blocked: true,
+      code: 'TRIAL_ACTIVE',
+      error: '您与该导师已有免费试课预约进行中，不可重复预约',
+      reason: 'active'
+    };
+  }
+  return { blocked: false };
+}
+
 function freezeSessionsForPaid(sessions) {
   if (!Array.isArray(sessions)) return sessions;
   return sessions.map(function (s) {
@@ -371,6 +444,9 @@ module.exports = {
   collectBookingSessionStartTimes,
   bookingEarliestSessionStartMs,
   bookingPendingConfirmSlotExpired,
+  trialSessionCompleted,
+  trialBookingBlocksNewFreeTrial,
+  evaluateParentFreeTrialWithMentor,
   freezeSessionsForPaid,
   PARENT_MESSAGE_MAX_LEN,
   BOOKING_CREATE_ALLOW,

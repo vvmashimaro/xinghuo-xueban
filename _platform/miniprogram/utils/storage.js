@@ -721,6 +721,14 @@ const StorageService = {
   getBookingById(id) { return this.getBookings().find((b) => b.id === id) || null; },
 
   async addBooking(booking) {
+    if (booking && booking.type === 'trial') {
+      const parentKey = (booking.parentId || booking.parentPhone) || '';
+      const mentorId = (booking.mentorId || booking.tutorId) || '';
+      const gate = this.evaluateParentFreeTrialWithMentor(parentKey, mentorId);
+      if (parentKey && gate.blocked) {
+        return { ok: false, error: gate.error, code: gate.code || 'TRIAL_USED' };
+      }
+    }
     try {
       const result = await _request('POST', '/api/bookings', booking);
       if (result && result.id) {
@@ -742,7 +750,61 @@ const StorageService = {
 
   getBookingsForParent(parentId) {
     if (!parentId) return [];
-    return this.getBookings().filter((b) => b.parentId === parentId);
+    const key = String(parentId || '').trim();
+    const parents = this.getParents();
+    const parent = parents.find((p) => p.id === key || String(p.phone || '') === key) || null;
+    const id = parent ? parent.id : key;
+    const phone = parent ? String(parent.phone || '') : (/^1\d{10}$/.test(key) ? key : '');
+    return this.getBookings().filter((b) => {
+      if (b.parentId && (b.parentId === id || b.parentId === key)) return true;
+      if (phone && b.parentPhone && String(b.parentPhone) === phone) return true;
+      return false;
+    });
+  },
+
+  evaluateParentFreeTrialWithMentor(parentIdOrPhone, mentorId) {
+    const bookings = this.getBookingsForParent(parentIdOrPhone);
+    let hasActive = false;
+    let hasCompleted = false;
+    const mid = mentorId ? String(mentorId) : '';
+    const sameMentor = (b) =>
+      !mid || String(b.mentorId || '') === mid || String(b.tutorId || '') === mid;
+    const blocks = (b) => {
+      if (!b || b.type !== 'trial') return false;
+      const st = String(b.status || '');
+      if (st === 'declined' || st === 'cancelled') return false;
+      const sessions = b.sessions || [];
+      if (sessions.some((s) => s && s.status === 'completed')) return true;
+      return st === 'pending_accept' || st === 'escrow_locked' || st === 'accepted';
+    };
+    bookings.forEach((b) => {
+      if (!sameMentor(b) || !blocks(b)) return;
+      const sessions = b.sessions || [];
+      if (sessions.some((s) => s && s.status === 'completed')) hasCompleted = true;
+      else hasActive = true;
+    });
+    if (hasCompleted) {
+      return {
+        blocked: true,
+        code: 'TRIAL_USED',
+        error: '已与该导师完成免费试课，不可再次预约免费试课',
+        reason: 'completed'
+      };
+    }
+    if (hasActive) {
+      return {
+        blocked: true,
+        code: 'TRIAL_ACTIVE',
+        error: '您与该导师已有免费试课预约进行中，不可重复预约',
+        reason: 'active'
+      };
+    }
+    return { blocked: false };
+  },
+
+  hasUsedFreeTrial(parentIdOrPhone, mentorId) {
+    const gate = this.evaluateParentFreeTrialWithMentor(parentIdOrPhone, mentorId);
+    return !!(gate && gate.blocked);
   },
 
   async respondToBooking(id, decision) {
