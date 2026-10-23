@@ -1255,20 +1255,17 @@ function addBooking(booking) {
     return { ok: false, error: computed.error, code: 'INVALID_PRICING' };
   }
   if (bookingType === 'trial') {
-    const parentKey = (booking && (booking.parentId || booking.parentPhone)) || '';
-    const subject = normalizeAssessmentSubject((booking && booking.subject) || '');
-    const used = (s.bookings || []).some((b) => {
-      if (!b || b.type !== 'trial') return false;
-      if (b.status === 'declined' || b.status === 'cancelled') return false;
-      const sameMentor = !mentorId || b.mentorId === mentorId || b.tutorId === mentorId;
-      const sameParent =
-        (booking.parentId && b.parentId === booking.parentId) ||
-        (booking.parentPhone && b.parentPhone && String(b.parentPhone) === String(booking.parentPhone));
-      const sameSubject = !subject || normalizeAssessmentSubject(b.subject) === subject;
-      return sameMentor && sameParent && sameSubject;
-    });
-    if (parentKey && used) {
-      return { ok: false, error: '每位导师同一学科仅可预约一次免费试课', code: 'TRIAL_USED' };
+    const parentRef = {
+      id: booking && booking.parentId,
+      phone: booking && booking.parentPhone
+    };
+    const trialGate = bookingFields.evaluateParentFreeTrialWithMentor(
+      s.bookings || [],
+      parentRef,
+      mentorId
+    );
+    if ((booking.parentId || booking.parentPhone) && trialGate.blocked) {
+      return { ok: false, error: trialGate.error, code: trialGate.code || 'TRIAL_USED' };
     }
   }
   const clientFields = bookingFields.pickBookingCreateFields(booking);
@@ -1492,30 +1489,7 @@ function findSuccessPayOrderForBooking(bookingId) {
   );
 }
 
-function collectSessionStartTimes(booking) {
-  const starts = [];
-  const sessions = Array.isArray(booking.sessions) ? booking.sessions : [];
-  sessions.forEach((sess) => {
-    if (!sess || sess.status === 'completed') return;
-    if (sess.date && sess.timeStart) {
-      const parts = String(sess.timeStart).split(':').map(Number);
-      const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
-      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
-      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
-    }
-  });
-  if (!starts.length) {
-    const bookingSchedule = require('./booking-schedule');
-    const parsed = bookingSchedule.parseOneOffSessionFromSchedule(booking);
-    if (parsed && parsed.date && parsed.timeStart) {
-      const parts = String(parsed.timeStart).split(':').map(Number);
-      const d = new Date(String(parsed.date).slice(0, 10) + 'T00:00:00');
-      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
-      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
-    }
-  }
-  return starts;
-}
+const collectSessionStartTimes = bookingFields.collectBookingSessionStartTimes;
 
 function validateParentCancelBooking(bookingId, parentRef) {
   const s = getState();
@@ -1540,9 +1514,10 @@ function validateParentCancelBooking(bookingId, parentRef) {
 
   const now = Date.now();
   const starts = collectSessionStartTimes(booking);
+  const pendingSlotExpired = bookingFields.bookingPendingConfirmSlotExpired(booking, now);
   if (starts.length) {
     const earliest = Math.min(...starts);
-    if (now > earliest - CANCEL_LEAD_MS) {
+    if (!pendingSlotExpired && now > earliest - CANCEL_LEAD_MS) {
       return { ok: false, error: '开课前 2 小时内不可撤销', tooLate: true };
     }
   } else if (booking.status === 'accepted') {

@@ -43,6 +43,17 @@ function parentBookingFundCopy(b, unpaid) {
       amountCaption: isTrial ? '试课免费 · 托管豁免' : '课次托管冻结中'
     };
   }
+  const slotExpired = Storage.bookingPendingConfirmSlotExpired && Storage.bookingPendingConfirmSlotExpired(b);
+  if (slotExpired) {
+    return {
+      fundReason: isTrial
+        ? '档期已过期，导师未确认。可撤销试课预约。'
+        : (unpaid
+          ? '档期已过期，导师未确认。可取消预约（未支付无需退款）。'
+          : '档期已过期，导师未确认接单。可申请退款，课酬将原路退回微信。'),
+      amountCaption: isTrial ? '试课·已过期' : (unpaid ? '已过期 · 未支付' : '已过期 · 可申请退款')
+    };
+  }
   return {
     fundReason: isTrial
       ? '试课免费，等待导师确认档期（开课前 2h 外可免费撤销）。'
@@ -226,7 +237,9 @@ Page({
     const recallCount = tutors.filter((t) => t.matchScore >= 95).length;
     const topTutors = tutors.filter((t) => t.isTopMatch).slice(0, 3).map((t) =>
       Object.assign({}, t, {
-        syllabusText: (t.syllabusTopics || []).slice(0, 2).join('、')
+        syllabusText: (t.syllabusTopics || []).slice(0, 2).join('、'),
+        freeTrialBlocked: t.freeTrialBlocked,
+        freeTrialBlockMessage: t.freeTrialBlockMessage
       })
     );
 
@@ -247,10 +260,15 @@ Page({
     tutors = tutors.map((t) => {
       const chsi = String(t.chsiStatus || '');
       const chsiEnrolled = chsi.indexOf('有效') >= 0 || chsi.indexOf('在籍') >= 0;
+      const trialGate = Storage.evaluateParentFreeTrialWithMentor
+        ? Storage.evaluateParentFreeTrialWithMentor(parent.id || parent.phone, t.mentorId)
+        : { blocked: false };
       return Object.assign({}, t, {
         syllabusText: (t.syllabusTopics || []).slice(0, 3).join('、'),
         hasLecture: !!(t.lectureUrl && t.lectureUrl !== '#'),
-        chsiEnrolled
+        chsiEnrolled,
+        freeTrialBlocked: !!(trialGate && trialGate.blocked),
+        freeTrialBlockMessage: trialGate && trialGate.blocked ? trialGate.error : ''
       });
     });
 
@@ -274,17 +292,24 @@ Page({
         }
       });
       const fund = parentBookingFundCopy(b, unpaid);
+      const slotExpired = Storage.bookingPendingConfirmSlotExpired && Storage.bookingPendingConfirmSlotExpired(b);
       const sessionBadges = (b.sessions || []).map((s) => {
         const pending = b.status === 'pending_accept' || b.status === 'escrow_locked';
-        const text = pending && (!s.status || s.status === 'scheduled')
+        let text = pending && (!s.status || s.status === 'scheduled')
           ? '待确认档期'
           : (s.status === 'scheduled' ? '已排课' : (s.status || ''));
+        if (pending && slotExpired && (!s.status || s.status === 'scheduled')) text = '已过期';
         return { id: s.id, text };
       });
+      const statusText = !unpaid && slotExpired ? '已过期' : st.text;
+      const statusBadge = !unpaid && slotExpired ? 'badge-rejected' : st.badge;
+      const cancelLabel = slotExpired ? (unpaid ? '取消预约' : '申请退款') : '撤销约课';
       return Object.assign({}, b, {
         unpaid,
-        statusText: st.text,
-        statusBadge: st.badge,
+        slotExpired: !!slotExpired,
+        statusText,
+        statusBadge,
+        cancelLabel,
         canCancel: Storage.canParentCancelBooking(b),
         canPay: unpaid,
         sessionActions,
@@ -509,6 +534,13 @@ Page({
       spaceIndex = spaces.indexOf(this._parent.selectedSpace);
     }
     if (spaceIndex < 0) spaceIndex = 0;
+    const parentKey = (this._parent && (this._parent.id || this._parent.phone)) || '';
+    const trialGate = Storage.evaluateParentFreeTrialWithMentor && parentKey
+      ? Storage.evaluateParentFreeTrialWithMentor(parentKey, tutor.mentorId)
+      : {
+        blocked: !!tutor.freeTrialBlocked,
+        error: tutor.freeTrialBlockMessage || ''
+      };
     this.setData({
       bookingShow: true,
       bookingTutor: tutor,
@@ -518,7 +550,9 @@ Page({
       contractShow: false,
       contractAgreed: false,
       contractSignName: (this._parent && this._parent.parentName) || this.data.parentName || '',
-      escrowAmount: (tutor.hourlyRate * 2).toFixed(2)
+      escrowAmount: (tutor.hourlyRate * 2).toFixed(2),
+      bookingTrialBlocked: !!(trialGate && trialGate.blocked),
+      bookingTrialBlockMessage: trialGate && trialGate.blocked ? trialGate.error : ''
     }, () => this.refreshSlotOptions());
   },
 
@@ -1199,9 +1233,19 @@ Page({
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     const that = this;
+    const list = Storage.getBookings();
+    const raw = list.find((b) => b.id === id);
+    const slotExpired = raw && Storage.bookingPendingConfirmSlotExpired && Storage.bookingPendingConfirmSlotExpired(raw);
+    const unpaid = raw && Storage.bookingIsUnpaid && Storage.bookingIsUnpaid(raw);
+    const title = slotExpired ? (unpaid ? '取消预约' : '申请退款') : '撤销约课';
+    const content = slotExpired
+      ? (unpaid
+        ? '档期已过期且导师未确认，确认取消该预约？'
+        : '档期已过期且导师未确认，确认申请退款？课酬将原路退回微信。')
+      : '开课前 2 小时外可撤销并退回托管。确认撤销？';
     wx.showModal({
-      title: '撤销约课',
-      content: '开课前 2 小时外可撤销并退回托管。确认撤销？',
+      title,
+      content,
       success(res) {
         if (!res.confirm) return;
         Storage.cancelParentBooking(id).then((r) => {

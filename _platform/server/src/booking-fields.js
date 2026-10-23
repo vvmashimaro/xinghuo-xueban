@@ -1,5 +1,9 @@
 'use strict';
 
+const bookingSchedule = require('./booking-schedule');
+
+const PENDING_MENTOR_CONFIRM_STATUSES = new Set(['pending_accept', 'escrow_locked']);
+
 const BOOKING_CREATE_ALLOW = new Set([
   'mentorId',
   'tutorId',
@@ -227,6 +231,125 @@ function bookingIsUnpaid(booking) {
   return false;
 }
 
+function bookingIsPendingMentorConfirm(booking) {
+  return !!(booking && PENDING_MENTOR_CONFIRM_STATUSES.has(String(booking.status || '')));
+}
+
+/**
+ * Earliest scheduled session start (ms), excluding completed sessions.
+ * Falls back to schedule string when sessions are empty.
+ */
+function collectBookingSessionStartTimes(booking) {
+  const starts = [];
+  const sessions = Array.isArray(booking && booking.sessions) ? booking.sessions : [];
+  sessions.forEach((sess) => {
+    if (!sess || sess.status === 'completed') return;
+    if (sess.date && sess.timeStart) {
+      const parts = String(sess.timeStart).split(':').map(Number);
+      const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
+    }
+  });
+  if (!starts.length && booking) {
+    const parsed = bookingSchedule.parseOneOffSessionFromSchedule(booking);
+    if (parsed && parsed.date && parsed.timeStart) {
+      const parts = String(parsed.timeStart).split(':').map(Number);
+      const d = new Date(String(parsed.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
+    }
+  }
+  return starts;
+}
+
+function bookingEarliestSessionStartMs(booking) {
+  const starts = collectBookingSessionStartTimes(booking);
+  return starts.length ? Math.min(...starts) : null;
+}
+
+/** Pending mentor confirm and the booked slot start time has passed. */
+function bookingPendingConfirmSlotExpired(booking, nowMs) {
+  if (!bookingIsPendingMentorConfirm(booking)) return false;
+  const earliest = bookingEarliestSessionStartMs(booking);
+  if (earliest == null) return false;
+  const now = nowMs != null ? nowMs : Date.now();
+  return now >= earliest;
+}
+
+const ACTIVE_FREE_TRIAL_BOOKING_STATUSES = new Set(['pending_accept', 'escrow_locked', 'accepted']);
+
+function bookingOwnedByParent(booking, parentRef) {
+  if (!booking || !parentRef) return false;
+  const parentId =
+    parentRef && typeof parentRef === 'object'
+      ? parentRef.id || parentRef.parentId
+      : parentRef;
+  const parentPhone = parentRef && typeof parentRef === 'object' ? parentRef.phone : '';
+  const key = parentId != null ? String(parentId) : '';
+  if (key && booking.parentId && String(booking.parentId) === key) return true;
+  if (parentPhone && booking.parentPhone && String(booking.parentPhone) === String(parentPhone)) {
+    return true;
+  }
+  if (key && booking.parentPhone && String(booking.parentPhone) === key) return true;
+  return false;
+}
+
+function bookingSameMentor(booking, mentorId) {
+  if (!mentorId) return true;
+  const mid = String(mentorId);
+  return String(booking.mentorId || '') === mid || String(booking.tutorId || '') === mid;
+}
+
+function trialSessionCompleted(booking) {
+  const sessions = Array.isArray(booking && booking.sessions) ? booking.sessions : [];
+  return sessions.some((s) => s && s.status === 'completed');
+}
+
+/**
+ * Existing trial row that should block another free trial with the same tutor.
+ * Cancelled/declined trials do not block (parent may retry).
+ */
+function trialBookingBlocksNewFreeTrial(booking) {
+  if (!booking || booking.type !== 'trial') return false;
+  const st = String(booking.status || '');
+  if (st === 'declined' || st === 'cancelled') return false;
+  if (trialSessionCompleted(booking)) return true;
+  return ACTIVE_FREE_TRIAL_BOOKING_STATUSES.has(st);
+}
+
+/**
+ * @returns {{ blocked: boolean, code?: string, error?: string, reason?: 'completed'|'active' }}
+ */
+function evaluateParentFreeTrialWithMentor(bookings, parentRef, mentorId) {
+  let hasActive = false;
+  let hasCompleted = false;
+  for (const b of bookings || []) {
+    if (!bookingOwnedByParent(b, parentRef)) continue;
+    if (!bookingSameMentor(b, mentorId)) continue;
+    if (!trialBookingBlocksNewFreeTrial(b)) continue;
+    if (trialSessionCompleted(b)) hasCompleted = true;
+    else hasActive = true;
+  }
+  if (hasCompleted) {
+    return {
+      blocked: true,
+      code: 'TRIAL_USED',
+      error: '已与该导师完成免费试课，不可再次预约免费试课',
+      reason: 'completed'
+    };
+  }
+  if (hasActive) {
+    return {
+      blocked: true,
+      code: 'TRIAL_ACTIVE',
+      error: '您与该导师已有免费试课预约进行中，不可重复预约',
+      reason: 'active'
+    };
+  }
+  return { blocked: false };
+}
+
 function freezeSessionsForPaid(sessions) {
   if (!Array.isArray(sessions)) return sessions;
   return sessions.map(function (s) {
@@ -317,6 +440,13 @@ module.exports = {
   bookingEscrowReleaseAllowed,
   bookingIsPaid,
   bookingIsUnpaid,
+  bookingIsPendingMentorConfirm,
+  collectBookingSessionStartTimes,
+  bookingEarliestSessionStartMs,
+  bookingPendingConfirmSlotExpired,
+  trialSessionCompleted,
+  trialBookingBlocksNewFreeTrial,
+  evaluateParentFreeTrialWithMentor,
   freezeSessionsForPaid,
   PARENT_MESSAGE_MAX_LEN,
   BOOKING_CREATE_ALLOW,

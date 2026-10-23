@@ -130,6 +130,60 @@ function main() {
   const deny = db.parentCancelBooking(soonBooking.id, parent);
   assert(!deny.ok && deny.tooLate, 'cancel within 2h should fail');
 
+  const past = new Date();
+  past.setDate(past.getDate() - 2);
+  const py = past.getFullYear();
+  const pm = String(past.getMonth() + 1).padStart(2, '0');
+  const pd = String(past.getDate()).padStart(2, '0');
+  const pastDate = `${py}-${pm}-${pd}`;
+  const expiredPending = db.addBooking({
+    mentorId: mentor.id,
+    tutorId: mentor.id,
+    tutorName: mentor.realName || '导师',
+    parentId: parent.id,
+    parentPhone: parent.phone,
+    studentNickname: parent.studentNickname || '学员',
+    studentGrade: parent.studentGrade || '初三',
+    subject: '化学',
+    space: '青羊金沙文化微网点',
+    schedule: `${pastDate} 19:00-21:00`,
+    sessionDate: pastDate,
+    hours: 2,
+    weekday: past.getDay(),
+    time: '19:00',
+    sessions: [
+      {
+        date: pastDate,
+        timeStart: '19:00',
+        timeEnd: '21:00',
+        status: 'scheduled'
+      }
+    ]
+  });
+  assert(expiredPending && expiredPending.id, 'expired pending booking created');
+  db.updateBooking(
+    expiredPending.id,
+    {
+      paymentStatus: 'paid',
+      status: 'pending_accept',
+      escrowStatus: 'frozen'
+    },
+    { trust: 'admin' }
+  );
+  const expiredCancel = db.parentCancelBooking(expiredPending.id, parent);
+  assert(expiredCancel.ok, expiredCancel.error || 'expired pending_accept must allow parent cancel/refund');
+  assert.strictEqual(expiredCancel.booking.status, 'cancelled');
+
+  const bookingFields = require('./src/booking-fields');
+  assert(bookingFields.bookingPendingConfirmSlotExpired(expiredCancel.booking) === false);
+  assert(
+    bookingFields.bookingPendingConfirmSlotExpired(
+      Object.assign({}, expiredPending, { status: 'pending_accept' }),
+      Date.now()
+    ),
+    'slot in the past should be expired while pending'
+  );
+
   assert.strictEqual(typeof bookingSchedule.parseOneOffSessionFromSchedule, 'function');
   const parsed = bookingSchedule.parseOneOffSessionFromSchedule({
     schedule: `${far.dateStr} 周日 20:00-21:00`

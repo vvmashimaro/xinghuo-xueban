@@ -36,7 +36,8 @@
         </view>
         <view class="muted" style="margin-top:8rpx;">{{item.matchScore}}% · ¥{{item.hourlyRate}}/h</view>
         <view class="muted">{{item.syllabusText}}</view>
-        <button class="btn-primary" size="mini" style="margin-top:10rpx;" data-id="{{item.mentorId}}" bindtap="openBooking">预约试课</button>
+        <view class="muted" wx:if="{{item.freeTrialBlocked}}" style="color:#b45309;margin-top:6rpx;">{{item.freeTrialBlockMessage}}</view>
+        <button class="btn-primary" size="mini" style="margin-top:10rpx;" data-id="{{item.mentorId}}" bindtap="openBooking">预约课次</button>
       </view>
     </scroll-view>
   </view>
@@ -97,7 +98,7 @@
       </view>
       <view class="bk-actions" wx:if="{{item.canPay || item.canCancel || (item.sessionActions && item.sessionActions.length)}}">
         <button wx:if="{{item.canPay}}" class="btn-primary" size="mini" data-id="{{item.id}}" bindtap="onResumePay">继续支付</button>
-        <button wx:if="{{item.canCancel}}" class="btn-ghost" size="mini" data-id="{{item.id}}" bindtap="onCancelBooking">撤销约课</button>
+        <button wx:if="{{item.canCancel}}" class="btn-ghost" size="mini" data-id="{{item.id}}" bindtap="onCancelBooking">{{item.cancelLabel || '撤销约课'}}</button>
         <button wx:for="{{item.sessionActions}}" wx:for-item="sa" wx:key="sessionId" class="btn-ghost" size="mini" data-bid="{{item.id}}" data-sid="{{sa.sessionId}}" bindtap="onRequestLeave">{{sa.label}}</button>
       </view>
     </view>
@@ -304,6 +305,7 @@
       <view style="font-size:20rpx;color:#99f6e4;">¥{{bookingTutor.hourlyRate}}/h · {{bookingTutor.subjects[0]}}</view>
     </view>
     <scroll-view scroll-y class="modal-body" style="max-height:60vh;">
+      <view wx:if="{{bookingTrialBlocked}}" class="muted" style="color:#b45309;margin-bottom:12rpx;">{{bookingTrialBlockMessage}} 仍可按下方流程预约付费课次。</view>
       <view class="section-h">单次辅导时长</view>
       <radio-group bindchange="onHours">
         <label class="pace-row"><radio value="2" checked="{{hours===2}}" color="#0d9488" /><text>2 小时（推荐·专题突破）</text></label>
