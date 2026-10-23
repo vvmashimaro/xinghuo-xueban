@@ -753,12 +753,13 @@ Page({
 
     let paymentOk = amount <= 0;
     if (amount > 0) {
-      paymentOk = await this.handleWeChatPayment(
+      const payResult = await this.handleWeChatPayment(
         booking.id,
         amount,
         tutor.maskedName,
         (tutor.subjects && tutor.subjects[0]) || '辅导'
       );
+      paymentOk = !!(payResult && payResult.success);
     }
 
     if (!paymentOk) {
@@ -793,11 +794,6 @@ Page({
 
   async handleWeChatPayment(bookingId, amount, tutorName, subject) {
     try {
-      const config = require('../../utils/config');
-      const apiBase = config.API_BASE || 'http://127.0.0.1:8787';
-      const payMode = config.PAY_MODE || 'demo';
-
-      // 创建预支付订单
       const prepayResult = await Storage.prepayWechat(
         bookingId,
         amount,
@@ -805,19 +801,31 @@ Page({
       );
 
       if (!prepayResult.success || prepayResult.error) {
-        showToast(prepayResult.error || '支付订单创建失败', 'error');
+        const err = prepayResult.error || '支付订单创建失败';
+        showToast(err, 'error');
         console.error('Prepay failed:', prepayResult);
-        return false;
+        return { success: false, error: err };
       }
 
       if (prepayResult.mock) {
         const confirmResult = await Storage.mockConfirmPayment(prepayResult.outTradeNo);
-        return !!(confirmResult && confirmResult.success);
+        if (confirmResult && confirmResult.success) {
+          try {
+            await Storage.hydrateFromServer();
+          } catch (_) {}
+          return { success: true, outTradeNo: prepayResult.outTradeNo };
+        }
+        const err = (confirmResult && confirmResult.error) || '模拟支付确认失败';
+        showToast(err, 'error');
+        return { success: false, error: err };
       }
 
       if (!prepayResult.prepayId) {
-        showToast('支付参数不完整，请检查服务端微信支付配置', 'error');
-        return false;
+        const err = prepayResult.codeUrl
+          ? '未能获取小程序支付参数，请重新打开小程序后再试'
+          : '支付参数不完整，请检查服务端微信支付配置';
+        showToast(err, 'error');
+        return { success: false, error: err };
       }
 
       const payParams = {
@@ -829,8 +837,9 @@ Page({
       };
 
       if (!payParams.timeStamp || !payParams.paySign) {
-        showToast('支付参数不完整，请检查服务端微信支付配置', 'error');
-        return false;
+        const err = '支付参数不完整，请检查服务端微信支付配置';
+        showToast(err, 'error');
+        return { success: false, error: err };
       }
 
       const outTradeNo = prepayResult.outTradeNo;
@@ -841,29 +850,37 @@ Page({
             showToast('正在确认支付结果…');
             const synced = await Storage.waitForPaymentConfirmed(outTradeNo, { maxMs: 90000 });
             if (synced && synced.success) {
+              try {
+                await Storage.hydrateFromServer();
+              } catch (_) {}
               showToast('✓ 支付成功');
               this.reload();
-              resolve(true);
+              resolve({ success: true, outTradeNo });
               return;
             }
-            showToast((synced && synced.error) || '支付尚未确认', 'warning');
-            resolve(false);
+            const err = (synced && synced.error) || '支付尚未确认，请稍后在「未支付」中继续或联系客服';
+            showToast(err, 'warning');
+            resolve({ success: false, error: err, outTradeNo });
           },
           fail: (err) => {
             const msg = (err && err.errMsg) || '';
             if (msg.includes('cancel')) {
               showToast('支付已取消', 'warning');
+              resolve({ success: false, error: '支付已取消', cancelled: true });
             } else {
-              showToast('支付失败，请重试', 'error');
+              const detail = msg.replace(/^requestPayment:fail\s*/i, '').trim();
+              const errText = detail ? `支付失败：${detail}` : '支付失败，请重试';
+              showToast(errText, 'error');
+              resolve({ success: false, error: errText });
             }
-            resolve(false);
           }
         });
       });
     } catch (error) {
       console.error('WeChat payment error:', error);
-      showToast('支付处理异常，请稍后重试', 'error');
-      return false;
+      const err = (error && error.message) || '支付处理异常，请稍后重试';
+      showToast(err, 'error');
+      return { success: false, error: err };
     }
   },
 
@@ -1165,11 +1182,15 @@ Page({
       showToast('该预约无需支付');
       return;
     }
-    const ok = await this.handleWeChatPayment(booking.id, amount, tutorName, subject);
-    if (ok) {
+    showToast('正在拉起微信支付…');
+    const payResult = await this.handleWeChatPayment(booking.id, amount, tutorName, subject);
+    if (payResult && payResult.success) {
       showToast('支付成功，托管已锁定，等待导师接单');
-    } else {
-      showToast('尚未完成支付，可稍后继续', 'warning');
+    } else if (!(payResult && payResult.cancelled)) {
+      showToast(
+        (payResult && payResult.error) || '尚未完成支付，可稍后继续',
+        'warning'
+      );
     }
     this.reload();
   },

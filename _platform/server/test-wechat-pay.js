@@ -316,6 +316,17 @@ async function run() {
 
   wechatPay.setWechatPayFetch(null);
   process.env = savedEnv;
+
+  const indexSrc = fs.readFileSync(path.join(__dirname, 'src/index.js'), 'utf8');
+  assert.ok(
+    indexSrc.includes('const refreshed = payOrder.bookingId'),
+    'syncPayOrderWithRemote must resolve booking from payOrder.bookingId after remote SUCCESS'
+  );
+  assert.ok(
+    !/const refreshed = booking \? db\.getBookings\(\)/.test(indexSrc),
+    'syncPayOrderWithRemote must not reference undefined booking'
+  );
+
   console.log('test-wechat-pay: OK');
 }
 
