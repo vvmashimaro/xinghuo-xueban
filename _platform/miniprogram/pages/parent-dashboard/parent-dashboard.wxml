@@ -97,7 +97,7 @@
       </view>
       <view class="bk-actions" wx:if="{{item.canPay || item.canCancel || (item.sessionActions && item.sessionActions.length)}}">
         <button wx:if="{{item.canPay}}" class="btn-primary" size="mini" data-id="{{item.id}}" bindtap="onResumePay">继续支付</button>
-        <button wx:if="{{item.canCancel}}" class="btn-ghost" size="mini" data-id="{{item.id}}" bindtap="onCancelBooking">撤销约课</button>
+        <button wx:if="{{item.canCancel}}" class="btn-ghost" size="mini" data-id="{{item.id}}" bindtap="onCancelBooking">{{item.cancelLabel || '撤销约课'}}</button>
         <button wx:for="{{item.sessionActions}}" wx:for-item="sa" wx:key="sessionId" class="btn-ghost" size="mini" data-bid="{{item.id}}" data-sid="{{sa.sessionId}}" bindtap="onRequestLeave">{{sa.label}}</button>
       </view>
     </view>

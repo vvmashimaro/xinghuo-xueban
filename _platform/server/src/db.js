@@ -1492,30 +1492,7 @@ function findSuccessPayOrderForBooking(bookingId) {
   );
 }
 
-function collectSessionStartTimes(booking) {
-  const starts = [];
-  const sessions = Array.isArray(booking.sessions) ? booking.sessions : [];
-  sessions.forEach((sess) => {
-    if (!sess || sess.status === 'completed') return;
-    if (sess.date && sess.timeStart) {
-      const parts = String(sess.timeStart).split(':').map(Number);
-      const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
-      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
-      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
-    }
-  });
-  if (!starts.length) {
-    const bookingSchedule = require('./booking-schedule');
-    const parsed = bookingSchedule.parseOneOffSessionFromSchedule(booking);
-    if (parsed && parsed.date && parsed.timeStart) {
-      const parts = String(parsed.timeStart).split(':').map(Number);
-      const d = new Date(String(parsed.date).slice(0, 10) + 'T00:00:00');
-      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
-      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
-    }
-  }
-  return starts;
-}
+const collectSessionStartTimes = bookingFields.collectBookingSessionStartTimes;
 
 function validateParentCancelBooking(bookingId, parentRef) {
   const s = getState();
@@ -1540,9 +1517,10 @@ function validateParentCancelBooking(bookingId, parentRef) {
 
   const now = Date.now();
   const starts = collectSessionStartTimes(booking);
+  const pendingSlotExpired = bookingFields.bookingPendingConfirmSlotExpired(booking, now);
   if (starts.length) {
     const earliest = Math.min(...starts);
-    if (now > earliest - CANCEL_LEAD_MS) {
+    if (!pendingSlotExpired && now > earliest - CANCEL_LEAD_MS) {
       return { ok: false, error: '开课前 2 小时内不可撤销', tooLate: true };
     }
   } else if (booking.status === 'accepted') {

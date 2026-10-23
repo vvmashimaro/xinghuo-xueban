@@ -795,17 +795,13 @@ const StorageService = {
     return false;
   },
 
-  canParentCancelBooking(booking) {
-    if (!booking) return false;
-    const cancellable = ['pending_accept', 'escrow_locked', 'accepted'];
-    if (cancellable.indexOf(booking.status) < 0) return false;
-    const sessions = booking.sessions || [];
-    if (sessions.some((s) => s && s.status === 'completed')) return false;
-    const now = Date.now();
-    const lead = 2 * 60 * 60 * 1000;
+  collectBookingSessionStartTimes(booking) {
+    if (!booking) return [];
     const starts = [];
+    const sessions = booking.sessions || [];
     sessions.forEach((sess) => {
-      if (!sess || !sess.date || !sess.timeStart) return;
+      if (!sess || sess.status === 'completed') return;
+      if (!sess.date || !sess.timeStart) return;
       const parts = String(sess.timeStart).split(':').map(Number);
       const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
       d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
@@ -821,6 +817,33 @@ const StorageService = {
         if (!isNaN(d.getTime())) starts.push(d.getTime());
       }
     }
+    return starts;
+  },
+
+  bookingIsPendingMentorConfirm(booking) {
+    if (!booking) return false;
+    const st = String(booking.status || '');
+    return st === 'pending_accept' || st === 'escrow_locked';
+  },
+
+  bookingPendingConfirmSlotExpired(booking, nowMs) {
+    if (!this.bookingIsPendingMentorConfirm(booking)) return false;
+    const starts = this.collectBookingSessionStartTimes(booking);
+    if (!starts.length) return false;
+    const now = nowMs != null ? nowMs : Date.now();
+    return now >= Math.min.apply(null, starts);
+  },
+
+  canParentCancelBooking(booking) {
+    if (!booking) return false;
+    const cancellable = ['pending_accept', 'escrow_locked', 'accepted'];
+    if (cancellable.indexOf(booking.status) < 0) return false;
+    const sessions = booking.sessions || [];
+    if (sessions.some((s) => s && s.status === 'completed')) return false;
+    if (this.bookingPendingConfirmSlotExpired(booking)) return true;
+    const now = Date.now();
+    const lead = 2 * 60 * 60 * 1000;
+    const starts = this.collectBookingSessionStartTimes(booking);
     if (!starts.length) return booking.status !== 'accepted';
     return now <= Math.min.apply(null, starts) - lead;
   },

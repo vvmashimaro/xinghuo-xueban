@@ -842,7 +842,7 @@
     </div>
   </div>
 
-  <div id="passportDrawerModal"> class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-end hidden opacity-0 transition-opacity duration-300">
+  <div id="passportDrawerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-end hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white w-full max-w-md h-full shadow-2xl p-5 overflow-y-auto space-y-4 transform transition-all duration-300 translate-x-full" id="passportDrawerContent">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
@@ -1153,6 +1153,21 @@
           amountCaption: isTrial ? '试课免费 · 托管豁免' : (isWeekly ? '课次托管冻结中' : '课次托管冻结中'),
           sessionEscrow: isTrial ? '试课免费' : '费用已冻结',
           reasonCls: 'text-emerald-700'
+        };
+      }
+      const slotExpired = window.StorageService && StorageService.bookingPendingConfirmSlotExpired
+        ? StorageService.bookingPendingConfirmSlotExpired(b)
+        : false;
+      if (slotExpired) {
+        return {
+          reason: isTrial
+            ? '档期已过期，导师未确认。可撤销试课预约。'
+            : (unpaid
+              ? '档期已过期，导师未确认。可取消预约（未支付无需退款）。'
+              : '档期已过期，导师未确认接单。可申请退款，课酬将原路退回微信。'),
+          amountCaption: isTrial ? '试课·已过期' : (unpaid ? '已过期 · 未支付' : '已过期 · 可申请退款'),
+          sessionEscrow: isTrial ? '已过期' : (unpaid ? '已过期' : '已过期'),
+          reasonCls: 'text-rose-700'
         };
       }
       return {
@@ -2929,7 +2944,20 @@
 
     function cancelParentBooking(bookingId) {
       if (!window.StorageService || !bookingId) return;
-      if (!confirm('确认撤销该约课？未支付将直接取消；已支付且开课前 2 小时外可原路退回托管。')) return;
+      const raw = StorageService.getBookingById && StorageService.getBookingById(bookingId);
+      const booking = raw && StorageService.normalizeBookingRecord
+        ? StorageService.normalizeBookingRecord(raw)
+        : raw;
+      const expiredPending = booking && StorageService.bookingPendingConfirmSlotExpired
+        ? StorageService.bookingPendingConfirmSlotExpired(booking)
+        : false;
+      const unpaid = booking && StorageService.bookingIsUnpaid && StorageService.bookingIsUnpaid(booking);
+      const confirmMsg = expiredPending
+        ? (unpaid
+          ? '档期已过期且导师未确认，确认取消该预约？'
+          : '档期已过期且导师未确认，确认申请退款？课酬将原路退回微信。')
+        : '确认撤销该约课？未支付将直接取消；已支付且开课前 2 小时外可原路退回托管。';
+      if (!confirm(confirmMsg)) return;
       const res = StorageService.parentCancelBooking(bookingId);
       if (res && res.ok) {
         showToast('约课已撤销，已支付课酬将原路退回微信账户');
@@ -3090,8 +3118,15 @@
       }, 2500);
     }
 
-    function sessionStatusBadge(st, bookingStatus) {
-      if ((bookingStatus === 'pending_accept' || bookingStatus === 'escrow_locked') && (!st || st === 'scheduled')) {
+    function sessionStatusBadge(st, bookingStatus, booking) {
+      const pending = bookingStatus === 'pending_accept' || bookingStatus === 'escrow_locked';
+      const slotExpired = booking && window.StorageService && StorageService.bookingPendingConfirmSlotExpired
+        ? StorageService.bookingPendingConfirmSlotExpired(booking)
+        : false;
+      if (pending && slotExpired && (!st || st === 'scheduled')) {
+        return { text: '已过期', cls: 'bg-rose-50 text-rose-800 border-rose-200' };
+      }
+      if (pending && (!st || st === 'scheduled')) {
         return { text: '待确认档期', cls: 'bg-amber-50 text-amber-800 border-amber-200' };
       }
       const map = {
@@ -3470,9 +3505,15 @@
       box.innerHTML = filtered.map(function(raw) {
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
         const unpaid = isUnpaid(b);
-        const st = unpaid
+        const slotExpired = StorageService.bookingPendingConfirmSlotExpired
+          ? StorageService.bookingPendingConfirmSlotExpired(b)
+          : false;
+        let st = unpaid
           ? { text: '未支付', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
           : (statusMap[b.status] || { text: b.status || '未知', cls: 'bg-slate-50 text-slate-600 border-slate-200' });
+        if (!unpaid && slotExpired) {
+          st = { text: '已过期', cls: 'bg-rose-50 text-rose-800 border-rose-200' };
+        }
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
         const fund = parentBookingFundCopy(b, unpaid);
@@ -3489,7 +3530,7 @@
           sessionsHtml = '<div class="mt-2 space-y-1.5 border-t border-slate-100 pt-2">' +
             (isWeekly ? '<div class="text-xs font-bold text-teal-800 mb-1">每周系列课次</div>' : '') +
             b.sessions.map(function(s) {
-              const sb = sessionStatusBadge(s.status, b.status);
+              const sb = sessionStatusBadge(s.status, b.status, b);
               const canLeave = !unpaid && b.status === 'accepted' &&
                 (s.status === 'scheduled' || s.status === 'leave_too_late');
               let acts = '';
@@ -3519,8 +3560,11 @@
         const payBtn = unpaid
           ? '<button type="button" onclick="resumeParentBookingPay(\'' + b.id + '\')" class="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-2.5 py-0.5 rounded-lg cursor-pointer">继续支付</button>'
           : '';
+        const cancelLabel = slotExpired
+          ? (unpaid ? '取消预约' : '申请退款')
+          : '撤销约课';
         const cancelBtn = canCancel
-          ? '<button type="button" onclick="cancelParentBooking(\'' + b.id + '\')" class="text-xs font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg cursor-pointer">撤销约课</button>'
+          ? '<button type="button" onclick="cancelParentBooking(\'' + b.id + '\')" class="text-xs font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg cursor-pointer">' + cancelLabel + '</button>'
           : '';
         const renewBtn = canRenew
           ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'

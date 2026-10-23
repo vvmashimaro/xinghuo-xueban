@@ -1,5 +1,9 @@
 'use strict';
 
+const bookingSchedule = require('./booking-schedule');
+
+const PENDING_MENTOR_CONFIRM_STATUSES = new Set(['pending_accept', 'escrow_locked']);
+
 const BOOKING_CREATE_ALLOW = new Set([
   'mentorId',
   'tutorId',
@@ -227,6 +231,52 @@ function bookingIsUnpaid(booking) {
   return false;
 }
 
+function bookingIsPendingMentorConfirm(booking) {
+  return !!(booking && PENDING_MENTOR_CONFIRM_STATUSES.has(String(booking.status || '')));
+}
+
+/**
+ * Earliest scheduled session start (ms), excluding completed sessions.
+ * Falls back to schedule string when sessions are empty.
+ */
+function collectBookingSessionStartTimes(booking) {
+  const starts = [];
+  const sessions = Array.isArray(booking && booking.sessions) ? booking.sessions : [];
+  sessions.forEach((sess) => {
+    if (!sess || sess.status === 'completed') return;
+    if (sess.date && sess.timeStart) {
+      const parts = String(sess.timeStart).split(':').map(Number);
+      const d = new Date(String(sess.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
+    }
+  });
+  if (!starts.length && booking) {
+    const parsed = bookingSchedule.parseOneOffSessionFromSchedule(booking);
+    if (parsed && parsed.date && parsed.timeStart) {
+      const parts = String(parsed.timeStart).split(':').map(Number);
+      const d = new Date(String(parsed.date).slice(0, 10) + 'T00:00:00');
+      d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+      if (!Number.isNaN(d.getTime())) starts.push(d.getTime());
+    }
+  }
+  return starts;
+}
+
+function bookingEarliestSessionStartMs(booking) {
+  const starts = collectBookingSessionStartTimes(booking);
+  return starts.length ? Math.min(...starts) : null;
+}
+
+/** Pending mentor confirm and the booked slot start time has passed. */
+function bookingPendingConfirmSlotExpired(booking, nowMs) {
+  if (!bookingIsPendingMentorConfirm(booking)) return false;
+  const earliest = bookingEarliestSessionStartMs(booking);
+  if (earliest == null) return false;
+  const now = nowMs != null ? nowMs : Date.now();
+  return now >= earliest;
+}
+
 function freezeSessionsForPaid(sessions) {
   if (!Array.isArray(sessions)) return sessions;
   return sessions.map(function (s) {
@@ -317,6 +367,10 @@ module.exports = {
   bookingEscrowReleaseAllowed,
   bookingIsPaid,
   bookingIsUnpaid,
+  bookingIsPendingMentorConfirm,
+  collectBookingSessionStartTimes,
+  bookingEarliestSessionStartMs,
+  bookingPendingConfirmSlotExpired,
   freezeSessionsForPaid,
   PARENT_MESSAGE_MAX_LEN,
   BOOKING_CREATE_ALLOW,

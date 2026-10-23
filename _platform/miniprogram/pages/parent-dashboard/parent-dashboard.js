@@ -43,6 +43,17 @@ function parentBookingFundCopy(b, unpaid) {
       amountCaption: isTrial ? '试课免费 · 托管豁免' : '课次托管冻结中'
     };
   }
+  const slotExpired = Storage.bookingPendingConfirmSlotExpired && Storage.bookingPendingConfirmSlotExpired(b);
+  if (slotExpired) {
+    return {
+      fundReason: isTrial
+        ? '档期已过期，导师未确认。可撤销试课预约。'
+        : (unpaid
+          ? '档期已过期，导师未确认。可取消预约（未支付无需退款）。'
+          : '档期已过期，导师未确认接单。可申请退款，课酬将原路退回微信。'),
+      amountCaption: isTrial ? '试课·已过期' : (unpaid ? '已过期 · 未支付' : '已过期 · 可申请退款')
+    };
+  }
   return {
     fundReason: isTrial
       ? '试课免费，等待导师确认档期（开课前 2h 外可免费撤销）。'
@@ -274,17 +285,24 @@ Page({
         }
       });
       const fund = parentBookingFundCopy(b, unpaid);
+      const slotExpired = Storage.bookingPendingConfirmSlotExpired && Storage.bookingPendingConfirmSlotExpired(b);
       const sessionBadges = (b.sessions || []).map((s) => {
         const pending = b.status === 'pending_accept' || b.status === 'escrow_locked';
-        const text = pending && (!s.status || s.status === 'scheduled')
+        let text = pending && (!s.status || s.status === 'scheduled')
           ? '待确认档期'
           : (s.status === 'scheduled' ? '已排课' : (s.status || ''));
+        if (pending && slotExpired && (!s.status || s.status === 'scheduled')) text = '已过期';
         return { id: s.id, text };
       });
+      const statusText = !unpaid && slotExpired ? '已过期' : st.text;
+      const statusBadge = !unpaid && slotExpired ? 'badge-rejected' : st.badge;
+      const cancelLabel = slotExpired ? (unpaid ? '取消预约' : '申请退款') : '撤销约课';
       return Object.assign({}, b, {
         unpaid,
-        statusText: st.text,
-        statusBadge: st.badge,
+        slotExpired: !!slotExpired,
+        statusText,
+        statusBadge,
+        cancelLabel,
         canCancel: Storage.canParentCancelBooking(b),
         canPay: unpaid,
         sessionActions,
@@ -1178,9 +1196,19 @@ Page({
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     const that = this;
+    const list = Storage.getBookings();
+    const raw = list.find((b) => b.id === id);
+    const slotExpired = raw && Storage.bookingPendingConfirmSlotExpired && Storage.bookingPendingConfirmSlotExpired(raw);
+    const unpaid = raw && Storage.bookingIsUnpaid && Storage.bookingIsUnpaid(raw);
+    const title = slotExpired ? (unpaid ? '取消预约' : '申请退款') : '撤销约课';
+    const content = slotExpired
+      ? (unpaid
+        ? '档期已过期且导师未确认，确认取消该预约？'
+        : '档期已过期且导师未确认，确认申请退款？课酬将原路退回微信。')
+      : '开课前 2 小时外可撤销并退回托管。确认撤销？';
     wx.showModal({
-      title: '撤销约课',
-      content: '开课前 2 小时外可撤销并退回托管。确认撤销？',
+      title,
+      content,
       success(res) {
         if (!res.confirm) return;
         Storage.cancelParentBooking(id).then((r) => {
