@@ -1199,20 +1199,20 @@ const StorageService = {
       const opts = options || {};
       let wxCode = opts.wxCode;
       if (!wxCode && opts.bindSession !== false) {
-        try {
-          wxCode = await this.wxLoginCode();
-        } catch (loginErr) {
-          console.warn('[prepayWechat] wx.login failed', loginErr);
-        }
+        wxCode = await this.wxLoginCode();
+      }
+      if (!wxCode) {
+        return { success: false, error: '无法获取微信登录凭证，请退出后重新打开小程序' };
       }
       const result = await _request('POST', '/api/pay/wechat/prepay', {
         bookingId,
         description,
-        wxCode
+        wxCode,
+        payType: 'JSAPI'
       });
       return Object.assign({ success: true }, result);
     } catch (e) {
-      return { success: false, error: e.message || '创建支付订单失败' };
+      return { success: false, error: _apiErrorFromReject(e) };
     }
   },
 

@@ -1,5 +1,5 @@
 <view class="match-banner-compact" wx:if="{{consoleSection==='courses'}}">
-  <text>已为您精准召回 {{recallCount}} 位 &gt;95% 契合度导师</text>
+  <text class="match-banner-text">已为您精准召回 {{recallCount}} 位 >95% 契合度导师</text>
   <text class="match-banner-go" data-id="discover" bindtap="onConsoleTab">去查看 ›</text>
 </view>
 <view class="match-banner-wrap" wx:if="{{consoleSection==='discover'}}">

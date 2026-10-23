@@ -845,7 +845,9 @@ async function syncPayOrderWithRemote(outTradeNo) {
     return { ok: false, error: applied.message || '支付金额校验失败', status: 'AMOUNT_MISMATCH' };
   }
 
-  const refreshed = booking ? db.getBookings().find((b) => b.id === booking.id) : null;
+  const refreshed = payOrder.bookingId
+    ? db.getBookings().find((b) => b.id === payOrder.bookingId)
+    : null;
   return {
     ok: true,
     status: 'SUCCESS',
