@@ -16,6 +16,7 @@ const sms = require('./sms');
 const bookingSmsNotify = require('./booking-sms-notify');
 const bookingFields = require('./booking-fields');
 const auth = require('./auth');
+const adminRbac = require('./admin-rbac');
 const wechatPay = require('./wechat-pay');
 const pricing = require('./pricing');
 const wechatPhone = require('./wechat-phone');
@@ -107,7 +108,25 @@ function maskPhone(phone) {
 }
 
 // 创建认证中间件（注入 db 依赖）
-const { requireAuth, requireAdmin, requireAdminToken } = auth.createAuthMiddleware(db);
+const { requireAuth, requireAdmin, requireAdminModule, requireAdminToken } = auth.createAuthMiddleware(db);
+
+function denyAdminResource(req, res, resource) {
+  if (req.user.role !== 'admin') return false;
+  if (!adminRbac.canReadAdminResource(db, req.user.phone, resource)) {
+    fail(res, 403, '无权查看该数据，请联系最高管理员开通模块权限');
+    return true;
+  }
+  return false;
+}
+
+function denyAdminModule(req, res, moduleKey) {
+  if (req.user.role !== 'admin') return false;
+  if (!adminRbac.hasModule(db, req.user.phone, moduleKey)) {
+    fail(res, 403, adminRbac.forbiddenModuleMessage(moduleKey));
+    return true;
+  }
+  return false;
+}
 
 // 定期清理过期令牌
 setInterval(() => {
@@ -382,15 +401,85 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
       return fail(res, 404, '用户不存在');
     }
     
-    ok(res, {
+    const payload = {
       userId: user.id,
       role,
       phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
       profile: user
-    });
+    };
+    if (role === 'admin') {
+      payload.adminRbac = {
+        isSuperAdmin: adminRbac.isSuperAdminPhone(phone),
+        modules: adminRbac.getEffectiveModules(db, phone),
+        catalog: adminRbac.getCatalog()
+      };
+    }
+    ok(res, payload);
   } catch (error) {
     console.error('[Get User Error]', error);
     fail(res, 500, '查询失败');
+  }
+});
+
+/* ========== 管理员 RBAC ========== */
+app.get('/api/admin/rbac/me', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return fail(res, 403, '需要管理员权限');
+  }
+  ok(res, {
+    isSuperAdmin: adminRbac.isSuperAdminPhone(req.user.phone),
+    modules: adminRbac.getEffectiveModules(db, req.user.phone),
+    catalog: adminRbac.getCatalog()
+  });
+});
+
+app.get('/api/admin/rbac/staff', requireAdminModule('permissions'), (req, res) => {
+  try {
+    const phones = auth.listConfiguredAdminPhones();
+    const rows = phones.map((phone) => {
+      const isSuper = adminRbac.isSuperAdminPhone(phone);
+      const modules = adminRbac.getEffectiveModules(db, phone);
+      const stored = db.getAdminStaffPermissions(phone);
+      return {
+        phone,
+        isSuperAdmin: isSuper,
+        modules,
+        updatedAt: stored && stored.updatedAt ? stored.updatedAt : '',
+        updatedBy: stored && stored.updatedBy ? stored.updatedBy : ''
+      };
+    });
+    ok(res, { staff: rows, catalog: adminRbac.getCatalog() });
+  } catch (error) {
+    console.error('[Admin RBAC List Error]', error);
+    fail(res, 500, '查询权限配置失败');
+  }
+});
+
+app.patch('/api/admin/rbac/staff/:phone', requireAdminModule('permissions'), (req, res) => {
+  try {
+    const targetPhone = String(req.params.phone || '').trim();
+    if (!targetPhone) {
+      return fail(res, 400, '手机号无效');
+    }
+    if (!auth.isAdminPhone(targetPhone)) {
+      return fail(res, 400, '该手机号不在管理员白名单中，请先在环境变量 ADMIN_PHONES 中配置');
+    }
+    if (adminRbac.isSuperAdminPhone(targetPhone)) {
+      return fail(res, 400, '最高管理权限账号的模块不可修改');
+    }
+    const modules = (req.body && req.body.modules) || [];
+    const record = db.setAdminStaffPermissions(targetPhone, modules, {
+      updatedBy: req.user.phone
+    });
+    ok(res, {
+      phone: record.phone,
+      modules: record.modules,
+      updatedAt: record.updatedAt,
+      updatedBy: record.updatedBy
+    });
+  } catch (error) {
+    console.error('[Admin RBAC Patch Error]', error);
+    fail(res, 500, '保存权限失败');
   }
 });
 
@@ -1063,7 +1152,7 @@ app.post('/api/pay/wechat/mock-confirm', requireAuth, (req, res) => {
   }
 });
 
-app.get('/api/pay/orders', requireAdmin, (req, res) => {
+app.get('/api/pay/orders', requireAdminModule('payments'), (req, res) => {
   try {
     const orders = db.listPayOrders(req.query || {});
     ok(res, { orders, total: orders.length });
@@ -1073,7 +1162,7 @@ app.get('/api/pay/orders', requireAdmin, (req, res) => {
   }
 });
 
-app.post('/api/pay/orders/:outTradeNo/refund', requireAdmin, async (req, res) => {
+app.post('/api/pay/orders/:outTradeNo/refund', requireAdminModule('payments'), async (req, res) => {
   try {
     const { outTradeNo } = req.params;
     const body = req.body || {};
@@ -1157,6 +1246,7 @@ app.get('/api/mentors', requireAuth, (req, res) => {
   
   // 管理员可以看所有导师完整信息
   if (req.user.role === 'admin') {
+    if (denyAdminResource(req, res, 'mentors')) return;
     ok(res, db.getMentors());
   } else if (req.user.role === 'parent') {
     // 家长可以看已审核的导师列表，但只返回公开信息（不含手机号等敏感字段）
@@ -1177,6 +1267,7 @@ app.post('/api/mentors', requireAuth, (req, res) => {
   if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
     return fail(res, 403, '无权限');
   }
+  if (req.user.role === 'admin' && denyAdminModule(req, res, 'mentors')) return;
   const body = Object.assign({}, req.body || {});
   if (req.user.role !== 'admin') {
     body.id = req.user.userId;
@@ -1200,6 +1291,7 @@ app.get('/api/mentors/phone/:phone', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') {
     return fail(res, 403, '无权限');
   }
+  if (denyAdminModule(req, res, 'mentors')) return;
   
   const m = db.getMentorByPhone(req.params.phone);
   if (!m) return fail(res, 404, 'mentor not found');
@@ -1241,7 +1333,10 @@ app.patch('/api/mentors/:id', requireAuth, (req, res) => {
   delete patch._options;
   delete patch.id;
 
-  if (req.user.role !== 'admin') {
+  if (req.user.role === 'admin') {
+    const mod = adminRbac.mentorPatchRequiredModule(patch);
+    if (denyAdminModule(req, res, mod)) return;
+  } else {
     MENTOR_PRIVILEGED_PATCH_KEYS.forEach((k) => {
       delete patch[k];
     });
@@ -1269,6 +1364,7 @@ app.get('/api/parents', requireAuth, (req, res) => {
   
   // 只有管理员可以看所有家长
   if (req.user.role === 'admin') {
+    if (denyAdminResource(req, res, 'parents')) return;
     ok(res, db.getParents());
   } else if (req.user.role === 'parent') {
     // 家长只能看自己
@@ -1297,7 +1393,8 @@ app.get('/api/parents/phone/:phone', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') {
     return fail(res, 403, '无权限');
   }
-  
+  if (denyAdminModule(req, res, 'parents')) return;
+
   const p = db.getParentByPhone(req.params.phone);
   if (!p) return fail(res, 404, 'parent not found');
   ok(res, p);
@@ -1311,6 +1408,7 @@ app.get('/api/bookings', requireAuth, (req, res) => {
   
   // 根据角色过滤预约
   if (req.user.role === 'admin') {
+    if (denyAdminResource(req, res, 'bookings')) return;
     ok(res, allBookings);
   } else if (req.user.role === 'parent') {
     // 家长只能看自己的预约
@@ -1396,6 +1494,7 @@ app.patch('/api/bookings/:id', requireAuth, (req, res) => {
     }
   }
   
+  if (req.user.role === 'admin' && denyAdminModule(req, res, 'bookings')) return;
   const trust = req.user.role === 'admin' ? 'admin' : null;
   const updated = db.updateBooking(req.params.id, req.body || {}, {
     trust,
@@ -1680,7 +1779,8 @@ app.post('/api/bookings/process-escrow', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') {
     return fail(res, 403, '需要管理员权限');
   }
-  
+  if (denyAdminModule(req, res, 'bookings')) return;
+
   ok(res, db.processEscrowReleases());
 });
 
@@ -1689,6 +1789,7 @@ app.get('/api/feedback', requireAuth, (req, res) => {
   try {
     let tickets = db.getFeedbackTickets();
     if (req.user.role === 'admin') {
+      if (denyAdminResource(req, res, 'feedback')) return;
       return ok(res, tickets);
     }
     if (req.user.role === 'mentor') {
@@ -1753,7 +1854,7 @@ app.post('/api/feedback', requireAuth, (req, res) => {
   }
 });
 
-app.patch('/api/feedback/:id', requireAdmin, (req, res) => {
+app.patch('/api/feedback/:id', requireAdminModule('feedback'), (req, res) => {
   try {
     const updated = db.updateFeedbackTicket(req.params.id, req.body || {});
     if (!updated) return fail(res, 404, '反馈不存在');
@@ -1810,7 +1911,10 @@ function mentorOwnsProof(mentor, storedName) {
 
 function canAccessProof(user, storedName, meta) {
   if (!user) return false;
-  if (user.role === 'admin') return true;
+  if (user.role === 'admin') {
+    if (!user.phone) return true;
+    return adminRbac.hasAnyModule(db, user.phone, ['audit', 'mentors']);
+  }
   if (meta && meta.ownerId && meta.ownerId === user.userId) return true;
   if (user.role === 'mentor') {
     const mentor = db.getMentorById(user.userId) || db.getMentorByPhone(user.phone);
@@ -1847,6 +1951,7 @@ app.post(
       if (req.user.role !== 'mentor' && req.user.role !== 'admin') {
         return fail(res, 403, '仅导师或管理员可上传佐证材料');
       }
+      if (req.user.role === 'admin' && denyAdminModule(req, res, 'audit')) return;
       const contentType = req.headers['content-type'] || '';
       if (!contentType.toLowerCase().includes('multipart/form-data')) {
         return fail(res, 400, '请使用 multipart 上传文件');
@@ -1870,12 +1975,12 @@ app.get('/api/teaching-points', requireAuth, (req, res) => {
   ok(res, db.getTeachingPoints());
 });
 
-app.get('/api/admin/teaching-points', requireAdmin, (req, res) => {
+app.get('/api/admin/teaching-points', requireAdminModule('teaching-points'), (req, res) => {
   db.seedIfEmpty();
   ok(res, db.getTeachingPoints());
 });
 
-app.patch('/api/admin/teaching-points/:id', requireAdmin, (req, res) => {
+app.patch('/api/admin/teaching-points/:id', requireAdminModule('teaching-points'), (req, res) => {
   db.seedIfEmpty();
   const body = req.body || {};
   const boothCount = body.boothCount != null ? body.boothCount : body.booth_count;
@@ -1891,7 +1996,7 @@ app.patch('/api/admin/teaching-points/:id', requireAdmin, (req, res) => {
   ok(res, result.teachingPoint);
 });
 
-app.get('/api/admin/teaching-points/:id/occupancy', requireAdmin, (req, res) => {
+app.get('/api/admin/teaching-points/:id/occupancy', requireAdminModule('teaching-points'), (req, res) => {
   db.seedIfEmpty();
   const result = db.getTeachingPointOccupancy(req.params.id, {
     date: req.query.date,
@@ -1908,11 +2013,11 @@ app.get('/api/feature-flags', (req, res) => {
   ok(res, db.getPublicFeatureFlags());
 });
 
-app.get('/api/admin/feature-flags', requireAdmin, (req, res) => {
+app.get('/api/admin/feature-flags', requireAdminModule('system'), (req, res) => {
   ok(res, db.getFeatureFlags());
 });
 
-app.patch('/api/admin/feature-flags', requireAdmin, (req, res) => {
+app.patch('/api/admin/feature-flags', requireAdminModule('system'), (req, res) => {
   try {
     const flags = db.updateFeatureFlags(req.body || {});
     ok(res, flags);
@@ -1950,6 +2055,7 @@ app.get('/api/assessments', requireAuth, (req, res) => {
   
   // 根据角色过滤
   if (req.user.role === 'admin') {
+    if (denyAdminResource(req, res, 'assessments')) return;
     ok(res, allAssessments);
   } else if (req.user.role === 'parent') {
     // 家长只能看自己的测评
@@ -1993,6 +2099,7 @@ app.get('/api/contracts', requireAuth, (req, res) => {
   const all = db.getContracts();
 
   if (req.user.role === 'admin') {
+    if (denyAdminResource(req, res, 'contracts')) return;
     return ok(res, all);
   }
 
@@ -2029,6 +2136,7 @@ app.post('/api/contracts', requireAuth, (req, res) => {
   const body = req.body || {};
 
   if (req.user.role === 'admin') {
+    if (denyAdminModule(req, res, 'contracts')) return;
     return ok(res, db.saveContract(body));
   }
 
