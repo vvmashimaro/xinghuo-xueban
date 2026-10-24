@@ -11,6 +11,32 @@
     supplement: '待补材料'
   };
 
+  const MENTOR_EVAL_GRADES = [
+    '待教研评级',
+    'V1 级标准导师',
+    'V2 级金牌导师',
+    'V3 级首席导师',
+    '待复评',
+    '不予评级'
+  ];
+
+  const RUBRIC_DIMENSIONS = [
+    { key: 'credential', label: '资质与合规' },
+    { key: 'demo', label: '试讲与授课表现' },
+    { key: 'subject', label: '学科专业度' },
+    { key: 'communication', label: '沟通与服务意识' },
+    { key: 'safety', label: '安全与履约风险' }
+  ];
+
+  const BOOKING_STATUS_ZH = {
+    pending_accept: '待导师接单',
+    accepted: '已接单',
+    declined: '已拒绝',
+    cancelled: '已取消',
+    escrow_locked: '托管锁定',
+    completed: '已完成'
+  };
+
   let state = {
     route: 'dashboard',
     mentors: [],
@@ -31,7 +57,8 @@
     tpOccupancyDate: '',
     tpOccupancyTpId: '',
     tpOccupancy: null,
-    adminLabel: '管理员'
+    adminLabel: '管理员',
+    bookingDetailId: null
   };
 
   function todayIso() {
@@ -203,6 +230,7 @@
     else if (r === 'system') main.innerHTML = renderSystem();
     else main.innerHTML = '<p class="text-slate-500">页面不存在</p>';
     bindMainHandlers();
+    syncBookingDetailModal();
   }
 
   function renderDashboard() {
@@ -224,15 +252,17 @@
           recentBk
             .map(
               (b) =>
-                '<li class="flex justify-between gap-2 border-b border-slate-100 pb-2">' +
-                '<span>' +
+                '<li><button type="button" data-open-booking="' +
+                esc(b.id) +
+                '" class="w-full text-left flex justify-between gap-2 border-b border-slate-100 pb-2 hover:bg-slate-50 rounded-lg px-1 -mx-1 transition">' +
+                '<span class="text-teal-800 font-medium">' +
                 esc(b.id) +
                 ' · ' +
                 esc(b.subject) +
-                '</span><span class="text-slate-500">' +
-                esc(b.status) +
+                '</span><span class="text-slate-500 shrink-0">' +
+                esc(bookingStatusLabel(b.status)) +
                 (b.hasTimeConflict ? ' · <span class="text-amber-700">冲突</span>' : '') +
-                '</span></li>'
+                '</span></button></li>'
             )
             .join('') +
           '</ul>'
@@ -267,8 +297,10 @@
           '" class="w-full text-left px-3 py-2 rounded-xl border text-sm ' +
           (active ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:bg-slate-50') +
           '">' +
-          '<div class="font-bold">' +
+          '<div class="font-bold flex flex-wrap items-center gap-1">' +
           esc(m.realName) +
+          ' ' +
+          mentorGradeBadge(m.evalGrade) +
           '</div><div class="text-xs text-slate-500">' +
           esc(STATUS_LABEL[m.status] || m.status) +
           ' · ' +
@@ -292,6 +324,24 @@
         row('时薪', '¥' + sel.hourlyRate) +
         row('状态', STATUS_LABEL[sel.status] || sel.status) +
         row('接单', sel.acceptingOrders === false ? '已暂停' : '正常') +
+        row('教研评级', sel.evalGrade || '待教研评级') +
+        '</div>' +
+        '<div class="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/50">' +
+        '<div class="flex flex-wrap items-center justify-between gap-2">' +
+        '<span class="text-sm font-bold text-slate-800">教研定级</span>' +
+        '<a href="../docs/mentor-rating-rubric.md" target="_blank" rel="noopener" class="text-xs text-teal-700 font-medium hover:underline">查看内部量规</a>' +
+        '</div>' +
+        '<div><label class="text-xs text-slate-500">综合等级</label>' +
+        '<select id="auditEvalGrade" class="w-full mt-1 border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white">' +
+        MENTOR_EVAL_GRADES
+          .map((g) => {
+            const on = (sel.evalGrade || '待教研评级') === g;
+            return '<option value="' + esc(g) + '"' + (on ? ' selected' : '') + '>' + esc(g) + '</option>';
+          })
+          .join('') +
+        '</select></div>' +
+        renderRubricNotesFields(sel.evalRubricNotes) +
+        '<button type="button" id="btnSaveMentorRating" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold">保存教研评级</button>' +
         '</div>' +
         '<div><label class="text-xs text-slate-500">审核意见</label>' +
         '<textarea id="auditComment" rows="3" class="w-full mt-1 border border-slate-300 rounded-xl px-3 py-2 text-sm">' +
@@ -340,6 +390,203 @@
     return '<div><span class="text-slate-500">' + esc(k) + '：</span>' + esc(v) + '</div>';
   }
 
+  function bookingStatusLabel(status) {
+    if (!status) return '—';
+    return BOOKING_STATUS_ZH[status] || status;
+  }
+
+  function findBookingById(id) {
+    return state.bookings.find((b) => b.id === id) || null;
+  }
+
+  function resolveParentForBooking(b) {
+    if (!b) return null;
+    return (
+      state.parents.find((p) => p.id === b.parentId) ||
+      state.parents.find((p) => p.phone && b.parentPhone && p.phone === b.parentPhone) ||
+      null
+    );
+  }
+
+  function resolveMentorForBooking(b) {
+    if (!b) return null;
+    const mid = b.mentorId || b.tutorId;
+    return state.mentors.find((m) => m.id === mid) || null;
+  }
+
+  function detailSection(title, innerHtml) {
+    return (
+      '<section class="border border-slate-200 rounded-xl p-4 space-y-2">' +
+      '<h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">' +
+      esc(title) +
+      '</h3>' +
+      innerHtml +
+      '</section>'
+    );
+  }
+
+  function renderBookingSessionsTable(sessions) {
+    const rows = (sessions || []).map((s) => {
+      return (
+        '<tr class="border-t border-slate-100">' +
+        '<td class="py-2 pr-2 font-mono text-xs">' +
+        esc(s.id || '—') +
+        '</td><td class="py-2 pr-2">' +
+        esc(s.date || s.sessionDate || '—') +
+        '</td><td class="py-2 pr-2">' +
+        esc(s.timeLabel || (s.timeStart && s.timeEnd ? s.timeStart + '-' + s.timeEnd : '—')) +
+        '</td><td class="py-2 pr-2">' +
+        esc(s.status || '—') +
+        '</td><td class="py-2">' +
+        esc(s.escrowStatus || '—') +
+        '</td></tr>'
+      );
+    });
+    if (!rows.length) {
+      return '<p class="text-slate-500 text-xs">无课次记录</p>';
+    }
+    return (
+      '<table class="w-full text-xs"><thead class="text-slate-500"><tr>' +
+      '<th class="text-left pb-1">课次 ID</th><th class="text-left pb-1">日期</th><th class="text-left pb-1">时段</th><th class="text-left pb-1">状态</th><th class="text-left pb-1">托管</th></tr></thead><tbody>' +
+      rows.join('') +
+      '</tbody></table>'
+    );
+  }
+
+  function renderBookingDetailHtml(b) {
+    if (!b) return '<p class="text-slate-500">未找到预约</p>';
+    const parent = resolveParentForBooking(b);
+    const mentor = resolveMentorForBooking(b);
+    const parentPhone = b.parentPhone || (parent && parent.phone) || '—';
+    const parentName = b.parentName || (parent && parent.parentName) || '—';
+    const studentNick = b.studentNickname || (parent && parent.studentNickname) || '—';
+    const studentGrade = b.studentGrade || (parent && parent.studentGrade) || '—';
+    const mentorPhone = (mentor && mentor.phone) || '—';
+    const mentorName = b.tutorName || (mentor && mentor.realName) || '—';
+    const orderBlock =
+      '<div class="grid sm:grid-cols-2 gap-x-4 gap-y-1">' +
+      row('预约 ID', b.id) +
+      row('创建时间', b.createdAt || '—') +
+      row('学科', b.subject) +
+      row('类型', b.type || '—') +
+      row('状态', bookingStatusLabel(b.status)) +
+      row('课时', b.hours != null ? b.hours + ' 小时' : '—') +
+      row('排期', b.schedule || b.timeSlot || '—') +
+      row('教学点', b.space || '—') +
+      row('仓位', b.boothLabel || '—') +
+      row('金额', b.amount != null ? '¥' + b.amount : '—') +
+      row('支付', b.paymentStatus || '—') +
+      row('托管', b.escrowStatus || '—') +
+      (b.hasTimeConflict
+        ? '<div class="sm:col-span-2 text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs">' +
+          esc(b.timeConflictNote || '存在时间冲突') +
+          (b.timeConflictForced ? '（家长强制约课）' : '') +
+          '</div>'
+        : '') +
+      (b.declineReason ? '<div class="sm:col-span-2">' + row('拒单原因', b.declineReason) + '</div>' : '') +
+      '</div>';
+    const studentBlock =
+      '<div class="grid sm:grid-cols-2 gap-x-4 gap-y-1">' +
+      row('学员昵称', studentNick) +
+      row('年级', studentGrade) +
+      row('家长姓名', parentName) +
+      row('家长手机', parentPhone) +
+      (parent && parent.id ? row('家长 ID', parent.id) : '') +
+      '</div>';
+    const mentorBlock =
+      '<div class="grid sm:grid-cols-2 gap-x-4 gap-y-1">' +
+      row('导师姓名', mentorName) +
+      row('导师手机', mentorPhone) +
+      row('导师 ID', b.mentorId || b.tutorId || '—') +
+      (mentor ? row('院校', mentor.university || '—') + row('教研评级', mentor.evalGrade || '—') : '') +
+      '</div>';
+    return (
+      '<div class="space-y-4">' +
+      '<p class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">管理员可见：含学员/导师联系方式，请勿外泄。</p>' +
+      detailSection('订单信息', orderBlock) +
+      detailSection('学员与家长', studentBlock) +
+      detailSection('导师', mentorBlock) +
+      detailSection('课次明细', renderBookingSessionsTable(b.sessions)) +
+      '</div>'
+    );
+  }
+
+  function openBookingDetail(bookingId) {
+    state.bookingDetailId = bookingId;
+    syncBookingDetailModal();
+  }
+
+  function closeBookingDetail() {
+    state.bookingDetailId = null;
+    syncBookingDetailModal();
+  }
+
+  function syncBookingDetailModal() {
+    const modal = document.getElementById('bookingDetailModal');
+    const body = document.getElementById('bookingDetailBody');
+    if (!modal || !body) return;
+    if (!state.bookingDetailId) {
+      modal.classList.add('hidden');
+      body.innerHTML = '';
+      return;
+    }
+    const b = findBookingById(state.bookingDetailId);
+    body.innerHTML = renderBookingDetailHtml(b);
+    modal.classList.remove('hidden');
+  }
+
+  function bindBookingDetailModalHandlers() {
+    const backdrop = document.getElementById('bookingDetailBackdrop');
+    const closeBtn = document.getElementById('bookingDetailClose');
+    if (backdrop && !backdrop._bound) {
+      backdrop._bound = true;
+      backdrop.addEventListener('click', () => closeBookingDetail());
+    }
+    if (closeBtn && !closeBtn._bound) {
+      closeBtn._bound = true;
+      closeBtn.addEventListener('click', () => closeBookingDetail());
+    }
+    if (!document._bookingDetailEscBound) {
+      document._bookingDetailEscBound = true;
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && state.bookingDetailId) closeBookingDetail();
+      });
+    }
+  }
+
+  function mentorGradeBadge(grade) {
+    const g = grade || '待教研评级';
+    const tone =
+      g.indexOf('V3') >= 0
+        ? 'bg-violet-100 text-violet-800'
+        : g.indexOf('V2') >= 0
+          ? 'bg-amber-100 text-amber-900'
+          : g.indexOf('V1') >= 0
+            ? 'bg-teal-100 text-teal-800'
+            : g === '不予评级'
+              ? 'bg-rose-100 text-rose-800'
+              : 'bg-slate-100 text-slate-600';
+    return '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + tone + '">' + esc(g) + '</span>';
+  }
+
+  function renderRubricNotesFields(notes) {
+    const n = notes && typeof notes === 'object' ? notes : {};
+    return RUBRIC_DIMENSIONS
+      .map((d) => {
+        return (
+          '<div><label class="text-xs text-slate-500">' +
+          esc(d.label) +
+          '</label>' +
+          '<textarea data-rubric-dim="' +
+          esc(d.key) +
+          '" rows="2" class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-xs" placeholder="内部备注（对照 docs/mentor-rating-rubric.md）">' +
+          esc(n[d.key] || '') +
+          '</textarea></div>'
+        );
+      })
+      .join('');
+  }
+
   function renderParents() {
     const q = document.getElementById('parentSearch');
     const needle = (q && q.value) || '';
@@ -385,7 +632,7 @@
       '<div class="space-y-4"><h1 class="text-xl font-semibold">导师用户</h1>' +
       subjectFilterBarHtml() +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
+      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">评级</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
       state.mentors
         .filter((m) => {
           const tag = state.subjectTagFilter;
@@ -403,6 +650,8 @@
             esc((m.subjects || []).join('、')) +
             '">' +
             esc((m.subjects || []).slice(0, 3).join('、') || '—') +
+            '</td><td class="p-3">' +
+            esc(m.evalGrade || '待教研评级') +
             '</td><td class="p-3">' +
             esc(STATUS_LABEL[m.status] || m.status) +
             '</td><td class="p-3">' +
@@ -455,9 +704,11 @@
         ? list
             .map(
               (b) =>
-                '<tr class="border-t border-slate-100' +
+                '<tr class="border-t border-slate-100 cursor-pointer hover:bg-slate-50' +
                 (b.hasTimeConflict ? ' bg-amber-50/40' : '') +
-                '"><td class="p-3 font-mono text-xs">' +
+                '" data-open-booking="' +
+                esc(b.id) +
+                '" role="button" tabindex="0"><td class="p-3 font-mono text-xs text-teal-800 font-medium">' +
                 esc(b.id) +
                 '</td><td class="p-3">' +
                 esc(b.subject) +
@@ -474,7 +725,7 @@
                     '</div>'
                   : '—') +
                 '</td><td class="p-3">' +
-                esc(b.status) +
+                esc(bookingStatusLabel(b.status)) +
                 '</td><td class="p-3">' +
                 esc(b.paymentStatus || '—') +
                 '</td><td class="p-3">' +
@@ -801,13 +1052,46 @@
     renderMain();
   }
 
+  function collectEvalRubricNotes() {
+    const notes = {};
+    document.querySelectorAll('[data-rubric-dim]').forEach((el) => {
+      const key = el.getAttribute('data-rubric-dim');
+      if (!key) return;
+      const val = (el.value || '').trim();
+      if (val) notes[key] = val;
+    });
+    return notes;
+  }
+
+  async function saveMentorRating() {
+    const sel = state.mentors.find((m) => m.id === state.selectedMentorId);
+    if (!sel) return;
+    const gradeEl = document.getElementById('auditEvalGrade');
+    const evalGrade = (gradeEl && gradeEl.value) || sel.evalGrade || '待教研评级';
+    const evalRubricNotes = collectEvalRubricNotes();
+    await StorageService.updateMentor(sel.id, { evalGrade, evalRubricNotes });
+    await reloadCore();
+    toast('教研评级已保存');
+    renderMain();
+  }
+
   async function applyAudit(status) {
     const sel = state.mentors.find((m) => m.id === state.selectedMentorId);
     if (!sel) return;
     const comment = (document.getElementById('auditComment') || {}).value || '';
-    const patch = { status, reviewComment: comment };
-    if (status === 'approved' && (!sel.evalGrade || sel.evalGrade === '待教研评级')) {
-      patch.evalGrade = 'V2 级金牌导师';
+    const gradeEl = document.getElementById('auditEvalGrade');
+    let evalGrade = (gradeEl && gradeEl.value) || sel.evalGrade;
+    const evalRubricNotes = collectEvalRubricNotes();
+    const patch = { status, reviewComment: comment, evalRubricNotes };
+    if (status === 'approved') {
+      if (!evalGrade || evalGrade === '待教研评级') evalGrade = 'V2 级金牌导师';
+      patch.evalGrade = evalGrade;
+    } else if (status === 'supplement') {
+      patch.evalGrade = evalGrade && evalGrade !== '待教研评级' ? evalGrade : '待复评';
+    } else if (status === 'rejected') {
+      patch.evalGrade = evalGrade === '待教研评级' || !evalGrade ? '不予评级' : evalGrade;
+    } else if (evalGrade) {
+      patch.evalGrade = evalGrade;
     }
     await StorageService.updateMentor(sel.id, patch);
     await reloadCore();
@@ -816,6 +1100,23 @@
   }
 
   function bindMainHandlers() {
+    bindBookingDetailModalHandlers();
+    document.querySelectorAll('[data-open-booking]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        openBookingDetail(el.getAttribute('data-open-booking'));
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openBookingDetail(el.getAttribute('data-open-booking'));
+        }
+      });
+    });
+    const saveRating = document.getElementById('btnSaveMentorRating');
+    if (saveRating) {
+      saveRating.addEventListener('click', () => saveMentorRating());
+    }
     document.querySelectorAll('[data-nav-main]').forEach(() => {});
     document.querySelectorAll('[data-pick-mentor]').forEach((btn) => {
       btn.addEventListener('click', () => {
