@@ -690,6 +690,7 @@ const refundLocks = new Set();
 const MENTOR_PRIVILEGED_PATCH_KEYS = [
   'status',
   'evalGrade',
+  'evalRubricNotes',
   'reviewComment',
   'code',
   'phone',
@@ -1185,6 +1186,7 @@ app.post('/api/mentors', requireAuth, (req, res) => {
     });
     delete body.status;
     delete body.evalGrade;
+    delete body.evalRubricNotes;
     delete body.reviewComment;
     delete body.code;
     delete body.sensitiveChangePending;
