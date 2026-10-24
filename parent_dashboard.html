@@ -84,10 +84,6 @@
           </div>
           <div class="min-w-0">
             <div class="text-xs text-slate-500 font-medium leading-none truncate" id="headerEscrowLabel">资金保障 · 一课一消</div>
-            <div class="text-xs font-black text-slate-900 mt-0.5">
-              <span id="headerEscrowFrozenWrap" class="hidden text-amber-700 font-mono">课次冻结 ¥<span id="headerEscrowFrozen">0.00</span></span>
-              <span id="headerEscrowEmpty" class="text-xs font-medium text-slate-500">暂无冻结课款</span>
-            </div>
           </div>
         </div>
 
@@ -313,10 +309,6 @@
           我的账户 · 资金保障
         </h2>
         <p class="text-xs text-slate-500">一课一消托管；开课前 2 小时外撤销将原路退回微信支付账户。</p>
-        <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs">
-          <div class="text-xs text-slate-500">当前冻结课款</div>
-          <div class="text-lg font-black text-amber-700 font-mono mt-1" id="accountWalletFrozen">暂无冻结课款</div>
-        </div>
         <div class="grid sm:grid-cols-2 gap-2 pt-1">
           <button type="button" onclick="openPassportDrawer()" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-2.5 rounded-xl cursor-pointer text-left">
             <i class="fa-solid fa-passport mr-1.5"></i>查阅学情护照
@@ -2880,28 +2872,11 @@
     }
 
     function refreshParentWalletHeader() {
-      const accountEl = document.getElementById('accountWalletFrozen');
       const parent = CURRENT_PARENT || (window.StorageService && StorageService.getCurrentParent());
       if (!parent || !window.StorageService || !StorageService.getParentWalletSummary) return;
       const summary = StorageService.getParentWalletSummary(parent);
       const labelEl = document.getElementById('headerEscrowLabel');
       if (labelEl && summary.label) labelEl.textContent = summary.label;
-      const frozenWrap = document.getElementById('headerEscrowFrozenWrap');
-      const frozenAmt = document.getElementById('headerEscrowFrozen');
-      const emptyEl = document.getElementById('headerEscrowEmpty');
-      if (summary.hasFrozen) {
-        if (frozenWrap) frozenWrap.classList.remove('hidden');
-        if (emptyEl) emptyEl.classList.add('hidden');
-        if (frozenAmt) frozenAmt.textContent = Number(summary.frozenYuan || 0).toFixed(2);
-      } else {
-        if (frozenWrap) frozenWrap.classList.add('hidden');
-        if (emptyEl) emptyEl.classList.remove('hidden');
-      }
-      if (accountEl) {
-        accountEl.textContent = summary.hasFrozen
-          ? '课次冻结 ¥' + Number(summary.frozenYuan || 0).toFixed(2)
-          : '暂无冻结课款';
-      }
     }
 
     function openParentFeedbackModal() {

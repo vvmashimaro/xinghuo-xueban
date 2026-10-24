@@ -61,8 +61,6 @@
     <view class="row-between">
       <view>
         <view class="muted">{{walletLabel}}</view>
-        <view class="wallet-bal" wx:if="{{walletHasFrozen}}">课次冻结 ¥{{walletFrozen}}</view>
-        <view class="wallet-bal muted" wx:else style="font-size:26rpx;font-weight:600;">暂无冻结课款</view>
       </view>
       <text class="badge badge-teal">一课一消</text>
     </view>
@@ -176,8 +174,6 @@
     <view class="card wallet-card">
       <view class="card-title" style="margin:0;">我的账户</view>
       <view class="muted" style="margin-top:8rpx;">一课一消托管；开课前 2 小时外撤销将原路退回微信。</view>
-      <view class="wallet-bal" wx:if="{{walletHasFrozen}}" style="margin-top:12rpx;">课次冻结 ¥{{walletFrozen}}</view>
-      <view class="muted" wx:else style="margin-top:12rpx;">暂无冻结课款</view>
     </view>
     <view class="card">
       <view class="settings-item" data-url="/pages/parent-settings-passport/parent-settings-passport" bindtap="goSettingsPage">
