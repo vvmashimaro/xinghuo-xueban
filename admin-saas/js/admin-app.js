@@ -70,8 +70,55 @@
     },
     selectedAssessmentId: null,
     assessmentDetail: null,
-    bookingDetailId: null
+    bookingDetailId: null,
+    adminRbac: { modules: [], isSuperAdmin: false, catalog: [] },
+    rbacStaff: [],
+    rbacDraft: {}
   };
+
+  function hasAdminModule(key) {
+    if (state.adminRbac && state.adminRbac.isSuperAdmin) return true;
+    const mods = (state.adminRbac && state.adminRbac.modules) || [];
+    return mods.indexOf(key) >= 0;
+  }
+
+  function firstAllowedRoute() {
+    const order = [
+      'dashboard',
+      'audit',
+      'payments',
+      'feedback',
+      'bookings',
+      'parents',
+      'mentors',
+      'contracts',
+      'assessments',
+      'teaching-points',
+      'system',
+      'permissions'
+    ];
+    for (let i = 0; i < order.length; i += 1) {
+      if (hasAdminModule(order[i])) return order[i];
+    }
+    return '';
+  }
+
+  function applyNavPermissions() {
+    document.querySelectorAll('[data-nav]').forEach((el) => {
+      const key = el.getAttribute('data-nav');
+      const allowed = hasAdminModule(key);
+      el.classList.toggle('hidden', !allowed);
+    });
+    document.querySelectorAll('.admin-nav-group').forEach((group) => {
+      let visible = false;
+      let sib = group.nextElementSibling;
+      while (sib && !sib.classList.contains('admin-nav-group')) {
+        if (sib.matches('[data-nav]') && !sib.classList.contains('hidden')) visible = true;
+        sib = sib.nextElementSibling;
+      }
+      group.classList.toggle('hidden', !visible);
+    });
+  }
 
   function todayIso() {
     const d = new Date();
@@ -209,31 +256,115 @@
     }
     state.adminLabel = me.phone || '管理员';
     document.getElementById('adminUserLabel').textContent = state.adminLabel;
+    if (me.adminRbac) {
+      state.adminRbac = me.adminRbac;
+    } else {
+      try {
+        state.adminRbac = await AdminApi.getAdminRbacMe();
+      } catch (e) {
+        state.adminRbac = { modules: [], isSuperAdmin: false, catalog: [] };
+      }
+    }
+    applyNavPermissions();
     return true;
   }
 
   async function reloadCore() {
-    await StorageService.hydrateFromServer();
-    state.mentors = StorageService.getMentors();
-    state.parents = StorageService.getParents();
-    state.bookings = StorageService.getBookings();
-    state.contracts = StorageService.getContracts ? StorageService.getContracts() : [];
-    state.assessments = StorageService.getAssessments ? StorageService.getAssessments() : [];
-    state.feedback = StorageService.getFeedbackTickets ? StorageService.getFeedbackTickets() : [];
-    try {
-      const flagRes = await AdminApi.getFeatureFlags();
-      state.flags = flagRes || {};
-    } catch (e) {
-      state.flags = { FEATURE_SMART_WAREHOUSE: false };
+    if (hasAdminModule('dashboard') || hasAdminModule('audit') || hasAdminModule('mentors')) {
+      try {
+        const mentors = await AdminApi.get('/api/mentors');
+        if (Array.isArray(mentors) && window.localStorage) {
+          localStorage.setItem('xh_mentors_v1', JSON.stringify(mentors));
+        }
+        state.mentors = Array.isArray(mentors) ? mentors : StorageService.getMentors();
+      } catch (e) {
+        state.mentors = StorageService.getMentors();
+      }
+    } else {
+      state.mentors = [];
+    }
+    if (hasAdminModule('parents')) {
+      try {
+        const parents = await AdminApi.get('/api/parents');
+        state.parents = Array.isArray(parents) ? parents : [];
+      } catch (e) {
+        state.parents = [];
+      }
+    } else {
+      state.parents = [];
+    }
+    if (hasAdminModule('dashboard') || hasAdminModule('bookings')) {
+      try {
+        const bookings = await AdminApi.get('/api/bookings');
+        state.bookings = Array.isArray(bookings) ? bookings : [];
+      } catch (e) {
+        state.bookings = [];
+      }
+    } else {
+      state.bookings = [];
+    }
+    if (hasAdminModule('contracts')) {
+      try {
+        const contracts = await AdminApi.get('/api/contracts');
+        state.contracts = Array.isArray(contracts) ? contracts : [];
+      } catch (e) {
+        state.contracts = [];
+      }
+    } else {
+      state.contracts = [];
+    }
+    if (hasAdminModule('assessments')) {
+      try {
+        const assessments = await AdminApi.get('/api/assessments');
+        state.assessments = Array.isArray(assessments) ? assessments : [];
+      } catch (e) {
+        state.assessments = [];
+      }
+    } else {
+      state.assessments = [];
+    }
+    if (hasAdminModule('dashboard') || hasAdminModule('feedback')) {
+      try {
+        const feedback = await AdminApi.listFeedback();
+        state.feedback = Array.isArray(feedback) ? feedback : [];
+      } catch (e) {
+        state.feedback = [];
+      }
+    } else {
+      state.feedback = [];
+    }
+    if (hasAdminModule('payments')) {
+      try {
+        const payRes = await AdminApi.listPayOrders({});
+        state.payOrders = (payRes && payRes.orders) || payRes || [];
+      } catch (e) {
+        state.payOrders = [];
+      }
+    } else {
+      state.payOrders = [];
     }
     try {
       state.subjectCatalog = await AdminApi.getSubjectCatalog();
     } catch (e) {
       state.subjectCatalog = null;
     }
-    try {
-      state.teachingPoints = normalizeTeachingPoints(await AdminApi.listTeachingPoints());
-    } catch (e) {
+    if (hasAdminModule('system')) {
+      try {
+        const flagRes = await AdminApi.getFeatureFlags();
+        state.flags = flagRes || {};
+      } catch (e) {
+        state.flags = { FEATURE_SMART_WAREHOUSE: false };
+      }
+    } else {
+      state.flags = { FEATURE_SMART_WAREHOUSE: false };
+    }
+    if (hasAdminModule('teaching-points')) {
+      try {
+        state.teachingPoints = normalizeTeachingPoints(await AdminApi.listTeachingPoints());
+      } catch (e) {
+        state.teachingPoints = [];
+      }
+    } else {
       state.teachingPoints = [];
     }
     if (!state.tpOccupancyDate) state.tpOccupancyDate = todayIso();
@@ -242,9 +373,43 @@
     }
   }
 
+  function renderNoModuleAccess() {
+    const main = document.getElementById('adminMain');
+    if (!main) return;
+    main.innerHTML =
+      '<div class="max-w-lg space-y-3">' +
+      '<h1 class="text-xl font-semibold text-slate-900">暂无可用模块</h1>' +
+      '<p class="text-sm text-slate-600">您的管理员账号尚未开通任何运营模块。请联系最高管理权限账号（13540012341）在「权限设置」中勾选授权。</p>' +
+      '</div>';
+  }
+
+  async function loadRbacStaff() {
+    const res = await AdminApi.listAdminRbacStaff();
+    state.rbacStaff = res.staff || [];
+    state.rbacDraft = {};
+    state.rbacStaff.forEach((row) => {
+      state.rbacDraft[row.phone] = (row.modules || []).slice();
+    });
+    if (res.catalog && res.catalog.length) {
+      state.adminRbac.catalog = res.catalog;
+    }
+  }
+
   function setRoute(route) {
-    state.route = route || 'dashboard';
-    if (route === 'audit' && !state.selectedMentorId) {
+    let next = route || 'dashboard';
+    if (next && !hasAdminModule(next)) {
+      const fallback = firstAllowedRoute();
+      if (!fallback) {
+        state.route = '';
+        applyNavPermissions();
+        renderNoModuleAccess();
+        return;
+      }
+      next = fallback;
+      toast('当前账号无权访问该模块', 'warn');
+    }
+    state.route = next;
+    if (next === 'audit' && !state.selectedMentorId) {
       const pending = state.mentors.find((m) => m.status === 'pending');
       if (pending) state.selectedMentorId = pending.id;
     }
@@ -255,6 +420,15 @@
       el.classList.toggle('text-white', on);
       el.classList.toggle('text-slate-300', !on);
     });
+    if (state.route === 'permissions') {
+      loadRbacStaff()
+        .then(() => renderMain())
+        .catch((e) => {
+          toast(e.message || '加载权限配置失败', 'error');
+          renderMain();
+        });
+      return;
+    }
     renderMain();
   }
 
@@ -273,6 +447,7 @@
     else if (r === 'payments') main.innerHTML = renderPayments();
     else if (r === 'feedback') main.innerHTML = renderFeedback();
     else if (r === 'system') main.innerHTML = renderSystem();
+    else if (r === 'permissions') main.innerHTML = renderPermissions();
     else main.innerHTML = '<p class="text-slate-500">页面不存在</p>';
     bindMainHandlers();
     syncBookingDetailModal();
@@ -1354,6 +1529,71 @@
     );
   }
 
+  function renderPermissions() {
+    const catalog = state.adminRbac.catalog || [];
+    const byGroup = {};
+    catalog.forEach((item) => {
+      const g = item.group || '其他';
+      if (!byGroup[g]) byGroup[g] = [];
+      byGroup[g].push(item);
+    });
+    const staffRows = (state.rbacStaff || [])
+      .map((row) => {
+        const draft = state.rbacDraft[row.phone] || row.modules || [];
+        const disabled = row.isSuperAdmin ? 'disabled' : '';
+        const checks = catalog
+          .map((mod) => {
+            const on = draft.indexOf(mod.key) >= 0 || row.isSuperAdmin;
+            return (
+              '<label class="inline-flex items-center gap-1 text-xs mr-3 mb-1" title="' +
+              esc(mod.label) +
+              '">' +
+              '<input type="checkbox" data-rbac-phone="' +
+              esc(row.phone) +
+              '" data-rbac-mod="' +
+              esc(mod.key) +
+              '" ' +
+              (on ? 'checked' : '') +
+              ' ' +
+              disabled +
+              ' class="rounded"/>' +
+              '<span>' +
+              esc(mod.label) +
+              '</span></label>'
+            );
+          })
+          .join('');
+        return (
+          '<tr class="border-b border-slate-100 align-top">' +
+          '<td class="py-3 pr-4 font-mono text-sm">' +
+          esc(row.phone) +
+          (row.isSuperAdmin ? '<div class="text-xs text-amber-600 font-bold mt-1">最高管理权限</div>' : '') +
+          '</td><td class="py-3">' +
+          checks +
+          '</td><td class="py-3 text-xs text-slate-500 whitespace-nowrap">' +
+          (row.isSuperAdmin
+            ? '不可修改'
+            : '<button type="button" data-rbac-save="' +
+              esc(row.phone) +
+              '" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold">保存</button>') +
+          '</td></tr>'
+        );
+      })
+      .join('');
+    return (
+      '<div class="space-y-4">' +
+      '<h1 class="text-xl font-semibold text-slate-900">权限设置</h1>' +
+      '<p class="text-sm text-slate-600">为白名单内的其他管理员勾选可访问的运营模块。手机号 <span class="font-mono">13540012341</span> 为最高管理权限，始终拥有全部模块且不可被修改。</p>' +
+      '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
+      '<table class="admin-dense w-full text-left"><thead class="bg-slate-50 text-xs text-slate-500 uppercase">' +
+      '<tr><th class="p-3">管理员手机号</th><th class="p-3">模块权限</th><th class="p-3">操作</th></tr></thead><tbody>' +
+      (staffRows || '<tr><td colspan="3" class="p-6 text-slate-500">暂无管理员</td></tr>') +
+      '</tbody></table></div>' +
+      '<p class="text-xs text-slate-500">说明：未在白名单 ENV <code class="bg-slate-100 px-1 rounded">ADMIN_PHONES</code> 中的账号无法登录管理端；新加入白名单的管理员默认无任何模块，需在此授权。</p>' +
+      '</div>'
+    );
+  }
+
   function renderSystem() {
     const wh = !!state.flags.FEATURE_SMART_WAREHOUSE;
     return (
@@ -1623,6 +1863,33 @@
         state.tpOccupancyDate = tpDate.value;
       });
     }
+    document.querySelectorAll('[data-rbac-mod]').forEach((input) => {
+      input.addEventListener('change', () => {
+        const phone = input.getAttribute('data-rbac-phone');
+        const mod = input.getAttribute('data-rbac-mod');
+        if (!phone || !mod) return;
+        const list = (state.rbacDraft[phone] || []).slice();
+        const idx = list.indexOf(mod);
+        if (input.checked && idx < 0) list.push(mod);
+        if (!input.checked && idx >= 0) list.splice(idx, 1);
+        state.rbacDraft[phone] = list;
+      });
+    });
+    document.querySelectorAll('[data-rbac-save]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const phone = btn.getAttribute('data-rbac-save');
+        if (!phone) return;
+        const modules = state.rbacDraft[phone] || [];
+        try {
+          await AdminApi.patchAdminRbacStaff(phone, modules);
+          toast('权限已保存');
+          await loadRbacStaff();
+          renderMain();
+        } catch (e) {
+          toast(e.message || '保存失败', 'error');
+        }
+      });
+    });
   }
 
   async function loadTeachingPointOccupancy() {
@@ -1645,8 +1912,9 @@
     const ok = await ensureAdmin();
     if (!ok) return;
     await reloadCore();
-    const hash = (window.location.hash || '#dashboard').replace('#', '');
-    setRoute(hash || 'dashboard');
+    const hash = (window.location.hash || '').replace('#', '');
+    const initial = hash || firstAllowedRoute() || 'dashboard';
+    setRoute(initial);
     document.querySelectorAll('[data-nav]').forEach((el) => {
       el.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1658,11 +1926,8 @@
       window.location.href = '../login.html';
     });
     window.addEventListener('hashchange', () => {
-      const h = (window.location.hash || '#dashboard').replace('#', '');
-      if (h !== state.route) {
-        state.route = h;
-        renderMain();
-      }
+      const h = (window.location.hash || '').replace('#', '');
+      if (h && h !== state.route) setRoute(h);
     });
   }
 

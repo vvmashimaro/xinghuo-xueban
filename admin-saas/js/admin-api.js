@@ -73,6 +73,10 @@
         '/api/admin/teaching-points/' + encodeURIComponent(id) + '/occupancy' + (qs ? '?' + qs : '')
       );
     },
-    getAssessment: (id) => request('GET', '/api/assessments/' + encodeURIComponent(id))
+    getAssessment: (id) => request('GET', '/api/assessments/' + encodeURIComponent(id)),
+    getAdminRbacMe: () => request('GET', '/api/admin/rbac/me'),
+    listAdminRbacStaff: () => request('GET', '/api/admin/rbac/staff'),
+    patchAdminRbacStaff: (phone, modules) =>
+      request('PATCH', '/api/admin/rbac/staff/' + encodeURIComponent(phone), { modules })
   };
 })(typeof window !== 'undefined' ? window : globalThis);

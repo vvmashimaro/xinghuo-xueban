@@ -762,6 +762,7 @@ function emptySnapshot() {
     users: [],
     phoneAuditLogs: [],
     authTokens: [],
+    adminStaff: [],
     seeded: true
   };
 }
@@ -825,6 +826,7 @@ function load() {
     if (!state.users) state.users = [];
     if (!state.phoneAuditLogs) state.phoneAuditLogs = [];
     if (!state.authTokens) state.authTokens = [];
+    if (!state.adminStaff) state.adminStaff = [];
     if (!state.feedbackTickets) state.feedbackTickets = [];
     if (!state.featureFlags || typeof state.featureFlags !== 'object') {
       state.featureFlags = { FEATURE_SMART_WAREHOUSE: false };
@@ -2083,6 +2085,53 @@ function updateFeedbackTicket(id, patch) {
   return s.feedbackTickets[idx];
 }
 
+/* ---------- Admin staff RBAC ---------- */
+function getAdminStaffList() {
+  const s = getState();
+  if (!s.adminStaff) s.adminStaff = [];
+  return s.adminStaff.slice();
+}
+
+function getAdminStaffPermissions(phone) {
+  const p = String(phone || '').trim();
+  if (!p) return null;
+  const s = getState();
+  if (!s.adminStaff) s.adminStaff = [];
+  return s.adminStaff.find((row) => String(row.phone).trim() === p) || null;
+}
+
+function setAdminStaffPermissions(phone, modules, meta) {
+  const p = String(phone || '').trim();
+  if (!p) return null;
+  const adminRbac = require('./admin-rbac');
+  if (adminRbac.isSuperAdminPhone(p)) {
+    return {
+      phone: p,
+      modules: adminRbac.ALL_MODULE_KEYS.slice(),
+      isSuperAdmin: true,
+      updatedAt: _now(),
+      updatedBy: meta && meta.updatedBy ? meta.updatedBy : ''
+    };
+  }
+  const normalized = adminRbac.normalizeModuleList(modules);
+  const s = getState();
+  if (!s.adminStaff) s.adminStaff = [];
+  const idx = s.adminStaff.findIndex((row) => String(row.phone).trim() === p);
+  const record = {
+    phone: p,
+    modules: normalized,
+    updatedAt: _now(),
+    updatedBy: meta && meta.updatedBy ? String(meta.updatedBy).trim() : ''
+  };
+  if (idx >= 0) {
+    s.adminStaff[idx] = record;
+  } else {
+    s.adminStaff.push(record);
+  }
+  persist();
+  return record;
+}
+
 /* ---------- Feature flags ---------- */
 const DEFAULT_FEATURE_FLAGS = {
   FEATURE_SMART_WAREHOUSE: false
@@ -2586,6 +2635,9 @@ module.exports = {
   getFeatureFlags,
   getPublicFeatureFlags,
   updateFeatureFlags,
+  getAdminStaffList,
+  getAdminStaffPermissions,
+  setAdminStaffPermissions,
   bookingAmountFen: pricing.bookingAmountFen,
   bookingAmountYuan: pricing.bookingAmountYuan,
   isBookingPayable: pricing.isBookingPayable,
