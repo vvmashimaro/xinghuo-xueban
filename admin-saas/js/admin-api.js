@@ -8,9 +8,21 @@
     return (global.XH_CONFIG && global.XH_CONFIG.API_BASE) || 'http://127.0.0.1:8787';
   }
 
+  /** 与 StorageService.setAuthToken 一致：令牌经 JSON.stringify 写入 localStorage */
   function token() {
     try {
-      return localStorage.getItem('xh_auth_token_v1') || '';
+      if (global.StorageService && typeof global.StorageService.getAuthToken === 'function') {
+        const t = global.StorageService.getAuthToken();
+        if (t) return String(t);
+      }
+      const raw = localStorage.getItem('xh_auth_token_v1');
+      if (!raw) return '';
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed == null ? '' : String(parsed);
+      } catch (e) {
+        return String(raw);
+      }
     } catch (e) {
       return '';
     }
@@ -60,6 +72,7 @@
         'GET',
         '/api/admin/teaching-points/' + encodeURIComponent(id) + '/occupancy' + (qs ? '?' + qs : '')
       );
-    }
+    },
+    getAssessment: (id) => request('GET', '/api/assessments/' + encodeURIComponent(id))
   };
 })(typeof window !== 'undefined' ? window : globalThis);

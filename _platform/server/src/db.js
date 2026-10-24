@@ -1891,9 +1891,30 @@ function savePayOrder(order) {
   return record;
 }
 
+function attachPayOrderContext(order) {
+  const base = Object.assign({}, order || {});
+  const booking = base.bookingId
+    ? getBookings().find((b) => b.id === base.bookingId)
+    : null;
+  if (!booking) {
+    return Object.assign(base, {
+      mentorName: base.mentorName || '',
+      studentName: base.studentName || '',
+      parentPhone: base.parentPhone || '',
+      parentName: base.parentName || ''
+    });
+  }
+  return Object.assign(base, {
+    mentorName: booking.tutorName || booking.mentorName || '',
+    studentName: booking.studentNickname || booking.studentName || '',
+    parentPhone: booking.parentPhone || '',
+    parentName: booking.parentName || ''
+  });
+}
+
 function listPayOrders(filters) {
   const q = filters || {};
-  let orders = getPayOrders();
+  let orders = getPayOrders().map(attachPayOrderContext);
   if (q.status) {
     const st = String(q.status).trim();
     orders = orders.filter((o) => String(o.status || '') === st);
@@ -1905,6 +1926,18 @@ function listPayOrders(filters) {
   if (q.bookingId) {
     const bid = String(q.bookingId).trim();
     orders = orders.filter((o) => String(o.bookingId || '') === bid);
+  }
+  if (q.mentorName) {
+    const needle = String(q.mentorName).trim().toLowerCase();
+    orders = orders.filter((o) => String(o.mentorName || '').toLowerCase().indexOf(needle) >= 0);
+  }
+  if (q.studentName) {
+    const needle = String(q.studentName).trim().toLowerCase();
+    orders = orders.filter((o) => String(o.studentName || '').toLowerCase().indexOf(needle) >= 0);
+  }
+  if (q.phone) {
+    const needle = String(q.phone).trim();
+    orders = orders.filter((o) => String(o.parentPhone || '').indexOf(needle) >= 0);
   }
   if (q.from || q.to) {
     const fromMs = q.from ? Date.parse(String(q.from)) : null;
@@ -1918,8 +1951,8 @@ function listPayOrders(filters) {
     });
   }
   orders.sort((a, b) => {
-    const ta = Date.parse(a.createTime || '') || 0;
-    const tb = Date.parse(b.createTime || '') || 0;
+    const ta = Date.parse(a.createTime || a.successTime || '') || 0;
+    const tb = Date.parse(b.createTime || b.successTime || '') || 0;
     return tb - ta;
   });
   const limit = Math.min(500, Math.max(1, parseInt(q.limit, 10) || 100));
@@ -2021,6 +2054,7 @@ function addFeedbackTicket(ticket) {
       createdAt: _now(),
       status: '待处理',
       handlerNote: '',
+      adminReply: '',
       handledAt: '',
       handledBy: ''
     },
@@ -2028,6 +2062,7 @@ function addFeedbackTicket(ticket) {
     {
       status: '待处理',
       handlerNote: '',
+      adminReply: '',
       handledAt: '',
       handledBy: '',
       updatedAt: _now()
@@ -2214,6 +2249,11 @@ function scoreToLevel(score) {
 
 function getAssessments() {
   return (getState().assessments || []).slice();
+}
+
+function getAssessmentById(id) {
+  if (!id) return null;
+  return (getState().assessments || []).find((a) => a.id === id) || null;
 }
 
 function saveAssessment(payload) {
@@ -2553,6 +2593,7 @@ module.exports = {
   setSession,
   matchTutors,
   getAssessments,
+  getAssessmentById,
   saveAssessment,
   normalizeAssessmentSubject,
   scoreToLevel,

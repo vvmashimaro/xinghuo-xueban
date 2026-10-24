@@ -395,6 +395,22 @@
       const score = Math.round((correct / qs.length) * 100);
       const level = StorageService.scoreToLevel(score);
       const parent = CURRENT_PARENT || StorageService.getCurrentParent();
+      const answers = qs.map((item, i) => {
+        const sel = document.querySelector('input[name="q' + i + '"]:checked');
+        const selectedIndex = sel ? parseInt(sel.value, 10) : -1;
+        const selectedText =
+          selectedIndex >= 0 && item.options[selectedIndex] != null ? item.options[selectedIndex] : '';
+        const correctText = item.options[item.a] != null ? item.options[item.a] : '';
+        return {
+          index: i,
+          question: item.q,
+          selectedIndex: selectedIndex,
+          selectedText: selectedText,
+          correctIndex: item.a,
+          correctText: correctText,
+          correct: selectedIndex === item.a
+        };
+      });
       const record = StorageService.saveAssessment({
         subject: currentSubject,
         score: score,
@@ -406,7 +422,9 @@
         studentId: parent && parent.id,
         studentNickname: parent && parent.studentNickname,
         totalQuestions: qs.length,
-        correctCount: correct
+        correctCount: correct,
+        questions: qs,
+        answers: answers
       });
       document.getElementById('quizPanel').classList.add('hidden');
       document.getElementById('resultPanel').classList.remove('hidden');
