@@ -209,6 +209,17 @@ function safeCompare(a, b) {
 /**
  * 创建 Express 中间件工厂（需要传入 db）
  */
+const adminRbac = require('./admin-rbac');
+
+function listConfiguredAdminPhones() {
+  const DEFAULT_ADMIN_PHONES = ['13540012341', '18080141668'];
+  const adminPhonesEnv = process.env.ADMIN_PHONES;
+  if (adminPhonesEnv) {
+    return adminPhonesEnv.split(',').map((p) => p.trim()).filter(Boolean);
+  }
+  return DEFAULT_ADMIN_PHONES;
+}
+
 function createAuthMiddleware(db) {
   /**
    * Express 中间件：验证用户身份
@@ -221,15 +232,20 @@ function createAuthMiddleware(db) {
     if (!user) {
       return res.status(401).json({ error: '未登录或会话已过期' });
     }
-    
-    req.user = user;
-    req.token = token;
+
+    attachAdminUser(req, user, token);
     next();
   }
 
-  /**
-   * Express 中间件：要求管理员权限
-   */
+  function attachAdminUser(req, user, token) {
+    req.user = user;
+    req.token = token;
+    if (user && user.role === 'admin') {
+      req.adminModules = adminRbac.getEffectiveModules(db, user.phone);
+      req.isSuperAdmin = adminRbac.isSuperAdminPhone(user.phone);
+    }
+  }
+
   function requireAdmin(req, res, next) {
     const token = extractTokenFromRequest(req);
     const user = verifyToken(token, db);
@@ -242,9 +258,34 @@ function createAuthMiddleware(db) {
       return res.status(403).json({ error: '需要管理员权限' });
     }
     
-    req.user = user;
-    req.token = token;
+    attachAdminUser(req, user, token);
     next();
+  }
+
+  /**
+   * 要求管理员且具备指定模块权限（最高管理手机号始终放行）
+   */
+  function requireAdminModule(moduleKey) {
+    return (req, res, next) => {
+      const token = extractTokenFromRequest(req);
+      const user = verifyToken(token, db);
+
+      if (!user) {
+        return res.status(401).json({ error: '未登录或会话已过期' });
+      }
+
+      if (user.role !== 'admin') {
+        return res.status(403).json({ error: '需要管理员权限' });
+      }
+
+      attachAdminUser(req, user, token);
+
+      if (!adminRbac.hasModule(db, user.phone, moduleKey)) {
+        return res.status(403).json({ error: adminRbac.forbiddenModuleMessage(moduleKey) });
+      }
+
+      next();
+    };
   }
 
   /**
@@ -255,8 +296,7 @@ function createAuthMiddleware(db) {
     const user = verifyToken(userToken, db);
 
     if (user && user.role === 'admin') {
-      req.user = user;
-      req.token = userToken;
+      attachAdminUser(req, user, userToken);
       return next();
     }
 
@@ -274,7 +314,7 @@ function createAuthMiddleware(db) {
     next();
   }
 
-  return { requireAuth, requireAdmin, requireAdminToken };
+  return { requireAuth, requireAdmin, requireAdminModule, requireAdminToken, attachAdminUser };
 }
 
 /**
@@ -286,6 +326,8 @@ function cleanupExpiredTokens(db) {
 
 module.exports = {
   isAdminPhone,
+  listConfiguredAdminPhones,
+  isSuperAdminPhone: adminRbac.isSuperAdminPhone,
   generateToken,
   createVerificationTicket,
   verifyAndConsumeTicket,
