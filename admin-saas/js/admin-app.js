@@ -31,7 +31,19 @@
     tpOccupancyDate: '',
     tpOccupancyTpId: '',
     tpOccupancy: null,
-    adminLabel: '管理员'
+    adminLabel: '管理员',
+    payFilters: {
+      from: '',
+      to: '',
+      mentorName: '',
+      studentName: '',
+      phone: '',
+      outTradeNo: '',
+      status: '',
+      limit: 200
+    },
+    selectedAssessmentId: null,
+    assessmentDetail: null
   };
 
   function todayIso() {
@@ -110,6 +122,39 @@
       .replace(/"/g, '&quot;');
   }
 
+  function apiBase() {
+    return (window.XH_CONFIG && window.XH_CONFIG.API_BASE) || 'http://127.0.0.1:8787';
+  }
+
+  function normalizeTeachingPoints(raw) {
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  function proofFileHref(file) {
+    if (!file) return '';
+    if (file.url) {
+      const u = String(file.url);
+      if (/^https?:\/\//i.test(u)) return u;
+      return apiBase().replace(/\/$/, '') + (u.startsWith('/') ? u : '/' + u);
+    }
+    if (file.storedName) {
+      return apiBase().replace(/\/$/, '') + '/uploads/proofs/' + encodeURIComponent(file.storedName);
+    }
+    return '';
+  }
+
+  function externalLinkHtml(url, label) {
+    const u = String(url || '').trim();
+    if (!u || u === '#') return '<span class="text-slate-400">—</span>';
+    return (
+      '<a href="' +
+      esc(u) +
+      '" target="_blank" rel="noopener noreferrer" class="text-teal-700 font-medium break-all hover:underline">' +
+      esc(label || u) +
+      '</a>'
+    );
+  }
+
   function toast(msg, type) {
     const el = document.getElementById('adminToast');
     const text = document.getElementById('adminToastText');
@@ -160,7 +205,7 @@
       state.subjectCatalog = null;
     }
     try {
-      state.teachingPoints = await AdminApi.listTeachingPoints();
+      state.teachingPoints = normalizeTeachingPoints(await AdminApi.listTeachingPoints());
     } catch (e) {
       state.teachingPoints = [];
     }
@@ -279,8 +324,35 @@
       .join('');
     let detail = '<p class="text-slate-500 text-sm">请选择左侧导师</p>';
     if (sel) {
+      const proofList = (sel.proofFiles || [])
+        .map((f) => {
+          const href = proofFileHref(f);
+          const name = (f && f.name) || '佐证材料';
+          const meta = [f && f.tag, f && f.size, f && f.verified ? '已核验' : '']
+            .filter(Boolean)
+            .join(' · ');
+          return (
+            '<li class="border border-slate-100 rounded-lg px-3 py-2 text-sm">' +
+            (href
+              ? '<a href="' +
+                esc(href) +
+                '" target="_blank" rel="noopener noreferrer" class="text-teal-700 font-medium hover:underline">' +
+                esc(name) +
+                '</a>'
+              : '<span class="font-medium">' + esc(name) + '</span>') +
+            (meta ? '<div class="text-xs text-slate-500 mt-0.5">' + esc(meta) + '</div>' : '') +
+            '</li>'
+          );
+        })
+        .join('');
+      const avail = (sel.availability || [])
+        .map((a) => {
+          const ranges = (a.ranges || []).map((r) => (r.start || '') + '-' + (r.end || '')).join('、');
+          return '周' + a.weekday + ' ' + ranges;
+        })
+        .join('；');
       detail =
-        '<div class="space-y-3">' +
+        '<div class="space-y-4 max-h-[70vh] overflow-y-auto pr-1">' +
         '<h2 class="text-lg font-semibold">' +
         esc(sel.realName) +
         ' <span class="text-sm font-normal text-slate-500">' +
@@ -288,10 +360,34 @@
         '</span></h2>' +
         '<div class="grid sm:grid-cols-2 gap-2 text-sm">' +
         row('手机', sel.phone) +
-        row('院校', sel.university) +
-        row('时薪', '¥' + sel.hourlyRate) +
+        row('身份证', sel.idCard) +
+        row('院校', (sel.university || '') + (sel.province ? ' · ' + sel.province : '')) +
+        row('学历', sel.degree) +
+        row('学信网码', sel.chsiCode) +
+        row('学信状态', sel.chsiStatus) +
+        row('专业', sel.chsiMajor) +
+        row('时薪', sel.hourlyRate != null ? '¥' + sel.hourlyRate : '—') +
+        row('评级', sel.evalGrade) +
         row('状态', STATUS_LABEL[sel.status] || sel.status) +
         row('接单', sel.acceptingOrders === false ? '已暂停' : '正常') +
+        row('提交时间', sel.submitTime) +
+        row('偏好网点', sel.spacePreference) +
+        row('银行卡', (sel.bankName || '') + ' ' + (sel.bankCardNumber || '')) +
+        '</div>' +
+        '<div class="text-sm"><span class="text-slate-500">授课学科：</span>' +
+        esc((sel.subjects || []).concat(sel.customSubjects || []).join('、') || '—') +
+        '</div>' +
+        '<div class="text-sm"><span class="text-slate-500">教学亮点：</span>' +
+        esc(sel.scoreHighlight || '—') +
+        '</div>' +
+        '<div class="text-sm"><span class="text-slate-500">可约时段：</span>' +
+        esc(avail || '—') +
+        '</div>' +
+        '<div class="text-sm"><span class="text-slate-500">试讲视频 / 链接：</span> ' +
+        externalLinkHtml(sel.lectureUrl, '打开试讲视频') +
+        '</div>' +
+        '<div><div class="text-xs font-bold text-slate-600 mb-2">资质附件</div>' +
+        (proofList ? '<ul class="space-y-2">' + proofList + '</ul>' : '<p class="text-sm text-slate-400">暂无上传附件</p>') +
         '</div>' +
         '<div><label class="text-xs text-slate-500">审核意见</label>' +
         '<textarea id="auditComment" rows="3" class="w-full mt-1 border border-slate-300 rounded-xl px-3 py-2 text-sm">' +
@@ -488,7 +584,15 @@
   }
 
   function renderTeachingPoints() {
-    const tps = state.teachingPoints || [];
+    let tps = state.teachingPoints || [];
+    if (!tps.length && window.StorageService && StorageService.SPACE_OPTIONS) {
+      tps = StorageService.SPACE_OPTIONS.map((name, idx) => ({
+        id: 'TP-LOCAL-' + idx,
+        name: name,
+        boothCount: 3,
+        booths: []
+      }));
+    }
     const selId = state.tpOccupancyTpId || (tps[0] && tps[0].id) || '';
     const occ = state.tpOccupancy;
     let occHtml =
@@ -633,26 +737,151 @@
     );
   }
 
+  function renderAssessmentDetailPanel() {
+    const d = state.assessmentDetail;
+    if (!d) {
+      return '<p class="text-sm text-slate-500">选择左侧记录查看试卷与作答明细</p>';
+    }
+    const answers = Array.isArray(d.answers) ? d.answers : [];
+    let body = '';
+    if (answers.length) {
+      body =
+        '<ol class="space-y-3 list-decimal list-inside text-sm">' +
+        answers
+          .map((item, i) => {
+            const ok = item.correct === true;
+            return (
+              '<li class="border border-slate-100 rounded-xl p-3 bg-slate-50/40">' +
+              '<div class="font-medium text-slate-800">' +
+              esc(item.question || '题目 ' + (i + 1)) +
+              '</div>' +
+              '<div class="text-xs mt-1 ' +
+              (ok ? 'text-emerald-700' : 'text-rose-700') +
+              '">学员答案：' +
+              esc(item.selectedText || item.selectedIndex) +
+              ' · 正确答案：' +
+              esc(item.correctText || item.correctIndex) +
+              '</div></li>'
+            );
+          })
+          .join('') +
+        '</ol>';
+    } else if (Array.isArray(d.questions) && d.questions.length) {
+      body =
+        '<ol class="space-y-2 list-decimal list-inside text-sm">' +
+        d.questions
+          .map(
+            (q, i) =>
+              '<li><span class="font-medium">' +
+              esc(q.q || q.question || '题' + (i + 1)) +
+              '</span> <span class="text-xs text-slate-500">参考答案：' +
+              esc(
+                q.options && q.a != null && q.options[q.a] != null ? q.options[q.a] : (q.correctText || '—')
+              ) +
+              '</span></li>'
+          )
+          .join('') +
+        '</ol>';
+    } else {
+      body =
+        '<p class="text-sm text-slate-500">该记录未保存逐题明细（得分 ' +
+        esc(d.score) +
+        ' / ' +
+        esc(d.level || '') +
+        '）。新提交的测评将包含完整试卷与答案。</p>';
+    }
+    return (
+      '<div class="space-y-3">' +
+      '<h2 class="text-base font-bold text-slate-900">' +
+      esc(d.subject) +
+      ' · ' +
+      esc(d.score) +
+      '分 · ' +
+      esc(d.level || '') +
+      '</h2>' +
+      '<div class="text-xs text-slate-500">' +
+      esc(d.studentNickname || d.studentName || '学员') +
+      ' · ' +
+      esc(d.studentGrade || d.gradeBand || '') +
+      ' · ' +
+      esc(d.completedAt || d.createdAt || '') +
+      '</div>' +
+      body +
+      '</div>'
+    );
+  }
+
   function renderAssessments() {
+    const rows = state.assessments.slice().sort((a, b) =>
+      String(b.completedAt || b.createdAt || '').localeCompare(String(a.completedAt || a.createdAt || ''))
+    );
+    const listHtml = rows.length
+      ? rows
+          .map((a) => {
+            const active = state.selectedAssessmentId === a.id;
+            const student = a.studentNickname || a.studentName || a.parentPhone || '—';
+            return (
+              '<button type="button" data-pick-assessment="' +
+              esc(a.id) +
+              '" class="w-full text-left px-3 py-2 rounded-xl border text-sm ' +
+              (active ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:bg-slate-50') +
+              '">' +
+              '<div class="font-bold">' +
+              esc(a.subject) +
+              ' · ' +
+              esc(a.score) +
+              '分</div>' +
+              '<div class="text-xs text-slate-500">' +
+              esc(student) +
+              ' · ' +
+              esc(a.completedAt || a.createdAt || '') +
+              '</div></button>'
+            );
+          })
+          .join('')
+      : '<p class="text-slate-500 text-sm">暂无测评记录</p>';
     return (
       '<div class="space-y-4"><h1 class="text-xl font-semibold">学情测评</h1>' +
-      '<div class="bg-white border border-slate-200 rounded-2xl p-4 text-sm space-y-2">' +
-      (state.assessments.length
-        ? state.assessments
-            .map(
-              (a) =>
-                '<div class="border-b border-slate-100 pb-2">' +
-                esc(a.subject) +
-                ' · ' +
-                esc(a.score) +
-                '分 · ' +
-                esc(a.level || '') +
-                ' · ' +
-                esc(a.createdAt) +
-                '</div>'
-            )
-            .join('')
-        : '<p class="text-slate-500">暂无测评记录</p>') +
+      '<div class="grid lg:grid-cols-3 gap-4">' +
+      '<div class="space-y-2 max-h-[70vh] overflow-y-auto">' +
+      listHtml +
+      '</div>' +
+      '<div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5" id="assessmentDetailWrap">' +
+      renderAssessmentDetailPanel() +
+      '</div></div></div>'
+    );
+  }
+
+  function payFiltersFormHtml() {
+    const f = state.payFilters;
+    return (
+      '<div class="bg-white border border-slate-200 rounded-2xl p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">' +
+      '<div><label class="text-xs text-slate-500">开始时间</label><input type="datetime-local" id="payFilterFrom" value="' +
+      esc(f.from) +
+      '" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5"/></div>' +
+      '<div><label class="text-xs text-slate-500">结束时间</label><input type="datetime-local" id="payFilterTo" value="' +
+      esc(f.to) +
+      '" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5"/></div>' +
+      '<div><label class="text-xs text-slate-500">导师名</label><input id="payFilterMentor" value="' +
+      esc(f.mentorName) +
+      '" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5"/></div>' +
+      '<div><label class="text-xs text-slate-500">学生名</label><input id="payFilterStudent" value="' +
+      esc(f.studentName) +
+      '" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5"/></div>' +
+      '<div><label class="text-xs text-slate-500">家长手机</label><input id="payFilterPhone" value="' +
+      esc(f.phone) +
+      '" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5"/></div>' +
+      '<div><label class="text-xs text-slate-500">商户单号</label><input id="payFilterOut" value="' +
+      esc(f.outTradeNo) +
+      '" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5"/></div>' +
+      '<div><label class="text-xs text-slate-500">状态</label><select id="payFilterStatus" class="w-full mt-1 border border-slate-300 rounded-xl px-2 py-1.5">' +
+      ['', 'SUCCESS', 'REFUND', 'REFUNDED', 'refund_pending', 'refund_failed', 'NOTPAY']
+        .map((st) => '<option value="' + esc(st) + '" ' + (f.status === st ? 'selected' : '') + '>' + (st || '全部') + '</option>')
+        .join('') +
+      '</select></div>' +
+      '<div class="flex items-end gap-2 sm:col-span-2">' +
+      '<button type="button" id="btnPaySearch" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold">查询</button>' +
+      '<button type="button" id="btnPayExport" class="border border-slate-300 px-4 py-2 rounded-xl text-sm font-bold">导出 Excel</button>' +
       '</div></div>'
     );
   }
@@ -662,45 +891,134 @@
       '<div class="space-y-4"><div class="flex flex-wrap items-center justify-between gap-3">' +
       '<h1 class="text-xl font-semibold">支付订单</h1>' +
       '<button type="button" id="btnReloadPay" class="text-sm border border-slate-300 px-3 py-2 rounded-xl">刷新</button></div>' +
+      payFiltersFormHtml() +
       '<div id="payTableWrap" class="text-sm text-slate-500">加载中…</div></div>'
     );
+  }
+
+  function readPayFiltersFromDom() {
+    const fromEl = document.getElementById('payFilterFrom');
+    const toEl = document.getElementById('payFilterTo');
+    state.payFilters.from = (fromEl && fromEl.value) || '';
+    state.payFilters.to = (toEl && toEl.value) || '';
+    state.payFilters.mentorName = ((document.getElementById('payFilterMentor') || {}).value || '').trim();
+    state.payFilters.studentName = ((document.getElementById('payFilterStudent') || {}).value || '').trim();
+    state.payFilters.phone = ((document.getElementById('payFilterPhone') || {}).value || '').trim();
+    state.payFilters.outTradeNo = ((document.getElementById('payFilterOut') || {}).value || '').trim();
+    state.payFilters.status = ((document.getElementById('payFilterStatus') || {}).value || '').trim();
+  }
+
+  function payOrdersQueryFromState() {
+    const q = { limit: state.payFilters.limit || 200 };
+    if (state.payFilters.from) q.from = state.payFilters.from;
+    if (state.payFilters.to) q.to = state.payFilters.to;
+    if (state.payFilters.mentorName) q.mentorName = state.payFilters.mentorName;
+    if (state.payFilters.studentName) q.studentName = state.payFilters.studentName;
+    if (state.payFilters.phone) q.phone = state.payFilters.phone;
+    if (state.payFilters.outTradeNo) q.outTradeNo = state.payFilters.outTradeNo;
+    if (state.payFilters.status) q.status = state.payFilters.status;
+    return q;
+  }
+
+  function renderPayOrdersTable() {
+    const wrap = document.getElementById('payTableWrap');
+    if (!wrap) return;
+    if (!state.payOrders.length) {
+      wrap.innerHTML = '<p class="text-slate-500">暂无支付订单</p>';
+      return;
+    }
+    wrap.innerHTML =
+      '<div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto"><table class="admin-dense w-full min-w-[960px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
+      '<th class="text-left p-3">商户单号</th><th class="text-left p-3">预约</th><th class="text-left p-3">导师</th><th class="text-left p-3">学生</th><th class="text-left p-3">手机</th><th class="text-left p-3">金额(分)</th><th class="text-left p-3">状态</th><th class="text-left p-3">时间</th><th></th></tr></thead><tbody>' +
+      state.payOrders
+        .map((o) => {
+          const canRefund = o.status === 'SUCCESS';
+          return (
+            '<tr class="border-t border-slate-100"><td class="p-3 font-mono text-xs">' +
+            esc(o.outTradeNo) +
+            '</td><td class="p-3">' +
+            esc(o.bookingId) +
+            '</td><td class="p-3">' +
+            esc(o.mentorName || '—') +
+            '</td><td class="p-3">' +
+            esc(o.studentName || '—') +
+            '</td><td class="p-3 font-mono text-xs">' +
+            esc(o.parentPhone || '—') +
+            '</td><td class="p-3">' +
+            esc(o.amount) +
+            '</td><td class="p-3">' +
+            esc(o.status) +
+            '</td><td class="p-3 text-xs">' +
+            esc(o.successTime || o.createTime || '') +
+            '</td><td class="p-3">' +
+            (canRefund
+              ? '<button type="button" data-refund="' + esc(o.outTradeNo) + '" class="text-rose-700 font-bold text-xs">退款</button>'
+              : '—') +
+            '</td></tr>'
+          );
+        })
+        .join('') +
+      '</tbody></table></div>';
+  }
+
+  function exportPayOrdersXlsx() {
+    if (!window.XLSX) {
+      toast('Excel 组件未加载', 'error');
+      return;
+    }
+    if (!state.payOrders.length) {
+      toast('没有可导出的订单', 'warn');
+      return;
+    }
+    const rows = state.payOrders.map((o) => ({
+      商户单号: o.outTradeNo || '',
+      预约编号: o.bookingId || '',
+      导师: o.mentorName || '',
+      学生: o.studentName || '',
+      家长手机: o.parentPhone || '',
+      金额分: o.amount != null ? o.amount : '',
+      状态: o.status || '',
+      支付时间: o.successTime || o.createTime || '',
+      退款时间: o.refundTime || ''
+    }));
+    const sheet = window.XLSX.utils.json_to_sheet(rows);
+    const book = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(book, sheet, '支付订单');
+    const stamp = todayIso().replace(/-/g, '');
+    window.XLSX.writeFile(book, '支付订单_' + stamp + '.xlsx');
+    toast('已导出 Excel');
   }
 
   async function loadPayOrders() {
     const wrap = document.getElementById('payTableWrap');
     if (!wrap) return;
+    readPayFiltersFromDom();
+    wrap.textContent = '加载中…';
     try {
-      const res = await AdminApi.listPayOrders({ limit: 100 });
+      const res = await AdminApi.listPayOrders(payOrdersQueryFromState());
       state.payOrders = res.orders || [];
-      wrap.innerHTML =
-        '<div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto"><table class="admin-dense w-full min-w-[720px]"><thead class="bg-slate-50 text-slate-500"><tr>' +
-        '<th class="text-left p-3">商户单号</th><th class="text-left p-3">预约</th><th class="text-left p-3">金额(分)</th><th class="text-left p-3">状态</th><th class="text-left p-3">创建</th><th></th></tr></thead><tbody>' +
-        state.payOrders
-          .map((o) => {
-            const canRefund = o.status === 'SUCCESS';
-            return (
-              '<tr class="border-t border-slate-100"><td class="p-3 font-mono text-xs">' +
-              esc(o.outTradeNo) +
-              '</td><td class="p-3">' +
-              esc(o.bookingId) +
-              '</td><td class="p-3">' +
-              esc(o.amount) +
-              '</td><td class="p-3">' +
-              esc(o.status) +
-              '</td><td class="p-3 text-xs">' +
-              esc(o.createTime) +
-              '</td><td class="p-3">' +
-              (canRefund
-                ? '<button type="button" data-refund="' + esc(o.outTradeNo) + '" class="text-rose-700 font-bold text-xs">退款</button>'
-                : '—') +
-              '</td></tr>'
-            );
-          })
-          .join('') +
-        '</tbody></table></div>';
-      if (!state.payOrders.length) wrap.innerHTML = '<p class="text-slate-500">暂无支付订单</p>';
+      renderPayOrdersTable();
     } catch (e) {
       wrap.innerHTML = '<p class="text-rose-600">加载失败：' + esc(e.message) + '</p>';
+    }
+  }
+
+  async function openAssessmentDetail(id) {
+    state.selectedAssessmentId = id;
+    const local = state.assessments.find((a) => a.id === id) || null;
+    state.assessmentDetail = local;
+    const wrap = document.getElementById('assessmentDetailWrap');
+    if (wrap) wrap.innerHTML = renderAssessmentDetailPanel();
+    try {
+      const remote = await AdminApi.getAssessment(id);
+      if (remote && remote.id) {
+        state.assessmentDetail = remote;
+        if (wrap) wrap.innerHTML = renderAssessmentDetailPanel();
+      }
+    } catch (e) {
+      if (!local && wrap) {
+        wrap.innerHTML = '<p class="text-rose-600 text-sm">加载失败：' + esc(e.message) + '</p>';
+      }
     }
   }
 
@@ -747,6 +1065,12 @@
                 '<p class="text-sm mt-2">' +
                 esc(t.detail) +
                 '</p>' +
+                (t.adminReply && String(t.adminReply).trim()
+                  ? '<div class="mt-2 text-xs bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 text-emerald-900"><span class="font-semibold">官方回复：</span>' +
+                    esc(t.adminReply) +
+                    (t.repliedAt ? ' <span class="text-emerald-700/70">(' + esc(t.repliedAt) + ')</span>' : '') +
+                    '</div>'
+                  : '') +
                 (t.handlerNote && String(t.handlerNote).trim()
                   ? '<div class="mt-2 text-xs bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-blue-900"><span class="font-semibold">备注：</span>' +
                     esc(t.handlerNote) +
@@ -765,6 +1089,9 @@
                       '</button>'
                   )
                   .join('') +
+                '<button type="button" data-fb-reply="' +
+                esc(t.id) +
+                '" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white">回复</button>' +
                 '<button type="button" data-fb-note="' +
                 esc(t.id) +
                 '" class="text-xs px-3 py-1.5 rounded-lg bg-teal-600 text-white">备注</button></div></div>'
@@ -890,6 +1217,27 @@
         }
       });
     });
+    document.querySelectorAll('[data-fb-reply]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-fb-reply');
+        const ticket = state.feedback.find((t) => t.id === id);
+        const reply = window.prompt('回复用户（将展示在工单中）', (ticket && ticket.adminReply) || '');
+        if (reply == null || !String(reply).trim()) return;
+        try {
+          await AdminApi.patchFeedback(id, {
+            adminReply: String(reply).trim(),
+            repliedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+            repliedBy: state.adminLabel,
+            status: ticket && ticket.status === '待处理' ? '处理中' : ticket && ticket.status
+          });
+          await reloadCore();
+          toast('回复已保存');
+          renderMain();
+        } catch (e) {
+          toast(e.message, 'error');
+        }
+      });
+    });
     const saveFlags = document.getElementById('btnSaveFlags');
     if (saveFlags) {
       saveFlags.addEventListener('click', async () => {
@@ -904,6 +1252,10 @@
     }
     const reloadPay = document.getElementById('btnReloadPay');
     if (reloadPay) reloadPay.addEventListener('click', () => loadPayOrders());
+    const paySearch = document.getElementById('btnPaySearch');
+    if (paySearch) paySearch.addEventListener('click', () => loadPayOrders());
+    const payExport = document.getElementById('btnPayExport');
+    if (payExport) payExport.addEventListener('click', () => exportPayOrdersXlsx());
     document.querySelectorAll('[data-refund]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const out = btn.getAttribute('data-refund');
@@ -919,6 +1271,13 @@
       });
     });
     if (state.route === 'payments') loadPayOrders();
+
+    document.querySelectorAll('[data-pick-assessment]').forEach((btn) => {
+      btn.addEventListener('click', () => openAssessmentDetail(btn.getAttribute('data-pick-assessment')));
+    });
+    if (state.route === 'assessments' && state.selectedAssessmentId && !state.assessmentDetail) {
+      openAssessmentDetail(state.selectedAssessmentId);
+    }
 
     document.querySelectorAll('[data-subject-filter]').forEach((btn) => {
       btn.addEventListener('click', () => {

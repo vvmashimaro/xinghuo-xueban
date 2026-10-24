@@ -1922,6 +1922,25 @@ app.patch('/api/admin/feature-flags', requireAdmin, (req, res) => {
 
 
 /* Assessments */
+app.get('/api/assessments/:id', requireAuth, (req, res) => {
+  db.seedIfEmpty();
+  const record = db.getAssessmentById(req.params.id);
+  if (!record) return fail(res, 404, '测评记录不存在');
+  if (req.user.role === 'admin') {
+    return ok(res, record);
+  }
+  if (req.user.role === 'parent') {
+    const parent = db.getParents().find((p) => p.id === req.user.userId);
+    if (!parent) return fail(res, 404, '用户不存在');
+    const owns =
+      record.parentId === parent.id ||
+      (record.parentPhone && parent.phone && String(record.parentPhone) === String(parent.phone));
+    if (!owns) return fail(res, 403, '无权限');
+    return ok(res, record);
+  }
+  return fail(res, 403, '无权限');
+});
+
 app.get('/api/assessments', requireAuth, (req, res) => {
   db.seedIfEmpty();
   
