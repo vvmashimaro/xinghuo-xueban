@@ -1,0 +1,201 @@
+/**
+ * 星火学伴 · 登录/认证中心（Gemini UI 切片）
+ */
+html[data-xh-auth-ui="1"] #xhLoading {
+  display: none !important;
+}
+
+#manualEnterFallback {
+  display: none !important;
+}
+#manualEnterFallback.is-visible {
+  display: block !important;
+}
+
+.xh-auth-page {
+  background: linear-gradient(145deg, var(--trust-navy) 0%, #0f172a 42%, #1a3a4a 100%);
+  min-height: 100vh;
+}
+
+.xh-auth-hero {
+  display: none;
+}
+.xh-auth-hero-mobile {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+@media (min-width: 640px) {
+  .xh-auth-hero-mobile {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .xh-auth-hero-mobile {
+    display: none;
+  }
+}
+.xh-trust-chip {
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.6rem;
+  text-align: center;
+}
+@media (min-width: 1024px) {
+  .xh-auth-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 420px);
+    gap: 2.5rem;
+    align-items: center;
+    max-width: 1080px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 1.5rem;
+  }
+  .xh-auth-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+}
+
+.xh-trust-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.15rem;
+  backdrop-filter: blur(8px);
+}
+.xh-trust-card h3 {
+  font-size: var(--type-sm);
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.35rem;
+}
+.xh-trust-card p {
+  font-size: var(--type-xs);
+  line-height: 1.55;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.xh-role-pill {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+.xh-role-pill button {
+  border: none;
+  cursor: pointer;
+  font-size: var(--type-xs);
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  color: #cbd5e1;
+  background: transparent;
+}
+.xh-role-pill button[aria-selected="true"] {
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+.xh-role-pill button[aria-selected="true"] i {
+  color: var(--brand-primary);
+}
+
+.xh-auth-panel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+@media (min-width: 640px) {
+  .xh-auth-panel {
+    padding: 2rem;
+  }
+}
+
+.xh-auth-input {
+  width: 100%;
+  height: var(--auth-input-height);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.42);
+  font-size: var(--type-sm);
+  color: var(--text-main);
+  transition: box-shadow 0.15s, background 0.15s;
+}
+.xh-auth-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: var(--focus-ring-brand);
+}
+.xh-auth-input::placeholder {
+  color: #64748b;
+}
+
+.xh-btn-primary {
+  width: 100%;
+  height: var(--auth-input-height);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-size: var(--type-sm);
+  font-weight: 800;
+  color: #fff;
+  background: var(--brand-primary);
+  box-shadow: var(--shadow-float);
+  transition: background 0.15s, transform 0.1s;
+}
+.xh-btn-primary:hover {
+  background: var(--brand-primary-hover);
+}
+.xh-btn-primary:active {
+  transform: scale(0.99);
+}
+.xh-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.xh-sms-send {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  padding: 0 0.75rem;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--brand-primary);
+  background: rgba(255, 255, 255, 0.92);
+  transition: background 0.15s;
+}
+.xh-sms-send:hover:not(:disabled) {
+  background: #fff;
+}
+.xh-sms-send:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+#smsDemoHint.hidden {
+  display: none !important;
+}

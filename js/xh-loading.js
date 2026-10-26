@@ -46,7 +46,18 @@
     document.body.appendChild(wrap);
   }
 
+  function isAuthQuietUi() {
+    try {
+      if (document.documentElement.getAttribute('data-xh-auth-ui') === '1') return true;
+      var p = String(global.location && global.location.pathname || '');
+      return /login\.html$/i.test(p);
+    } catch (e) {
+      return false;
+    }
+  }
+
   function show() {
+    if (isAuthQuietUi()) return;
     ensureDom();
     var el = document.getElementById('xhLoading');
     if (!el) return;
