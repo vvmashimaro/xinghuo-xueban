@@ -16,18 +16,21 @@
   display: flex;
 }
 #xhLoading .xh-logo-wrap {
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.18), 0 0 28px rgba(13, 148, 136, 0.22);
+  box-shadow: 0 0 0 1px rgba(255, 107, 44, 0.2), 0 0 32px rgba(255, 107, 44, 0.28);
 }
 #xhLoading .xh-logo {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   display: block;
+}
+#xhLoading .xh-logo-mascot {
+  object-fit: contain;
 }
 #xhLoading .xh-tip {
   margin-top: 12px;

@@ -40,8 +40,8 @@
   <!-- 顶部轻量系统栏：左侧品牌，右侧角色切换 -->
   <header class="w-full px-5 sm:px-8 py-4 flex items-center justify-between relative z-10 gap-3">
     <div class="flex items-center space-x-2.5 min-w-0">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shadow-teal-500/20 shrink-0">
-        <i class="fa-solid fa-graduation-cap"></i>
+      <div class="xh-brand-mark" aria-hidden="true">
+        <img src="assets/brand/spark-mascot-96.png" alt="" width="36" height="36" decoding="async">
       </div>
       <div class="min-w-0">
         <span class="font-black text-white text-base tracking-tight leading-none block">星火学伴</span>
@@ -63,7 +63,7 @@
 
   <main class="w-full relative z-10 flex-1 flex flex-col justify-center py-4 sm:py-8">
     <div class="xh-auth-shell">
-      <aside class="xh-auth-hero" aria-label="平台保障">
+      <aside id="authHeroParent" class="xh-auth-hero" aria-label="家长端平台保障">
         <div class="space-y-2 pr-4">
           <p class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-200 bg-orange-500/15 border border-orange-400/25 px-3 py-1 rounded-full">阳光合规 · 一课一消托管</p>
           <h2 class="text-2xl font-black text-white tracking-tight leading-snug">为成都家庭连接<br>可核验的高校学伴</h2>
@@ -85,11 +85,38 @@
         </div>
       </aside>
 
+      <aside id="authHeroMentor" class="xh-auth-hero is-hidden" aria-label="导师端平台保障">
+        <div class="space-y-2 pr-4">
+          <p class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-200 bg-orange-500/15 border border-orange-400/25 px-3 py-1 rounded-full">阳光勤工 · L1/L2 入库认证</p>
+          <h2 class="text-2xl font-black text-white tracking-tight leading-snug">高校学伴接单<br>课酬有保障、履约有记录</h2>
+          <p class="text-sm text-slate-400 leading-relaxed max-w-md">完成资质核验与能力画像后即可入库；约课、打卡、结课与托管释放全程可在平台追溯。</p>
+        </div>
+        <div class="grid gap-3">
+          <div class="xh-trust-card">
+            <h3><i class="fa-solid fa-stamp text-indigo-400 mr-1.5" aria-hidden="true"></i>L1/L2 合规入库</h3>
+            <p>实名、学籍与授课能力分步核验，通过后生成导师专属码与工作台权限。</p>
+          </div>
+          <div class="xh-trust-card">
+            <h3><i class="fa-solid fa-wallet text-emerald-400 mr-1.5" aria-hidden="true"></i>课酬托管 · 一课一结</h3>
+            <p>家长约课成功后课酬预先冻结，完课打卡确认后按规则划拨，减少拖欠纠纷。</p>
+          </div>
+          <div class="xh-trust-card">
+            <h3><i class="fa-solid fa-clipboard-check text-sky-400 mr-1.5" aria-hidden="true"></i>阳光履约留痕</h3>
+            <p>接单、排期、结课与课后小结在线可查，配套高校社会实践与工时认证对接。</p>
+          </div>
+        </div>
+      </aside>
+
     <div class="w-full max-w-md mx-auto px-4 lg:px-0 lg:max-w-none">
-    <div class="xh-auth-hero-mobile" aria-hidden="false">
+    <div id="authHeroMobileParent" class="xh-auth-hero-mobile" aria-hidden="false">
       <div class="xh-trust-chip">学信网核验</div>
       <div class="xh-trust-chip">微网点安全伴学</div>
       <div class="xh-trust-chip">课时费托管</div>
+    </div>
+    <div id="authHeroMobileMentor" class="xh-auth-hero-mobile is-hidden" aria-hidden="true">
+      <div class="xh-trust-chip">L1/L2 入库</div>
+      <div class="xh-trust-chip">课酬托管</div>
+      <div class="xh-trust-chip">履约留痕</div>
     </div>
     <div class="xh-auth-panel glass-panel space-y-5 transition-all">
 
@@ -145,7 +172,7 @@
 
         <!-- 登录方式切换链接与忘记密码 -->
         <div class="flex items-center justify-between text-xs pt-0.5">
-          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-300 hover:text-teal-200 font-semibold flex items-center gap-1 transition cursor-pointer">
+          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="xh-auth-link font-semibold flex items-center gap-1 transition cursor-pointer">
             <i class="fa-solid fa-rotate text-xs"></i>
             <span id="toggleLoginModeText">改用账号密码登录</span>
           </button>
@@ -160,17 +187,17 @@
             <input type="checkbox" id="agreementCheckbox" class="w-3.5 h-3.5 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-0 bg-white/40">
             <span class="text-xs leading-tight text-slate-300">
               已阅读并同意
-              <button type="button" onclick="openServiceAgreement(event)" class="text-teal-300 underline font-medium cursor-pointer p-0 bg-transparent border-none">《服务协议》</button>
+              <button type="button" onclick="openServiceAgreement(event)" class="xh-auth-link underline font-medium cursor-pointer p-0 bg-transparent border-none">《服务协议》</button>
               与
-              <button type="button" onclick="openPrivacyPolicy(event)" class="text-teal-300 underline font-medium cursor-pointer p-0 bg-transparent border-none">《个人信息保护政策》</button>
+              <button type="button" onclick="openPrivacyPolicy(event)" class="xh-auth-link underline font-medium cursor-pointer p-0 bg-transparent border-none">《个人信息保护政策》</button>
             </span>
           </label>
         </div>
 
         <!-- 提交登录按钮 -->
         <button type="submit" id="btnSubmitLogin" class="xh-btn-primary flex items-center justify-center gap-2">
-          <span>安全登录</span>
-          <i class="fa-solid fa-arrow-right text-xs"></i>
+          <span id="btnSubmitLoginText">安全登录并找学伴</span>
+          <i class="fa-solid fa-arrow-right text-xs" id="btnSubmitLoginIcon" aria-hidden="true"></i>
         </button>
 
         <!-- 跳转失败时的手动进入兜底 -->
@@ -178,7 +205,7 @@
           <p class="text-xs text-amber-200/90 bg-amber-500/15 rounded-xl px-3 py-2 mb-2">
             页面未自动跳转？请点击下方手动进入
           </p>
-          <a id="manualEnterLink" href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-teal-200 hover:text-white bg-teal-500/20 hover:bg-teal-500/30 px-4 py-2 rounded-xl transition">
+          <a id="manualEnterLink" href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-orange-100 hover:text-white bg-orange-500/25 hover:bg-orange-500/35 px-4 py-2 rounded-xl transition">
             <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
             <span>手动进入</span>
           </a>
@@ -189,7 +216,7 @@
       <!-- 底部入驻指引（无分割线） -->
       <div id="registerPromptBox" class="pt-2 flex items-center justify-between text-xs gap-2">
         <span class="text-slate-400 shrink-0">首次约课辅导？</span>
-        <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+        <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold xh-auth-link hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
           <span>前往学情建档注册</span>
           <i class="fa-solid fa-angle-right text-xs"></i>
         </button>
@@ -202,15 +229,15 @@
 
     <!-- 底部合规说明 -->
     <div class="mt-5 text-center text-xs text-slate-400 space-y-1 max-w-md mx-auto px-4 lg:max-w-none">
-      <div class="flex items-center justify-center gap-3 flex-wrap">
+      <div id="authComplianceStrip" class="flex items-center justify-center gap-3 flex-wrap">
         <span class="flex items-center gap-1">
-          <i class="fa-solid fa-shield-check text-teal-400"></i>
+          <i class="fa-solid fa-shield-check text-orange-400"></i>
           合规实名与学籍核验
         </span>
         <span class="text-slate-600">·</span>
         <span class="flex items-center gap-1">
-          <i class="fa-solid fa-building-columns text-teal-400"></i>
-          课酬资金保障
+          <i class="fa-solid fa-building-columns text-orange-400"></i>
+          课次托管资金保障
         </span>
       </div>
     </div>
@@ -250,6 +277,29 @@
     let isCodeMode = true;
     let countdown = 0;
     let timerInterval = null;
+    const MASCOT_LOADER_SRC = 'assets/brand/spark-mascot-96.png';
+
+    function loginCtaLabel(role) {
+      return role === 'mentor' ? '登录并进入工作台' : '安全登录并找学伴';
+    }
+
+    function setSubmitLoading(message) {
+      const submitBtn = document.getElementById('btnSubmitLogin');
+      if (!submitBtn) return;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<img src="' + MASCOT_LOADER_SRC + '" alt="" class="xh-inline-mascot-loader" width="22" height="22">' +
+        '<span>' + message + '</span>';
+    }
+
+    function resetSubmitButton() {
+      const submitBtn = document.getElementById('btnSubmitLogin');
+      if (!submitBtn) return;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span id="btnSubmitLoginText">' + loginCtaLabel(currentRole) + '</span>' +
+        '<i class="fa-solid fa-arrow-right text-xs" id="btnSubmitLoginIcon" aria-hidden="true"></i>';
+    }
 
     // 安全路由跳转：优先 location.assign / location.href，并暴露手动进入兜底
     let pendingNavUrl = null;
@@ -302,37 +352,70 @@
       const roleTitle = document.getElementById('roleTitle');
       const roleSubtitle = document.getElementById('roleSubtitle');
       const regBox = document.getElementById('registerPromptBox');
+      const heroParent = document.getElementById('authHeroParent');
+      const heroMentor = document.getElementById('authHeroMentor');
+      const mobParent = document.getElementById('authHeroMobileParent');
+      const mobMentor = document.getElementById('authHeroMobileMentor');
+      const compliance = document.getElementById('authComplianceStrip');
+      const regLinkClass =
+        'font-bold xh-auth-link hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer';
 
       tabMentor.setAttribute('aria-selected', 'false');
       tabParent.setAttribute('aria-selected', 'false');
+      document.documentElement.setAttribute('data-xh-auth-role', role);
 
       if (role === 'mentor') {
         tabMentor.setAttribute('aria-selected', 'true');
-        roleTitle.innerText = "伴读导师端登录";
+        roleTitle.innerText = '高校学伴 · 导师登录';
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('mentor')
-          : '资金保障 · 阳光透明接单授课';
+          : '完课打卡 · 课酬托管结算 · 阳光透明接单';
+        if (heroParent) heroParent.classList.add('is-hidden');
+        if (heroMentor) heroMentor.classList.remove('is-hidden');
+        if (mobParent) mobParent.classList.add('is-hidden');
+        if (mobMentor) mobMentor.classList.remove('is-hidden');
+        if (compliance) {
+          compliance.innerHTML = `
+            <span class="flex items-center gap-1"><i class="fa-solid fa-stamp text-orange-400"></i>L1/L2 资质入库</span>
+            <span class="text-slate-600">·</span>
+            <span class="flex items-center gap-1"><i class="fa-solid fa-wallet text-orange-400"></i>课酬托管保障</span>
+          `;
+        }
         regBox.innerHTML = `
-          <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
-          <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <span class="text-slate-400 shrink-0">尚未完成入库？</span>
+          <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="${regLinkClass}">
             <span>进入导师认证与建库 (L1/L2)</span>
             <i class="fa-solid fa-angle-right text-xs"></i>
           </button>
         `;
       } else {
         tabParent.setAttribute('aria-selected', 'true');
-        roleTitle.innerText = "家长 / 学员登录";
+        roleTitle.innerText = '家长 / 学员登录';
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('parent')
           : '单次约课零预付 · 优选双一流学霸导师';
+        if (heroParent) heroParent.classList.remove('is-hidden');
+        if (heroMentor) heroMentor.classList.add('is-hidden');
+        if (mobParent) mobParent.classList.remove('is-hidden');
+        if (mobMentor) mobMentor.classList.add('is-hidden');
+        if (compliance) {
+          compliance.innerHTML = `
+            <span class="flex items-center gap-1"><i class="fa-solid fa-shield-check text-orange-400"></i>合规实名与学籍核验</span>
+            <span class="text-slate-600">·</span>
+            <span class="flex items-center gap-1"><i class="fa-solid fa-building-columns text-orange-400"></i>课次托管资金保障</span>
+          `;
+        }
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">首次约课辅导？</span>
-          <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="${regLinkClass}">
             <span>前往学情建档注册</span>
             <i class="fa-solid fa-angle-right text-xs"></i>
           </button>
         `;
       }
+      const submitText = document.getElementById('btnSubmitLoginText');
+      if (submitText) submitText.textContent = loginCtaLabel(role);
+      else resetSubmitButton();
     }
 
     // 切换验证码 / 密码登录模式
@@ -506,14 +589,12 @@
       }
 
       const submitBtn = document.getElementById('btnSubmitLogin');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>验证中...</span>';
+      setSubmitLoading('验证中...');
 
       if (isCodeMode) {
         const code = document.getElementById('smsCodeInput').value.trim();
         if (!code || code.length !== 6) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+          resetSubmitButton();
           showToast('请输入 6 位短信验证码！', 'error');
           return;
         }
@@ -525,34 +606,31 @@
             const verifyResult = await StorageService.verifySMS(mobile, code, 'login');
             
             if (!verifyResult.success) {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              resetSubmitButton();
               showToast(verifyResult.error || '验证码错误，请重试', 'error');
               return;
             }
 
             const ticket = verifyResult.ticket;
             if (!ticket) {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              resetSubmitButton();
               showToast('验证成功但未获取到票据，请重试', 'error');
               return;
             }
 
             // Step 2: 使用票据登录
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>登录中...</span>';
+            setSubmitLoading('登录中...');
             const loginResult = await StorageService.login(ticket, currentRole);
 
             if (!loginResult.success) {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              resetSubmitButton();
               showToast(loginResult.error || '登录失败，请重试', 'error');
               return;
             }
 
             // Step 3: 登录成功，hydrate数据，确定跳转目标
             const user = loginResult.user;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>加载数据...</span>';
+            setSubmitLoading('加载数据...');
             
             // Hydrate from server to get latest data
             try {
@@ -561,7 +639,7 @@
               console.warn('Hydration failed, using local data:', e);
             }
             
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>登录成功，正在进入...</span>';
+            setSubmitLoading('登录成功，正在进入...');
             const roleLabel = user.role === 'mentor' ? '导师工作台' : (user.role === 'admin' ? '星火运营中台' : '家长预约中心');
             showToast(`欢迎回来！正在进入${roleLabel}...`);
 
@@ -593,23 +671,20 @@
             // 若约 2.5s 后仍停留在登录页，展示「手动进入」并恢复按钮
             if (pendingNavWatch) clearTimeout(pendingNavWatch);
             pendingNavWatch = setTimeout(() => {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+              resetSubmitButton();
               showManualEnterFallback(target.url);
               showToast('自动跳转未完成，请点击「手动进入」', 'warning');
             }, 2500);
           } catch (error) {
             console.error('Login error:', error);
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+            resetSubmitButton();
             showToast(error.message || '登录失败，请重试', 'error');
           }
         })();
         return; // 异步处理，不继续执行下面的代码
       }
 
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>安全登录</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+      resetSubmitButton();
       showToast('请使用短信验证码登录（密码登录暂未开放）', 'warning');
     }
 

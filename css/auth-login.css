@@ -5,6 +5,58 @@ html[data-xh-auth-ui="1"] #xhLoading {
   display: none !important;
 }
 
+.xh-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #ff8c3a 0%, #e63022 100%);
+  padding: 2px;
+  box-shadow: 0 2px 10px rgba(255, 107, 44, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.xh-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.xh-auth-hero.is-hidden,
+.xh-auth-hero-mobile.is-hidden {
+  display: none !important;
+}
+
+@keyframes sparkBreathe {
+  0%, 100% { transform: scale(0.94); opacity: 0.92; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+.xh-inline-mascot-loader {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  animation: sparkBreathe 1.25s ease-in-out infinite;
+}
+
+.xh-auth-link {
+  color: #fdba74;
+}
+.xh-auth-link:hover {
+  color: #ffedd5;
+}
+
+.xh-role-pill button {
+  color: #fff;
+}
+.xh-role-pill button[aria-selected="false"] i {
+  color: #fff;
+  opacity: 0.95;
+}
+
 #manualEnterFallback {
   display: none !important;
 }
@@ -103,7 +155,7 @@ html[data-xh-auth-ui="1"] #xhLoading {
   align-items: center;
   gap: 0.35rem;
   transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-  color: #cbd5e1;
+  color: #fff;
   background: transparent;
 }
 .xh-role-pill button[aria-selected="true"] {

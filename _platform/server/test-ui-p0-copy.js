@@ -93,7 +93,12 @@ function main() {
   assert.ok(svg.includes('@keyframes pulse'), 'loading SVG 含 CSS pulse');
   assert.ok(read('assets/loading/xinghuo-loading-overlay.css').includes('#xhLoading'), 'overlay CSS 存在');
   const xhLoading = read('js/xh-loading.js');
-  assert.ok(xhLoading.includes('xinghuo-loading.svg'), 'Web overlay 使用 SVG');
+  assert.ok(
+    xhLoading.includes('spark-mascot-loader.svg') || xhLoading.includes('xinghuo-loading.svg'),
+    'Web overlay 使用星火加载 SVG'
+  );
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/loading/spark-mascot-loader.svg')), 'spark mascot loader SVG 存在');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/brand/spark-mascot-96.png')), 'spark mascot PNG 存在');
   assert.ok(xhLoading.includes('/api/pay/wechat/sync'), 'Web overlay 跳过支付轮询');
   assert.ok(xhLoading.includes('/api/feature-flags'), 'Web overlay 跳过 feature-flags');
   [

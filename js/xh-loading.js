@@ -8,7 +8,8 @@
   var pending = 0;
   var showTimer = null;
   var DELAY_MS = 160;
-  var SVG_NAME = 'xinghuo-loading.svg';
+  var SVG_NAME = 'spark-mascot-loader.svg';
+  var SVG_LEGACY = 'xinghuo-loading.svg';
   var CSS_NAME = 'xinghuo-loading-overlay.css';
 
   function assetUrl(name) {
@@ -40,7 +41,7 @@
     wrap.setAttribute('aria-busy', 'false');
     wrap.innerHTML =
       '<div class="xh-logo-wrap">' +
-        '<img class="xh-logo" alt="" width="72" height="72" src="' + assetUrl(SVG_NAME) + '">' +
+        '<img class="xh-logo xh-logo-mascot" alt="" width="80" height="80" src="' + assetUrl(SVG_NAME) + '" data-fallback="' + assetUrl(SVG_LEGACY) + '">' +
       '</div>' +
       '<div class="xh-tip">正在连接服务…</div>';
     document.body.appendChild(wrap);
@@ -130,9 +131,27 @@
     global.fetch = wrapped;
   }
 
+  function wireLogoFallback() {
+    try {
+      var img = document.querySelector('#xhLoading .xh-logo-mascot');
+      if (!img || img.__xhFallbackWired) return;
+      img.__xhFallbackWired = true;
+      img.addEventListener('error', function onErr() {
+        var fb = img.getAttribute('data-fallback');
+        if (fb && img.src.indexOf('spark-mascot-loader') >= 0) {
+          img.removeEventListener('error', onErr);
+          img.src = fb;
+        }
+      });
+    } catch (e) {}
+  }
+
   function boot() {
     wrapFetch();
-    if (document.body) ensureDom();
+    if (document.body) {
+      ensureDom();
+      wireLogoFallback();
+    }
   }
 
   if (document.readyState === 'loading') {
