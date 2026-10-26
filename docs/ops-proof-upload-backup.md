@@ -78,7 +78,9 @@ The live upload path is unchanged. A scheduled job copies **only files added on 
 - **排除** `server/uploads/`（或整个 `uploads`），不要用部署包覆盖线上已上传文件；
 - **不要**把 `/www/xinghuo-data/` 纳入会被 `--delete` 同步的目标树。
 
-本仓库未包含生产 rsync 脚本；若客户侧有自定义部署脚本，请把上述目录加入 exclude 列表。
+生产一键部署脚本见仓库根目录 **`scripts/deploy-xinghuo.sh`**（生产机通常为 `/root/deploy-xinghuo.sh`，请与仓库保持同步）。脚本已：
+- rsync API 时 **排除** `uploads/`；
+- 在 pm2 重载前 **`mkdir -p uploads/proofs` + `chown -R www:www uploads`**，避免 tarball 部署后属主为 root 导致 EACCES。
 
 ---
 

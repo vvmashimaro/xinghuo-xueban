@@ -1967,27 +1967,31 @@ function refundPayOrder(outTradeNo, meta) {
   if (order.status === 'REFUND' || order.status === 'REFUNDED') {
     return { ok: false, error: '订单已退款' };
   }
-  if (order.status === 'refund_pending') {
+  const wxStatus = String((meta && (meta.wxStatus || meta.status)) || '').toUpperCase();
+  const completingPending = order.status === 'refund_pending' && wxStatus === 'SUCCESS';
+  if (order.status === 'refund_pending' && !completingPending) {
     return { ok: false, error: '退款处理中', status: 'refund_pending' };
   }
-  if (order.status !== 'SUCCESS' && order.status !== 'refund_failed') {
+  if (!completingPending && order.status !== 'SUCCESS' && order.status !== 'refund_failed') {
     return { ok: false, error: '仅已支付订单可退款' };
   }
-  const wxStatus = String((meta && (meta.wxStatus || meta.status)) || '').toUpperCase();
   let nextStatus = 'REFUND';
-  if (wxStatus === 'PROCESSING') nextStatus = 'refund_pending';
-  if (wxStatus === 'ABNORMAL' || wxStatus === 'CLOSED' || wxStatus === 'REFUND_FAILED') {
-    nextStatus = 'refund_failed';
+  if (!completingPending) {
+    if (wxStatus === 'PROCESSING') nextStatus = 'refund_pending';
+    if (wxStatus === 'ABNORMAL' || wxStatus === 'CLOSED' || wxStatus === 'REFUND_FAILED') {
+      nextStatus = 'refund_failed';
+    }
   }
   const refundTime = _now();
   const updatedOrder = savePayOrder(
     Object.assign({}, order, {
       status: nextStatus,
-      refundWxStatus: wxStatus || nextStatus,
+      refundWxStatus: completingPending ? 'SUCCESS' : wxStatus || nextStatus,
       refundTime,
-      refundReason: (meta && meta.reason) || '',
-      refundedBy: (meta && meta.refundedBy) || 'admin',
-      refundId: (meta && meta.refundId) || order.refundId
+      refundReason: (meta && meta.reason) || order.refundReason || '',
+      refundedBy: (meta && meta.refundedBy) || order.refundedBy || 'admin',
+      refundId: (meta && meta.refundId) || order.refundId,
+      outRefundNo: (meta && meta.outRefundNo) || order.outRefundNo
     })
   );
   if (nextStatus === 'refund_failed') {
