@@ -1,0 +1,122 @@
+/* Web login: desktop split layout + promo typography */
+.login-main {
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem 1.25rem 2rem;
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .login-main {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3rem;
+    padding-left: 2.5rem;
+    padding-right: 3rem;
+  }
+}
+
+.login-promo {
+  order: 1;
+  flex: 1 1 auto;
+  max-width: 36rem;
+  padding: 0.5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .login-promo {
+    order: 0;
+    margin-right: auto;
+    padding-right: 1rem;
+  }
+}
+
+.login-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(45, 212, 191, 0.95);
+  margin-bottom: 1rem;
+}
+
+.login-promo-headline {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin-bottom: 1.25rem;
+}
+
+.login-promo-headline .accent {
+  color: #2dd4bf;
+  letter-spacing: 0.02em;
+}
+
+.login-promo-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.login-promo-lines li {
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(226, 232, 240, 0.92);
+  padding-left: 1rem;
+  border-left: 3px solid rgba(20, 184, 166, 0.65);
+  line-height: 1.45;
+}
+
+.login-promo-lines li strong {
+  color: #2dd4bf;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.login-card-wrap {
+  order: 2;
+  width: 100%;
+  max-width: 28rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .login-card-wrap {
+    margin-left: 0;
+  }
+}
+
+.login-compliance {
+  order: 3;
+  width: 100%;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .login-compliance {
+    position: absolute;
+    bottom: 0;
+    right: 3rem;
+    max-width: 28rem;
+  }
+}

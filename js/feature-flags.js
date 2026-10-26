@@ -66,13 +66,9 @@
 
   function getLoginRoleSubtitle(role) {
     if (role === 'mentor') {
-      return isSmartWarehouseEnabled()
-        ? '资金保障 · 免押扫码开启智能教学仓'
-        : '资金保障 · 阳光透明接单授课';
+      return '资金保障 · 按次接单不捆绑';
     }
-    return isSmartWarehouseEnabled()
-      ? '单次约课零预付 · 优选双一流学霸与合规微空间'
-      : '单次约课零预付 · 优选双一流学霸导师';
+    return '按次约课 · 试讲评级可见';
   }
 
   window.isSmartWarehouseEnabled = isSmartWarehouseEnabled;

@@ -8,14 +8,14 @@ const ROLE_META = {
   mentor: {
     title: '伴读导师端登录',
     subtitle: warehouseOn
-      ? '资金保障 · 免押扫码开启智能教学仓'
-      : '资金保障 · 阳光透明接单授课'
+      ? '资金保障 · 按次接单不捆绑'
+      : '资金保障 · 按次接单不捆绑'
   },
   parent: {
     title: '家长 / 学员登录',
     subtitle: warehouseOn
-      ? '单次约课零预付 · 优选双一流学霸与合规微空间'
-      : '单次约课零预付 · 优选双一流学霸导师'
+      ? '按次约课 · 试讲评级可见'
+      : '按次约课 · 试讲评级可见'
   }
 };
 
@@ -38,12 +38,12 @@ async function resolvePostLoginTarget(user) {
 
 Page({
   data: {
-    role: 'mentor',
+    role: 'parent',
     heroSub: warehouseOn
       ? '阳光课业辅导 · 智能微仓 · 课酬资金保障'
       : '阳光课业辅导 · 导师匹配 · 课酬资金保障',
-    roleTitle: ROLE_META.mentor.title,
-    roleSubtitle: ROLE_META.mentor.subtitle,
+    roleTitle: ROLE_META.parent.title,
+    roleSubtitle: ROLE_META.parent.subtitle,
     mobile: '',
     smsCode: '',
     agreed: false,

@@ -10,6 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/auth-login.css">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -39,13 +40,17 @@
   <!-- 顶部轻量系统栏：左侧品牌，右侧角色切换 -->
   <header class="w-full px-5 sm:px-8 py-4 flex items-center justify-between relative z-10 gap-3">
     <div class="flex items-center space-x-2.5 min-w-0">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shadow-teal-500/20 shrink-0">
-        <i class="fa-solid fa-graduation-cap"></i>
-      </div>
+      <img
+        src="assets/brand/spark-logo-teal-noface-192.png"
+        alt="星火学伴"
+        width="36"
+        height="36"
+        class="w-9 h-9 rounded-xl shrink-0 object-contain"
+        decoding="async"
+      />
       <div class="min-w-0">
         <div class="flex items-center gap-2">
           <span class="font-black text-white text-base tracking-tight leading-none">星火学伴</span>
-          <span class="text-xs bg-teal-500/20 text-teal-300 px-1.5 py-0.5 rounded font-mono">AUTH</span>
         </div>
         <span class="text-xs text-slate-400 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
       </div>
@@ -53,28 +58,43 @@
 
     <!-- 角色切换：右上角紧凑分段控件 -->
     <div id="roleSwitchBar" class="flex items-center gap-0.5 p-0.5 rounded-full bg-white/10 backdrop-blur-md shrink-0" role="tablist" aria-label="登录角色">
-      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false">
-        <i class="fa-solid fa-user-group text-xs opacity-70"></i>
-        <span class="hidden xs:inline sm:inline">家长学员端</span>
-        <span class="sm:hidden">家长</span>
+      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer" role="tab" aria-selected="true" aria-label="找学伴">
+        <i class="fa-solid fa-user-group text-xs text-teal-600"></i>
+        <span>找学伴</span>
       </button>
-      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer" role="tab" aria-selected="true">
-        <i class="fa-solid fa-chalkboard-user text-xs text-teal-600"></i>
-        <span class="hidden xs:inline sm:inline">导师端</span>
-        <span class="sm:hidden">导师</span>
+      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false" aria-label="去授课">
+        <i class="fa-solid fa-chalkboard-user text-xs opacity-70"></i>
+        <span>去授课</span>
       </button>
     </div>
   </header>
 
-  <main class="w-full max-w-md mx-auto px-4 py-4 sm:py-8 relative z-10 flex-1 flex flex-col justify-center">
+  <main class="login-main">
+    <aside id="loginPromo" class="login-promo" aria-label="品牌介绍">
+      <div class="login-promo-badge">
+        <span aria-hidden="true">◆</span>
+        <span id="promoBadge">星火学伴</span>
+      </div>
+      <h2 id="promoHeadline" class="login-promo-headline">
+        <span class="accent">找对学伴</span>，课业路上不慌
+      </h2>
+      <ul id="promoLines" class="login-promo-lines">
+        <li><strong>智能匹配</strong> · 按学科智能推荐</li>
+        <li><strong>透明可见</strong> · 试讲评级可见</li>
+        <li><strong>灵活约课</strong> · 按次约课无捆绑</li>
+        <li><strong>合规保障</strong> · 合规实名与资金托管</li>
+      </ul>
+    </aside>
+
+    <div class="login-card-wrap">
     <!-- 无边框、强融合背景的半透明面板 -->
     <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-5 transition-all">
 
       <!-- 动态标题说明 -->
       <div class="space-y-1">
-        <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">伴读导师端登录</h1>
+        <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">家长 / 学员登录</h1>
         <p id="roleSubtitle" class="text-sm text-slate-300/80 leading-relaxed">
-          资金保障 · 阳光透明接单授课
+          按次约课 · 试讲评级可见
         </p>
       </div>
 
@@ -85,10 +105,10 @@
         <div>
           <label class="block text-xs font-bold text-slate-200/90 mb-1.5">手机号码</label>
           <div class="relative">
-            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-500 text-xs font-bold pr-2 select-none">
+            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-500 text-xs font-bold pr-2 select-none pointer-events-none" aria-hidden="true">
               <span>+86</span>
             </div>
-            <input type="tel" id="loginMobile" required maxlength="11" placeholder="例：138****8000（入库登记或预留手机号）" class="field-soft w-full text-sm pl-14 pr-3.5 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition font-medium text-slate-800 placeholder:text-slate-500/70">
+            <input type="tel" id="loginMobile" required maxlength="11" autocomplete="tel-national" placeholder="例：138****8000（入库登记或预留手机号）" class="field-soft w-full text-sm pl-14 pr-3.5 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition font-medium text-slate-800 placeholder:text-slate-500/70">
           </div>
         </div>
 
@@ -104,10 +124,6 @@
               获取验证码
             </button>
           </div>
-          <div id="smsDemoHint" class="text-xs text-slate-400 flex items-center gap-1 pt-0.5">
-            <i class="fa-solid fa-circle-info text-teal-400"></i>
-            <span id="smsDemoHintText">请先点击「获取验证码」，验证码将发送至您的手机</span>
-          </div>
         </div>
 
         <!-- 登录方式二：账户密码（默认隐藏，点击切换呼出） -->
@@ -122,13 +138,13 @@
           </div>
         </div>
 
-        <!-- 登录方式切换链接与忘记密码 -->
-        <div class="flex items-center justify-between text-xs pt-0.5">
-          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-300 hover:text-teal-200 font-semibold flex items-center gap-1 transition cursor-pointer">
+        <!-- 密码登录切换（保留 DOM，默认隐藏） -->
+        <div class="hidden flex items-center justify-between text-xs pt-0.5" aria-hidden="true">
+          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-300 hover:text-teal-200 font-semibold flex items-center gap-1 transition cursor-pointer" tabindex="-1">
             <i class="fa-solid fa-rotate text-xs"></i>
             <span id="toggleLoginModeText">改用账号密码登录</span>
           </button>
-          <button type="button" onclick="showToast('请联系平台教研客服或使用免密短信重置')" class="text-slate-400 hover:text-slate-200 transition cursor-pointer">
+          <button type="button" onclick="showToast('请联系平台教研客服或使用免密短信重置')" class="text-slate-400 hover:text-slate-200 transition cursor-pointer" tabindex="-1">
             忘记密码？
           </button>
         </div>
@@ -167,17 +183,18 @@
 
       <!-- 底部入驻指引（无分割线） -->
       <div id="registerPromptBox" class="pt-2 flex items-center justify-between text-xs gap-2">
-        <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
-        <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
-          <span>进入导师认证与建库 (L1/L2)</span>
+        <span class="text-slate-400 shrink-0">首次约课辅导？</span>
+        <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <span>前往学情建档注册</span>
           <i class="fa-solid fa-angle-right text-xs"></i>
         </button>
       </div>
 
     </div>
+    </div>
 
     <!-- 底部合规说明 -->
-    <div class="mt-5 text-center text-xs text-slate-400 space-y-1">
+    <div class="login-compliance mt-5 text-center text-xs text-slate-400 space-y-1">
       <div class="flex items-center justify-center gap-3 flex-wrap">
         <span class="flex items-center gap-1">
           <i class="fa-solid fa-shield-check text-teal-400"></i>
@@ -222,7 +239,40 @@
 <script>
     'use strict';
 
-    let currentRole = 'mentor';
+    let currentRole = 'parent';
+
+    const PROMO_COPY = {
+      parent: {
+        badge: '星火学伴',
+        headlineHtml: '<span class="accent">找对学伴</span>，课业路上不慌',
+        lines: [
+          '<li><strong>智能匹配</strong> · 按学科智能推荐</li>',
+          '<li><strong>透明可见</strong> · 试讲评级可见</li>',
+          '<li><strong>灵活约课</strong> · 按次约课无捆绑</li>',
+          '<li><strong>合规保障</strong> · 合规实名与资金托管</li>'
+        ]
+      },
+      mentor: {
+        badge: '去授课',
+        headlineHtml: '<span class="accent">找对家庭</span>，阳光接单不慌',
+        lines: [
+          '<li><strong>精准匹配</strong> · 优质生源按需推送</li>',
+          '<li><strong>透明履约</strong> · 排课与评级清晰可见</li>',
+          '<li><strong>灵活接单</strong> · 按次授课无捆绑</li>',
+          '<li><strong>合规保障</strong> · 实名入库与课酬托管</li>'
+        ]
+      }
+    };
+
+    function updatePromo(role) {
+      const copy = PROMO_COPY[role] || PROMO_COPY.parent;
+      const badge = document.getElementById('promoBadge');
+      const headline = document.getElementById('promoHeadline');
+      const lines = document.getElementById('promoLines');
+      if (badge) badge.textContent = copy.badge;
+      if (headline) headline.innerHTML = copy.headlineHtml;
+      if (lines) lines.innerHTML = copy.lines.join('');
+    }
     let isCodeMode = true;
     let countdown = 0;
     let timerInterval = null;
@@ -293,7 +343,7 @@
         roleTitle.innerText = "伴读导师端登录";
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('mentor')
-          : '资金保障 · 阳光透明接单授课';
+          : '资金保障 · 按次接单不捆绑';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
           <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -307,7 +357,7 @@
         roleTitle.innerText = "家长 / 学员登录";
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('parent')
-          : '单次约课零预付 · 优选双一流学霸导师';
+          : '按次约课 · 试讲评级可见';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">首次约课辅导？</span>
           <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -316,6 +366,7 @@
           </button>
         `;
       }
+      updatePromo(role);
     }
 
     // 切换验证码 / 密码登录模式
@@ -389,13 +440,8 @@
             }
           }, 1000);
 
-          const hintEl = document.getElementById('smsDemoHint');
-          const hintText = document.getElementById('smsDemoHintText');
           if (result.requiresRealCode) {
-            if (hintText) hintText.textContent = '该手机号需使用短信中的真实验证码登录';
-            if (hintEl) hintEl.classList.remove('hidden');
-          } else if (result.message && hintText) {
-            hintText.textContent = result.message;
+            showToast('该手机号需使用短信中的真实验证码登录', 'warning');
           }
           const msg = result.message || (result.provider === 'mock'
             ? '短信验证码已发送'
@@ -621,14 +667,16 @@
       }, 2600);
     }
 
-    if (window.getLoginRoleSubtitle) {
-      const rs = document.getElementById('roleSubtitle');
-      if (rs) rs.innerText = window.getLoginRoleSubtitle(currentRole);
-    }
     try {
       var bootRole = new URLSearchParams(window.location.search || '').get('role');
-      if (bootRole === 'parent' || bootRole === 'mentor') switchRole(bootRole);
-    } catch (e) {}
+      if (bootRole === 'parent' || bootRole === 'mentor') {
+        switchRole(bootRole);
+      } else {
+        switchRole('parent');
+      }
+    } catch (e) {
+      switchRole('parent');
+    }
   </script>
 </body>
 </html>

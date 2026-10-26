@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火学伴 · 登录布局预览（找学伴 / 去授课）</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* --- Inlined from css/auth-login.css --- */
+    .login-main {
+      width: 100%;
+      max-width: 72rem;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 1rem 1.25rem 2rem;
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2rem;
+    }
+    @media (min-width: 1024px) {
+      .login-main {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 3rem;
+        padding-left: 2.5rem;
+        padding-right: 3rem;
+      }
+    }
+    .login-promo {
+      order: 1;
+      flex: 1 1 auto;
+      max-width: 36rem;
+      padding: 0.5rem 0;
+    }
+    @media (min-width: 1024px) {
+      .login-promo {
+        order: 0;
+        margin-right: auto;
+        padding-right: 1rem;
+      }
+    }
+    .login-promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(45, 212, 191, 0.95);
+      margin-bottom: 1rem;
+    }
+    .login-promo-headline {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 1.25rem;
+    }
+    .login-promo-headline .accent {
+      color: #2dd4bf;
+      letter-spacing: 0.02em;
+    }
+    .login-promo-lines {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .login-promo-lines li {
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: rgba(226, 232, 240, 0.92);
+      padding-left: 1rem;
+      border-left: 3px solid rgba(20, 184, 166, 0.65);
+      line-height: 1.45;
+    }
+    .login-promo-lines li strong {
+      color: #2dd4bf;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .login-card-wrap {
+      order: 2;
+      width: 100%;
+      max-width: 28rem;
+      flex-shrink: 0;
+    }
+    .login-compliance {
+      order: 3;
+      width: 100%;
+      max-width: 28rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    @media (min-width: 1024px) {
+      .login-compliance {
+        position: absolute;
+        bottom: 0;
+        right: 3rem;
+        max-width: 28rem;
+      }
+    }
+
+    /* --- Page shell (login.html critical) --- */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #1e293b;
+      background: linear-gradient(to bottom right, #0f172a, #1e293b, #134e4a);
+      overflow-x: hidden;
+    }
+    .bg-glow { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .bg-glow .a { position: absolute; top: -10rem; right: -10rem; width: 24rem; height: 24rem; background: rgba(20, 184, 166, 0.15); border-radius: 9999px; filter: blur(64px); }
+    .bg-glow .b { position: absolute; bottom: -10rem; left: -10rem; width: 24rem; height: 24rem; background: rgba(16, 185, 129, 0.1); border-radius: 9999px; filter: blur(64px); }
+    .site-header {
+      width: 100%;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      position: relative;
+      z-index: 10;
+    }
+    .brand { display: flex; align-items: center; gap: 0.625rem; min-width: 0; }
+    .brand-logo {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      flex-shrink: 0;
+      object-fit: contain;
+      display: block;
+    }
+    .brand-title { font-weight: 900; color: #fff; font-size: 1rem; }
+    .brand-sub { font-size: 0.75rem; color: #94a3b8; display: block; }
+    .role-switch {
+      display: flex; gap: 0.125rem; padding: 0.125rem; border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); flex-shrink: 0;
+    }
+    .role-tab {
+      padding: 0.375rem 0.75rem; border-radius: 9999px; border: none; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;
+      background: transparent; color: #cbd5e1; transition: color 0.15s, background 0.15s;
+    }
+    .role-tab:hover { color: #fff; }
+    .role-tab.on { background: rgba(255, 255, 255, 0.9); color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .role-tab.on i { color: #0d9488; }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 1.5rem;
+      padding: 1.5rem 2rem;
+    }
+    .card-title { font-size: 1.25rem; font-weight: 900; color: #fff; margin: 0 0 0.25rem; }
+    .card-sub { font-size: 0.875rem; color: rgba(203, 213, 225, 0.8); margin: 0 0 1.25rem; line-height: 1.5; }
+    .field-label { display: block; font-size: 0.75rem; font-weight: 700; color: rgba(226, 232, 240, 0.9); margin-bottom: 0.375rem; }
+    .field-soft {
+      width: 100%; font-size: 0.875rem; padding: 0.625rem 0.875rem; border: 0; border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(8px); color: #1e293b;
+    }
+    .field-soft:focus { outline: none; box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.6); background: rgba(255, 255, 255, 0.55); }
+    .field-row { display: flex; gap: 0.5rem; }
+    .field-row .field-soft { flex: 1; }
+    .btn-send {
+      flex-shrink: 0; background: rgba(255, 255, 255, 0.25); color: #ccfbf1;
+      font-size: 0.75rem; font-weight: 700; padding: 0.625rem 0.875rem; border: none; border-radius: 0.75rem; cursor: pointer;
+    }
+    .btn-primary {
+      width: 100%; margin-top: 0.5rem; padding: 0.75rem; border: none; border-radius: 0.75rem;
+      background: rgba(20, 184, 166, 0.9); color: #020617; font-weight: 700; font-size: 0.875rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .reg-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.75rem; padding-top: 0.5rem; }
+    .reg-row span { color: #94a3b8; }
+    .reg-btn {
+      font-weight: 700; color: #99f6e4; background: rgba(255,255,255,0.1); border: none; border-radius: 0.5rem;
+      padding: 0.375rem 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;
+    }
+    .check-row { display: flex; gap: 0.5rem; font-size: 0.75rem; color: #94a3b8; align-items: flex-start; margin: 0.75rem 0; }
+    .check-row a { color: #5eead4; text-decoration: underline; }
+    .compliance { text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 1.25rem; }
+    .compliance i { color: #2dd4bf; }
+    .site-footer { text-align: center; font-size: 0.75rem; color: #64748b; padding: 1rem; position: relative; z-index: 10; }
+    .preview-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255, 107, 44, 0.92); color: #0f172a; text-align: center;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.35rem;
+    }
+    body { padding-top: 1.75rem; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <p class="preview-banner">静态布局预览 · PR #61 · 无 API / 无密码入口</p>
+  <div class="bg-glow" aria-hidden="true"><div class="a"></div><div class="b"></div></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <img
+        class="brand-logo"
+        src="../../assets/brand/spark-logo-teal-noface-192.png"
+        alt="星火学伴"
+        width="36"
+        height="36"
+        decoding="async"
+      />
+      <div>
+        <div><span class="brand-title">星火学伴</span></div>
+        <span class="brand-sub">阳光合规课辅 · 智能共享空间</span>
+      </div>
+    </div>
+    <div class="role-switch" role="tablist" aria-label="找学伴与去授课">
+      <button type="button" id="tabParent" class="role-tab on" role="tab" aria-selected="true" aria-label="找学伴" onclick="switchRole('parent')">
+        <i class="fa-solid fa-user-group"></i><span>找学伴</span>
+      </button>
+      <button type="button" id="tabMentor" class="role-tab" role="tab" aria-selected="false" aria-label="去授课" onclick="switchRole('mentor')">
+        <i class="fa-solid fa-chalkboard-user"></i><span>去授课</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="login-main">
+    <aside id="loginPromo" class="login-promo" aria-label="品牌介绍">
+      <div class="login-promo-badge"><span aria-hidden="true">◆</span><span id="promoBadge">星火学伴</span></div>
+      <h2 id="promoHeadline" class="login-promo-headline"><span class="accent">找对学伴</span>，课业路上不慌</h2>
+      <ul id="promoLines" class="login-promo-lines">
+        <li><strong>智能匹配</strong> · 按学科智能推荐</li>
+        <li><strong>透明可见</strong> · 试讲评级可见</li>
+        <li><strong>灵活约课</strong> · 按次约课无捆绑</li>
+        <li><strong>合规保障</strong> · 合规实名与资金托管</li>
+      </ul>
+    </aside>
+
+    <div class="login-card-wrap">
+      <div class="glass-panel">
+        <h1 id="roleTitle" class="card-title">家长 / 学员登录</h1>
+        <p id="roleSubtitle" class="card-sub">按次约课 · 试讲评级可见</p>
+        <form onsubmit="event.preventDefault(); return false;">
+          <label class="field-label">手机号码</label>
+          <input type="tel" class="field-soft" placeholder="例：138****8000" maxlength="11" style="margin-bottom:1rem;">
+          <label class="field-label">短信验证码</label>
+          <div class="field-row" style="margin-bottom:0.5rem;">
+            <input type="text" class="field-soft" placeholder="请输入 6 位短信验证码" maxlength="6">
+            <button type="button" class="btn-send" onclick="void 0">获取验证码</button>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="agree">
+            <span>已阅读并同意 <a href="#">《服务协议》</a> 与 <a href="#">《个人信息保护政策》</a></span>
+          </div>
+          <button type="submit" class="btn-primary"><span>安全登录</span><i class="fa-solid fa-arrow-right"></i></button>
+        </form>
+        <div id="registerPromptBox" class="reg-row">
+          <span>首次约课辅导？</span>
+          <button type="button" class="reg-btn"><span>前往学情建档注册</span><i class="fa-solid fa-angle-right"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-compliance compliance">
+      <span><i class="fa-solid fa-shield-check"></i> 合规实名与学籍核验</span>
+      ·
+      <span><i class="fa-solid fa-building-columns"></i> 课酬资金保障</span>
+    </div>
+  </main>
+
+  <footer class="site-footer">© 2026 星火学伴 · 布局预览 standalone</footer>
+
+  <script>
+    'use strict';
+    const PROMO_COPY = {
+      parent: {
+        badge: '星火学伴',
+        headlineHtml: '<span class="accent">找对学伴</span>，课业路上不慌',
+        lines: [
+          '<li><strong>智能匹配</strong> · 按学科智能推荐</li>',
+          '<li><strong>透明可见</strong> · 试讲评级可见</li>',
+          '<li><strong>灵活约课</strong> · 按次约课无捆绑</li>',
+          '<li><strong>合规保障</strong> · 合规实名与资金托管</li>'
+        ],
+        title: '家长 / 学员登录',
+        subtitle: '按次约课 · 试讲评级可见',
+        regHtml: '<span>首次约课辅导？</span><button type="button" class="reg-btn"><span>前往学情建档注册</span><i class="fa-solid fa-angle-right"></i></button>'
+      },
+      mentor: {
+        badge: '去授课',
+        headlineHtml: '<span class="accent">找对家庭</span>，阳光接单不慌',
+        lines: [
+          '<li><strong>精准匹配</strong> · 优质生源按需推送</li>',
+          '<li><strong>透明履约</strong> · 排课与评级清晰可见</li>',
+          '<li><strong>灵活接单</strong> · 按次授课无捆绑</li>',
+          '<li><strong>合规保障</strong> · 实名入库与课酬托管</li>'
+        ],
+        title: '伴读导师端登录',
+        subtitle: '资金保障 · 按次接单不捆绑',
+        regHtml: '<span>还未通过资质核验？</span><button type="button" class="reg-btn"><span>进入导师认证与建库 (L1/L2)</span><i class="fa-solid fa-angle-right"></i></button>'
+      }
+    };
+
+    function switchRole(role) {
+      const copy = PROMO_COPY[role] || PROMO_COPY.parent;
+      document.getElementById('tabParent').classList.toggle('on', role === 'parent');
+      document.getElementById('tabMentor').classList.toggle('on', role === 'mentor');
+      document.getElementById('tabParent').setAttribute('aria-selected', role === 'parent' ? 'true' : 'false');
+      document.getElementById('tabMentor').setAttribute('aria-selected', role === 'mentor' ? 'true' : 'false');
+      document.getElementById('promoBadge').textContent = copy.badge;
+      document.getElementById('promoHeadline').innerHTML = copy.headlineHtml;
+      document.getElementById('promoLines').innerHTML = copy.lines.join('');
+      document.getElementById('roleTitle').textContent = copy.title;
+      document.getElementById('roleSubtitle').textContent = copy.subtitle;
+      document.getElementById('registerPromptBox').innerHTML = copy.regHtml;
+    }
+    switchRole('parent');
+  </script>
+</body>
+</html>
