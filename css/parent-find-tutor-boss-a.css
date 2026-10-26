@@ -1,0 +1,748 @@
+/* 家长查找导师 · 方案 A Boss 双栏（生产页 scoped） */
+.parent-discover-boss {
+  --boss-filter-w: 260px;
+  --boss-teal-50: #f0fdfa;
+  --boss-teal-200: #99f6e4;
+  --boss-teal-500: #14b8a6;
+  --boss-teal-600: #0d9488;
+  --boss-teal-700: #0f766e;
+  --boss-radius: 16px;
+  --boss-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 20px rgba(15, 23, 42, 0.05);
+  --boss-shadow-lg: 0 12px 32px rgba(15, 118, 110, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.parent-discover-boss .boss-layout {
+  display: grid;
+  grid-template-columns: var(--boss-filter-w) 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .parent-discover-boss .boss-layout {
+    grid-template-columns: 1fr;
+  }
+  .parent-discover-boss .boss-filters {
+    position: static !important;
+    max-height: none !important;
+  }
+}
+
+.parent-discover-boss .boss-filters {
+  position: sticky;
+  top: 4.5rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--boss-radius);
+  padding: 1rem;
+  box-shadow: var(--boss-shadow);
+  max-height: calc(100vh - 5.5rem);
+  overflow-y: auto;
+}
+
+.parent-discover-boss .boss-filters-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.parent-discover-boss .boss-filters-title .hint {
+  font-weight: 600;
+  color: #94a3b8;
+  font-size: 0.65rem;
+}
+
+.parent-discover-boss .boss-filter-block {
+  margin-bottom: 0.9rem;
+}
+
+.parent-discover-boss .boss-filter-block > label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+.parent-discover-boss .boss-search-wrap {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.parent-discover-boss .boss-search-wrap i.fa-magnifying-glass {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.parent-discover-boss .boss-search-wrap input {
+  width: 100%;
+  padding: 0.55rem 0.75rem 0.55rem 2rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.parent-discover-boss .boss-search-wrap input:focus {
+  border-color: var(--boss-teal-500);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+}
+
+.parent-discover-boss .boss-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.parent-discover-boss .boss-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.55rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.parent-discover-boss .boss-chip:hover {
+  background: #e2e8f0;
+}
+
+.parent-discover-boss .boss-chip.on {
+  background: var(--boss-teal-600);
+  color: #fff;
+  font-weight: 800;
+}
+
+.parent-discover-boss .boss-chip.on-dark {
+  background: #0f172a;
+  color: #fff;
+  font-weight: 800;
+}
+
+.parent-discover-boss .boss-sort-select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.parent-discover-boss .boss-rate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  margin-bottom: 0.35rem;
+}
+
+.parent-discover-boss .boss-rate-row .val {
+  font-family: ui-monospace, monospace;
+  font-weight: 800;
+  color: var(--boss-teal-700);
+}
+
+.parent-discover-boss .boss-rate-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.parent-discover-boss .boss-rate-sliders input[type='range'] {
+  width: 100%;
+  accent-color: var(--boss-teal-600);
+  cursor: pointer;
+}
+
+.parent-discover-boss .boss-btn-search {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--boss-teal-600);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
+  cursor: pointer;
+}
+
+.parent-discover-boss .boss-btn-search:hover {
+  background: var(--boss-teal-700);
+}
+
+.parent-discover-boss .boss-btn-reset {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.parent-discover-boss .boss-btn-reset:hover {
+  background: #f1f5f9;
+}
+
+.parent-discover-boss .boss-result-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.parent-discover-boss .boss-result-bar .title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.parent-discover-boss .boss-result-bar .title i {
+  color: var(--boss-teal-600);
+}
+
+.parent-discover-boss .boss-result-bar .count {
+  font-family: ui-monospace, monospace;
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.parent-discover-boss .boss-result-bar .count strong {
+  color: var(--boss-teal-700);
+}
+
+.parent-discover-boss .boss-result-bar .trust {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.parent-discover-boss .boss-result-bar .trust i {
+  color: #059669;
+}
+
+.parent-discover-boss .boss-tutor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.parent-discover-boss .boss-m-card {
+  background: #fff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: var(--boss-radius);
+  padding: 1rem 1.1rem;
+  box-shadow: var(--boss-shadow);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.parent-discover-boss .boss-m-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--boss-teal-200);
+  box-shadow: var(--boss-shadow-lg);
+}
+
+.parent-discover-boss .boss-m-card.active {
+  border-color: var(--boss-teal-500);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15), var(--boss-shadow-lg);
+}
+
+.parent-discover-boss .boss-m-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.parent-discover-boss .boss-m-id {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.parent-discover-boss .boss-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--boss-teal-700), var(--boss-teal-500));
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.15rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+}
+
+.parent-discover-boss .boss-m-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.parent-discover-boss .boss-m-name h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.parent-discover-boss .boss-chsi {
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+}
+
+.parent-discover-boss .boss-m-school {
+  font-size: 0.7rem;
+  color: #475569;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.parent-discover-boss .boss-m-price {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.parent-discover-boss .boss-m-price .yen {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--boss-teal-700);
+  font-family: ui-monospace, monospace;
+}
+
+.parent-discover-boss .boss-m-price .yen small {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.parent-discover-boss .boss-match-pill {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  font-family: ui-monospace, monospace;
+  color: var(--boss-teal-700);
+  background: var(--boss-teal-50);
+  border: 1px solid var(--boss-teal-200);
+  border-radius: 4px;
+  padding: 0.05rem 0.4rem;
+}
+
+.parent-discover-boss .boss-highlight-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.7rem;
+}
+
+.parent-discover-boss .boss-highlight-row .hl {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  min-width: 0;
+}
+
+.parent-discover-boss .boss-highlight-row .hl i {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.parent-discover-boss .boss-highlight-row .hl span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parent-discover-boss .boss-highlight-row .hrs {
+  font-family: ui-monospace, monospace;
+  color: #94a3b8;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+}
+
+.parent-discover-boss .boss-section-label {
+  font-size: 0.625rem;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.parent-discover-boss .boss-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.parent-discover-boss .boss-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(240, 253, 250, 0.9);
+  color: #134e4a;
+  border: 1px solid rgba(153, 246, 228, 0.8);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parent-discover-boss .boss-style-tag {
+  font-size: 0.6rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+.parent-discover-boss .boss-m-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+}
+
+.parent-discover-boss .boss-m-loc {
+  color: #64748b;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parent-discover-boss .boss-m-loc i {
+  color: var(--boss-teal-600);
+  font-size: 0.65rem;
+}
+
+.parent-discover-boss .boss-m-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.parent-discover-boss .boss-btn-ghost-sm {
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.parent-discover-boss .boss-btn-ghost-sm:hover {
+  background: #e2e8f0;
+}
+
+.parent-discover-boss .boss-btn-ghost-sm i {
+  color: var(--boss-teal-600);
+  font-size: 0.65rem;
+}
+
+.parent-discover-boss .boss-btn-primary-sm {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--boss-teal-600);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+  cursor: pointer;
+}
+
+.parent-discover-boss .boss-btn-primary-sm:hover {
+  background: var(--boss-teal-700);
+}
+
+.parent-discover-boss .boss-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--boss-radius);
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* —— 右侧详情抽屉 —— */
+.tutor-boss-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 55;
+}
+
+.tutor-boss-drawer-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tutor-boss-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  background: #fff;
+  z-index: 56;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -12px 0 40px rgba(15, 23, 42, 0.15);
+}
+
+.tutor-boss-drawer.open {
+  transform: translateX(0);
+}
+
+.tutor-boss-drawer .drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.15rem;
+  background: linear-gradient(90deg, #0f172a, #134e4a);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.tutor-boss-drawer .head-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.tutor-boss-drawer .head-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  background: rgba(20, 184, 166, 0.2);
+  color: #5eead4;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+}
+
+.tutor-boss-drawer .drawer-head h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.tutor-boss-drawer .drawer-head .sub {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-top: 0.1rem;
+}
+
+.tutor-boss-drawer .drawer-close {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.tutor-boss-drawer .drawer-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.tutor-boss-drawer .drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.15rem;
+  font-size: 0.8rem;
+}
+
+.tutor-boss-drawer .drawer-foot {
+  padding: 0.9rem 1.15rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.tutor-boss-drawer .drawer-foot .btn-block {
+  flex: 1;
+  padding: 0.65rem;
+  border-radius: 0.85rem;
+  border: none;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.tutor-boss-drawer .btn-outline {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.tutor-boss-drawer .btn-outline:hover {
+  background: #e2e8f0;
+}
+
+.tutor-boss-drawer .btn-main {
+  background: #0d9488;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.3);
+}
+
+.tutor-boss-drawer .btn-main:hover {
+  background: #0f766e;
+}
+
+.tutor-boss-drawer .avatar.lg {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1.1rem;
+  font-size: 1.35rem;
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  color: #fff;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.tutor-boss-drawer .bio {
+  font-size: 0.85rem;
+  color: #334155;
+  margin: 0.85rem 0;
+  line-height: 1.55;
+}
+
+.tutor-boss-drawer .slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.tutor-boss-drawer .slot {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #f0fdfa;
+  color: #115e59;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+}
+
+.tutor-boss-drawer .trial-box {
+  position: relative;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f172a, #134e4a);
+  aspect-ratio: 16/9;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  cursor: pointer;
+}
+
+.tutor-boss-drawer .trial-box .play {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.35);
+  border: 2px solid rgba(94, 234, 212, 0.5);
+  display: grid;
+  place-items: center;
+}
+
+.tutor-boss-drawer .privacy-note {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 0.85rem;
+}

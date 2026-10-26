@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>查找导师 · 方案 A Boss 双栏（预览）· 星火学伴</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="preview-banner">效果预览 · 方案 A Boss 双栏 · 不开 PR / 不部署 · 筛选、点卡开抽屉、预约试讲均为本地演示</div>
+
+  <header class="glass-nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="brand-mark"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <span class="brand-title">星火学伴</span>
+            <span class="brand-badge">PARENT-HUB</span>
+          </div>
+          <div class="student-line">
+            <i class="fa-solid fa-circle-user" style="color:var(--teal-600);font-size:.7rem"></i>
+            <strong>乐乐同学</strong>
+            <span class="grade-pill">初三 · 中考冲刺</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="tab-nav" aria-label="家长主导航">
+        <button type="button" class="tab-btn" data-tab="courses">
+          <i class="fa-solid fa-calendar-days"></i><span class="label">我的课程</span>
+        </button>
+        <button type="button" class="tab-btn active" data-tab="find">
+          <i class="fa-solid fa-magnifying-glass"></i><span class="label">查找导师</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="account">
+          <i class="fa-solid fa-wallet"></i><span class="label">我的账户</span>
+        </button>
+      </nav>
+
+      <div class="nav-actions">
+        <div class="wallet-chip">
+          <div class="wallet-icon"><i class="fa-solid fa-building-columns"></i></div>
+          <div>
+            <div style="font-size:.6rem;color:var(--slate-400);font-weight:600">招商银行合约存管</div>
+            <div class="wallet-bal">可用 ¥315.00<span class="wallet-frozen">(冻结 ¥135)</span></div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" title="演示"><i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--slate-400)"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="layout">
+      <!-- 左：粘性筛选 -->
+      <aside class="filters" id="filters" aria-label="筛选条件">
+        <div class="filters-title">
+          <span><i class="fa-solid fa-sliders" style="color:var(--teal-600);margin-right:.35rem"></i>筛选条件</span>
+          <span class="hint">Boss 双栏</span>
+        </div>
+
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" id="mainSearch" placeholder="姓名 / 川大 / 压轴模型…" autocomplete="off">
+        </div>
+        <button type="button" class="btn-search" id="btnSearch">
+          <i class="fa-solid fa-magnifying-glass"></i>全域检索
+        </button>
+
+        <div class="filter-block">
+          <label>学科方向</label>
+          <div class="chip-wrap" id="f-subject"></div>
+        </div>
+        <div class="filter-block">
+          <label>年级学段</label>
+          <div class="chip-wrap" id="f-grade"></div>
+        </div>
+        <div class="filter-block">
+          <label>可约时段</label>
+          <div class="chip-wrap" id="f-time"></div>
+        </div>
+        <div class="filter-block">
+          <label>空间网点</label>
+          <div class="chip-wrap" id="f-space"></div>
+        </div>
+        <div class="filter-block">
+          <label>排序维度</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="matchDesc" selected>AI 学情契合度最高</option>
+            <option value="ratingDesc">家长好评率最高</option>
+            <option value="rateAsc">课酬时薪从低到高</option>
+            <option value="rateDesc">课酬时薪从高到低</option>
+            <option value="hoursDesc">累计履约授课最多</option>
+          </select>
+        </div>
+        <div class="filter-block">
+          <label>时薪预算区间</label>
+          <div class="rate-row">
+            <span>预算</span>
+            <span class="val">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">210</span>/h</span>
+          </div>
+          <div class="rate-sliders">
+            <input type="range" id="rateMin" min="70" max="260" step="10" value="80" title="下限">
+            <input type="range" id="rateMax" min="70" max="260" step="10" value="210" title="上限">
+          </div>
+        </div>
+
+        <button type="button" class="btn-reset" id="btnReset">
+          <i class="fa-solid fa-arrow-rotate-left"></i>重置条件
+        </button>
+      </aside>
+
+      <!-- 右：导师列表 -->
+      <section>
+        <div class="result-bar">
+          <div class="title">
+            <i class="fa-solid fa-list"></i>
+            <span>可约双一流导师库</span>
+            <span class="count">（共 <strong id="tutorCountBadge">0</strong> 位符合条件）</span>
+          </div>
+          <div class="trust">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>100% 学信网核验 · 商业银行托管直结</span>
+          </div>
+        </div>
+
+        <div class="tutor-list" id="tutorList"></div>
+        <div class="empty-state hidden" id="empty">
+          没有符合条件的导师，试试放宽学科、网点或时薪区间。
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="drawer-backdrop" id="drawer-bg"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="导师详情">
+    <div class="drawer-head">
+      <div class="head-left">
+        <div class="head-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+        <div>
+          <h3><span id="drawer-title">导师详情</span>
+            <span id="drawer-code" style="font-size:.65rem;font-family:ui-monospace,monospace;background:rgba(20,184,166,.25);color:#99f6e4;padding:.1rem .35rem;border-radius:4px;margin-left:.35rem;font-weight:700"></span>
+          </h3>
+          <div class="sub">官方实名存证已备案 · 点击卡片打开本抽屉</div>
+        </div>
+      </div>
+      <button type="button" class="drawer-close" id="drawer-close" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+    <div class="drawer-foot">
+      <button type="button" class="btn-block btn-outline" id="drawer-video"><i class="fa-solid fa-circle-play"></i>试讲视频</button>
+      <button type="button" class="btn-block btn-main" id="drawer-book">约TA · 预约试讲 <i class="fa-solid fa-angle-right"></i></button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
