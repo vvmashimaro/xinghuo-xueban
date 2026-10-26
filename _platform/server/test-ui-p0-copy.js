@@ -99,6 +99,7 @@ function main() {
   );
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/loading/spark-mascot-loader.svg')), 'spark mascot loader SVG 存在');
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/brand/spark-mascot-96.png')), 'spark mascot PNG 存在');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/brand/spark-mascot-96-transparent.png')), 'spark mascot transparent PNG 存在');
   assert.ok(xhLoading.includes('/api/pay/wechat/sync'), 'Web overlay 跳过支付轮询');
   assert.ok(xhLoading.includes('/api/feature-flags'), 'Web overlay 跳过 feature-flags');
   [

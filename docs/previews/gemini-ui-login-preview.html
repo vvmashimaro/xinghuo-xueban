@@ -3,106 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>星火学伴 · 登录认证 UI 预览（Gemini + 星火吉祥物）</title>
-  <!-- Desktop / file:// 请打开同目录 gemini-ui-login-preview-standalone.html（资源已内嵌） -->
+  <title>星火学伴 - 极简登录与认证中心</title>
   <link rel="stylesheet" href="../../css/tokens.css">
   <link rel="stylesheet" href="../../css/auth-login.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { margin: 0; }
-    .preview-wrap { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
-    .preview-title { color: #94a3b8; font-size: 12px; text-align: center; margin: 0 0 1.5rem; }
-    .preview-grid { display: grid; gap: 2rem; }
-    @media (min-width: 1100px) { .preview-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
-    .state-label {
-      font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
-      color: #fdba74; margin-bottom: 0.75rem;
-    }
-    .mini-header { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
-    .mini-brand { display: flex; gap: 0.6rem; align-items: center; }
-    .mini-brand h1 { margin: 0; font-size: 1rem; color: #fff; }
-    .mini-brand p { margin: 0.1rem 0 0; font-size: 12px; color: #94a3b8; }
-    .glass-panel { background: rgba(255,255,255,.1); backdrop-filter: blur(20px); }
-    .panel h2 { margin: 0; color: #fff; font-size: 1.15rem; }
-    .panel .sub { margin: 0.35rem 0 1rem; font-size: 14px; color: #cbd5e1; }
-    label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 0.35rem; color: #e2e8f0; }
-    .note { margin-top: 2rem; text-align: center; font-size: 12px; color: #64748b; }
-    #manualEnterFallback { display: none !important; }
+    .glass-panel { background: rgba(255,255,255,.12); backdrop-filter: blur(20px); }
   </style>
 </head>
-<body class="xh-auth-page">
-  <div class="preview-wrap">
-    <p class="preview-banner" style="font-size:12px;line-height:1.5;color:#cbd5e1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.65rem .85rem;margin-bottom:1rem;text-align:center">
-      本文件依赖仓库内 <code>../../css</code> 与 <code>../../assets</code>，需从项目根目录起静态服务或保持相对路径完整。
-      <strong>Desktop 双击预览请用：</strong> <a href="gemini-ui-login-preview-standalone.html" class="xh-auth-link">gemini-ui-login-preview-standalone.html</a>
-    </p>
-    <p class="preview-title">静态预览 · 对应 <code>login.html</code> · 吉祥物 <code>assets/brand/spark-mascot-96.png</code></p>
+<body class="xh-auth-page text-slate-800 antialiased min-h-screen flex flex-col justify-between relative overflow-x-hidden">
 
-    <div class="preview-grid">
-      <section>
-        <p class="state-label">找学伴（家长）· 分段激活态参考</p>
-        <div class="mini-header">
-          <div class="mini-brand">
-            <div class="xh-brand-mark"><img src="../../assets/brand/spark-mascot-96.png" alt="" width="36" height="36"></div>
-            <div>
-              <h1>星火学伴</h1>
-              <p>阳光合规课辅 · 智能共享空间</p>
-            </div>
-          </div>
-          <div class="xh-role-pill">
-            <button type="button" aria-selected="true"><i class="fa-solid fa-user-group text-xs"></i> 找学伴</button>
-            <button type="button" aria-selected="false"><i class="fa-solid fa-chalkboard-user text-xs"></i> 去授课</button>
-          </div>
-        </div>
-        <div class="xh-auth-panel glass-panel panel">
-          <h2>家长 / 学员登录</h2>
-          <p class="sub">单次约课零预付 · 优选双一流学霸导师</p>
-          <label>手机号码</label>
-          <input class="xh-auth-input" type="tel" placeholder="请输入 11 位手机号" style="margin-bottom:1rem">
-          <label>短信验证码</label>
-          <div style="position:relative;margin-bottom:1rem">
-            <input class="xh-auth-input" style="padding-right:7.5rem" type="text" placeholder="6 位验证码">
-            <button type="button" class="xh-sms-send">获取验证码</button>
-          </div>
-          <button type="button" class="xh-btn-primary">安全登录并找学伴</button>
-        </div>
-      </section>
-
-      <section>
-        <p class="state-label">去授课（导师）· 同套令牌与分段样式</p>
-        <div class="mini-header">
-          <div class="mini-brand">
-            <div class="xh-brand-mark"><img src="../../assets/brand/spark-mascot-96.png" alt="" width="36" height="36"></div>
-            <div>
-              <h1>星火学伴</h1>
-              <p>阳光合规课辅 · 智能共享空间</p>
-            </div>
-          </div>
-          <div class="xh-role-pill">
-            <button type="button" aria-selected="false"><i class="fa-solid fa-user-group text-xs"></i> 找学伴</button>
-            <button type="button" aria-selected="true"><i class="fa-solid fa-chalkboard-user text-xs"></i> 去授课</button>
-          </div>
-        </div>
-        <div class="xh-auth-panel glass-panel panel">
-          <h2>高校学伴 · 导师登录</h2>
-          <p class="sub">完课打卡 · 课酬托管结算 · 阳光透明接单</p>
-          <label>手机号码</label>
-          <input class="xh-auth-input" type="tel" placeholder="入库登记或预留手机号" style="margin-bottom:1rem">
-          <label>短信验证码</label>
-          <div style="position:relative;margin-bottom:1rem">
-            <input class="xh-auth-input" style="padding-right:7.5rem" type="text" placeholder="6 位验证码">
-            <button type="button" class="xh-sms-send">获取验证码</button>
-          </div>
-          <button type="button" class="xh-btn-primary">登录并进入工作台</button>
-          <p style="margin:1rem 0 0;font-size:12px;color:#94a3b8">尚未完成入库？ <span class="xh-auth-link" style="font-weight:700">进入导师认证与建库 (L1/L2) →</span></p>
-        </div>
-      </section>
+  <header class="w-full px-5 sm:px-8 py-4 flex items-center justify-between relative z-10 gap-3">
+    <div class="flex items-center space-x-2.5 min-w-0">
+      <div class="xh-brand-mark" aria-hidden="true">
+        <img src="../../assets/brand/spark-mascot-96-transparent.png" alt="" width="36" height="36" decoding="async">
+      </div>
+      <div class="min-w-0">
+        <span class="font-black text-white text-base tracking-tight leading-none block">星火学伴</span>
+        <span class="text-xs text-slate-400 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
+      </div>
     </div>
-
-    <p class="note">加载动画：<code>assets/loading/spark-mascot-loader.svg</code>（全站 xh-loading 缓冲层）</p>
-    <div style="display:flex;justify-content:center;margin-top:1rem">
-      <img src="../../assets/loading/spark-mascot-loader.svg" alt="星火加载动画预览" width="96" height="96">
+    <div id="roleSwitchBar" class="xh-role-pill shrink-0" role="tablist" aria-label="登录角色">
+      <button type="button" id="tabParent" data-role="parent" role="tab" aria-selected="true">
+        <i class="fa-solid fa-user-group text-xs" aria-hidden="true"></i><span>找学伴</span>
+      </button>
+      <button type="button" id="tabMentor" data-role="mentor" role="tab" aria-selected="false">
+        <i class="fa-solid fa-chalkboard-user text-xs" aria-hidden="true"></i><span>去授课</span>
+      </button>
     </div>
-  </div>
+  </header>
+
+  <main class="w-full relative z-10 flex-1 flex flex-col justify-center py-4 sm:py-8">
+    <div class="xh-auth-shell">
+      <aside id="authHeroParent" class="xh-auth-hero" aria-label="平台保障">
+        <div class="space-y-2 pr-4">
+          <p class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-200 bg-orange-500/15 border border-orange-400/25 px-3 py-1 rounded-full">阳光合规 · 一课一消托管</p>
+          <h2 class="text-2xl font-black text-white tracking-tight leading-snug">为成都家庭连接<br>可核验的高校学伴</h2>
+          <p class="text-sm text-slate-400 leading-relaxed max-w-md">学信网实名、微网点安全伴学、课时费托管释放——三大机制降低黑家教风险。</p>
+        </div>
+        <div class="grid gap-3">
+          <div class="xh-trust-card"><h3>985/211 学信网核验</h3><p>导师入库前完成学籍与身份一致性核对，家长可查看核验标识。</p></div>
+          <div class="xh-trust-card"><h3>微网点实体空间伴学</h3><p>分布式合规微空间授课，减少陌生家庭入户的人身与安全顾虑。</p></div>
+          <div class="xh-trust-card"><h3>课时费银行级托管</h3><p>课次费用预先冻结，完课确认后按规则释放，减少拖欠与纠纷。</p></div>
+        </div>
+      </aside>
+      <aside id="authHeroMentor" class="xh-auth-hero is-hidden" aria-hidden="true">
+        <div class="space-y-2 pr-4">
+          <p class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-200 bg-orange-500/15 border border-orange-400/25 px-3 py-1 rounded-full">阳光勤工 · L1/L2 入库认证</p>
+          <h2 class="text-2xl font-black text-white tracking-tight leading-snug">高校学伴接单<br>课酬有保障、履约有记录</h2>
+          <p class="text-sm text-slate-400 leading-relaxed max-w-md">完成资质核验与能力画像后即可入库；约课、打卡、结课与托管释放全程可在平台追溯。</p>
+        </div>
+        <div class="grid gap-3">
+          <div class="xh-trust-card"><h3>L1/L2 合规入库</h3><p>实名、学籍与授课能力分步核验，通过后生成导师专属码与工作台权限。</p></div>
+          <div class="xh-trust-card"><h3>课酬托管 · 一课一结</h3><p>家长约课成功后课酬预先冻结，完课打卡确认后按规则划拨，减少拖欠纠纷。</p></div>
+          <div class="xh-trust-card"><h3>阳光履约留痕</h3><p>接单、排期、结课与课后小结在线可查，配套高校社会实践与工时认证对接。</p></div>
+        </div>
+      </aside>
+
+      <div class="w-full max-w-md mx-auto px-4 lg:px-0 lg:max-w-none">
+        <div id="authHeroMobileParent" class="xh-auth-hero-mobile">
+          <div class="xh-trust-chip">学信网核验</div><div class="xh-trust-chip">微网点安全伴学</div><div class="xh-trust-chip">课时费托管</div>
+        </div>
+        <div id="authHeroMobileMentor" class="xh-auth-hero-mobile is-hidden" aria-hidden="true">
+          <div class="xh-trust-chip">L1/L2 入库</div><div class="xh-trust-chip">课酬托管</div><div class="xh-trust-chip">履约留痕</div>
+        </div>
+        <div class="xh-auth-panel glass-panel space-y-5">
+          <div class="space-y-1">
+            <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">家长 / 学员登录</h1>
+            <p id="roleSubtitle" class="text-sm text-slate-300/80 leading-relaxed">单次约课零预付 · 优选双一流学霸导师</p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-200/90 mb-1.5">手机号码</label>
+              <input class="xh-auth-input" type="tel" placeholder="请输入 11 位手机号">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-200/90 mb-1.5">短信验证码</label>
+              <div class="relative">
+                <input class="xh-auth-input pl-9 pr-[7.5rem]" placeholder="6 位验证码">
+                <button type="button" class="xh-sms-send">获取验证码</button>
+              </div>
+            </div>
+            <button type="button" id="btnDemo" class="xh-btn-primary flex items-center justify-center gap-2">
+              <span id="btnSubmitLoginText">安全登录并找学伴</span>
+            </button>
+          </div>
+          <div id="registerPromptBox" class="pt-2 flex items-center justify-between text-xs gap-2">
+            <span class="text-slate-400 shrink-0">首次约课辅导？</span>
+            <span class="xh-auth-link font-bold">前往学情建档注册 →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="w-full py-4 text-center text-xs text-slate-500 relative z-10"><p>© 2026 星火学伴</p></footer>
+  <script>
+    const LOADER_SRC = '../../assets/loading/spark-mascot-loader.svg';
+    function loginCtaLabel(role) { return role === 'mentor' ? '登录并进入工作台' : '安全登录并找学伴'; }
+    function switchRole(role) {
+      document.getElementById('tabParent').setAttribute('aria-selected', role === 'parent');
+      document.getElementById('tabMentor').setAttribute('aria-selected', role === 'mentor');
+      document.getElementById('authHeroParent').classList.toggle('is-hidden', role !== 'parent');
+      document.getElementById('authHeroMentor').classList.toggle('is-hidden', role !== 'mentor');
+      document.getElementById('authHeroMobileParent').classList.toggle('is-hidden', role !== 'parent');
+      document.getElementById('authHeroMobileMentor').classList.toggle('is-hidden', role !== 'mentor');
+      const reg = document.getElementById('registerPromptBox');
+      if (role === 'mentor') {
+        document.getElementById('roleTitle').textContent = '高校学伴 · 导师登录';
+        document.getElementById('roleSubtitle').textContent = '完课打卡 · 课酬托管结算 · 阳光透明接单';
+        document.getElementById('btnSubmitLoginText').textContent = loginCtaLabel('mentor');
+        reg.innerHTML = '<span class="text-slate-400 shrink-0">尚未完成入库？</span><span class="xh-auth-link font-bold">进入导师认证与建库 (L1/L2) →</span>';
+      } else {
+        document.getElementById('roleTitle').textContent = '家长 / 学员登录';
+        document.getElementById('roleSubtitle').textContent = '单次约课零预付 · 优选双一流学霸导师';
+        document.getElementById('btnSubmitLoginText').textContent = loginCtaLabel('parent');
+        reg.innerHTML = '<span class="text-slate-400 shrink-0">首次约课辅导？</span><span class="xh-auth-link font-bold">前往学情建档注册 →</span>';
+      }
+    }
+    document.getElementById('roleSwitchBar').addEventListener('click', function (e) {
+      const btn = e.target.closest('button[data-role]');
+      if (btn) switchRole(btn.getAttribute('data-role'));
+    });
+    document.getElementById('btnDemo').addEventListener('click', function () {
+      const role = document.getElementById('tabMentor').getAttribute('aria-selected') === 'true' ? 'mentor' : 'parent';
+      this.innerHTML = '<img src="' + LOADER_SRC + '" alt="" class="xh-inline-mascot-loader" width="24" height="24"><span>验证中...</span>';
+      setTimeout(() => { this.innerHTML = '<span id="btnSubmitLoginText">' + loginCtaLabel(role) + '</span>'; }, 1500);
+    });
+    switchRole('parent');
+  </script>
 </body>
 </html>

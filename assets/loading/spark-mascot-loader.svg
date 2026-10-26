@@ -1,36 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="k }-">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="?????">
+  <defs>
+    <linearGradient id="flameOuter" x1="64" y1="8" x2="64" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff9f43"/>
+      <stop offset="55%" stop-color="#ff6b2c"/>
+      <stop offset="100%" stop-color="#e63022"/>
+    </linearGradient>
+    <linearGradient id="flameInner" x1="64" y1="18" x2="64" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffb347"/>
+      <stop offset="100%" stop-color="#ff6b2c"/>
+    </linearGradient>
+  </defs>
   <style>
-    .glow {
-      transform-origin: 64px 70px;
-      animation: glowPulse 1.35s ease-in-out infinite;
-    }
-    .mascot {
-      transform-origin: 64px 70px;
-      animation: breathe 1.35s ease-in-out infinite;
-    }
-    .spark {
-      transform-origin: center;
-      animation: twinkle 1.8s ease-in-out infinite;
-    }
+    .core { transform-origin: 64px 68px; animation: breathe 1.35s ease-in-out infinite; }
+    .glow { transform-origin: 64px 70px; animation: glowPulse 1.35s ease-in-out infinite; }
+    .spark { animation: twinkle 1.8s ease-in-out infinite; }
     @keyframes breathe {
       0%, 100% { transform: scale(0.94); }
       50% { transform: scale(1.06); }
     }
     @keyframes glowPulse {
-      0%, 100% { opacity: 0.28; transform: scale(0.92); }
-      50% { opacity: 0.55; transform: scale(1.08); }
+      0%, 100% { opacity: 0.22; transform: scale(0.9); }
+      50% { opacity: 0.5; transform: scale(1.08); }
     }
     @keyframes twinkle {
       0%, 100% { opacity: 0.35; }
       50% { opacity: 1; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .glow, .mascot, .spark { animation: none; }
+      .core, .glow, .spark { animation: none; }
     }
   </style>
-  <ellipse class="glow" cx="64" cy="70" rx="46" ry="42" fill="#ff6b2c"/>
-  <image class="mascot" xlink:href="../brand/spark-mascot-96.png" href="../brand/spark-mascot-96.png" x="14" y="6" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>
-  <path class="spark" fill="#fbbf24" d="M28 26l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" opacity="0.8"/>
-  <path class="spark" fill="#fbbf24" d="M98 22l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" opacity="0.65"/>
+  <ellipse class="glow" cx="64" cy="70" rx="44" ry="40" fill="#ff6b2c"/>
+  <g class="core">
+    <path fill="url(#flameOuter)" d="M64 10c14 18 26 28 30 46 4 18-2 34-14 44-8 7-18 10-28 10s-20-3-28-10c-12-10-18-26-14-44 4-18 16-28 30-46 4-5 10-5 14 0 8 10 14 16 20 0z"/>
+    <path fill="url(#flameInner)" opacity="0.85" d="M64 22c9 12 17 20 19 32 2 12-2 22-10 29-6 5-13 8-21 8s-15-3-21-8c-8-7-12-17-10-29 2-12 10-20 19-32 3-4 7-4 10 0 5 6 9 10 14 0z"/>
+    <ellipse fill="#ffffff" cx="64" cy="54" rx="19" ry="21"/>
+    <circle fill="#b91c1c" cx="56" cy="52" r="3.2"/>
+    <circle fill="#b91c1c" cx="72" cy="52" r="3.2"/>
+    <circle fill="#ffffff" cx="57" cy="51" r="1"/>
+    <circle fill="#ffffff" cx="73" cy="51" r="1"/>
+    <ellipse fill="#fecaca" cx="52" cy="58" rx="4" ry="2.2" opacity="0.9"/>
+    <ellipse fill="#fecaca" cx="76" cy="58" rx="4" ry="2.2" opacity="0.9"/>
+    <path fill="none" stroke="#c2410c" stroke-width="2" stroke-linecap="round" d="M58 62q6 6 12 0"/>
+    <path fill="#e63022" d="M38 96c8 10 18 16 26 16s18-6 26-16v8c-8 8-18 12-26 12s-18-4-26-12v-8z"/>
+    <path fill="#ffffff" d="M64 96 48 104v-6l16-8 16 8v6z"/>
+  </g>
+  <path class="spark" fill="#fbbf24" d="M26 28l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" opacity="0.85"/>
+  <path class="spark" fill="#fbbf24" d="M100 24l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" opacity="0.7"/>
 </svg>

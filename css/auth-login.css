@@ -36,10 +36,11 @@ html[data-xh-auth-ui="1"] #xhLoading {
   50% { transform: scale(1.05); opacity: 1; }
 }
 .xh-inline-mascot-loader {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
-  animation: sparkBreathe 1.25s ease-in-out infinite;
+  flex-shrink: 0;
+  background: transparent;
 }
 
 .xh-auth-link {
