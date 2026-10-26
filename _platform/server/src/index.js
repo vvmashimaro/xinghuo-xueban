@@ -1178,6 +1178,7 @@ app.post('/api/pay/orders/:outTradeNo/refund', requireAdminModule('payments'), a
       reason: body.reason || '',
       refundedBy: req.user.phone || req.user.userId || 'admin',
       refundId: wxRefund.wx && wxRefund.wx.refundId,
+      outRefundNo: wxRefund.wx && wxRefund.wx.outRefundNo,
       wxStatus: (wxRefund.wx && wxRefund.wx.status) || wxRefund.status
     });
     if (!result.ok) {
@@ -1187,6 +1188,35 @@ app.post('/api/pay/orders/:outTradeNo/refund', requireAdminModule('payments'), a
   } catch (error) {
     console.error('[Refund Error]', error);
     fail(res, 500, error.message || '退款失败');
+  }
+});
+
+app.post('/api/pay/wechat/reconcile', requireAdminModule('payments'), async (req, res) => {
+  try {
+    const payReconcile = require('./pay-reconcile');
+    const body = req.body || {};
+    const q = req.query || {};
+    const apply =
+      body.apply === true ||
+      body.apply === 1 ||
+      body.apply === '1' ||
+      q.apply === '1' ||
+      q.apply === 'true';
+    const outTradeNo = body.outTradeNo || q.outTradeNo || '';
+    const limit = body.limit || q.limit;
+    const report = await payReconcile.reconcileWechatPay(
+      { db, wechatPay },
+      {
+        apply,
+        outTradeNo: outTradeNo || undefined,
+        limit: limit != null ? parseInt(limit, 10) : undefined,
+        onPaid: notifyMentorAfterParentPaid
+      }
+    );
+    ok(res, report);
+  } catch (error) {
+    console.error('[WeChat Pay Reconcile Error]', error);
+    fail(res, 500, error.message || '对账失败');
   }
 });
 
@@ -1572,6 +1602,7 @@ app.post('/api/bookings/:id/cancel', requireAuth, async (req, res) => {
       reason: '家长开课前撤销',
       refundedBy: validated.parentPhone || validated.parentId || 'parent',
       refundId: wxRefund.wx && wxRefund.wx.refundId,
+      outRefundNo: wxRefund.wx && wxRefund.wx.outRefundNo,
       wxStatus: (wxRefund.wx && wxRefund.wx.status) || wxRefund.status
     });
     if (!dbRefund.ok) {

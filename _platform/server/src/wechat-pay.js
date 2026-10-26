@@ -737,6 +737,67 @@ function getLocalOrderStatus(outTradeNo) {
   };
 }
 
+async function queryRefundByOutRefundNo(outRefundNo) {
+  if (!outRefundNo) {
+    throw new Error('缺少商户退款单号');
+  }
+  if (!isConfigComplete()) {
+    return { outRefundNo, status: 'PROCESSING', mock: true, message: '微信支付未配置' };
+  }
+  const urlPath = `/v3/refund/domestic/refunds/out-refund-no/${encodeURIComponent(outRefundNo)}`;
+  const json = await wechatPayRequest('GET', urlPath, null);
+  return {
+    outRefundNo: json.out_refund_no || outRefundNo,
+    outTradeNo: json.out_trade_no,
+    refundId: json.refund_id,
+    status: json.status,
+    successTime: json.success_time,
+    amount: json.amount && json.amount.refund,
+    mock: false
+  };
+}
+
+async function queryRefundsByOutTradeNo(outTradeNo) {
+  if (!outTradeNo) {
+    throw new Error('缺少商户订单号');
+  }
+  const local = getLocalOrderStatus(outTradeNo);
+  if (local && local.status === 'REFUND') {
+    return {
+      outTradeNo,
+      refunds: [{ outTradeNo, status: 'SUCCESS', mock: true }],
+      mock: true
+    };
+  }
+  if (!isConfigComplete()) {
+    return { outTradeNo, refunds: [], mock: true, message: '微信支付未配置' };
+  }
+  const config = getWeChatPayConfig();
+  const urlPath =
+    `/v3/refund/domestic/refunds/out-trade-no/${encodeURIComponent(outTradeNo)}?mchid=${encodeURIComponent(config.mchId)}`;
+  const json = await wechatPayRequest('GET', urlPath, null);
+  const list = Array.isArray(json.data) ? json.data : [];
+  const refunds = list.map((item) => ({
+    outRefundNo: item.out_refund_no,
+    outTradeNo: item.out_trade_no || outTradeNo,
+    refundId: item.refund_id,
+    status: item.status,
+    successTime: item.success_time,
+    amount: item.amount && item.amount.refund,
+    mock: false
+  }));
+  return { outTradeNo, refunds, mock: false };
+}
+
+function pickLatestRefund(refunds) {
+  if (!Array.isArray(refunds) || !refunds.length) return null;
+  return refunds.slice().sort((a, b) => {
+    const ta = Date.parse(a.successTime || '') || 0;
+    const tb = Date.parse(b.successTime || '') || 0;
+    return tb - ta;
+  })[0];
+}
+
 async function queryTransactionByOutTradeNo(outTradeNo) {
   const local = getLocalOrderStatus(outTradeNo);
   if (local) {
@@ -792,6 +853,9 @@ module.exports = {
   getOrderStatus,
   getLocalOrderStatus,
   queryTransactionByOutTradeNo,
+  queryRefundByOutRefundNo,
+  queryRefundsByOutTradeNo,
+  pickLatestRefund,
   parseBookingIdFromOutTradeNo,
   isConfigComplete,
   isMockPayAllowed,

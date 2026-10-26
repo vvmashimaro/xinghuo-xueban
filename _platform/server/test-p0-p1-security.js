@@ -302,9 +302,10 @@ async function main() {
   const pending = db.refundPayOrder(pendingOrder.outTradeNo, { wxStatus: 'PROCESSING', reason: 'test' });
   assert.ok(pending.ok);
   assert.strictEqual(db.getPayOrder(pendingOrder.outTradeNo).status, 'refund_pending');
-  const pendingAgain = db.refundPayOrder(pendingOrder.outTradeNo, { wxStatus: 'SUCCESS' });
-  assert.strictEqual(pendingAgain.ok, false);
-  console.log('✓ P1-04 refund_pending / refund_failed');
+  const pendingAgain = db.refundPayOrder(pendingOrder.outTradeNo, { wxStatus: 'SUCCESS', refundedBy: 'reconcile' });
+  assert.strictEqual(pendingAgain.ok, true);
+  assert.strictEqual(db.getPayOrder(pendingOrder.outTradeNo).status, 'REFUND');
+  console.log('✓ P1-04 refund_pending / refund_failed / complete pending');
 
   // P1-06 parent cannot approve leave
   const leaveSess = Object.assign({}, sessionFar(), { id: (booking.sessions[0] && booking.sessions[0].id) || 'S1' });
