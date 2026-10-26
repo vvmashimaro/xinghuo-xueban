@@ -430,6 +430,20 @@
       }
     }
 
+    function getReturnUrlFromQuery() {
+      try {
+        const q = new URLSearchParams(window.location.search || '');
+        const ret = q.get('return');
+        if (!ret) return null;
+        const decoded = decodeURIComponent(ret).trim();
+        if (!decoded || decoded.indexOf('://') >= 0) return null;
+        if (!/^[a-z0-9_./?=&%-]+$/i.test(decoded)) return null;
+        return { url: decoded, title: '继续找学伴' };
+      } catch (e) {
+        return null;
+      }
+    }
+
     // 提交登录逻辑
     async function resolvePostLoginTargetAsync(user) {
       console.log('[resolvePostLoginTargetAsync] user:', user);
@@ -548,7 +562,8 @@
             showToast(`欢迎回来！正在进入${roleLabel}...`);
 
             // 异步获取跳转目标
-            const target = await resolvePostLoginTargetAsync(user);
+            const returnTarget = getReturnUrlFromQuery();
+            const target = returnTarget || (await resolvePostLoginTargetAsync(user));
             pendingNavUrl = target.url;
 
             // 预填手动进入链接
@@ -626,8 +641,14 @@
       if (rs) rs.innerText = window.getLoginRoleSubtitle(currentRole);
     }
     try {
-      var bootRole = new URLSearchParams(window.location.search || '').get('role');
+      var bootParams = new URLSearchParams(window.location.search || '');
+      var bootRole = bootParams.get('role');
       if (bootRole === 'parent' || bootRole === 'mentor') switchRole(bootRole);
+      var hint = bootParams.get('hint');
+      if (hint) {
+        var sub = document.getElementById('roleSubtitle');
+        if (sub) sub.innerText = decodeURIComponent(hint);
+      }
     } catch (e) {}
   </script>
 </body>

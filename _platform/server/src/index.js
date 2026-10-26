@@ -22,6 +22,7 @@ const pricing = require('./pricing');
 const wechatPhone = require('./wechat-phone');
 const wechatSession = require('./wechat-session');
 const phoneCrypto = require('./phone-crypto');
+const parentBrowseFilter = require('./parent-browse-filter');
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -99,6 +100,14 @@ function publicMentorProfile(mentor) {
     availableSlots: Array.isArray(mentor.availableSlots) ? mentor.availableSlots.slice() : [],
     proofFiles
   };
+}
+
+/** 未登录浏览：公开字段，不含试讲链接等需登录内容 */
+function publicBrowseMentorProfile(mentor) {
+  const pub = publicMentorProfile(mentor);
+  if (!pub || typeof pub !== 'object') return pub;
+  delete pub.lectureUrl;
+  return pub;
 }
 
 // 工具函数：脱敏手机号
@@ -1268,6 +1277,33 @@ app.get('/api/pay/orders/:outTradeNo', requireAuth, async (req, res) => {
     console.error('[Get Order Error]', error);
     fail(res, 500, '查询订单失败');
   }
+});
+
+/* Public mentor browse (E+C 家长找学伴，无需登录) */
+app.get('/api/public/mentors', (req, res) => {
+  db.seedIfEmpty();
+  const grade = String(req.query.grade || '').trim();
+  const subject = String(req.query.subject || '').trim();
+  const time = String(req.query.time || '全部').trim() || '全部';
+  let mentors = db
+    .getMentors()
+    .filter((m) => m.status === 'approved' && m.acceptingOrders !== false)
+    .map(publicBrowseMentorProfile);
+  if (grade || subject) {
+    mentors = parentBrowseFilter.filterBrowseMentors(mentors, {
+      grade: grade || undefined,
+      subject: subject || undefined,
+      time
+    });
+  }
+  ok(res, mentors);
+});
+
+app.get('/api/public/browse-catalog', (req, res) => {
+  ok(res, {
+    gradeSubjects: parentBrowseFilter.GRADE_SUBJECTS,
+    timeOptions: parentBrowseFilter.BROWSE_TIME_OPTIONS
+  });
 });
 
 /* Mentors */

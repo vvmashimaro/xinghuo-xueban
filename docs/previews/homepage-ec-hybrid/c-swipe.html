@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 C · 翻牌 · 星火伴学</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 40%, #f1f5f9 100%); }
+  .stage {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 1rem 1rem 2.5rem; min-height: calc(100vh - 3.5rem);
+  }
+  .counter {
+    font-size: .85rem; font-weight: 700; color: var(--teal-700);
+    background: #fff; border: 1px solid var(--teal-100);
+    padding: .35rem .85rem; border-radius: 999px; margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .phone {
+    width: min(390px, 100%);
+    background: #0f172a; border-radius: 2rem; padding: .65rem;
+    box-shadow: var(--shadow-lg);
+  }
+  .phone-inner {
+    background: var(--slate-50); border-radius: 1.5rem;
+    min-height: 560px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .stack-hint {
+    position: absolute; inset: 12px 12px auto; height: 12px;
+    border-radius: 12px 12px 0 0; background: #e2e8f0; z-index: 0;
+    transform: scaleX(.92); opacity: .7;
+  }
+  .stack-hint2 {
+    position: absolute; inset: 20px 12px auto; height: 12px;
+    border-radius: 12px 12px 0 0; background: #cbd5e1; z-index: 0;
+    transform: scaleX(.86); opacity: .5;
+  }
+  .swipe-card {
+    position: relative; z-index: 1; margin: 1.5rem .85rem .85rem;
+    background: #fff; border-radius: 1.25rem; border: 1px solid var(--slate-200);
+    box-shadow: var(--shadow); padding: 1.25rem; flex: 1;
+    display: flex; flex-direction: column;
+    transition: transform .25s ease, opacity .25s ease;
+  }
+  .swipe-card.out-left { transform: translateX(-120%) rotate(-8deg); opacity: 0; }
+  .swipe-card.out-right { transform: translateX(120%) rotate(8deg); opacity: 0; }
+  .swipe-card .av-wrap { display: flex; justify-content: center; margin-bottom: .75rem; }
+  .swipe-card h2 { margin: 0; text-align: center; font-size: 1.35rem; }
+  .swipe-card .school { text-align: center; color: var(--slate-500); font-size: .85rem; margin-top: .25rem; }
+  .swipe-card .hl { text-align: center; margin: 1rem 0; font-size: .95rem; color: var(--slate-700); flex: 1; }
+  .controls {
+    display: flex; justify-content: center; gap: 1.25rem;
+    padding: .75rem 1rem 1.25rem; background: #fff;
+    border-top: 1px solid var(--slate-100);
+  }
+  .ctrl {
+    width: 64px; height: 64px; border-radius: 999px; border: none;
+    font-size: 1.5rem; cursor: pointer; box-shadow: var(--shadow);
+    display: grid; place-items: center; transition: transform .1s;
+  }
+  .ctrl:active { transform: scale(.94); }
+  .ctrl.skip { background: #fff; border: 2px solid var(--slate-200); color: var(--slate-500); }
+  .ctrl.like { background: linear-gradient(135deg, var(--teal-400), var(--teal-700)); color: #fff; border: none; width: 72px; height: 72px; font-size: 1.75rem; }
+  .done {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 2rem 1.5rem; flex: 1; gap: .75rem;
+  }
+  .done.show { display: flex; }
+  .tip { margin-top: 1rem; font-size: .8rem; color: var(--slate-500); text-align: center; max-width: 320px; }
+</style>
+</head>
+<body>
+<div id="top"></div>
+<div class="stage">
+  <div class="counter" id="counter">已感兴趣 0</div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="stack-hint"></div>
+      <div class="stack-hint2"></div>
+      <div class="swipe-card" id="card"></div>
+      <div class="done" id="done">
+        <div style="font-size:2.5rem">✨</div>
+        <h2 style="margin:0">本轮翻完了</h2>
+        <p class="muted">你可以重置再翻，或登录查看已感兴趣名单。</p>
+        <button type="button" class="btn btn-primary" id="reset">再翻一轮</button>
+        <button type="button" class="btn btn-secondary" id="login-list">登录查看名单</button>
+      </div>
+      <div class="controls" id="controls">
+        <button type="button" class="ctrl skip" id="skip" title="跳过">✕</button>
+        <button type="button" class="ctrl like" id="like" title="感兴趣">♡</button>
+      </div>
+    </div>
+  </div>
+  <p class="tip">左 ✕ 跳过 · 右 ♡ 感兴趣（感兴趣会弹出登录墙，并计入计数）</p>
+</div>
+<script src="shared.js"></script>
+<script>
+(function () {
+  document.getElementById("top").innerHTML = XH.topbar();
+  var queue = XH.MENTORS.slice();
+  var idx = 0;
+  var liked = 0;
+  var animating = false;
+
+  function updateCounter() {
+    document.getElementById("counter").textContent = "已感兴趣 " + liked;
+  }
+
+  function showDone() {
+    document.getElementById("card").style.display = "none";
+    document.getElementById("controls").style.display = "none";
+    document.getElementById("done").classList.add("show");
+  }
+
+  function renderCard() {
+    if (idx >= queue.length) {
+      showDone();
+      return;
+    }
+    document.getElementById("done").classList.remove("show");
+    document.getElementById("card").style.display = "";
+    document.getElementById("controls").style.display = "";
+    var m = queue[idx];
+    var el = document.getElementById("card");
+    el.className = "swipe-card";
+    el.innerHTML =
+      '<div class="av-wrap"><div class="avatar xl" style="background:linear-gradient(135deg,' + m.color + ',#134e4a)">' + m.initial + "</div></div>" +
+      "<h2>" + m.displayName + "</h2>" +
+      '<div class="school">' + m.school + " · " + m.major + "</div>" +
+      '<div class="stars" style="text-align:center;margin-top:.35rem">' + XH.stars(m.rating) + "</div>" +
+      '<p class="hl">' + m.highlight + "</p>" +
+      '<div class="flex wrap gap-1" style="justify-content:center">' +
+      m.subjects.map(function (s) { return '<span class="tag">' + s + "</span>"; }).join("") +
+      " " + XH.tagHtml(m.tags) + "</div>" +
+      '<div class="slots mt-3" style="justify-content:center">' + XH.slotHtml(m.slots) + "</div>" +
+      '<div style="text-align:center;margin-top:.75rem" class="price">' + m.priceBand + " · " + m.site + "</div>";
+  }
+
+  function next(dir, didLike) {
+    if (animating || idx >= queue.length) return;
+    animating = true;
+    var m = queue[idx];
+    var el = document.getElementById("card");
+    el.classList.add(dir === "left" ? "out-left" : "out-right");
+    setTimeout(function () {
+      if (didLike) {
+        liked++;
+        updateCounter();
+        XH.openLogin({ mentorName: m.displayName, action: "感兴趣" });
+      }
+      idx++;
+      animating = false;
+      renderCard();
+    }, 260);
+  }
+
+  document.getElementById("skip").onclick = function () { next("left", false); };
+  document.getElementById("like").onclick = function () { next("right", true); };
+  document.getElementById("reset").onclick = function () {
+    idx = 0; liked = 0; updateCounter(); renderCard();
+  };
+  document.getElementById("login-list").onclick = function () {
+    XH.openLogin({ mentorName: "已感兴趣名单（" + liked + " 人）", action: "查看名单" });
+  };
+
+  updateCounter();
+  renderCard();
+})();
+</script>
+</body>
+</html>

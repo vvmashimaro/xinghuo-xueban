@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 E · 任务匹配 · 星火伴学</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .wizard { max-width: 640px; margin: 0 auto; }
+  .step-card { padding: 1.5rem; }
+  .step-card h1 { margin: 0 0 .35rem; font-size: 1.35rem; }
+  .form-row { margin-bottom: 1.15rem; }
+  .form-row > label { display: block; font-size: .8rem; font-weight: 700; color: var(--slate-600); margin-bottom: .45rem; }
+  .chip-wrap { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .match-list { display: flex; flex-direction: column; gap: .75rem; }
+  .match-row {
+    display: grid; grid-template-columns: auto 1fr auto; gap: .85rem; align-items: center;
+    padding: 1rem; cursor: default;
+  }
+  .match-pct {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--teal-50); color: var(--teal-700);
+    display: grid; place-items: center; font-weight: 900; font-size: .95rem;
+  }
+  .match-row h3 { margin: 0; font-size: 1rem; }
+  .reason { font-size: .8rem; color: var(--slate-500); margin-top: .2rem; }
+  .steps-dot {
+    display: flex; gap: .5rem; margin-bottom: 1rem; align-items: center;
+    font-size: .8rem; color: var(--slate-500);
+  }
+  .steps-dot .d {
+    width: 1.5rem; height: 1.5rem; border-radius: 999px; display: grid; place-items: center;
+    font-weight: 800; font-size: .75rem; background: var(--slate-200); color: var(--slate-600);
+  }
+  .steps-dot .d.on { background: var(--teal-600); color: #fff; }
+  .steps-dot .d.done { background: var(--teal-100); color: var(--teal-700); }
+</style>
+</head>
+<body>
+<div id="top"></div>
+<main class="page">
+  <div class="wizard">
+    <div class="steps-dot" id="dots">
+      <span class="d on" id="d1">1</span><span>说出需求</span>
+      <span style="opacity:.35">——</span>
+      <span class="d" id="d2">2</span><span>匹配结果</span>
+    </div>
+
+    <section class="card step-card" id="step1">
+      <h1>你想补什么？</h1>
+      <p class="muted mb-4">选好学科、年级和时段，我们马上匹配学伴</p>
+      <div class="form-row">
+        <label>学科</label>
+        <div class="chip-wrap" id="sub"></div>
+      </div>
+      <div class="form-row">
+        <label>年级</label>
+        <div class="chip-wrap" id="grd"></div>
+      </div>
+      <div class="form-row">
+        <label>偏好时段</label>
+        <div class="chip-wrap" id="tm"></div>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg btn-block" id="go">查看匹配结果</button>
+    </section>
+
+    <section class="hidden" id="step2">
+      <div class="flex justify-between items-center mb-3 wrap gap-2">
+        <div>
+          <h1 style="margin:0;font-size:1.25rem">匹配结果</h1>
+          <p class="muted" id="summary" style="margin:.25rem 0 0"></p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="back">重新选择</button>
+      </div>
+      <div class="match-list" id="results"></div>
+      <div class="empty-state hidden" id="empty">暂无高度匹配的学伴，试试调整条件。</div>
+    </section>
+  </div>
+</main>
+<script src="shared.js"></script>
+<script>
+(function () {
+  document.getElementById("top").innerHTML = XH.topbar();
+  var state = { subject: null, grade: null, time: "全部" };
+
+  var subjects = XH.SUBJECTS.filter(function (s) { return s !== "全部"; });
+  var grades = XH.GRADES.filter(function (s) { return s !== "全部"; });
+  var times = XH.TIMES;
+
+  function bindChips(el, items, key, multiFalse) {
+    el.innerHTML = items.map(function (it) {
+      var on = state[key] === it ? " on" : "";
+      return '<button type="button" class="chip' + on + '" data-v="' + it + '">' + it + "</button>";
+    }).join("");
+    el.querySelectorAll(".chip").forEach(function (c) {
+      c.onclick = function () {
+        state[key] = c.getAttribute("data-v");
+        bindChips(el, items, key);
+      };
+    });
+  }
+
+  function matchTime(m, t) {
+    if (!t || t === "全部") return true;
+    var s = m.slots.join(" ");
+    if (t === "工作日晚") return /周[一二三四五]晚/.test(s);
+    if (t === "周末上午") return /周[六日]上午/.test(s);
+    if (t === "周末下午") return /周[六日]下午/.test(s);
+    if (t === "周末晚") return /周[六日]晚/.test(s);
+    if (t === "全天") return /全天/.test(s);
+    return true;
+  }
+
+  function score(m) {
+    var pct = 55;
+    var reasons = [];
+    if (state.subject && m.subjects.indexOf(state.subject) >= 0) {
+      pct += 28; reasons.push("科目完全匹配");
+    } else if (state.subject) {
+      // soft: related
+      var related = m.subjects.some(function (s) {
+        return state.subject.indexOf(s.replace(/高中|初中|小学|考研/g, "")) >= 0 ||
+          s.indexOf(state.subject.replace(/高中|初中|小学|考研/g, "")) >= 0;
+      });
+      if (related) { pct += 12; reasons.push("科目相近"); }
+      else { pct -= 15; }
+    }
+    if (state.grade && m.grades.indexOf(state.grade) >= 0) {
+      pct += 12; reasons.push("年级匹配");
+    }
+    if (matchTime(m, state.time)) {
+      pct += 8; reasons.push(state.time === "全部" ? "档期灵活" : "时段可约");
+    } else {
+      pct -= 5;
+    }
+    if (m.rating >= 4.9) { pct += 3; reasons.push("高评分"); }
+    pct = Math.max(40, Math.min(99, pct));
+    if (!reasons.length) reasons.push("综合可考虑");
+    return { pct: pct, reason: reasons.slice(0, 2).join(" · ") };
+  }
+
+  function showStep(n) {
+    document.getElementById("step1").classList.toggle("hidden", n !== 1);
+    document.getElementById("step2").classList.toggle("hidden", n !== 2);
+    document.getElementById("d1").className = "d " + (n === 1 ? "on" : "done");
+    document.getElementById("d2").className = "d " + (n === 2 ? "on" : "");
+  }
+
+  document.getElementById("go").onclick = function () {
+    if (!state.subject || !state.grade) {
+      alert("请先选择学科和年级");
+      return;
+    }
+    var scored = XH.MENTORS.map(function (m) {
+      var sc = score(m);
+      return { m: m, pct: sc.pct, reason: sc.reason };
+    }).filter(function (x) {
+      return x.m.subjects.indexOf(state.subject) >= 0 || x.pct >= 70;
+    }).sort(function (a, b) { return b.pct - a.pct; });
+
+    document.getElementById("summary").textContent =
+      state.subject + " · " + state.grade + " · " + state.time + " · 共 " + scored.length + " 位";
+
+    var box = document.getElementById("results");
+    var empty = document.getElementById("empty");
+    if (!scored.length) {
+      box.innerHTML = "";
+      empty.classList.remove("hidden");
+    } else {
+      empty.classList.add("hidden");
+      box.innerHTML = scored.map(function (x) {
+        var m = x.m;
+        return (
+          '<article class="card match-row">' +
+          '<div class="match-pct">' + x.pct + "%</div>" +
+          "<div><h3>" + m.displayName + ' <span class="muted" style="font-weight:500;font-size:.8rem">' +
+          m.school + "</span></h3>" +
+          '<div class="reason">' + x.reason + " · " + m.priceBand + "</div>" +
+          '<div class="flex wrap gap-1 mt-2">' +
+          m.subjects.map(function (s) { return '<span class="tag">' + s + "</span>"; }).join("") +
+          "</div></div>" +
+          '<button type="button" class="btn btn-primary" data-id="' + m.id + '">选TA</button>' +
+          "</article>"
+        );
+      }).join("");
+      box.querySelectorAll("[data-id]").forEach(function (b) {
+        b.onclick = function () {
+          var m = XH.getMentor(b.getAttribute("data-id"));
+          XH.openLogin({ mentorName: m.displayName, action: "选TA" });
+        };
+      });
+    }
+    showStep(2);
+  };
+
+  document.getElementById("back").onclick = function () { showStep(1); };
+
+  bindChips(document.getElementById("sub"), subjects, "subject");
+  bindChips(document.getElementById("grd"), grades, "grade");
+  bindChips(document.getElementById("tm"), times, "time");
+})();
+</script>
+</body>
+</html>
