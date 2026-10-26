@@ -72,13 +72,13 @@
         <span id="promoBadge">星火学伴</span>
       </div>
       <h2 id="promoHeadline" class="login-promo-headline">
-        <span class="accent">高校学伴</span>，点亮成都家庭的课业路
+        <span class="accent">找对学伴</span>，课业路上不慌
       </h2>
       <ul id="promoLines" class="login-promo-lines">
-        <li><strong>星火学伴</strong> · 阳光合规课辅匹配</li>
-        <li><strong>高校学伴</strong> · 双一流学霸一对一</li>
-        <li><strong>成都家庭</strong> · 单次约课零预付</li>
-        <li><strong>托管安全</strong> · 实名核验与资金保障</li>
+        <li><strong>智能匹配</strong> · 按学科智能推荐</li>
+        <li><strong>透明可见</strong> · 试讲评级可见</li>
+        <li><strong>灵活约课</strong> · 按次约课无捆绑</li>
+        <li><strong>合规保障</strong> · 合规实名与资金托管</li>
       </ul>
     </aside>
 
@@ -90,7 +90,7 @@
       <div class="space-y-1">
         <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">家长 / 学员登录</h1>
         <p id="roleSubtitle" class="text-sm text-slate-300/80 leading-relaxed">
-          单次约课零预付 · 优选双一流学霸导师
+          按次约课 · 试讲评级可见
         </p>
       </div>
 
@@ -240,22 +240,22 @@
     const PROMO_COPY = {
       parent: {
         badge: '星火学伴',
-        headlineHtml: '<span class="accent">高校学伴</span>，点亮成都家庭的课业路',
+        headlineHtml: '<span class="accent">找对学伴</span>，课业路上不慌',
         lines: [
-          '<li><strong>星火学伴</strong> · 阳光合规课辅匹配</li>',
-          '<li><strong>高校学伴</strong> · 双一流学霸一对一</li>',
-          '<li><strong>成都家庭</strong> · 单次约课零预付</li>',
-          '<li><strong>托管安全</strong> · 实名核验与资金保障</li>'
+          '<li><strong>智能匹配</strong> · 按学科智能推荐</li>',
+          '<li><strong>透明可见</strong> · 试讲评级可见</li>',
+          '<li><strong>灵活约课</strong> · 按次约课无捆绑</li>',
+          '<li><strong>合规保障</strong> · 合规实名与资金托管</li>'
         ]
       },
       mentor: {
         badge: '去授课',
-        headlineHtml: '<span class="accent">伴读导师</span>，阳光接单授课',
+        headlineHtml: '<span class="accent">找对家庭</span>，阳光接单不慌',
         lines: [
-          '<li><strong>星火学伴</strong> · 平台资金保障课酬</li>',
-          '<li><strong>高校学伴</strong> · 透明排课与履约</li>',
-          '<li><strong>成都家庭</strong> · 优质生源精准匹配</li>',
-          '<li><strong>托管安全</strong> · 合规实名入库认证</li>'
+          '<li><strong>精准匹配</strong> · 优质生源按需推送</li>',
+          '<li><strong>透明履约</strong> · 排课与评级清晰可见</li>',
+          '<li><strong>灵活接单</strong> · 按次授课无捆绑</li>',
+          '<li><strong>合规保障</strong> · 实名入库与课酬托管</li>'
         ]
       }
     };
@@ -339,7 +339,7 @@
         roleTitle.innerText = "伴读导师端登录";
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('mentor')
-          : '资金保障 · 阳光透明接单授课';
+          : '资金保障 · 按次接单不捆绑';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
           <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -353,7 +353,7 @@
         roleTitle.innerText = "家长 / 学员登录";
         roleSubtitle.innerText = window.getLoginRoleSubtitle
           ? window.getLoginRoleSubtitle('parent')
-          : '单次约课零预付 · 优选双一流学霸导师';
+          : '按次约课 · 试讲评级可见';
         regBox.innerHTML = `
           <span class="text-slate-400 shrink-0">首次约课辅导？</span>
           <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
