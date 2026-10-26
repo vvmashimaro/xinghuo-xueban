@@ -110,6 +110,10 @@ html[data-xh-auth-ui="1"] #xhLoading {
     margin: 0 auto;
     width: 100%;
     padding: 0 1.5rem;
+    min-width: 0;
+  }
+  .xh-auth-shell > * {
+    min-width: 0;
   }
   .xh-auth-hero {
     display: flex;
@@ -175,6 +179,21 @@ html[data-xh-auth-ui="1"] #xhLoading {
   padding: 1.5rem 1.75rem;
   box-shadow: var(--shadow-card);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.xh-auth-panel form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.xh-auth-field,
+.xh-sms-field {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 @media (min-width: 640px) {
   .xh-auth-panel {
@@ -183,7 +202,11 @@ html[data-xh-auth-ui="1"] #xhLoading {
 }
 
 .xh-auth-input {
+  box-sizing: border-box;
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: var(--auth-input-height);
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -191,6 +214,18 @@ html[data-xh-auth-ui="1"] #xhLoading {
   font-size: var(--type-sm);
   color: var(--text-main);
   transition: box-shadow 0.15s, background 0.15s;
+}
+.xh-auth-input--with-sms-btn {
+  padding-right: 6.85rem;
+}
+@media (max-width: 400px) {
+  .xh-auth-input--with-sms-btn {
+    padding-right: 6.1rem;
+  }
+  .xh-sms-send {
+    padding: 0 0.45rem;
+    font-size: 11px;
+  }
 }
 .xh-auth-input:focus {
   outline: none;
@@ -231,7 +266,9 @@ html[data-xh-auth-ui="1"] #xhLoading {
   right: 4px;
   top: 4px;
   bottom: 4px;
+  max-width: calc(100% - 8px);
   padding: 0 0.75rem;
+  white-space: nowrap;
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
   font-size: 12px;

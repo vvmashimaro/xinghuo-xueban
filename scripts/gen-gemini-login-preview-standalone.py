@@ -96,7 +96,7 @@ html, body { margin: 0; font-family: "PingFang SC", "Microsoft YaHei", sans-seri
           <div class="stack">
             <div><label class="block text-xs font-bold ts" style="margin-bottom:.35rem">手机号码</label><input class="xh-auth-input" type="tel" placeholder="请输入 11 位手机号"></div>
             <div><label class="block text-xs font-bold ts" style="margin-bottom:.35rem">短信验证码</label>
-              <div style="position:relative"><input class="xh-auth-input" style="padding-right:7.5rem" placeholder="6 位验证码"><button type="button" class="xh-sms-send">获取验证码</button></div></div>
+              <div class="xh-sms-field"><input class="xh-auth-input xh-auth-input--with-sms-btn" placeholder="6 位验证码"><button type="button" class="xh-sms-send">获取验证码</button></div></div>
             <button type="button" id="btnDemo" class="xh-btn-primary row" style="justify-content:center"><span id="btnSubmitLoginText">安全登录并找学伴</span></button>
           </div>
           <div id="registerPromptBox" class="row" style="font-size:12px"><span class="tm">首次约课辅导？</span><span class="xh-auth-link" style="font-weight:700">前往学情建档注册 →</span></div>
