@@ -1,0 +1,54 @@
+#parentBrowseFlow { display: none; }
+#parentBrowseFlow.is-on { display: block; flex: 1 1 auto; }
+
+.ec-chip {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ec-chip.on {
+  background: #0d9488;
+  border-color: #0d9488;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+.ec-chip-hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  padding: 0.35rem 0.15rem;
+}
+
+.ec-swipe-card {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.ec-swipe-card.out-left {
+  transform: translateX(-120%) rotate(-8deg);
+  opacity: 0;
+}
+.ec-swipe-card.out-right {
+  transform: translateX(120%) rotate(8deg);
+  opacity: 0;
+}
+
+.ec-phone-frame {
+  width: min(390px, 100%);
+  background: #0f172a;
+  border-radius: 2rem;
+  padding: 0.65rem;
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.35);
+}
+
+.ec-slot-pill {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #ccfbf1;
+}

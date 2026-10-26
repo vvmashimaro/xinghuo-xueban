@@ -1113,6 +1113,18 @@
       );
     },
 
+    /** 未登录家长找学伴：公开导师列表（脱敏，无试讲链接） */
+    fetchPublicMentorsForBrowse: async function (query) {
+      const qs = new URLSearchParams();
+      if (query && query.grade) qs.set('grade', query.grade);
+      if (query && query.subject) qs.set('subject', query.subject);
+      if (query && query.time) qs.set('time', query.time);
+      const path = '/api/public/mentors' + (qs.toString() ? '?' + qs.toString() : '');
+      const data = await _apiSafe('GET', path);
+      if (Array.isArray(data)) return data;
+      return null;
+    },
+
     /* ---------- Parents ---------- */
     getParents: function () {
       this.seedIfEmptyLocal();

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 E+C 混搭 · 星火伴学</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 45%, #f1f5f9 100%); }
+  .wizard { max-width: 640px; margin: 0 auto; }
+  .step-card { padding: 1.5rem; }
+  .form-row { margin-bottom: 1.15rem; }
+  .form-row > label {
+    display: block; font-size: .8rem; font-weight: 700;
+    color: var(--slate-600); margin-bottom: .45rem;
+  }
+  .chip-wrap { display: flex; flex-wrap: wrap; gap: .4rem; min-height: 2rem; }
+  .chip-hint {
+    font-size: .8rem; color: var(--slate-400); padding: .35rem .15rem;
+  }
+  .chip:disabled, .chip.disabled {
+    opacity: .45; cursor: not-allowed; pointer-events: none;
+  }
+  .steps-dot {
+    display: flex; gap: .5rem; margin-bottom: 1rem; align-items: center;
+    font-size: .8rem; color: var(--slate-500);
+  }
+  .steps-dot .d {
+    width: 1.5rem; height: 1.5rem; border-radius: 999px; display: grid; place-items: center;
+    font-weight: 800; font-size: .75rem; background: var(--slate-200); color: var(--slate-600);
+  }
+  .steps-dot .d.on { background: var(--teal-600); color: #fff; }
+  .steps-dot .d.done { background: var(--teal-100); color: var(--teal-700); }
+
+  /* C-style swipe stage */
+  .stage {
+    display: flex; flex-direction: column; align-items: center;
+    padding: .25rem 1rem 2.5rem;
+  }
+  .stage-bar {
+    width: min(390px, 100%);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .5rem; margin-bottom: .85rem; flex-wrap: wrap;
+  }
+  .counter {
+    font-size: .85rem; font-weight: 700; color: var(--teal-700);
+    background: #fff; border: 1px solid var(--teal-100);
+    padding: .35rem .85rem; border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+  .filter-summary {
+    font-size: .75rem; color: var(--slate-500); font-weight: 600;
+  }
+  .phone {
+    width: min(390px, 100%);
+    background: #0f172a; border-radius: 2rem; padding: .65rem;
+    box-shadow: var(--shadow-lg);
+  }
+  .phone-inner {
+    background: var(--slate-50); border-radius: 1.5rem;
+    min-height: 560px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .stack-hint {
+    position: absolute; inset: 12px 12px auto; height: 12px;
+    border-radius: 12px 12px 0 0; background: #e2e8f0; z-index: 0;
+    transform: scaleX(.92); opacity: .7;
+  }
+  .stack-hint2 {
+    position: absolute; inset: 20px 12px auto; height: 12px;
+    border-radius: 12px 12px 0 0; background: #cbd5e1; z-index: 0;
+    transform: scaleX(.86); opacity: .5;
+  }
+  .swipe-card {
+    position: relative; z-index: 1; margin: 1.5rem .85rem .85rem;
+    background: #fff; border-radius: 1.25rem; border: 1px solid var(--slate-200);
+    box-shadow: var(--shadow); padding: 1.25rem; flex: 1;
+    display: flex; flex-direction: column;
+    transition: transform .25s ease, opacity .25s ease;
+  }
+  .swipe-card.out-left { transform: translateX(-120%) rotate(-8deg); opacity: 0; }
+  .swipe-card.out-right { transform: translateX(120%) rotate(8deg); opacity: 0; }
+  .swipe-card .av-wrap { display: flex; justify-content: center; margin-bottom: .75rem; }
+  .swipe-card h2 { margin: 0; text-align: center; font-size: 1.35rem; }
+  .swipe-card .school { text-align: center; color: var(--slate-500); font-size: .85rem; margin-top: .25rem; }
+  .swipe-card .hl { text-align: center; margin: 1rem 0; font-size: .95rem; color: var(--slate-700); flex: 1; }
+  .controls {
+    display: flex; justify-content: center; gap: 1.25rem;
+    padding: .75rem 1rem 1.25rem; background: #fff;
+    border-top: 1px solid var(--slate-100);
+  }
+  .ctrl {
+    width: 64px; height: 64px; border-radius: 999px; border: none;
+    font-size: 1.5rem; cursor: pointer; box-shadow: var(--shadow);
+    display: grid; place-items: center; transition: transform .1s;
+  }
+  .ctrl:active { transform: scale(.94); }
+  .ctrl.skip { background: #fff; border: 2px solid var(--slate-200); color: var(--slate-500); }
+  .ctrl.like {
+    background: linear-gradient(135deg, var(--teal-400), var(--teal-700));
+    color: #fff; border: none; width: 72px; height: 72px; font-size: 1.75rem;
+  }
+  .done {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 2rem 1.5rem; flex: 1; gap: .75rem;
+  }
+  .done.show { display: flex; }
+  .tip { margin-top: 1rem; font-size: .8rem; color: var(--slate-500); text-align: center; max-width: 320px; }
+  .empty-match {
+    text-align: center; padding: 2.5rem 1.25rem; color: var(--slate-500);
+  }
+</style>
+</head>
+<body>
+<div id="top"></div>
+<main class="page">
+  <div class="wizard">
+    <div class="steps-dot" id="dots">
+      <span class="d on" id="d1">1</span><span>筛选条件</span>
+      <span style="opacity:.35">——</span>
+      <span class="d" id="d2">2</span><span>翻牌匹配</span>
+    </div>
+
+    <!-- Step 1: form (no「你想补什么？」) -->
+    <section class="card step-card" id="step1">
+      <div class="form-row">
+        <label>年级</label>
+        <div class="chip-wrap" id="grd"></div>
+      </div>
+      <div class="form-row">
+        <label>学科</label>
+        <div class="chip-wrap" id="sub">
+          <span class="chip-hint" id="sub-hint">先选年级</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>偏好时段（可选）</label>
+        <div class="chip-wrap" id="tm"></div>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg btn-block" id="go">查看匹配结果</button>
+      <p class="muted mt-3" style="text-align:center;margin-bottom:0">选好年级与学科后，将以翻牌方式浏览匹配学伴</p>
+    </section>
+
+    <!-- Step 2: C swipe -->
+    <section class="hidden" id="step2">
+      <div class="stage">
+        <div class="stage-bar">
+          <div>
+            <div class="counter" id="counter">已感兴趣 0</div>
+            <div class="filter-summary mt-1" id="summary"></div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="back">重新筛选</button>
+        </div>
+        <div class="phone" id="phone-wrap">
+          <div class="phone-inner">
+            <div class="stack-hint"></div>
+            <div class="stack-hint2"></div>
+            <div class="swipe-card" id="card"></div>
+            <div class="done" id="done">
+              <div style="font-size:2.5rem">✨</div>
+              <h2 style="margin:0">本轮翻完了</h2>
+              <p class="muted" id="done-msg">你可以重新筛选，或登录查看已感兴趣名单。</p>
+              <button type="button" class="btn btn-primary" id="again">再翻一轮</button>
+              <button type="button" class="btn btn-secondary" id="login-list">登录查看名单</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="back2">重新筛选</button>
+            </div>
+            <div class="controls" id="controls">
+              <button type="button" class="ctrl skip" id="skip" title="跳过">✕</button>
+              <button type="button" class="ctrl like" id="like" title="感兴趣">♡</button>
+            </div>
+          </div>
+        </div>
+        <div class="empty-match hidden" id="empty">
+          <div style="font-size:2rem;margin-bottom:.5rem">🔍</div>
+          <p>暂无匹配的学伴</p>
+          <p class="muted">试试换个学科或时段，或放宽偏好时段。</p>
+          <button type="button" class="btn btn-primary mt-3" id="back-empty">重新筛选</button>
+        </div>
+        <p class="tip" id="tip">左 ✕ 跳过 · 右 ♡ 感兴趣（感兴趣会弹出登录墙）</p>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="shared.js"></script>
+<script>
+(function () {
+  document.getElementById("top").innerHTML = XH.topbar();
+
+  var state = { grade: null, subject: null, time: "全部" };
+  var grades = Object.keys(XH.GRADE_SUBJECTS);
+  var times = XH.TIMES;
+  var queue = [];
+  var idx = 0;
+  var liked = 0;
+  var animating = false;
+
+  function bindGradeChips() {
+    var el = document.getElementById("grd");
+    el.innerHTML = grades.map(function (it) {
+      return '<button type="button" class="chip' + (state.grade === it ? " on" : "") + '" data-v="' + it + '">' + it + "</button>";
+    }).join("");
+    el.querySelectorAll(".chip").forEach(function (c) {
+      c.onclick = function () {
+        var v = c.getAttribute("data-v");
+        if (state.grade !== v) {
+          state.grade = v;
+          state.subject = null; // reset subject when grade changes
+        }
+        bindGradeChips();
+        bindSubjectChips();
+      };
+    });
+  }
+
+  function bindSubjectChips() {
+    var el = document.getElementById("sub");
+    if (!state.grade) {
+      el.innerHTML = '<span class="chip-hint" id="sub-hint">先选年级</span>';
+      return;
+    }
+    var items = XH.GRADE_SUBJECTS[state.grade] || [];
+    el.innerHTML = items.map(function (it) {
+      return '<button type="button" class="chip' + (state.subject === it ? " on" : "") + '" data-v="' + it + '">' + it + "</button>";
+    }).join("");
+    el.querySelectorAll(".chip").forEach(function (c) {
+      c.onclick = function () {
+        state.subject = c.getAttribute("data-v");
+        bindSubjectChips();
+      };
+    });
+  }
+
+  function bindTimeChips() {
+    var el = document.getElementById("tm");
+    el.innerHTML = times.map(function (it) {
+      return '<button type="button" class="chip' + (state.time === it ? " on" : "") + '" data-v="' + it + '">' + it + "</button>";
+    }).join("");
+    el.querySelectorAll(".chip").forEach(function (c) {
+      c.onclick = function () {
+        state.time = c.getAttribute("data-v");
+        bindTimeChips();
+      };
+    });
+  }
+
+  function showStep(n) {
+    document.getElementById("step1").classList.toggle("hidden", n !== 1);
+    document.getElementById("step2").classList.toggle("hidden", n !== 2);
+    document.getElementById("d1").className = "d " + (n === 1 ? "on" : "done");
+    document.getElementById("d2").className = "d " + (n === 2 ? "on" : "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function updateCounter() {
+    document.getElementById("counter").textContent = "已感兴趣 " + liked;
+  }
+
+  function showEmpty(yes) {
+    document.getElementById("phone-wrap").classList.toggle("hidden", yes);
+    document.getElementById("tip").classList.toggle("hidden", yes);
+    document.getElementById("empty").classList.toggle("hidden", !yes);
+  }
+
+  function showDone() {
+    document.getElementById("card").style.display = "none";
+    document.getElementById("controls").style.display = "none";
+    document.getElementById("done").classList.add("show");
+    document.getElementById("done-msg").textContent =
+      "共翻完 " + queue.length + " 位匹配学伴 · 已感兴趣 " + liked + " 人";
+  }
+
+  function renderCard() {
+    if (!queue.length) {
+      showEmpty(true);
+      return;
+    }
+    showEmpty(false);
+    if (idx >= queue.length) {
+      showDone();
+      return;
+    }
+    document.getElementById("done").classList.remove("show");
+    document.getElementById("card").style.display = "";
+    document.getElementById("controls").style.display = "";
+    var m = queue[idx];
+    var el = document.getElementById("card");
+    el.className = "swipe-card";
+    el.innerHTML =
+      '<div class="av-wrap"><div class="avatar xl" style="background:linear-gradient(135deg,' + m.color + ',#134e4a)">' + m.initial + "</div></div>" +
+      "<h2>" + m.displayName + "</h2>" +
+      '<div class="school">' + m.school + " · " + m.major + "</div>" +
+      '<div class="stars" style="text-align:center;margin-top:.35rem">' + XH.stars(m.rating) + "</div>" +
+      '<p class="hl">' + m.highlight + "</p>" +
+      '<div class="flex wrap gap-1" style="justify-content:center">' +
+      m.subjects.map(function (s) { return '<span class="tag">' + s + "</span>"; }).join("") +
+      " " + XH.tagHtml(m.tags) + "</div>" +
+      '<div class="slots mt-3" style="justify-content:center">' + XH.slotHtml(m.slots) + "</div>" +
+      '<div style="text-align:center;margin-top:.75rem" class="price">' + m.priceBand + " · " + m.site + "</div>";
+  }
+
+  function next(dir, didLike) {
+    if (animating || idx >= queue.length) return;
+    animating = true;
+    var m = queue[idx];
+    var el = document.getElementById("card");
+    el.classList.add(dir === "left" ? "out-left" : "out-right");
+    setTimeout(function () {
+      if (didLike) {
+        liked++;
+        updateCounter();
+        XH.openLogin({ mentorName: m.displayName, action: "感兴趣" });
+      }
+      idx++;
+      animating = false;
+      renderCard();
+    }, 260);
+  }
+
+  function startSwipe() {
+    if (!state.grade || !state.subject) {
+      alert("请先选择年级和学科");
+      return;
+    }
+    queue = XH.filterMentors({
+      grade: state.grade,
+      subject: state.subject,
+      time: state.time
+    });
+    // soft fallback: if time filtered to empty, retry without time
+    if (!queue.length && state.time !== "全部") {
+      queue = XH.filterMentors({ grade: state.grade, subject: state.subject, time: "全部" });
+    }
+    idx = 0;
+    liked = 0;
+    animating = false;
+    updateCounter();
+    document.getElementById("summary").textContent =
+      state.grade + " · " + state.subject +
+      (state.time && state.time !== "全部" ? " · " + state.time : "") +
+      " · " + queue.length + " 位";
+    showStep(2);
+    renderCard();
+  }
+
+  function backToForm() {
+    showStep(1);
+  }
+
+  document.getElementById("go").onclick = startSwipe;
+  document.getElementById("back").onclick = backToForm;
+  document.getElementById("back2").onclick = backToForm;
+  document.getElementById("back-empty").onclick = backToForm;
+  document.getElementById("skip").onclick = function () { next("left", false); };
+  document.getElementById("like").onclick = function () { next("right", true); };
+  document.getElementById("again").onclick = function () {
+    idx = 0; liked = 0; updateCounter(); renderCard();
+  };
+  document.getElementById("login-list").onclick = function () {
+    XH.openLogin({ mentorName: "已感兴趣名单（" + liked + " 人）", action: "查看名单" });
+  };
+
+  bindGradeChips();
+  bindSubjectChips();
+  bindTimeChips();
+})();
+</script>
+</body>
+</html>

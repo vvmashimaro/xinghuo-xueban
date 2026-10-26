@@ -26,7 +26,10 @@
     #mentorOnboardFlow { display: none; }
     #mentorOnboardFlow.is-on { display: flex; flex-direction: column; flex: 1 1 auto; }
     #roleGate.hidden { display: none !important; }
+    #parentBrowseFlow { display: none; }
+    #parentBrowseFlow.is-on { display: block; flex: 1 1 auto; }
   </style>
+  <link rel="stylesheet" href="css/parent-browse-ec-hybrid.css">
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
@@ -80,6 +83,87 @@
           <p class="text-sm text-slate-300 mt-1.5 leading-relaxed">完成 L1 资质核验与 L2 能力画像，入库后即可在工作台接单履约。</p>
           <span class="inline-flex items-center gap-1 mt-4 text-sm font-bold text-teal-300 group-hover:text-white">进入导师入驻 <i class="fa-solid fa-arrow-right text-xs"></i></span>
         </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 家长 E+C 混搭：年级→学科筛选 + 翻牌匹配（未登录可浏览，感兴趣需登录） -->
+  <section id="parentBrowseFlow" class="flex-1">
+    <div class="max-w-2xl mx-auto px-4 py-8 sm:py-10">
+      <div class="text-center mb-6 space-y-2">
+        <p class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full">找学伴 · 阳光合规一对一</p>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">匹配学霸学伴</h1>
+        <p class="text-sm text-slate-600 max-w-md mx-auto">先选年级与学科，再以翻牌方式浏览匹配导师；感兴趣时再登录预约。</p>
+        <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+          <button type="button" onclick="showRoleGate()" class="text-xs text-slate-500 hover:text-teal-800 underline cursor-pointer">返回身份选择</button>
+          <span class="text-slate-300">|</span>
+          <button type="button" onclick="safeNavigate('login.html?role=parent', '家长登录')" class="text-xs font-bold text-teal-700 hover:text-teal-900 cursor-pointer">已有账号登录</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-sm text-slate-500 mb-4">
+        <span id="ec-d1" class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black bg-teal-600 text-white">1</span>
+        <span class="font-semibold">筛选条件</span>
+        <span class="opacity-35">——</span>
+        <span id="ec-d2" class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black bg-slate-200 text-slate-600">2</span>
+        <span class="font-semibold">翻牌匹配</span>
+      </div>
+
+      <div id="ec-step1" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-2">年级</label>
+          <div class="flex flex-wrap gap-2 min-h-[2rem]" id="ec-grd"></div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-2">学科</label>
+          <div class="flex flex-wrap gap-2 min-h-[2rem]" id="ec-sub">
+            <span class="ec-chip-hint">先选年级</span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-2">偏好时段（可选）</label>
+          <div class="flex flex-wrap gap-2" id="ec-tm"></div>
+        </div>
+        <button type="button" id="ec-go" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-md shadow-teal-600/20 transition cursor-pointer">
+          查看匹配结果
+        </button>
+        <p class="text-xs text-slate-500 text-center">选好年级与学科后，将以翻牌方式浏览匹配学伴</p>
+      </div>
+
+      <div id="ec-step2" class="hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <div id="ec-counter" class="inline-flex text-sm font-bold text-teal-800 bg-white border border-teal-100 px-3 py-1 rounded-full shadow-sm">已感兴趣 0</div>
+            <div id="ec-summary" class="text-xs text-slate-500 font-semibold mt-1"></div>
+          </div>
+          <button type="button" id="ec-back" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer">重新筛选</button>
+        </div>
+
+        <div id="ec-phone-wrap" class="ec-phone-frame mx-auto">
+          <div class="bg-slate-50 rounded-3xl min-h-[520px] flex flex-col relative overflow-hidden">
+            <div id="ec-card" class="ec-swipe-card relative z-10 mx-3 mt-6 mb-3 bg-white rounded-2xl border border-slate-200 shadow-md p-5 flex flex-col flex-1"></div>
+            <div id="ec-done" class="hidden flex-col items-center justify-center text-center px-6 py-10 flex-1 gap-3">
+              <div class="text-4xl">✨</div>
+              <h2 class="text-lg font-black text-slate-900">本轮翻完了</h2>
+              <p class="text-sm text-slate-500" id="ec-done-msg">你可以重新筛选，或登录查看已感兴趣名单。</p>
+              <button type="button" id="ec-again" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2.5 rounded-xl cursor-pointer">再翻一轮</button>
+              <button type="button" id="ec-login-list" class="bg-white border border-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl cursor-pointer">登录查看名单</button>
+              <button type="button" id="ec-back2" class="text-sm text-teal-700 font-semibold underline cursor-pointer">重新筛选</button>
+            </div>
+            <div id="ec-controls" class="flex justify-center gap-5 py-4 bg-white border-t border-slate-100">
+              <button type="button" id="ec-skip" class="w-16 h-16 rounded-full border-2 border-slate-200 bg-white text-slate-500 text-2xl shadow-sm cursor-pointer" title="跳过">✕</button>
+              <button type="button" id="ec-like" class="w-[4.5rem] h-[4.5rem] rounded-full bg-gradient-to-br from-teal-400 to-teal-700 text-white text-3xl shadow-lg cursor-pointer" title="感兴趣">♡</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="ec-empty" class="hidden text-center py-12 text-slate-500">
+          <div class="text-4xl mb-2">🔍</div>
+          <p class="font-semibold">暂无匹配的学伴</p>
+          <p class="text-sm mt-1">试试换个学科或时段，或放宽偏好时段。</p>
+          <button type="button" id="ec-back-empty" class="mt-4 bg-teal-600 text-white font-bold px-5 py-2 rounded-xl cursor-pointer">重新筛选</button>
+        </div>
+        <p id="ec-tip" class="text-xs text-slate-500 text-center mt-4 max-w-sm mx-auto">左 ✕ 跳过 · 右 ♡ 感兴趣（未登录会引导登录，登录后回到当前筛选）</p>
       </div>
     </div>
   </section>
@@ -1240,6 +1324,7 @@
     <script src="js/storage-service.js"></script>
     <script src="js/availability-picker.js"></script>
     <script src="js/mentor-wizard.js"></script>
+    <script src="js/parent-browse-ec-hybrid.js"></script>
 
     <script>
     // 统一库 hydrate：页面脚本可 await StorageService.ready()
@@ -2678,8 +2763,10 @@
 
     function showMentorOnboardFlow() {
       var gate = document.getElementById('roleGate');
+      var browse = document.getElementById('parentBrowseFlow');
       var flow = document.getElementById('mentorOnboardFlow');
       if (gate) gate.classList.add('hidden');
+      if (browse) browse.classList.remove('is-on');
       if (flow) flow.classList.add('is-on');
       try {
         var url = new URL(window.location.href);
@@ -2695,17 +2782,65 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function enterAsParent() {
-      var session = window.StorageService && StorageService.getSession && StorageService.getSession();
-      if (session && session.role === 'parent') {
-        safeNavigate('parent_dashboard.html', '家长主控中心');
-        return;
+    function showRoleGate() {
+      var gate = document.getElementById('roleGate');
+      var browse = document.getElementById('parentBrowseFlow');
+      var flow = document.getElementById('mentorOnboardFlow');
+      if (gate) gate.classList.remove('hidden');
+      if (browse) browse.classList.remove('is-on');
+      if (flow) flow.classList.remove('is-on');
+      try {
+        var url = new URL(window.location.href);
+        url.searchParams.delete('entry');
+        url.searchParams.delete('grade');
+        url.searchParams.delete('subject');
+        url.searchParams.delete('time');
+        url.searchParams.delete('step');
+        url.searchParams.delete('liked');
+        history.replaceState({}, '', url.pathname + (url.search || '') + url.hash);
+      } catch (e) {}
+    }
+
+    function showParentBrowseFlow() {
+      var gate = document.getElementById('roleGate');
+      var browse = document.getElementById('parentBrowseFlow');
+      var flow = document.getElementById('mentorOnboardFlow');
+      if (gate) gate.classList.add('hidden');
+      if (flow) flow.classList.remove('is-on');
+      if (browse) browse.classList.add('is-on');
+      try {
+        var url = new URL(window.location.href);
+        if (!url.searchParams.get('entry')) {
+          url.searchParams.set('entry', 'browse');
+          history.replaceState({}, '', url.pathname + url.search + url.hash);
+        }
+      } catch (e) {}
+      if (window.ParentBrowseEcHybrid && !window.__ecBrowseInited) {
+        ParentBrowseEcHybrid.init();
+        window.__ecBrowseInited = true;
       }
-      safeNavigate('login.html?role=parent', '家长 / 学员登录');
+    }
+
+    function shouldOpenParentBrowse() {
+      try {
+        var q = new URLSearchParams(window.location.search || '');
+        var entry = (q.get('entry') || '').toLowerCase();
+        if (entry === 'browse' || entry === 'parent') return true;
+      } catch (e) {}
+      return false;
+    }
+
+    function enterAsParent() {
+      showParentBrowseFlow();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     window.onload = function() {
-      if (shouldOpenMentorOnboard()) showMentorOnboardFlow();
+      if (shouldOpenParentBrowse()) {
+        showParentBrowseFlow();
+      } else if (shouldOpenMentorOnboard()) {
+        showMentorOnboardFlow();
+      }
       initUniversitySelectors();
       renderUploadedFiles();
       updateLiveCard();
