@@ -38,12 +38,12 @@ async function resolvePostLoginTarget(user) {
 
 Page({
   data: {
-    role: 'mentor',
+    role: 'parent',
     heroSub: warehouseOn
       ? '阳光课业辅导 · 智能微仓 · 课酬资金保障'
       : '阳光课业辅导 · 导师匹配 · 课酬资金保障',
-    roleTitle: ROLE_META.mentor.title,
-    roleSubtitle: ROLE_META.mentor.subtitle,
+    roleTitle: ROLE_META.parent.title,
+    roleSubtitle: ROLE_META.parent.subtitle,
     mobile: '',
     smsCode: '',
     agreed: false,

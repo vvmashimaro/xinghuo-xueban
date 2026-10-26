@@ -4,9 +4,9 @@
     <view class="hero-sub">{{heroSub}}</view>
   </view>
 
-  <view class="role-tabs">
-    <view class="role-tab {{role==='mentor'?'on':''}}" data-role="mentor" bindtap="onSwitchRole">伴读导师</view>
-    <view class="role-tab {{role==='parent'?'on':''}}" data-role="parent" bindtap="onSwitchRole">家长 / 学员</view>
+  <view class="role-tabs" role="tablist" aria-label="登录角色">
+    <view class="role-tab {{role==='parent'?'on':''}}" data-role="parent" bindtap="onSwitchRole" role="tab" aria-label="找学伴">找学伴</view>
+    <view class="role-tab {{role==='mentor'?'on':''}}" data-role="mentor" bindtap="onSwitchRole" role="tab" aria-label="去授课">去授课</view>
   </view>
 
   <view class="card">
