@@ -62,7 +62,6 @@ html, body { margin: 0; font-family: "PingFang SC", "Microsoft YaHei", sans-seri
   <main class="flex-1 pad-main">
     <div class="xh-auth-shell">
       <aside id="authHeroParent" class="xh-auth-hero">
-        <p class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-200 bg-orange-500/15 border border-orange-400/25 px-3 py-1 rounded-full">阳光合规 · 一课一消托管</p>
         <h2 class="tw" style="font-size:1.65rem;line-height:1.3;font-weight:900">为成都家庭连接<br>可核验的高校学伴</h2>
         <p class="tm" style="font-size:14px;line-height:1.6;max-width:28rem">学信网实名、微网点安全伴学、课时费托管释放——三大机制降低黑家教风险。</p>
         <div class="stack">
@@ -72,7 +71,6 @@ html, body { margin: 0; font-family: "PingFang SC", "Microsoft YaHei", sans-seri
         </div>
       </aside>
       <aside id="authHeroMentor" class="xh-auth-hero is-hidden" aria-hidden="true">
-        <p class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-200 bg-orange-500/15 border border-orange-400/25 px-3 py-1 rounded-full">阳光勤工 · L1/L2 入库认证</p>
         <h2 class="tw" style="font-size:1.65rem;line-height:1.3;font-weight:900">高校学伴接单<br>课酬有保障、履约有记录</h2>
         <p class="tm" style="font-size:14px;line-height:1.6;max-width:28rem">完成资质核验与能力画像后即可入库；约课、打卡、结课与托管释放全程可追溯。</p>
         <div class="stack">
