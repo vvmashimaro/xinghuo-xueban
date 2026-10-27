@@ -10,6 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/parent-find-tutor-boss-a.css">
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -195,111 +196,140 @@
   </main>
   </div>
 
-  <div data-console-pane="discover" class="hidden">
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
+  <div data-console-pane="discover" class="hidden parent-discover-boss">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
 
-    <!-- 搜索与多维过滤条卡片 -->
-    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
-      
-      <!-- 主搜索输入框 + 搜索按钮 -->
-      <div class="flex flex-col sm:flex-row gap-2.5">
-        <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-          <input type="text" id="mainSearchInput" oninput="applyFilterAndSearch()" placeholder="搜索导师姓名、川大/电子科大、初中数学压轴模型、电学实验、艺考文化课..." class="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium transition">
-          <button type="button" onclick="clearSearchInput()" id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 cursor-pointer">
-            <i class="fa-solid fa-circle-xmark text-sm"></i>
-          </button>
+    <div class="boss-layout">
+      <aside class="boss-filters" aria-label="筛选条件">
+        <div class="boss-filters-title">
+          <span><i class="fa-solid fa-sliders text-teal-600 mr-1"></i>筛选条件</span>
+          <span class="hint">Boss 双栏</span>
         </div>
 
-        <button type="button" onclick="applyFilterAndSearch()" class="bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer">
-          <i class="fa-solid fa-magnifying-glass text-xs"></i>
-          <span>全域检索</span>
+        <div class="boss-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" id="mainSearchInput" oninput="applyFilterAndSearch()" placeholder="姓名 / 高校 / 考点关键词…" autocomplete="off">
+        </div>
+        <button type="button" class="boss-btn-search" onclick="applyFilterAndSearch()">
+          <i class="fa-solid fa-magnifying-glass"></i>全域检索
         </button>
 
-        <button type="button" onclick="resetAllFilters()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium px-4 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-          <i class="fa-solid fa-arrow-rotate-left text-xs"></i>
-          <span>重置条件</span>
+        <div class="boss-filter-block">
+          <label>学科方向</label>
+          <div class="boss-chip-wrap" id="subjectFilterGroup">
+            <button type="button" onclick="setSubjectFilter('all', this)" class="boss-chip on filter-chip">全部学科</button>
+            <button type="button" onclick="setSubjectFilter('数学', this)" class="boss-chip filter-chip">初高中数学</button>
+            <button type="button" onclick="setSubjectFilter('物理', this)" class="boss-chip filter-chip">初高中物理</button>
+            <button type="button" onclick="setSubjectFilter('英语', this)" class="boss-chip filter-chip">中高考英语</button>
+            <button type="button" onclick="setSubjectFilter('化学', this)" class="boss-chip filter-chip">初高中化学</button>
+            <button type="button" onclick="setSubjectFilter('语文', this)" class="boss-chip filter-chip">语文学科</button>
+            <button type="button" onclick="setSubjectFilter('艺考', this)" class="boss-chip filter-chip">艺考文化课</button>
+            <button type="button" onclick="setSubjectFilter('考研', this)" class="boss-chip filter-chip">考研辅导</button>
+            <button type="button" onclick="setSubjectFilter('体育', this)" class="boss-chip filter-chip">体育/艺体</button>
+          </div>
+        </div>
+
+        <div class="boss-filter-block">
+          <label>年级学段</label>
+          <div class="boss-chip-wrap" id="gradeFilterGroup">
+            <button type="button" onclick="setGradeFilter('all', this)" class="boss-chip on grade-chip">不限</button>
+            <button type="button" onclick="setGradeFilter('小学', this)" class="boss-chip grade-chip">小学</button>
+            <button type="button" onclick="setGradeFilter('初中', this)" class="boss-chip grade-chip">初中</button>
+            <button type="button" onclick="setGradeFilter('高中', this)" class="boss-chip grade-chip">高中</button>
+            <button type="button" onclick="setGradeFilter('考研', this)" class="boss-chip grade-chip">考研</button>
+            <button type="button" onclick="setGradeFilter('艺体', this)" class="boss-chip grade-chip">艺体</button>
+          </div>
+        </div>
+
+        <div class="boss-filter-block">
+          <label>可约时段</label>
+          <div class="boss-chip-wrap" id="timeFilterGroup">
+            <button type="button" onclick="setTimeFilter('all', this)" class="boss-chip on time-chip">不限</button>
+            <button type="button" onclick="setTimeFilter('工作日晚', this)" class="boss-chip time-chip">工作日晚</button>
+            <button type="button" onclick="setTimeFilter('周末上午', this)" class="boss-chip time-chip">周末上午</button>
+            <button type="button" onclick="setTimeFilter('周末下午', this)" class="boss-chip time-chip">周末下午</button>
+            <button type="button" onclick="setTimeFilter('周末全天', this)" class="boss-chip time-chip">周末全天</button>
+          </div>
+        </div>
+
+        <div class="boss-filter-block">
+          <label>网点 / 教学点</label>
+          <div class="boss-chip-wrap" id="spaceFilterGroup">
+            <button type="button" onclick="setSpaceFilter('all', this)" class="boss-chip on-dark on space-chip">全部网点</button>
+            <button type="button" onclick="setSpaceFilter('青羊金沙', this)" class="boss-chip space-chip">青羊金沙</button>
+            <button type="button" onclick="setSpaceFilter('高新大源', this)" class="boss-chip space-chip">高新大源</button>
+            <button type="button" onclick="setSpaceFilter('武侯川大', this)" class="boss-chip space-chip">武侯川大</button>
+          </div>
+        </div>
+
+        <div class="boss-filter-block">
+          <label>排序维度</label>
+          <select id="sortSelect" onchange="applyFilterAndSearch()" class="boss-sort-select">
+            <option value="matchDesc" selected>AI 学情契合度最高</option>
+            <option value="ratingDesc">家长好评率最高</option>
+            <option value="rateAsc">课酬时薪从低到高</option>
+            <option value="rateDesc">课酬时薪从高到低</option>
+            <option value="hoursDesc">累计履约授课最多</option>
+          </select>
+        </div>
+
+        <div class="boss-filter-block">
+          <label>时薪预算区间</label>
+          <div class="boss-rate-row">
+            <span>预算</span>
+            <span class="val">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">180</span>/h</span>
+          </div>
+          <div class="boss-rate-sliders">
+            <input type="range" id="rateMinFilter" min="70" max="260" step="10" value="80" oninput="onMinRateFilterChange(this.value)" title="下限">
+            <input type="range" id="rateRangeFilter" min="70" max="260" step="10" value="180" oninput="onMaxRateFilterChange(this.value)" title="上限">
+          </div>
+        </div>
+
+        <button type="button" class="boss-btn-reset" onclick="resetAllFilters()">
+          <i class="fa-solid fa-arrow-rotate-left"></i>重置条件
         </button>
-      </div>
+      </aside>
 
-      <!-- 快捷标签过滤矩阵 (科目、学段、微网点、预算排序) -->
-      <div class="space-y-2.5 pt-1 text-xs border-t border-slate-100">
-        
-        <!-- 学科分类筛选条 -->
-        <div class="flex items-start sm:items-center gap-2">
-          <span class="text-slate-500 font-bold shrink-0 w-16 text-xs">学科方向：</span>
-          <div class="flex flex-wrap gap-1.5" id="subjectFilterGroup">
-            <button type="button" onclick="setSubjectFilter('all', this)" class="filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer">全部学科</button>
-            <button type="button" onclick="setSubjectFilter('数学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中数学</button>
-            <button type="button" onclick="setSubjectFilter('物理', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中物理</button>
-            <button type="button" onclick="setSubjectFilter('英语', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">中高考英语</button>
-            <button type="button" onclick="setSubjectFilter('化学', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">初高中化学</button>
-            <button type="button" onclick="setSubjectFilter('语文', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">语文学科</button>
-            <button type="button" onclick="setSubjectFilter('艺考', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">美术/音乐艺考文化课</button>
-            <button type="button" onclick="setSubjectFilter('考研', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">考研辅导</button>
-            <button type="button" onclick="setSubjectFilter('体育', this)" class="filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">体育/艺体</button>
+      <section class="boss-results">
+        <div class="boss-result-bar">
+          <div class="title">
+            <i class="fa-solid fa-list"></i>
+            <span>可约双一流导师库</span>
+            <span class="count">（共 <strong id="tutorCountBadge">0</strong> 位符合条件）</span>
+          </div>
+          <div class="trust">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>学信网核验 · 课酬资金保障</span>
           </div>
         </div>
 
-        <!-- 空间网点筛选条 -->
-        <div class="flex items-start sm:items-center gap-2">
-          <span class="text-slate-500 font-bold shrink-0 w-16 text-xs">空间网点：</span>
-          <div class="flex flex-wrap gap-1.5" id="spaceFilterGroup">
-            <button type="button" onclick="setSpaceFilter('all', this)" class="space-chip px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer">全部成都市网点</button>
-            <button type="button" onclick="setSpaceFilter('青羊金沙', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">青羊金沙微网点</button>
-            <button type="button" onclick="setSpaceFilter('高新大源', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">高新大源微网点</button>
-            <button type="button" onclick="setSpaceFilter('武侯川大', this)" class="space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">武侯川大望江微网点</button>
-          </div>
-        </div>
-
-        <!-- 综合排序与高级滑块面板 -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 text-xs">
-          <div class="flex items-center gap-2">
-            <span class="text-slate-500 font-medium">排序维度：</span>
-            <select id="sortSelect" onchange="applyFilterAndSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-700 text-xs cursor-pointer">
-              <option value="matchDesc" selected>AI 学情契合度最高</option>
-              <option value="ratingDesc">家长好评率最高 (5.0★)</option>
-              <option value="rateAsc">课酬时薪从低到高</option>
-              <option value="rateDesc">课酬时薪从高到低</option>
-              <option value="hoursDesc">累计履约授课最多</option>
-            </select>
-          </div>
-
-          <!-- 时薪区间过滤（与家长建档 budgetMin/Max 对齐，可再收窄） -->
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-slate-500 font-medium">时薪预算区间：</span>
-            <span class="font-mono font-bold text-teal-700">¥<span id="minRateLabel">80</span>–<span id="maxRateLabel">180</span>/h</span>
-            <input type="range" id="rateMinFilter" min="70" max="260" step="10" value="80" oninput="onMinRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="下限">
-            <input type="range" id="rateRangeFilter" min="70" max="260" step="10" value="180" oninput="onMaxRateFilterChange(this.value)" class="w-24 sm:w-28 accent-teal-600 cursor-pointer" title="上限">
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- 导师列表主展示区 -->
-    <div class="space-y-3">
-      <!-- 状态与检索结果计数横条 -->
-      <div class="flex items-center justify-between text-xs px-1">
-        <div class="flex items-center gap-2 font-bold text-slate-800">
-          <i class="fa-solid fa-list text-teal-600"></i>
-          <span>可约双一流导师库</span>
-          <span class="text-xs font-mono text-slate-500">（共 <strong id="tutorCountBadge" class="text-teal-700">6</strong> 位符合条件）</span>
-        </div>
-        <div class="flex items-center gap-2 text-xs text-slate-500">
-          <i class="fa-solid fa-shield-check text-emerald-600"></i>
-          <span>导师学籍资质审核 · 课酬资金保障</span>
-        </div>
-      </div>
-
-      <!-- 导师卡片响应式网格 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="tutorListGrid">
-        <!-- 由 JavaScript 动态渲染导师卡片 -->
-      </div>
+        <div class="boss-tutor-list" id="tutorListGrid"></div>
+      </section>
     </div>
 
   </main>
   </div>
+
+  <div id="tutorBossDrawerBackdrop" class="tutor-boss-drawer-backdrop" onclick="closeTutorBossDrawer()" aria-hidden="true"></div>
+  <aside id="tutorBossDrawer" class="tutor-boss-drawer" aria-hidden="true" aria-label="导师详情">
+    <div class="drawer-head">
+      <div class="head-left">
+        <div class="head-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+        <div>
+          <h3><span id="tutorBossDrawerTitle">导师详情</span>
+            <span id="tutorBossDrawerCode" style="font-size:.65rem;font-family:ui-monospace,monospace;background:rgba(20,184,166,.25);color:#99f6e4;padding:.1rem .35rem;border-radius:4px;margin-left:.35rem;font-weight:700"></span>
+          </h3>
+          <div class="sub">官方实名存证已备案 · 点击卡片打开本抽屉</div>
+        </div>
+      </div>
+      <button type="button" class="drawer-close" onclick="closeTutorBossDrawer()" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body" id="tutorBossDrawerBody"></div>
+    <div class="drawer-foot">
+      <button type="button" class="btn-block btn-outline" id="tutorBossDrawerVideoBtn" onclick="openTutorDetailFromBossDrawer()"><i class="fa-solid fa-circle-play"></i>试讲视频</button>
+      <button type="button" class="btn-block btn-main" id="tutorBossDrawerBookBtn" onclick="openBookingFromBossDrawer()"><span id="tutorBossDrawerBookLabel">约TA</span> <i class="fa-solid fa-angle-right"></i></button>
+    </div>
+  </aside>
 
   <div data-console-pane="account" class="hidden">
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
@@ -1080,8 +1110,11 @@
 
     // 当前筛选与排序状态
     let currentSubjectFilter = 'all';
+    let currentGradeFilter = 'all';
+    let currentTimeFilter = 'all';
     let currentSpaceFilter = 'all';
     let currentMinRate = 80;
+    let tutorBossDrawerId = null;
     let currentMaxRate = 180;
     let selectedTutorForBooking = null;
 
@@ -1295,16 +1328,58 @@
     /* ==========================================================================
        3. 过滤、搜索与列表渲染逻辑
        ========================================================================== */
+    function tutorGradeKeys(tutor) {
+      const hay = [].concat(tutor.subjects || [], tutor.degree || '', tutor.scoreHighlight || '').join(' ');
+      const keys = [];
+      if (/小学|奥数/.test(hay)) keys.push('小学');
+      if (/初中|中考/.test(hay)) keys.push('初中');
+      if (/高中|高考/.test(hay)) keys.push('高中');
+      if (/考研/.test(hay)) keys.push('考研');
+      if (/艺考|艺体|体育|美术|音乐/.test(hay)) keys.push('艺体');
+      if (!keys.length) keys.push('初中', '高中');
+      return keys;
+    }
+
+    function tutorSlotLabels(tutor) {
+      if (tutor.availableSlots && tutor.availableSlots.length) {
+        return tutor.availableSlots.slice(0, 6);
+      }
+      return [];
+    }
+
+    function tutorSlotHaystack(tutor) {
+      return tutorSlotLabels(tutor).join(' ');
+    }
+
+    function matchTutorTimeFilter(tutor, timeKey) {
+      if (timeKey === 'all') return true;
+      const s = tutorSlotHaystack(tutor);
+      if (!s) return true;
+      if (timeKey === '工作日晚') return /周[一二三四五]晚/.test(s);
+      if (timeKey === '周末上午') return /周[六日]上午/.test(s);
+      if (timeKey === '周末下午') return /周[六日]下午/.test(s);
+      if (timeKey === '周末全天') {
+        return /周[六日]全天|周六全天|周日全天/.test(s) || (/周[六日]/.test(s) && /上午|下午|晚/.test(s));
+      }
+      return true;
+    }
+
+    function tutorBioText(tutor) {
+      const parts = [];
+      if (tutor.university) parts.push(tutor.university + (tutor.degree ? ' · ' + tutor.degree : ''));
+      if (tutor.scoreHighlight) parts.push(tutor.scoreHighlight);
+      const styles = (tutor.styles || []).slice(0, 2).join('、');
+      if (styles) parts.push('教学风格：' + styles);
+      return parts.join('。') + (parts.length ? '。' : '合规实名导师，支持线下网点预约与试讲。');
+    }
+
+    function shortTutorSpace(space) {
+      return String(space || '').replace(/微网点$/, '');
+    }
+
     function applyFilterAndSearch() {
       const keyword = (document.getElementById('mainSearchInput')?.value || '').trim().toLowerCase();
       const sortType = document.getElementById('sortSelect')?.value || 'matchDesc';
-      const clearBtn = document.getElementById('btnClearSearch');
-
-      if (keyword) {
-        clearBtn?.classList.remove('hidden');
-      } else {
-        clearBtn?.classList.add('hidden');
-      }
 
       // 多维过滤
       let results = TUTOR_DATABASE.filter(item => {
@@ -1314,15 +1389,23 @@
           if (!matchSubj) return false;
         }
 
-        // 2. 网点微空间过滤
+        // 2. 年级学段
+        if (currentGradeFilter !== 'all') {
+          if (tutorGradeKeys(item).indexOf(currentGradeFilter) < 0) return false;
+        }
+
+        // 3. 可约时段
+        if (!matchTutorTimeFilter(item, currentTimeFilter)) return false;
+
+        // 4. 网点微空间过滤
         if (currentSpaceFilter !== 'all') {
           if (!item.space.includes(currentSpaceFilter)) return false;
         }
 
-        // 3. 时薪预算区间过滤 [min, max]
+        // 5. 时薪预算区间过滤 [min, max]
         if (item.hourlyRate < currentMinRate || item.hourlyRate > currentMaxRate) return false;
 
-        // 4. 关键字搜索（姓名、高校、专业、考点、风格、亮点）
+        // 6. 关键字搜索（姓名、高校、专业、考点、风格、亮点）
         if (keyword) {
           const combinedStr = [
             item.realName, item.maskedName, item.university, item.degree, item.scoreHighlight,
@@ -1365,138 +1448,219 @@
       if (!grid) return;
 
       if (list.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full bg-white rounded-3xl p-10 text-center border border-slate-200 space-y-3">
-            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto text-2xl">
-              <i class="fa-solid fa-user-slash"></i>
-            </div>
-            <h4 class="font-bold text-slate-800 text-sm">暂无符合当前筛选条件的导师</h4>
-            <p class="text-xs text-slate-500 max-w-sm mx-auto">
-              建议放宽时薪预算区间，或切换空间网点尝试更宽泛的匹配方案
-            </p>
-            <button type="button" onclick="resetAllFilters()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">
-              一键重置筛选条件
-            </button>
-          </div>
-        `;
+        grid.innerHTML =
+          '<div class="boss-empty-state">' +
+          '<div style="font-size:2rem;color:#94a3b8;margin-bottom:.5rem"><i class="fa-solid fa-user-slash"></i></div>' +
+          '<h4 style="font-weight:800;color:#1e293b;margin:0 0 .35rem">暂无符合当前筛选条件的导师</h4>' +
+          '<p style="font-size:.75rem;color:#64748b;max-width:20rem;margin:0 auto .75rem">建议放宽时薪、学科或网点条件后重试</p>' +
+          '<button type="button" onclick="resetAllFilters()" class="boss-btn-primary-sm" style="margin:0 auto">一键重置筛选</button>' +
+          '</div>';
         return;
       }
 
-      grid.innerHTML = '';
+      const cta = parentBookingCtaLabel();
+      grid.innerHTML = list.map(function (tutor) {
+        const active = tutorBossDrawerId === tutor.id ? ' active' : '';
+        const degreeShort = (tutor.degree || '').split(' ')[0] || '合规导师';
+        const topics = (tutor.syllabusTopics || []).map(function (topic) {
+          return '<span class="boss-tag" title="' + topic + '">' + topic + '</span>';
+        }).join('');
+        const styles = (tutor.styles || []).map(function (st) {
+          return '<span class="boss-style-tag">' + st + '</span>';
+        }).join('');
+        return (
+          '<article class="boss-m-card' + active + '" data-tutor-id="' + tutor.id + '" role="button" tabindex="0">' +
+            '<div class="boss-m-top">' +
+              '<div class="boss-m-id">' +
+                '<div class="boss-avatar">' + tutor.avatarLetter + '</div>' +
+                '<div>' +
+                  '<div class="boss-m-name"><h3>' + tutor.maskedName + '</h3><span class="boss-chsi">学信网在籍</span></div>' +
+                  '<div class="boss-m-school">' + (tutor.university || '') + ' · <span>' + degreeShort + '</span></div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="boss-m-price">' +
+                '<div class="yen">¥' + tutor.hourlyRate + '<small>/h</small></div>' +
+                '<span class="boss-match-pill">' + tutor.matchScore + '% 契合</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="boss-highlight-row">' +
+              '<div class="hl"><i class="fa-solid fa-award"></i><span>' + tutor.scoreHighlight + '</span></div>' +
+              '<span class="hrs">' + tutor.totalHours + '课时</span>' +
+            '</div>' +
+            '<div>' +
+              '<span class="boss-section-label">主辅考纲重点：</span>' +
+              '<div class="boss-tags">' + topics + '</div>' +
+              '<div class="boss-tags" style="margin-top:.35rem">' + styles + '</div>' +
+            '</div>' +
+            '<div class="boss-m-foot">' +
+              '<div class="boss-m-loc"><i class="fa-solid fa-location-dot"></i><span>' + shortTutorSpace(tutor.space) + '</span></div>' +
+              '<div class="boss-m-actions">' +
+                '<button type="button" class="boss-btn-ghost-sm" data-tutor-video="' + tutor.id + '"><i class="fa-solid fa-circle-play"></i>试讲视频</button>' +
+                '<button type="button" class="boss-btn-primary-sm" data-tutor-book="' + tutor.id + '">' + cta + ' <i class="fa-solid fa-angle-right"></i></button>' +
+              '</div>' +
+            '</div>' +
+          '</article>'
+        );
+      }).join('');
 
-      list.forEach(tutor => {
-        const card = document.createElement('div');
-        card.className = "bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs card-hover-effect flex flex-col justify-between space-y-3.5";
-
-        card.innerHTML = `
-          <div>
-            <!-- 顶栏：头像、姓名、高校与契合度 -->
-            <div class="flex items-start justify-between gap-2.5">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
-                  ${tutor.avatarLetter}
-                </div>
-                <div>
-                  <div class="flex items-center gap-1.5">
-                    <h3 class="font-black text-slate-900 text-sm sm:text-base">${tutor.maskedName}</h3>
-                    <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-semibold">
-                      学信网在籍
-                    </span>
-                  </div>
-                  <div class="text-xs text-slate-600 font-medium mt-0.5">
-                    ${tutor.university} · <span class="text-slate-500">${tutor.degree.split(' ')[0]}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 价格与契合度 -->
-              <div class="text-right shrink-0">
-                <div class="text-base font-black text-teal-700 font-mono">
-                  ¥${tutor.hourlyRate}<span class="text-xs font-normal text-slate-500">/h</span>
-                </div>
-                <span class="text-xs text-teal-700 bg-teal-50 border border-teal-200 font-bold px-1.5 py-0.2 rounded font-mono">
-                  ${tutor.matchScore}% 契合
-                </span>
-              </div>
-            </div>
-
-            <!-- 成绩与战绩亮点 -->
-            <div class="mt-3 bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-1.5 truncate mr-2">
-                <i class="fa-solid fa-award text-amber-500 text-xs shrink-0"></i>
-                <span class="font-bold text-slate-800 text-xs truncate">${tutor.scoreHighlight}</span>
-              </div>
-              <span class="text-xs text-slate-500 font-mono shrink-0">${tutor.totalHours}课时</span>
-            </div>
-
-            <!-- 攻坚大纲专项考点胶囊 -->
-            <div class="mt-2.5">
-              <span class="text-xs text-slate-500 block mb-1">主辅考纲重点：</span>
-              <div class="flex flex-wrap gap-1">
-                ${tutor.syllabusTopics.map(topic => `
-                  <span class="text-xs bg-teal-50/80 text-teal-900 border border-teal-200/80 px-2 py-0.5 rounded font-medium truncate max-w-[150px]" title="${topic}">
-                    ${topic}
-                  </span>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- 教学风格标签 -->
-            <div class="mt-2 flex flex-wrap gap-1">
-              ${tutor.styles.map(st => `
-                <span class="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200">
-                  ${st}
-                </span>
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- 底栏：网点空间与操作按钮 -->
-          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
-            <div class="text-xs text-slate-500 truncate mr-1">
-              <i class="fa-solid fa-location-dot text-teal-600 mr-1 text-xs"></i>
-              <span class="truncate">${tutor.space.split('微网点')[0]}</span>
-            </div>
-
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button type="button" onclick="openTutorDetail('${tutor.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1">
-                <i class="fa-solid fa-circle-play text-teal-600 text-xs"></i>
-                <span>试讲视频</span>
-              </button>
-              <button type="button" onclick="openBookingDrawer('${tutor.id}')" class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-1 cursor-pointer">
-                <span>${parentBookingCtaLabel()}</span>
-                <i class="fa-solid fa-angle-right text-xs"></i>
-              </button>
-            </div>
-          </div>
-        `;
-
-        grid.appendChild(card);
+      grid.querySelectorAll('.boss-m-card').forEach(function (card) {
+        const id = card.getAttribute('data-tutor-id');
+        card.addEventListener('click', function (e) {
+          if (e.target.closest('[data-tutor-video],[data-tutor-book]')) return;
+          openTutorBossDrawer(id);
+        });
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openTutorBossDrawer(id);
+          }
+        });
       });
+      grid.querySelectorAll('[data-tutor-video]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openTutorDetail(btn.getAttribute('data-tutor-video'));
+        });
+      });
+      grid.querySelectorAll('[data-tutor-book]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openBookingDrawer(btn.getAttribute('data-tutor-book'));
+        });
+      });
+    }
+
+    function renderTutorList() {
+      applyFilterAndSearch();
+    }
+
+    function openTutorBossDrawer(tutorId) {
+      const tutor = TUTOR_DATABASE.find(function (t) { return t.id === tutorId; });
+      if (!tutor) return;
+      tutorBossDrawerId = tutorId;
+      selectedTutorForBooking = tutor;
+
+      const titleEl = document.getElementById('tutorBossDrawerTitle');
+      const codeEl = document.getElementById('tutorBossDrawerCode');
+      const bodyEl = document.getElementById('tutorBossDrawerBody');
+      const bookLabel = document.getElementById('tutorBossDrawerBookLabel');
+      if (titleEl) titleEl.textContent = tutor.maskedName;
+      if (codeEl) codeEl.textContent = tutor.id;
+      if (bookLabel) bookLabel.textContent = parentBookingCtaLabel().replace(/\s*→?$/, '');
+
+      const slots = tutorSlotLabels(tutor);
+      const slotHtml = slots.length
+        ? slots.map(function (s) { return '<span class="slot">' + s + '</span>'; }).join('')
+        : '<span class="slot">档期以预约页为准</span>';
+      const topicTags = (tutor.syllabusTopics || []).map(function (x) {
+        return '<span class="boss-tag" style="max-width:none">' + x + '</span>';
+      }).join('');
+      const styleTags = (tutor.styles || []).concat(tutor.subjects || []).slice(0, 5).map(function (x) {
+        return '<span class="boss-style-tag">' + x + '</span>';
+      }).join('');
+
+      if (bodyEl) {
+        bodyEl.innerHTML =
+          '<div style="display:flex;gap:.85rem;align-items:center">' +
+            '<div class="avatar lg">' + tutor.avatarLetter + '</div>' +
+            '<div>' +
+              '<div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">' +
+                '<h3 style="margin:0;font-size:1.1rem;font-weight:900">' + tutor.maskedName + '</h3>' +
+                '<span class="boss-chsi">学信网在籍</span>' +
+              '</div>' +
+              '<div class="boss-m-school" style="margin-top:.25rem">' + (tutor.university || '') + ' · ' + (tutor.degree || '') + '</div>' +
+              '<div style="margin-top:.35rem;font-size:.75rem;color:#64748b">★ ' + tutor.rating + ' · ' + tutor.totalHours + ' 课时履约</div>' +
+            '</div>' +
+          '</div>' +
+          '<p class="bio">' + tutorBioText(tutor) + '</p>' +
+          '<span class="boss-section-label">主辅考纲重点</span>' +
+          '<div class="boss-tags" style="margin-bottom:.65rem">' + topicTags + '</div>' +
+          '<div class="boss-tags" style="margin-bottom:.75rem">' + styleTags + '</div>' +
+          '<div style="font-size:.75rem;color:#64748b;margin-bottom:.5rem">' +
+            '<i class="fa-solid fa-location-dot" style="color:#0d9488;margin-right:.25rem"></i>' +
+            (tutor.space || '') + ' · <span style="color:#0f766e;font-weight:800;font-family:ui-monospace,monospace">¥' + tutor.hourlyRate + '/h</span>' +
+            ' · <span class="boss-match-pill">' + tutor.matchScore + '% 契合</span>' +
+          '</div>' +
+          '<span class="boss-section-label">可约时段</span>' +
+          '<div class="slots">' + slotHtml + '</div>' +
+          '<span class="boss-section-label">' + (tutor.videoTitle || '试讲示范') + '</span>' +
+          '<div class="trial-box" id="tutorBossTrialPlay" role="button" tabindex="0">' +
+            '<div class="play"><i class="fa-solid fa-play"></i></div>' +
+          '</div>' +
+          '<p class="privacy-note">完整联系方式需完成预约后由平台托管展示。</p>';
+        const trial = document.getElementById('tutorBossTrialPlay');
+        if (trial) {
+          trial.onclick = function () { openTutorDetail(tutor.id); };
+        }
+      }
+
+      const drawer = document.getElementById('tutorBossDrawer');
+      const backdrop = document.getElementById('tutorBossDrawerBackdrop');
+      drawer?.classList.add('open');
+      backdrop?.classList.add('open');
+      drawer?.setAttribute('aria-hidden', 'false');
+
+      applyFilterAndSearch();
+    }
+
+    function closeTutorBossDrawer() {
+      tutorBossDrawerId = null;
+      const drawer = document.getElementById('tutorBossDrawer');
+      const backdrop = document.getElementById('tutorBossDrawerBackdrop');
+      drawer?.classList.remove('open');
+      backdrop?.classList.remove('open');
+      drawer?.setAttribute('aria-hidden', 'true');
+      const grid = document.getElementById('tutorListGrid');
+      if (grid) {
+        grid.querySelectorAll('.boss-m-card.active').forEach(function (el) { el.classList.remove('active'); });
+      }
+    }
+
+    function openTutorDetailFromBossDrawer() {
+      if (!tutorBossDrawerId) return;
+      const id = tutorBossDrawerId;
+      closeTutorBossDrawer();
+      setTimeout(function () { openTutorDetail(id); }, 200);
+    }
+
+    function openBookingFromBossDrawer() {
+      if (!tutorBossDrawerId) return;
+      const id = tutorBossDrawerId;
+      closeTutorBossDrawer();
+      setTimeout(function () { openBookingDrawer(id); }, 200);
     }
 
     /* ==========================================================================
        4. 筛选按钮点击交互
        ========================================================================== */
+    function syncBossChips(groupSelector, activeBtn, useDark) {
+      document.querySelectorAll(groupSelector).forEach(function (el) {
+        el.classList.remove('on', 'on-dark');
+      });
+      if (activeBtn) activeBtn.classList.add(useDark ? 'on-dark' : 'on');
+    }
+
     function setSubjectFilter(subject, btn) {
       currentSubjectFilter = subject;
-      document.querySelectorAll('#subjectFilterGroup .filter-chip').forEach(el => {
-        el.className = "filter-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer";
-      });
-      if (btn) {
-        btn.className = "filter-chip px-2.5 py-1 rounded-lg font-bold bg-teal-600 text-white transition cursor-pointer";
-      }
+      syncBossChips('#subjectFilterGroup .boss-chip', btn, false);
+      applyFilterAndSearch();
+    }
+
+    function setGradeFilter(grade, btn) {
+      currentGradeFilter = grade;
+      syncBossChips('#gradeFilterGroup .boss-chip', btn, false);
+      applyFilterAndSearch();
+    }
+
+    function setTimeFilter(time, btn) {
+      currentTimeFilter = time;
+      syncBossChips('#timeFilterGroup .boss-chip', btn, false);
       applyFilterAndSearch();
     }
 
     function setSpaceFilter(space, btn) {
       currentSpaceFilter = space;
-      document.querySelectorAll('#spaceFilterGroup .space-chip').forEach(el => {
-        el.className = "space-chip px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer";
-      });
-      if (btn) {
-        btn.className = "space-chip px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer";
-      }
+      syncBossChips('#spaceFilterGroup .boss-chip', btn, true);
       applyFilterAndSearch();
     }
 
@@ -1537,6 +1701,8 @@
       if (input) input.value = '';
 
       currentSubjectFilter = 'all';
+      currentGradeFilter = 'all';
+      currentTimeFilter = 'all';
       currentSpaceFilter = 'all';
       const p = CURRENT_PARENT || {};
       currentMinRate = Number(p.budgetMin) || 80;
@@ -1556,8 +1722,11 @@
 
       // 还原胶囊样式
       setSubjectFilter('all', document.querySelector('#subjectFilterGroup .filter-chip'));
+      setGradeFilter('all', document.querySelector('#gradeFilterGroup .grade-chip'));
+      setTimeFilter('all', document.querySelector('#timeFilterGroup .time-chip'));
       setSpaceFilter('all', document.querySelector('#spaceFilterGroup .space-chip'));
 
+      closeTutorBossDrawer();
       applyFilterAndSearch();
       showToast('已重置所有检索过滤条件');
     }
@@ -1933,6 +2102,7 @@
        6. 约课与银行存管签约抽屉
        ========================================================================== */
     function openBookingDrawer(tutorId) {
+      closeTutorBossDrawer();
       closeAllStackedModals('bookingDrawerModal');
       const tutor = TUTOR_DATABASE.find(t => t.id === tutorId) || TUTOR_DATABASE[0];
       selectedTutorForBooking = tutor;
