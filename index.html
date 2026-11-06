@@ -28,6 +28,77 @@
     #roleGate.hidden { display: none !important; }
     #parentBrowseFlow { display: none; }
     #parentBrowseFlow.is-on { display: block; flex: 1 1 auto; }
+
+    /* Landing hero: photo layer zooms; copy and CTAs stay fixed. */
+    .xh-home-hero {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      background: #f1f5f9;
+    }
+    .xh-home-hero-media,
+    .xh-home-hero-scrim {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .xh-home-hero-media {
+      z-index: 0;
+      overflow: hidden;
+    }
+    .xh-home-hero-scrim {
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.14) 0%, rgba(241, 245, 249, 0.04) 36%, rgba(240, 253, 250, 0.16) 72%, rgba(241, 245, 249, 0.78) 100%);
+    }
+    .xh-home-hero-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 64% 42%;
+      transform-origin: 64% 42%;
+      animation: xh-home-kenburns 16s ease-in-out infinite alternate;
+    }
+    @keyframes xh-home-kenburns {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    .xh-home-hero-copy {
+      max-width: 40rem;
+      margin-left: auto;
+      margin-right: auto;
+      background: rgba(241, 245, 249, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 1.25rem;
+      padding: 1.15rem 1.25rem 1.05rem;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    @media (max-width: 900px) {
+      .xh-home-hero-media {
+        bottom: auto;
+        height: 68vw;
+        max-height: 440px;
+      }
+      .xh-home-hero-img {
+        object-position: 60% 46%;
+        transform-origin: 60% 46%;
+      }
+      .xh-home-hero > .relative {
+        padding-top: min(54vw, 340px);
+      }
+      .xh-home-hero-scrim {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.06) 0%, rgba(241, 245, 249, 0.08) 42%, rgba(241, 245, 249, 0.72) 62%, #f1f5f9 74%, #f1f5f9 100%);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .xh-home-hero-img {
+        animation: none;
+        transform: none;
+      }
+    }
   </style>
   <link rel="stylesheet" href="css/parent-browse-ec-hybrid.css">
 </head>
@@ -59,9 +130,13 @@
     </div>
   </header>
 
-  <section id="roleGate" class="flex-1">
-    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-14">
-      <div class="text-center mb-8 space-y-2">
+  <section id="roleGate" class="xh-home-hero flex-1">
+    <div class="xh-home-hero-media" aria-hidden="true">
+      <img class="xh-home-hero-img" src="assets/homepage/tutor-student-hero.jpg" alt="" width="1536" height="1024" decoding="async">
+    </div>
+    <div class="xh-home-hero-scrim" aria-hidden="true"></div>
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-14 relative z-10">
+      <div class="text-center mb-8 space-y-2 xh-home-hero-copy">
         <p class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full">阳光合规 · 一课一消托管</p>
         <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">欢迎来到星火学伴</h1>
         <p class="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">请选择身份进入。家长可匹配双一流导师并约课；导师走 L1/L2 入库认证。登录与深链不会被此页拦截。</p>
