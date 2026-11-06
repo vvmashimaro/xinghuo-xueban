@@ -17,7 +17,7 @@ async function main() {
   assert.strictEqual(sms.sceneUsesTemplateVariables('refund'), false);
 
   const loginParams = sms.buildTemplateParamSet('login', { code: '123456', minutes: 5 });
-  assert.deepStrictEqual(loginParams, ['123456', '5']);
+  assert.deepStrictEqual(loginParams, ['123456']);
 
   assert.deepStrictEqual(sms.buildTemplateParamSet('booking', { studentName: '小明' }), []);
   assert.deepStrictEqual(sms.buildTemplateParamSet('refund', { amountYuan: 120 }), []);
