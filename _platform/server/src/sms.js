@@ -23,7 +23,7 @@ const MAX_IP_HOURLY_SENDS = parseInt(process.env.SMS_MAX_IP_HOURLY || '30', 10);
 
 /**
  * 腾讯云「通知类」短信模板固定文案（控制台配置为无变量全文；代码不传 TemplateParamSet）
- * 验证码类模板仍使用 buildTemplateParamSet('login', …)
+ * 登录验证码模板（scene=login）仅传 TemplateParamSet：[验证码]（单变量 {1}）
  */
 const NOTIFICATION_FIXED_COPY = {
   booking: '您有新的约课待接单，请登录星火学伴导师端查看详情。',
@@ -251,10 +251,8 @@ function buildTemplateParamSet(scene, payload) {
   if (!sceneUsesTemplateVariables(scene)) {
     return [];
   }
-  const minutes =
-    payload && payload.minutes != null ? String(payload.minutes) : String(CODE_EXPIRY_MINUTES);
   const code = payload && payload.code != null ? String(payload.code) : String(payload);
-  return [code, minutes];
+  return [code];
 }
 
 /**
@@ -446,10 +444,7 @@ async function sendSMS(phone, scene = 'login', auth = null, clientIp = '') {
         console.log('[SMS] 开发环境腾讯云配置不完整，使用 mock 发送验证码');
         result = await sendMockSMS(phone, code, scene, auth);
       } else {
-        result = await sendTencentTemplateSMS(phone, 'login', {
-          code,
-          minutes: CODE_EXPIRY_MINUTES
-        });
+        result = await sendTencentTemplateSMS(phone, 'login', { code });
       }
     } else {
       result = await sendMockSMS(phone, code, scene, auth);
