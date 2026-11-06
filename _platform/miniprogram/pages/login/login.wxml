@@ -1,5 +1,6 @@
 <view class="container">
   <view class="hero">
+    <image class="brand-logo" src="/assets/brand/spark-logo-forest-noface-192.png" mode="aspectFit" />
     <view class="hero-title">星火学伴</view>
     <view class="hero-sub">{{heroSub}}</view>
   </view>

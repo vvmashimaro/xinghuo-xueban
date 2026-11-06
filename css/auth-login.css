@@ -48,7 +48,7 @@
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(45, 212, 191, 0.95);
+  color: #166b56;
   margin-bottom: 1rem;
 }
 
@@ -57,12 +57,12 @@
   font-weight: 900;
   line-height: 1.15;
   letter-spacing: -0.03em;
-  color: #fff;
+  color: #173d32;
   margin-bottom: 1.25rem;
 }
 
 .login-promo-headline .accent {
-  color: #2dd4bf;
+  color: #166b56;
   letter-spacing: 0.02em;
 }
 
@@ -79,14 +79,14 @@
   font-size: clamp(1rem, 2.2vw, 1.2rem);
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: rgba(226, 232, 240, 0.92);
+  color: #3d5248;
   padding-left: 1rem;
-  border-left: 3px solid rgba(20, 184, 166, 0.65);
+  border-left: 3px solid #a6cd72;
   line-height: 1.45;
 }
 
 .login-promo-lines li strong {
-  color: #2dd4bf;
+  color: #166b56;
   font-weight: 800;
   letter-spacing: 0.08em;
 }

@@ -21,7 +21,7 @@ XH.MENTORS = [
     site: "金沙教学点",
     rating: 4.97, reviews: 86,
     matchHint: "科目完全匹配 · 晚间可约",
-    color: "#0d9488",
+    color: "#166b56",
     nearby: true, featured: true, highRate: true
   },
   {
@@ -43,7 +43,7 @@ XH.MENTORS = [
     site: "东门教学点",
     rating: 4.92, reviews: 64,
     matchHint: "年级匹配 · 周末有空档",
-    color: "#14b8a6",
+    color: "#2f8f6e",
     nearby: true, featured: false, highRate: true
   },
   {
@@ -65,7 +65,7 @@ XH.MENTORS = [
     site: "犀浦教学点",
     rating: 4.88, reviews: 41,
     matchHint: "学科匹配 · 周六可约整段",
-    color: "#0f766e",
+    color: "#115645",
     nearby: false, featured: true, highRate: false
   },
   {
@@ -87,7 +87,7 @@ XH.MENTORS = [
     site: "金沙教学点",
     rating: 4.95, reviews: 112,
     matchHint: "价位友好 · 周末上午可约",
-    color: "#115e59",
+    color: "#0e4639",
     nearby: true, featured: false, highRate: true
   },
   {
@@ -109,7 +109,7 @@ XH.MENTORS = [
     site: "线上优先",
     rating: 4.90, reviews: 28,
     matchHint: "专项匹配 · 周日可长时段",
-    color: "#134e4a",
+    color: "#173d32",
     nearby: false, featured: true, highRate: true
   },
   {
@@ -131,7 +131,7 @@ XH.MENTORS = [
     site: "东门教学点",
     rating: 4.94, reviews: 53,
     matchHint: "艺体专项 · 周末下午",
-    color: "#0d9488",
+    color: "#166b56",
     nearby: true, featured: false, highRate: true
   },
   {
@@ -153,7 +153,7 @@ XH.MENTORS = [
     site: "光华教学点",
     rating: 4.85, reviews: 37,
     matchHint: "考研向 · 晚间连续可约",
-    color: "#14b8a6",
+    color: "#2f8f6e",
     nearby: false, featured: false, highRate: false
   },
   {
@@ -175,7 +175,7 @@ XH.MENTORS = [
     site: "望江教学点",
     rating: 4.91, reviews: 49,
     matchHint: "工作日晚间可约 · 近望江",
-    color: "#0f766e",
+    color: "#115645",
     nearby: true, featured: true, highRate: true
   },
   {
@@ -197,7 +197,7 @@ XH.MENTORS = [
     site: "金沙教学点",
     rating: 4.93, reviews: 71,
     matchHint: "小学全科友好 · 周末上午",
-    color: "#0d9488",
+    color: "#166b56",
     nearby: true, featured: true, highRate: true
   },
   {
@@ -219,7 +219,7 @@ XH.MENTORS = [
     site: "望江教学点",
     rating: 4.89, reviews: 33,
     matchHint: "考研公共课 · 晚间可约",
-    color: "#115e59",
+    color: "#0e4639",
     nearby: true, featured: false, highRate: false
   },
   {
@@ -241,7 +241,7 @@ XH.MENTORS = [
     site: "东门教学点",
     rating: 4.91, reviews: 22,
     matchHint: "艺体·美术 · 周末可约",
-    color: "#14b8a6",
+    color: "#2f8f6e",
     nearby: true, featured: true, highRate: true
   }
 ];
@@ -400,7 +400,7 @@ XH.ensureModal = function () {
     var toast = document.createElement("div");
     toast.style.cssText =
       "position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:200;" +
-      "background:#134e4a;color:#fff;padding:.65rem 1.1rem;border-radius:999px;font-size:.85rem;" +
+      "background:#173d32;color:#fff;padding:.65rem 1.1rem;border-radius:999px;font-size:.85rem;" +
       "font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2)";
     toast.textContent = ctx
       ? "演示：已登录，将回到「" + ctx + "」"
@@ -455,7 +455,7 @@ XH.topbar = function (opts) {
   var extra = opts.extraActions || "";
   return (
     '<header class="xh-top">' +
-    '<a class="xh-logo" href="index.html"><span class="mark">星</span>星火伴学</a>' +
+    '<a class="xh-logo" href="index.html"><img class="mark" src="../../../assets/brand/spark-logo-forest-noface-192.png" alt="" width="28" height="28" />星火伴学</a>' +
     '<nav class="xh-nav"><a href="#" class="active">找学伴</a>' +
     '<a href="index.html" style="opacity:.7">方案首页</a></nav>' +
     '<div class="xh-top-actions">' +

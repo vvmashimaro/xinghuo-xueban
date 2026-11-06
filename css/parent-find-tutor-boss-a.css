@@ -1,14 +1,14 @@
 /* 家长查找导师 · 方案 A Boss 双栏（生产页 scoped） */
 .parent-discover-boss {
   --boss-filter-w: 260px;
-  --boss-teal-50: #f0fdfa;
-  --boss-teal-200: #99f6e4;
-  --boss-teal-500: #14b8a6;
-  --boss-teal-600: #0d9488;
-  --boss-teal-700: #0f766e;
-  --boss-radius: 16px;
+  --boss-teal-50: #e7f3e4;
+  --boss-teal-200: #d3e7bf;
+  --boss-teal-500: #2f8f6e;
+  --boss-teal-600: #166b56;
+  --boss-teal-700: #115645;
+  --boss-radius: 20px;
   --boss-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 20px rgba(15, 23, 42, 0.05);
-  --boss-shadow-lg: 0 12px 32px rgba(15, 118, 110, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --boss-shadow-lg: 0 12px 32px rgba(17, 86, 69, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .parent-discover-boss .boss-layout {
@@ -96,7 +96,7 @@
 
 .parent-discover-boss .boss-search-wrap input:focus {
   border-color: var(--boss-teal-500);
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+  box-shadow: 0 0 0 3px rgba(47, 143, 110, 0.2);
 }
 
 .parent-discover-boss .boss-chip-wrap {
@@ -176,7 +176,7 @@
   width: 100%;
   margin-bottom: 0.75rem;
   padding: 0.55rem;
-  border-radius: 0.75rem;
+  border-radius: 999px;
   border: none;
   background: var(--boss-teal-600);
   color: #fff;
@@ -186,7 +186,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 6px 16px rgba(22, 107, 86, 0.25);
   cursor: pointer;
 }
 
@@ -286,7 +286,7 @@
 
 .parent-discover-boss .boss-m-card.active {
   border-color: var(--boss-teal-500);
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15), var(--boss-shadow-lg);
+  box-shadow: 0 0 0 3px rgba(47, 143, 110, 0.15), var(--boss-shadow-lg);
 }
 
 .parent-discover-boss .boss-m-top {
@@ -314,7 +314,7 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 107, 86, 0.3);
 }
 
 .parent-discover-boss .boss-m-name {
@@ -435,7 +435,7 @@
   font-size: 0.65rem;
   font-weight: 600;
   background: rgba(240, 253, 250, 0.9);
-  color: #134e4a;
+  color: #173d32;
   border: 1px solid rgba(153, 246, 228, 0.8);
   border-radius: 4px;
   padding: 0.15rem 0.45rem;
@@ -513,7 +513,7 @@
 
 .parent-discover-boss .boss-btn-primary-sm {
   padding: 0.4rem 0.85rem;
-  border-radius: 0.75rem;
+  border-radius: 999px;
   border: none;
   background: var(--boss-teal-600);
   color: #fff;
@@ -522,7 +522,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 2px 6px rgba(22, 107, 86, 0.2);
   cursor: pointer;
 }
 
@@ -581,7 +581,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.15rem;
-  background: linear-gradient(90deg, #0f172a, #134e4a);
+  background: linear-gradient(90deg, #0f172a, #173d32);
   color: #fff;
   flex-shrink: 0;
 }
@@ -596,9 +596,9 @@
   width: 2rem;
   height: 2rem;
   border-radius: 0.75rem;
-  background: rgba(20, 184, 166, 0.2);
-  color: #5eead4;
-  border: 1px solid rgba(45, 212, 191, 0.3);
+  background: rgba(47, 143, 110, 0.2);
+  color: #8fbf78;
+  border: 1px solid rgba(95, 165, 122, 0.3);
   display: grid;
   place-items: center;
   font-size: 0.85rem;
@@ -673,13 +673,13 @@
 }
 
 .tutor-boss-drawer .btn-main {
-  background: #0d9488;
+  background: #166b56;
   color: #fff;
-  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.3);
+  box-shadow: 0 6px 16px rgba(22, 107, 86, 0.3);
 }
 
 .tutor-boss-drawer .btn-main:hover {
-  background: #0f766e;
+  background: #115645;
 }
 
 .tutor-boss-drawer .avatar.lg {
@@ -687,7 +687,7 @@
   height: 3.5rem;
   border-radius: 1.1rem;
   font-size: 1.35rem;
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  background: linear-gradient(135deg, #115645, #2f8f6e);
   color: #fff;
   font-weight: 900;
   display: grid;
@@ -712,9 +712,9 @@
 .tutor-boss-drawer .slot {
   font-size: 0.65rem;
   font-weight: 700;
-  background: #f0fdfa;
-  color: #115e59;
-  border: 1px solid #99f6e4;
+  background: #e7f3e4;
+  color: #0e4639;
+  border: 1px solid #d3e7bf;
   border-radius: 999px;
   padding: 0.2rem 0.55rem;
 }
@@ -723,7 +723,7 @@
   position: relative;
   border-radius: 0.85rem;
   overflow: hidden;
-  background: linear-gradient(135deg, #0f172a, #134e4a);
+  background: linear-gradient(135deg, #0f172a, #173d32);
   aspect-ratio: 16/9;
   display: grid;
   place-items: center;
@@ -735,8 +735,8 @@
   width: 3rem;
   height: 3rem;
   border-radius: 999px;
-  background: rgba(20, 184, 166, 0.35);
-  border: 2px solid rgba(94, 234, 212, 0.5);
+  background: rgba(47, 143, 110, 0.35);
+  border: 2px solid rgba(143, 191, 120, 0.5);
   display: grid;
   place-items: center;
 }

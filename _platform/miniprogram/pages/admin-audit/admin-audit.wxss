@@ -5,11 +5,11 @@
   padding: 10rpx 18rpx; border-radius: 12rpx; background: #f1f5f9;
   font-size: 24rpx; color: #64748b; font-weight: 600;
 }
-.ftab.on { background: #0d9488; color: #fff; }
-.mentor-row.sel { border-color: #14b8a6; box-shadow: 0 0 0 2px rgba(13,148,136,0.2); }
+.ftab.on { background: #166b56; color: #fff; }
+.mentor-row.sel { border-color: #2f8f6e; box-shadow: 0 0 0 2px rgba(22, 107, 86,0.2); }
 .avatar {
   width: 64rpx; height: 64rpx; border-radius: 16rpx;
-  background: #ccfbf1; color: #0f766e; font-weight: 900;
+  background: #d7ead0; color: #115645; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
 }
 .name { font-weight: 800; font-size: 28rpx; }

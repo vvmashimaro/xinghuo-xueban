@@ -20,8 +20,8 @@
 }
 
 .avail-picker {
-  border: 1px solid #ccfbf1;
-  background: #f0fdfa;
+  border: 1px solid #d7ead0;
+  background: #e7f3e4;
   border-radius: 16rpx;
   padding: 20rpx;
   margin-top: 12rpx;
@@ -37,15 +37,15 @@
 .avail-step {
   font-size: 22rpx;
   font-weight: 700;
-  color: #0f766e;
+  color: #115645;
 }
 
 .avail-weekday-btn {
   font-size: 24rpx;
   font-weight: 700;
-  color: #14b8a6;
+  color: #2f8f6e;
   background: white;
-  border: 1px solid #5eead4;
+  border: 1px solid #8fbf78;
   padding: 8rpx 20rpx;
   border-radius: 12rpx;
 }
@@ -80,17 +80,17 @@
 }
 
 .avail-slot-on {
-  background: #14b8a6;
-  border-color: #0d9488;
+  background: #2f8f6e;
+  border-color: #166b56;
   color: white;
   font-weight: 700;
 }
 
 .avail-summary {
   font-size: 20rpx;
-  color: #0f766e;
+  color: #115645;
   background: white;
-  border: 1px solid #99f6e4;
+  border: 1px solid #d3e7bf;
   border-radius: 10rpx;
   padding: 10rpx 12rpx;
   line-height: 1.6;

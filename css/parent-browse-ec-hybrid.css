@@ -13,10 +13,10 @@
   transition: all 0.15s ease;
 }
 .ec-chip.on {
-  background: #0d9488;
-  border-color: #0d9488;
+  background: #166b56;
+  border-color: #166b56;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 4px 12px rgba(22, 107, 86, 0.25);
 }
 .ec-chip-hint {
   font-size: 0.8rem;
@@ -48,7 +48,7 @@
   font-size: 0.7rem;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: #f0fdfa;
-  color: #0f766e;
-  border: 1px solid #ccfbf1;
+  background: #e7f3e4;
+  color: #115645;
+  border: 1px solid #d7ead0;
 }
