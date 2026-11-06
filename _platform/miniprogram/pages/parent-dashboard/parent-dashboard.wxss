@@ -140,6 +140,45 @@
   background: linear-gradient(135deg, #0f172a, #134e4a);
   margin-bottom: 16rpx; color: #fff;
 }
+
+/* 查找导师 hero：照片铺满圆角卡，缩放只作用在背景层。 */
+.hero.hero-photo {
+  position: relative;
+  overflow: hidden;
+  background: #0f172a;
+}
+.hero-photo-zoom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../assets/homepage/tutor-student-hero.jpg");
+  background-size: cover;
+  background-position: 62% 38%;
+  background-repeat: no-repeat;
+  transform-origin: 62% 38%;
+  animation: xhHeroKen 16s ease-in-out infinite alternate;
+}
+.hero-photo-scrim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.5) 46%, rgba(19, 78, 74, 0.68) 100%);
+}
+.hero-photo-copy {
+  position: relative;
+  z-index: 1;
+}
+@keyframes xhHeroKen {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-zoom { animation: none; transform: none; }
+}
 .passport-plan {
   padding: 16rpx; background: #f8fafc; border: 1px solid #e2e8f0;
   border-radius: 14rpx; margin-bottom: 12rpx; font-size: 24rpx;
