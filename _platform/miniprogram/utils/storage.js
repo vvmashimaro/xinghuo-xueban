@@ -206,12 +206,32 @@ function _request(method, path, body, options) {
     if (token) {
       headers['Authorization'] = 'Bearer ' + token;
     }
-    wx.request({
+    let settled = false;
+    let task = null;
+    let timer = null;
+    const timeoutMs = Number(opts.timeoutMs) > 0 ? Number(opts.timeoutMs) : 0;
+    const settle = () => {
+      if (settled) return false;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      return true;
+    };
+    if (timeoutMs) {
+      timer = setTimeout(() => {
+        try {
+          if (task && typeof task.abort === 'function') task.abort();
+        } catch (e) { /* ignore */ }
+        if (!settle()) return;
+        reject({ status: 0, message: '请求超时', timeout: true });
+      }, timeoutMs);
+    }
+    const req = {
       url: API_BASE.replace(/\/$/, '') + path,
       method: method,
       data: body !== undefined ? body : undefined,
       header: headers,
       success(res) {
+        if (!settle()) return;
         if (res.statusCode === 401) {
           _write(KEYS.authToken, null);
           const err = { status: 401, message: '未授权，请重新登录' };
@@ -224,28 +244,31 @@ function _request(method, path, body, options) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
-          const body = res.data;
+          const payload = res.data;
           const serverError =
-            body && typeof body === 'object'
-              ? body.error || body.message
-              : typeof body === 'string' && body.trim()
-                ? body.trim()
+            payload && typeof payload === 'object'
+              ? payload.error || payload.message
+              : typeof payload === 'string' && payload.trim()
+                ? payload.trim()
                 : null;
           reject({
             status: res.statusCode,
-            data: body,
+            data: payload,
             path,
             message: serverError || `请求失败（${res.statusCode}）`
           });
         }
       },
       fail(err) {
+        if (!settle()) return;
         reject(err || new Error('network fail'));
       },
       complete() {
         if (track) XhLoading.end();
       }
-    });
+    };
+    if (timeoutMs) req.timeout = timeoutMs;
+    task = wx.request(req);
   });
 }
 
@@ -411,13 +434,21 @@ const StorageService = {
     }
   },
 
-  async logout() {
+  async logout(options) {
+    const logoutOpts = options || {};
+    const timeoutMs = Number(logoutOpts.timeoutMs) > 0 ? Number(logoutOpts.timeoutMs) : 0;
+    const tokenAtStart = this.getAuthToken();
     try {
-      await _request('POST', '/api/auth/logout', {});
+      const reqOpts = { noAuthRedirect: true };
+      if (timeoutMs) reqOpts.timeoutMs = timeoutMs;
+      await _request('POST', '/api/auth/logout', {}, reqOpts);
     } catch (e) {
       console.warn('Logout API call failed:', e);
     }
-    this.clearAuthToken();
+    // 请求期间若已换成新令牌（超时后用户重新登录），不要把新会话清掉。
+    if (this.getAuthToken() === tokenAtStart) {
+      this.clearAuthToken();
+    }
   },
 
   async getCurrentUser() {
