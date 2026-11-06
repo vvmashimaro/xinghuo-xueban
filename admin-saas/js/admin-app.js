@@ -1921,8 +1921,7 @@
       });
     });
     document.getElementById('btnLogout').addEventListener('click', async () => {
-      await StorageService.logout();
-      window.location.href = '../login.html';
+      await StorageService.confirmAndLogout('../login.html');
     });
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');

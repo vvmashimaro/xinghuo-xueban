@@ -1,5 +1,6 @@
 const Storage = require('../../utils/storage');
 const { showToast } = require('../../utils/toast');
+const { confirmUserLogout } = require('../../utils/logout-confirm');
 
 const STATUS_LABEL = {
   pending: '待初审',
@@ -272,7 +273,6 @@ Page({
   },
 
   goLogin() {
-    this.closeSettingsDrawer();
-    wx.reLaunch({ url: '/pages/login/login' });
+    confirmUserLogout({ onBeforeNavigate: () => this.closeSettingsDrawer() });
   }
 });

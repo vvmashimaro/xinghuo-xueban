@@ -760,6 +760,23 @@
         return { success: false, error: error.message };
       }
     },
+
+    /** 用户点击「退出登录」：确认后再 logout 并跳转登录页（不用于 401 等强制登出）。 */
+    confirmAndLogout: async function (redirectTo) {
+      if (typeof window === 'undefined') {
+        return this.logout();
+      }
+      var confirmed = window.confirm('确认退出该账号？\n\n退出后需要重新登录');
+      if (!confirmed) {
+        return { success: false, cancelled: true };
+      }
+      var result = await this.logout();
+      var href = redirectTo || 'login.html';
+      if (window.location) {
+        window.location.href = href;
+      }
+      return Object.assign({ cancelled: false }, result);
+    },
     
     getCurrentUser: async function () {
       try {

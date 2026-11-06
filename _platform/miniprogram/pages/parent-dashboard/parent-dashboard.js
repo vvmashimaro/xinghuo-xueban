@@ -1,6 +1,7 @@
 const Storage = require('../../utils/storage');
 const Avail = require('../../utils/mentor-availability');
 const { showToast } = require('../../utils/toast');
+const { confirmUserLogout } = require('../../utils/logout-confirm');
 const appConfig = require('../../utils/config');
 
 const BOOKING_STATUS = {
@@ -988,9 +989,7 @@ Page({
   },
 
   goLogin() {
-    this.closeSettingsDrawer();
-    Storage.clearSession();
-    wx.reLaunch({ url: '/pages/login/login' });
+    confirmUserLogout({ onBeforeNavigate: () => this.closeSettingsDrawer() });
   },
 
   goProfile() {

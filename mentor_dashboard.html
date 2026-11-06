@@ -42,7 +42,7 @@
           <i class="fa-solid fa-id-card text-teal-600 text-xs"></i>
           <span>补件 / 重新建档</span>
         </button>
-        <button type="button" onclick="safeNavigate('login.html', '统一登录')" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
+        <button type="button" onclick="onUserLogoutClick()" title="退出登录" aria-label="退出登录" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl transition font-medium cursor-pointer">
           <i class="fa-solid fa-arrow-right-from-bracket text-slate-500"></i>
         </button>
       </div>
@@ -529,6 +529,18 @@
           try { window.location.href = targetUrl; } catch (_) {}
         }
       }, 400);
+    }
+
+    async function onUserLogoutClick() {
+      if (window.StorageService && typeof StorageService.confirmAndLogout === 'function') {
+        await StorageService.confirmAndLogout('login.html');
+        return;
+      }
+      if (!window.confirm('确认退出该账号？\n\n退出后需要重新登录')) return;
+      if (window.StorageService && StorageService.logout) {
+        await StorageService.logout();
+      }
+      window.location.href = 'login.html';
     }
 
     let toastTimer = null;
