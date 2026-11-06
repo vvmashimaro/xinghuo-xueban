@@ -1,28 +1,36 @@
 /**
- * 星火学伴 · 共享设计令牌（方案 A 底座 + 家长/导师路径 B 字阶）
- * 管理端另走克制专业（D），不在此强制营销渐变。
+ * 星火学伴 · 共享设计令牌（方案 A · 自然陪伴）
+ * 主色取自落地稿 CTA / LOGO 圆：#166b56。页面暖奶油，辅色鼠尾草绿。
+ * 管理端布局仍走克制专业（D）；品牌色与本令牌共用。
  */
 :root {
   --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
     -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --color-primary: #0d9488;
-  --color-primary-hover: #0f766e;
-  --color-primary-muted: #14b8a6;
-  --color-primary-soft: #f0fdfa;
-  --color-primary-border: #99f6e4;
-  --color-primary-deep: #134e4a;
+  --color-primary: #166b56;
+  --color-primary-hover: #115645;
+  --color-primary-muted: #2f8f6e;
+  --color-primary-soft: #e7f3e4;
+  --color-primary-border: #d3e7bf;
+  --color-primary-deep: #0e4639;
+  --color-progress: #a6cd72;
+  --color-sage: #dfefca;
 
-  --color-ink: #0f172a;
-  --color-body: #1e293b;
-  --color-muted: #475569;
-  --color-placeholder: #64748b;
-  --color-border: #e2e8f0;
-  --color-border-strong: #cbd5e1;
-  --color-surface: #f8fafc;
-  --color-surface-2: #f1f5f9;
+  --color-ink: #173d32;
+  --color-body: #24382f;
+  --color-muted: #5c6d63;
+  --color-placeholder: #7a8a82;
+  --color-border: #e3e8dc;
+  --color-border-strong: #cfd6c6;
+  --color-surface: #f6f6ee;
+  --color-surface-2: #f1f4eb;
+  --color-page: #f6f6ee;
   --color-surface-raised: #ffffff;
+
+  --radius-card: 20px;
+  --radius-control: 14px;
+  --radius-pill: 999px;
 
   --color-success: #059669;
   --color-success-soft: #ecfdf5;
@@ -106,7 +114,7 @@ body {
   color: #0f172a;
 }
 .xh-tab-badge.is-muted {
-  background: #ccfbf1;
-  color: #0f766e;
-  border: 1px solid #99f6e4;
+  background: #d7ead0;
+  color: #115645;
+  border: 1px solid #d3e7bf;
 }

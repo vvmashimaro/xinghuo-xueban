@@ -86,8 +86,10 @@ S.resetDemoData();
 
 ## 设计令牌
 
-- Primary：`#0d9488`（teal-600）
-- Dark：`#0f172a`（slate-900）
+- Primary：`#166b56`（方案 A · 自然陪伴，森林绿）
+- Page：`#f6f6ee`（暖奶油）
+- Ink：`#173d32`（深青绿）
+- Soft：`#e7f3e4` / `#d3e7bf`（鼠尾草）
 - 反馈统一 `showToast` / `wx.showToast`，禁止 `wx.showModal` 当作 alert 阻塞流程（婉拒等原因用自定义弹层）
 
 ## 说明与边界

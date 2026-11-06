@@ -13,8 +13,8 @@
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .step-active { border-color: #0d9488; color: #0d9488; background-color: #f0fdfa; }
-    .step-done { background-color: #0d9488; border-color: #0d9488; color: #ffffff; }
+    .step-active { border-color: #166b56; color: #166b56; background-color: #e7f3e4; }
+    .step-done { background-color: #166b56; border-color: #166b56; color: #ffffff; }
     .glass-effect {
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(12px);
@@ -31,15 +31,13 @@
   </style>
   <link rel="stylesheet" href="css/parent-browse-ec-hybrid.css">
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
+<body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
   <!-- 顶部系统通知与品牌栏 -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-teal-500/20">
-          <i class="fa-solid fa-graduation-cap"></i>
-        </div>
+        <img src="assets/brand/spark-logo-forest-noface-192.png" alt="星火学伴" width="36" height="36" class="w-9 h-9 rounded-full shrink-0 object-cover" decoding="async" />
         <div>
           <span class="font-black text-slate-900 text-base tracking-tight block leading-tight">星火学伴</span>
           <span class="text-xs text-teal-700 font-medium tracking-wide block">阳光合规一对一课业辅导</span>
@@ -124,7 +122,7 @@
           <label class="block text-xs font-bold text-slate-500 mb-2">偏好时段（可选）</label>
           <div class="flex flex-wrap gap-2" id="ec-tm"></div>
         </div>
-        <button type="button" id="ec-go" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-md shadow-teal-600/20 transition cursor-pointer">
+        <button type="button" id="ec-go" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-full shadow-md shadow-teal-600/20 transition cursor-pointer">
           查看匹配结果
         </button>
         <p class="text-xs text-slate-500 text-center">选好年级与学科后，将以翻牌方式浏览匹配学伴</p>
@@ -1119,7 +1117,7 @@
             </div>
 
             <!-- 唯一导师凭证 -->
-            <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 p-5 rounded-2xl max-w-sm mx-auto text-left shadow-sm border border-teal-100 space-y-3 relative overflow-hidden">
+            <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-teal-50 text-slate-800 p-5 rounded-2xl max-w-sm mx-auto text-left shadow-sm border border-teal-100 space-y-3 relative overflow-hidden">
               <div class="flex items-center justify-between border-b border-teal-100 pb-3">
                 <div class="flex items-center gap-2">
                   <i class="fa-solid fa-id-badge text-teal-600"></i>
@@ -1194,7 +1192,7 @@
           <!-- 模拟名片卡（全部完成后展示） -->
           <div id="liveCardPanel" class="hidden bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md">
             <!-- 顶部装饰背景 -->
-            <div class="h-16 -mx-5 -mt-5 bg-gradient-to-r from-teal-100 via-cyan-50 to-slate-100 p-3 flex justify-between items-start border-b border-teal-100">
+            <div class="h-16 -mx-5 -mt-5 bg-gradient-to-r from-teal-100 via-teal-50 to-slate-100 p-3 flex justify-between items-start border-b border-teal-100">
               <span class="text-xs text-teal-800 bg-white/80 px-2 py-0.5 rounded border border-teal-100">
                 <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>合规实名认证
               </span>

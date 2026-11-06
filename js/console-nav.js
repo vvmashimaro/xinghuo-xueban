@@ -29,11 +29,11 @@
       '.xh-console-bar-inner{max-width:80rem;margin:0 auto;padding:.45rem 1rem;display:flex;justify-content:flex-start;align-items:center;overflow-x:auto;}' +
       '.xh-console-seg{display:inline-flex;align-items:center;gap:.2rem;padding:.2rem;border-radius:.9rem;background:#f1f5f9;border:1px solid #e2e8f0;}' +
       '.xh-console-tab{flex:0 0 auto;text-align:center;font-size:14px;font-weight:700;padding:.4rem .9rem;border-radius:.7rem;border:0;background:transparent;color:#475569;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;transition:all .15s;}' +
-      '.xh-console-tab.on{background:#0f766e;color:#fff;box-shadow:0 4px 14px rgba(15,118,110,.22);}' +
+      '.xh-console-tab.on{background:#115645;color:#fff;box-shadow:0 4px 14px rgba(17, 86, 69,.22);}' +
       '.xh-console-tab-badge{display:none;min-width:1.15rem;height:1.15rem;padding:0 .35rem;border-radius:9999px;font-size:12px;font-weight:800;line-height:1.15rem;background:#fbbf24;color:#0f172a;}' +
       '.xh-console-tab-badge.is-on{display:inline-flex;align-items:center;justify-content:center;}' +
       '.xh-console-tab.on .xh-console-tab-badge{background:#fde68a;color:#0f172a;}' +
-      '.xh-console-tab-badge.is-muted{background:#ccfbf1;color:#0f766e;}' +
+      '.xh-console-tab-badge.is-muted{background:#d7ead0;color:#115645;}' +
       '.xh-console-pane.hidden{display:none!important;}';
     document.head.appendChild(style);
   }
