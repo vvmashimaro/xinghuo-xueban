@@ -217,7 +217,7 @@
     <view class="settings-item" data-url="/pages/privacy/privacy" bindtap="goSettingsPage">
       <text>个人信息保护政策</text><text class="settings-item-arrow">›</text>
     </view>
-    <view class="settings-item settings-item-muted" bindtap="goLogin">
+    <view class="settings-item settings-item-muted" catchtap="goLogin">
       <text>退出登录</text><text class="settings-item-arrow">›</text>
     </view>
   </scroll-view>

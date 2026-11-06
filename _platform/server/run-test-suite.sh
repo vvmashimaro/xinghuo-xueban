@@ -90,6 +90,10 @@ echo "=== Running UI mid-term static copy tests ==="
 node test-ui-midterm-copy.js
 
 echo ""
+echo "=== Running mini-program logout confirm tests ==="
+node test-mini-logout-confirm.js
+
+echo ""
 echo "=== Running WeChat pay / DEV OTP / proof / P0-P1 security tests ==="
 node test-wechat-pay.js
 node test-booking-sms-notify.js
