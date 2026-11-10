@@ -34,7 +34,23 @@
       position: relative;
       overflow: hidden;
       isolation: isolate;
+      margin-top: -4rem;
       background: #f1f5f9;
+    }
+    body:has(#roleGate:not(.hidden)) > header.xh-home-bar {
+      background: rgba(255, 255, 255, 0.46);
+      border-bottom-color: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    body:has(#roleGate:not(.hidden)) > header.xh-home-bar .xh-home-login {
+      background: rgba(255, 255, 255, 0.55);
+      border-color: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    body:has(#roleGate:not(.hidden)) > header.xh-home-bar .xh-home-login:hover {
+      background: rgba(255, 255, 255, 0.78);
     }
     .xh-home-hero-media,
     .xh-home-hero-scrim {
@@ -56,38 +72,74 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: 64% 42%;
-      transform-origin: 64% 42%;
+      object-position: 52% 40%;
+      transform-origin: 52% 40%;
       animation: xh-home-kenburns 16s ease-in-out infinite alternate;
     }
     @keyframes xh-home-kenburns {
       from { transform: scale(1); }
       to { transform: scale(1.1); }
     }
+    .xh-home-hero > .relative {
+      padding-top: 6.5rem;
+    }
     .xh-home-hero-copy {
       max-width: 40rem;
       margin-left: auto;
       margin-right: auto;
-      background: rgba(241, 245, 249, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.7);
       border-radius: 1.25rem;
       padding: 1.15rem 1.25rem 1.05rem;
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    #roleGate .xh-home-role {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    #roleGate .xh-home-role:hover {
+      background: rgba(255, 255, 255, 0.84);
+    }
+    /* Booth lime sampled from the hero sofa: #ADC147 */
+    #roleGate .xh-home-mentor {
+      background: rgba(173, 193, 71, 0.8);
+      border-color: rgba(154, 174, 52, 0.9);
+      color: #0f172a;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    #roleGate .xh-home-mentor:hover {
+      background: rgba(156, 176, 58, 0.9);
+    }
+    #roleGate .xh-home-mentor .xh-home-mentor-icon {
+      background: rgba(255, 255, 255, 0.48);
+      color: #0f172a;
+    }
+    #roleGate .xh-home-mentor .xh-home-mentor-copy {
+      color: #1e293b;
+    }
+    #roleGate .xh-home-mentor .xh-home-mentor-go {
+      color: #0f172a;
+    }
+    #roleGate .xh-home-mentor:hover .xh-home-mentor-go {
+      color: #0f172a;
     }
     @media (max-width: 900px) {
       .xh-home-hero-media {
         bottom: auto;
-        height: 68vw;
-        max-height: 440px;
+        height: calc(4rem + 62vw);
+        max-height: 520px;
       }
       .xh-home-hero-img {
-        object-position: 60% 46%;
-        transform-origin: 60% 46%;
+        object-position: 50% 42%;
+        transform-origin: 50% 42%;
       }
       .xh-home-hero > .relative {
-        padding-top: min(54vw, 340px);
+        padding-top: calc(4rem + min(46vw, 240px));
       }
       .xh-home-hero-scrim {
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.06) 0%, rgba(241, 245, 249, 0.08) 42%, rgba(241, 245, 249, 0.72) 62%, #f1f5f9 74%, #f1f5f9 100%);
@@ -105,12 +157,10 @@
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
   <!-- 顶部系统通知与品牌栏 -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+  <header class="xh-home-bar sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-teal-500/20">
-          <i class="fa-solid fa-graduation-cap"></i>
-        </div>
+        <img src="assets/brand/spark-logo-forest-noface-192.png" alt="星火学伴" width="36" height="36" class="w-9 h-9 rounded-full shrink-0 object-cover" decoding="async" />
         <div>
           <span class="font-black text-slate-900 text-base tracking-tight block leading-tight">星火学伴</span>
           <span class="text-xs text-teal-700 font-medium tracking-wide block">阳光合规一对一课业辅导</span>
@@ -118,7 +168,7 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button type="button" onclick="safeNavigate('login.html?role=parent', '家长登录')" class="text-xs bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-200 transition font-medium cursor-pointer">
+        <button type="button" onclick="safeNavigate('login.html?role=parent', '家长登录')" class="xh-home-login text-xs bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-200 transition font-medium cursor-pointer">
           <i class="fa-solid fa-right-to-bracket text-slate-500"></i>
           <span class="hidden sm:inline ml-1">登录</span>
         </button>
@@ -142,7 +192,7 @@
         <p class="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">请选择身份进入。家长可匹配双一流导师并约课；导师走 L1/L2 入库认证。登录与深链不会被此页拦截。</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button type="button" onclick="enterAsParent()" class="text-left bg-white hover:border-teal-400 hover:shadow-md border border-slate-200 rounded-2xl p-5 sm:p-6 transition cursor-pointer group">
+        <button type="button" onclick="enterAsParent()" class="xh-home-role text-left hover:border-teal-400 hover:shadow-md border border-slate-200 rounded-2xl p-5 sm:p-6 transition cursor-pointer group">
           <div class="w-11 h-11 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-lg mb-3">
             <i class="fa-solid fa-user-group"></i>
           </div>
@@ -150,13 +200,13 @@
           <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">匹配学霸导师、预约试课、课酬托管冻结。未建档将先完成学情档案。</p>
           <span class="inline-flex items-center gap-1 mt-4 text-sm font-bold text-teal-700 group-hover:text-teal-900">进入家长通道 <i class="fa-solid fa-arrow-right text-xs"></i></span>
         </button>
-        <button type="button" onclick="enterAsMentor()" class="text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl p-5 sm:p-6 transition cursor-pointer text-white group">
-          <div class="w-11 h-11 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center text-lg mb-3">
+        <button type="button" onclick="enterAsMentor()" class="xh-home-mentor text-left border rounded-2xl p-5 sm:p-6 transition cursor-pointer group">
+          <div class="xh-home-mentor-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg mb-3">
             <i class="fa-solid fa-chalkboard-user"></i>
           </div>
           <div class="text-lg font-black">我是导师（入驻）</div>
-          <p class="text-sm text-slate-300 mt-1.5 leading-relaxed">完成 L1 资质核验与 L2 能力画像，入库后即可在工作台接单履约。</p>
-          <span class="inline-flex items-center gap-1 mt-4 text-sm font-bold text-teal-300 group-hover:text-white">进入导师入驻 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+          <p class="xh-home-mentor-copy text-sm mt-1.5 leading-relaxed">完成 L1 资质核验与 L2 能力画像，入库后即可在工作台接单履约。</p>
+          <span class="xh-home-mentor-go inline-flex items-center gap-1 mt-4 text-sm font-bold">进入导师入驻 <i class="fa-solid fa-arrow-right text-xs"></i></span>
         </button>
       </div>
     </div>
