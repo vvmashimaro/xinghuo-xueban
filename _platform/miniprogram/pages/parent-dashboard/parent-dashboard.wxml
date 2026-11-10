@@ -3,11 +3,15 @@
   <text class="match-banner-go" data-id="discover" bindtap="onConsoleTab">去查看 ›</text>
 </view>
 <view class="match-banner-wrap" wx:if="{{consoleSection==='discover'}}">
-  <view class="hero">
-    <view class="hero-kicker">星火算力匹配引擎</view>
-    <view class="hero-title">你好，{{parentName}}</view>
-    <view class="hero-sub">{{studentNickname}} · {{studentGrade}} · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
-    <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#5eead4;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
+  <view class="hero hero-photo">
+    <view class="hero-photo-zoom"></view>
+    <view class="hero-photo-scrim"></view>
+    <view class="hero-photo-copy">
+      <view class="hero-kicker">星火算力匹配引擎</view>
+      <view class="hero-title">你好，{{parentName}}</view>
+      <view class="hero-sub">{{studentNickname}} · {{studentGrade}} · 预算 ¥{{budgetMin}}-{{budgetMax}}/时</view>
+      <view class="hero-sub" style="margin-top:8rpx;">已为您精准召回 <text style="color:#5eead4;font-weight:800;">{{recallCount}}</text> 位契合度 > 95% 的金牌学霸导师</view>
+    </view>
   </view>
   <view class="card" wx:if="{{topTutors.length>0}}" style="margin:0 28rpx 16rpx;">
     <view class="row-between">
