@@ -1907,6 +1907,50 @@
       }
     }
 
+    var __materialReplaceTarget = null;
+
+    function openMaterialReselect(listName, id) {
+      __materialReplaceTarget = { listName: listName, id: id };
+      var input = document.getElementById('materialReselectInput');
+      if (!input) {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.id = 'materialReselectInput';
+        input.accept = '.jpg,.jpeg,.png,.pdf';
+        input.className = 'hidden';
+        input.addEventListener('change', handleMaterialReselect);
+        document.body.appendChild(input);
+      }
+      input.value = '';
+      input.click();
+    }
+
+    function handleMaterialReselect(event) {
+      var target = __materialReplaceTarget;
+      __materialReplaceTarget = null;
+      var file = event.target.files && event.target.files[0];
+      event.target.value = '';
+      if (!target || !file) return;
+      var list = target.listName === 'edu' ? eduOtherProofMaterials : uploadedMaterials;
+      var idx = list.findIndex(function (item) {
+        return item && item.id === target.id && !materialHasFile(item);
+      });
+      if (idx < 0) return;
+      list[idx] = {
+        id: list[idx].id,
+        name: file.name,
+        size: (file.size / (1024 * 1024)).toFixed(1) + 'MB',
+        tag: list[idx].tag || (target.listName === 'edu' ? '其它证明' : '新上传'),
+        file: file
+      };
+      if (target.listName === 'edu') renderEduOtherProofFiles();
+      else {
+        renderUploadedFiles();
+        updateLiveCard();
+      }
+      scheduleMentorDraftSave(false);
+    }
+
     function placeUploadedMaterial(list, file, tag) {
       const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + 'MB';
       const idx = list.findIndex(function (item) {
@@ -1968,12 +2012,12 @@
       return !!(item && item.file && typeof File !== 'undefined' && item.file instanceof File);
     }
 
-    function appendMaterialChip(container, item, onRemove) {
+    function appendMaterialChip(container, item, onRemove, listName) {
       const hasFile = materialHasFile(item);
       const chip = document.createElement('div');
       chip.className = hasFile
         ? 'inline-flex items-center gap-1.5 bg-white border border-teal-200/90 text-slate-700 text-xs px-2.5 py-1 rounded-lg shadow-sm font-medium'
-        : 'inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs px-2.5 py-1 rounded-lg shadow-sm font-medium';
+        : 'inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs px-2.5 py-1 rounded-lg shadow-sm font-medium cursor-pointer';
       const icon = document.createElement('i');
       icon.className = hasFile ? 'fa-solid fa-paperclip text-teal-600 text-xs' : 'fa-solid fa-triangle-exclamation text-amber-600 text-xs';
       icon.setAttribute('aria-hidden', 'true');
@@ -1990,11 +2034,27 @@
       btn.type = 'button';
       btn.className = 'text-slate-500 hover:text-rose-500 ml-0.5 text-xs transition';
       btn.title = '移除';
-      btn.addEventListener('click', function () { onRemove(item.id); });
+      btn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        onRemove(item.id);
+      });
       const x = document.createElement('i');
       x.className = 'fa-solid fa-xmark';
       x.setAttribute('aria-hidden', 'true');
       btn.appendChild(x);
+      if (!hasFile) {
+        chip.title = '需重新选择';
+        chip.setAttribute('role', 'button');
+        chip.tabIndex = 0;
+        chip.addEventListener('click', function () { openMaterialReselect(listName, item.id); });
+        chip.addEventListener('keydown', function (event) {
+          if (event.target !== chip) return;
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openMaterialReselect(listName, item.id);
+          }
+        });
+      }
       chip.appendChild(icon);
       chip.appendChild(name);
       chip.appendChild(meta);
@@ -2008,7 +2068,7 @@
       container.innerHTML = '';
       if (!eduOtherProofMaterials.length) return;
       eduOtherProofMaterials.forEach(item => {
-        appendMaterialChip(container, item, removeEduOtherProof);
+        appendMaterialChip(container, item, removeEduOtherProof, 'edu');
       });
     }
 
@@ -2038,7 +2098,7 @@
       }
 
       uploadedMaterials.forEach(item => {
-        appendMaterialChip(container, item, removeMaterial);
+        appendMaterialChip(container, item, removeMaterial, 'uploaded');
       });
     }
 
