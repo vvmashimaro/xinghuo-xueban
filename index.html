@@ -1886,6 +1886,7 @@
       if (parent) {
         parent.remove();
         updateLiveCard();
+        scheduleMentorDraftSave(false);
         showToast('已移除该教学风格标签', 'warning');
       }
     }
@@ -1906,6 +1907,7 @@
       }
       renderUploadedFiles();
       updateLiveCard();
+      scheduleMentorDraftSave(false);
       showToast(`已成功添加 ${files.length} 份资历证明材料！`);
       event.target.value = '';
     }
@@ -1923,6 +1925,7 @@
         });
       }
       renderEduOtherProofFiles();
+      scheduleMentorDraftSave(false);
       showToast(`已添加 ${files.length} 份其它证明`);
       event.target.value = '';
     }
@@ -1930,6 +1933,7 @@
     function removeEduOtherProof(id) {
       eduOtherProofMaterials = eduOtherProofMaterials.filter(item => item.id !== id);
       renderEduOtherProofFiles();
+      scheduleMentorDraftSave(false);
       showToast('已移除该其它证明', 'warning');
     }
 
@@ -1957,6 +1961,7 @@
       uploadedMaterials = uploadedMaterials.filter(item => item.id !== id);
       renderUploadedFiles();
       updateLiveCard();
+      scheduleMentorDraftSave(false);
       showToast('已移除该项佐证材料', 'warning');
     }
 
@@ -2218,6 +2223,7 @@
         elem.classList.add('bg-teal-100', 'text-teal-800', 'border-teal-300');
       }
       updateLiveCard();
+      scheduleMentorDraftSave(false);
     }
 
     /* ==========================================================================
@@ -2375,11 +2381,19 @@
 
 
     let __onboardAvailMounted = false;
-    function ensureOnboardAvailabilityPicker() {
+    var __mentorDraftAvailability = [];
+    function ensureOnboardAvailabilityPicker(value) {
       const el = document.getElementById('onboardAvailabilityPicker');
       if (!el || !window.AvailabilityPicker) return;
-      if (window.__onboardAvailApi) return;
-      window.__onboardAvailApi = AvailabilityPicker.mount(el, { value: [] });
+      var initial = Array.isArray(value) ? value : (__mentorDraftAvailability || []);
+      if (window.__onboardAvailApi) {
+        if (Array.isArray(value) && window.__onboardAvailApi.setValue) window.__onboardAvailApi.setValue(value);
+        return;
+      }
+      window.__onboardAvailApi = AvailabilityPicker.mount(el, {
+        value: initial,
+        onChange: function () { scheduleMentorDraftSave(false); }
+      });
       __onboardAvailMounted = true;
     }
 
@@ -2699,11 +2713,27 @@
       }
     }
 
+    function styleTagLabel(span) {
+      var inner = span.querySelector('span');
+      return (inner ? inner.innerText : span.innerText).replace(/×|✕|✖/g, '').trim();
+    }
+
+    function mentorMaterialSnapshot(list) {
+      return (list || []).map(function (item) {
+        return { id: item.id, name: item.name || '', size: item.size || '', tag: item.tag || '' };
+      }).filter(function (item) { return item.name; });
+    }
+
+    function readMentorAvailability() {
+      if (window.__onboardAvailApi && window.__onboardAvailApi.getValue) return window.__onboardAvailApi.getValue();
+      return Array.isArray(__mentorDraftAvailability) ? __mentorDraftAvailability : [];
+    }
+
     function collectMentorDraft() {
       const checkedSubjects = Array.from(document.querySelectorAll('input[name="subject"]:checked')).map((c) => c.value);
       const styleTags = Array.from(document.querySelectorAll('#styleTagContainer > span'))
         .filter((span) => span.classList.contains('bg-teal-100'))
-        .map((span) => (span.querySelector('span') ? span.querySelector('span').innerText.trim() : span.innerText.trim()));
+        .map(styleTagLabel);
       return {
         step: document.getElementById('step2-card') && !document.getElementById('step2-card').classList.contains('hidden') ? 2 : 1,
         l1SubStep: typeof window.currentL1SubStep !== 'undefined' ? window.currentL1SubStep : 1,
@@ -2725,7 +2755,10 @@
         hourlyRate: document.getElementById('hourlyRate')?.value || '',
         lectureUrl: document.getElementById('lectureUrl')?.value || '',
         scoreHighlight: document.getElementById('scoreHighlight')?.value || '',
-        styles: styleTags
+        styles: styleTags,
+        materials: mentorMaterialSnapshot(typeof uploadedMaterials !== 'undefined' ? uploadedMaterials : []),
+        eduProofs: mentorMaterialSnapshot(typeof eduOtherProofMaterials !== 'undefined' ? eduOtherProofMaterials : []),
+        availability: readMentorAvailability()
       };
     }
 
@@ -2772,7 +2805,12 @@
       if (draft.universitySelect === '__MANUAL__') return true;
       if (draft.universitySelect && draft.universitySelect !== defaultUni) return true;
       if (draft.subjects && !mentorDraftSameList(draft.subjects, MENTOR_DRAFT_DEFAULT_SUBJECTS)) return true;
-      if (draft.styles && draft.styles.length && !mentorDraftSameList(draft.styles, MENTOR_DRAFT_DEFAULT_STYLES)) return true;
+      if (Array.isArray(draft.styles) && !mentorDraftSameList(draft.styles, MENTOR_DRAFT_DEFAULT_STYLES)) return true;
+      if (Array.isArray(draft.materials) && draft.materials.length) return true;
+      if (Array.isArray(draft.eduProofs) && draft.eduProofs.length) return true;
+      if (Array.isArray(draft.availability) && draft.availability.some(function (item) {
+        return item && Array.isArray(item.ranges) && item.ranges.length;
+      })) return true;
       return false;
     }
 
@@ -2811,7 +2849,14 @@
       const draft = collectMentorDraft();
       if (!mentorDraftHasUserInput(draft)) {
         var stored = readStoredMentorDraft();
-        if (!stored || !mentorDraftHasUserInput(stored) || mentorOnboardIsOpen()) clearStoredMentorDraft();
+        // The form still looks like the sample until restore finishes. Do not
+        // drop a real draft just because the mentor flow is already open.
+        if (stored && mentorDraftHasUserInput(stored) && !__mentorDraftApplied) return;
+        if (!stored || !mentorDraftHasUserInput(stored)) {
+          if (stored) clearStoredMentorDraft();
+          return;
+        }
+        if (mentorOnboardIsOpen()) clearStoredMentorDraft();
         return;
       }
       try {
@@ -2863,16 +2908,45 @@
         document.querySelectorAll('input[name="subject"]').forEach((cb) => {
           cb.checked = subjects.indexOf(cb.value) >= 0;
         });
-        if (Array.isArray(draft.styles) && draft.styles.length) {
+        if (Array.isArray(draft.styles)) {
           document.querySelectorAll('#styleTagContainer > span').forEach((span) => {
-            const label = span.querySelector('span') ? span.querySelector('span').innerText.trim() : span.innerText.trim();
-            const on = draft.styles.indexOf(label) >= 0;
-            if (on) {
+            span.classList.remove('bg-teal-100', 'text-teal-800', 'border-teal-300');
+            span.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-200');
+          });
+          var known = {};
+          document.querySelectorAll('#styleTagContainer > span').forEach((span) => {
+            const label = styleTagLabel(span);
+            known[label] = true;
+            if (draft.styles.indexOf(label) >= 0) {
               span.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-200');
               span.classList.add('bg-teal-100', 'text-teal-800', 'border-teal-300');
             }
           });
+          draft.styles.forEach(function (label) {
+            if (!label || known[label]) return;
+            var container = document.getElementById('styleTagContainer');
+            if (!container) return;
+            var tag = document.createElement('span');
+            tag.className = 'px-3 py-1.5 bg-teal-100 text-teal-800 rounded-lg border border-teal-300 cursor-pointer font-medium transition select-none flex items-center gap-1.5';
+            tag.setAttribute('onclick', 'toggleStyleTag(this)');
+            var text = document.createElement('span');
+            text.textContent = label;
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'text-teal-700 hover:text-rose-500 ml-1 text-xs';
+            removeBtn.title = '移除标签';
+            removeBtn.setAttribute('onclick', 'removeCustomStyle(this, event)');
+            removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            tag.appendChild(text);
+            tag.appendChild(removeBtn);
+            container.appendChild(tag);
+          });
         }
+        uploadedMaterials = Array.isArray(draft.materials) ? mentorMaterialSnapshot(draft.materials) : [];
+        eduOtherProofMaterials = Array.isArray(draft.eduProofs) ? mentorMaterialSnapshot(draft.eduProofs) : [];
+        renderUploadedFiles();
+        renderEduOtherProofFiles();
+        __mentorDraftAvailability = Array.isArray(draft.availability) ? draft.availability : [];
         updateL1Progress();
         updateLiveCard();
         
@@ -2897,7 +2971,7 @@
           const p1 = document.getElementById('progress-bar-1');
           if (p1) p1.style.width = '100%';
           __l1WasComplete = true;
-          try { ensureOnboardAvailabilityPicker(); } catch (e) {}
+          try { ensureOnboardAvailabilityPicker(__mentorDraftAvailability); } catch (e) {}
           
           // Restore L2 sub-step after step switch
           if (draft.l2SubStep && typeof window.goToL2SubStep === 'function') {
@@ -2922,6 +2996,7 @@
       if (__mentorDraftApplied || !mentorOnboardIsOpen()) return false;
       var draft = readStoredMentorDraft();
       if (!draft || !mentorDraftHasUserInput(draft)) {
+        __mentorDraftApplied = true;
         if (draft) clearStoredMentorDraft();
         refreshMentorPreviewGate();
         return false;
