@@ -1907,20 +1907,36 @@
       }
     }
 
+    function placeUploadedMaterial(list, file, tag) {
+      const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + 'MB';
+      const idx = list.findIndex(function (item) {
+        return item && !materialHasFile(item) && item.name === file.name;
+      });
+      if (idx >= 0) {
+        list[idx] = {
+          id: list[idx].id,
+          name: file.name,
+          size: sizeStr,
+          tag: list[idx].tag || tag,
+          file: file
+        };
+        return;
+      }
+      list.push({
+        id: Date.now() + Math.random(),
+        name: file.name,
+        size: sizeStr,
+        tag: tag,
+        file: file
+      });
+    }
+
     function handleFileUpload(event) {
       const files = event.target.files;
       if (!files || files.length === 0) return;
 
       for (let i = 0; i < files.length; i++) {
-        const f = files[i];
-        const sizeStr = (f.size / (1024 * 1024)).toFixed(1) + 'MB';
-        uploadedMaterials.push({
-          id: Date.now() + Math.random(),
-          name: f.name,
-          size: sizeStr,
-          tag: "新上传",
-          file: f
-        });
+        placeUploadedMaterial(uploadedMaterials, files[i], '新上传');
       }
       renderUploadedFiles();
       updateLiveCard();
@@ -1933,14 +1949,7 @@
       const files = event.target.files;
       if (!files || files.length === 0) return;
       for (let i = 0; i < files.length; i++) {
-        const f = files[i];
-        eduOtherProofMaterials.push({
-          id: Date.now() + Math.random(),
-          name: f.name,
-          size: (f.size / (1024 * 1024)).toFixed(1) + 'MB',
-          tag: '其它证明',
-          file: f
-        });
+        placeUploadedMaterial(eduOtherProofMaterials, files[i], '其它证明');
       }
       renderEduOtherProofFiles();
       scheduleMentorDraftSave(false);
