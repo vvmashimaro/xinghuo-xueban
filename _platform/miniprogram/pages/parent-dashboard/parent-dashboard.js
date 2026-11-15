@@ -156,22 +156,48 @@ Page({
     iotBtnDisabled: false,
     featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
     settingsDrawerShow: false,
-    consoleSection: 'courses'
+    consoleSection: 'courses',
+    heroMotionPaused: false
+  },
+
+  _readHeroMotionPaused() {
+    try {
+      return wx.getStorageSync('xhHeroMotion') === 'pause';
+    } catch (e) {
+      return false;
+    }
   },
 
   onLoad() {
     this.setData({
-      featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE
+      featureSmartWarehouse: !!appConfig.FEATURE_SMART_WAREHOUSE,
+      heroMotionPaused: this._readHeroMotionPaused()
     });
   },
 
   async onShow() {
+    if (this._heroHiddenPause) {
+      this._heroHiddenPause = false;
+      this.setData({ heroMotionPaused: this._readHeroMotionPaused() });
+    }
     this.reload();
   },
 
+  onHide() {
+    this._heroHiddenPause = true;
+    this.setData({ heroMotionPaused: true });
+  },
+
   onUnload() {
+    this._heroHiddenPause = false;
     if (this._iotTimer) clearInterval(this._iotTimer);
     if (this._smsTimer) clearInterval(this._smsTimer);
+  },
+
+  onToggleHeroMotion() {
+    const paused = !this._readHeroMotionPaused();
+    try { wx.setStorageSync('xhHeroMotion', paused ? 'pause' : 'play'); } catch (e) {}
+    this.setData({ heroMotionPaused: paused });
   },
 
   async reload() {

@@ -160,6 +160,18 @@
   transform-origin: 52% 40%;
   animation: xhHeroKen 16s ease-in-out infinite alternate;
 }
+.hero-photo-zoom.is-paused { animation-play-state: paused; }
+.hero-motion {
+  display: inline-block;
+  margin-top: 16rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.45);
+  color: #f8fafc;
+  font-size: 22rpx;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.28);
+}
 .hero-photo-scrim {
   position: absolute;
   left: 0;
@@ -175,9 +187,6 @@
 @keyframes xhHeroKen {
   from { transform: scale(1); }
   to { transform: scale(1.1); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-photo-zoom { animation: none; transform: none; }
 }
 .passport-plan {
   padding: 16rpx; background: #f8fafc; border: 1px solid #e2e8f0;
