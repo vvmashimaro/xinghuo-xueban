@@ -2729,9 +2729,91 @@
       };
     }
 
+    var MENTOR_DRAFT_DEFAULT_SUBJECTS = ['初中数学'];
+    var MENTOR_DRAFT_DEFAULT_STYLES = ['引导启发解题', '大题压轴模型归纳'];
+    var __mentorDraftApplied = false;
+
+    function mentorOnboardIsOpen() {
+      var flow = document.getElementById('mentorOnboardFlow');
+      return !!(flow && flow.classList.contains('is-on'));
+    }
+
+    function mentorDraftSameList(a, b) {
+      var left = (a || []).slice().sort();
+      var right = (b || []).slice().sort();
+      if (left.length !== right.length) return false;
+      for (var i = 0; i < left.length; i++) if (left[i] !== right[i]) return false;
+      return true;
+    }
+
+    function mentorDraftDefaultUniversity() {
+      var list = (typeof CHINA_UNIVERSITIES !== 'undefined' && CHINA_UNIVERSITIES['四川']) || [];
+      return list[0] || '';
+    }
+
+    // The registration form ships with a sample subject, two style tags, a rate,
+    // a bank, and a Sichuan university. Those are not an unfinished draft.
+    function mentorDraftHasUserInput(draft) {
+      if (!draft || typeof draft !== 'object') return false;
+      var textKeys = ['realName', 'phone', 'idCard', 'chsiCode', 'bankCardNumber', 'manualUniversity', 'lectureUrl', 'scoreHighlight'];
+      for (var i = 0; i < textKeys.length; i++) {
+        if (String(draft[textKeys[i]] || '').trim()) return true;
+      }
+      if (draft.privacyAuthAgree) return true;
+      if (draft.customSubjects && draft.customSubjects.length) return true;
+      if (draft.step === 2) return true;
+      if ((draft.l1SubStep && draft.l1SubStep > 1) || (draft.l2SubStep && draft.l2SubStep > 1)) return true;
+      if (draft.educationLevel && draft.educationLevel !== '本科在读 (大二及以上)') return true;
+      if (draft.bankName && draft.bankName !== '招商银行') return true;
+      if (draft.hourlyRate != null && String(draft.hourlyRate) !== '' && String(draft.hourlyRate) !== '130') return true;
+      if (draft.province && draft.province !== '四川') return true;
+      var defaultUni = mentorDraftDefaultUniversity();
+      if (draft.university && draft.university !== defaultUni) return true;
+      if (draft.universitySelect === '__MANUAL__') return true;
+      if (draft.universitySelect && draft.universitySelect !== defaultUni) return true;
+      if (draft.subjects && !mentorDraftSameList(draft.subjects, MENTOR_DRAFT_DEFAULT_SUBJECTS)) return true;
+      if (draft.styles && draft.styles.length && !mentorDraftSameList(draft.styles, MENTOR_DRAFT_DEFAULT_STYLES)) return true;
+      return false;
+    }
+
+    function readStoredMentorDraft() {
+      var draft = null;
+      try {
+        if (window.StorageService && StorageService.getMentorRegisterDraftV2) {
+          draft = StorageService.getMentorRegisterDraftV2();
+        }
+        if (!draft && window.StorageService && StorageService.getMentorRegisterDraft) {
+          draft = StorageService.getMentorRegisterDraft();
+        }
+        if (!draft) {
+          var rawV2 = localStorage.getItem('xh_mentor_register_draft_v2');
+          if (rawV2) draft = JSON.parse(rawV2);
+          else {
+            var rawV1 = localStorage.getItem('xh_mentor_register_draft_v1');
+            if (rawV1) draft = JSON.parse(rawV1);
+          }
+        }
+      } catch (e) {}
+      return draft;
+    }
+
+    function clearStoredMentorDraft() {
+      try {
+        if (window.StorageService && StorageService.clearMentorRegisterDraftV2) StorageService.clearMentorRegisterDraftV2();
+        if (window.StorageService && StorageService.clearMentorRegisterDraft) StorageService.clearMentorRegisterDraft();
+        localStorage.removeItem('xh_mentor_register_draft_v1');
+        localStorage.removeItem('xh_mentor_register_draft_v2');
+      } catch (e) {}
+    }
+
     function persistMentorDraft(showTip) {
       if (__restoringMentorDraft) return;
       const draft = collectMentorDraft();
+      if (!mentorDraftHasUserInput(draft)) {
+        var stored = readStoredMentorDraft();
+        if (!stored || !mentorDraftHasUserInput(stored) || mentorOnboardIsOpen()) clearStoredMentorDraft();
+        return;
+      }
       try {
         // Use v2 draft storage for wizard state
         if (window.StorageService && StorageService.saveMentorRegisterDraftV2) {
@@ -2829,39 +2911,33 @@
         }
         
         refreshMentorPreviewGate();
-        showToast('已恢复未完成的导师注册草稿');
+        if (mentorOnboardIsOpen()) showToast('已恢复未完成的导师注册草稿');
         return true;
       } finally {
         __restoringMentorDraft = false;
       }
     }
 
-    function loadMentorDraftOnBoot() {
-      let draft = null;
-      try {
-        // Try v2 first (with wizard state)
-        if (window.StorageService && StorageService.getMentorRegisterDraftV2) {
-          draft = StorageService.getMentorRegisterDraftV2();
-        }
-        // Fall back to v1 if v2 not available
-        if (!draft && window.StorageService && StorageService.getMentorRegisterDraft) {
-          draft = StorageService.getMentorRegisterDraft();
-        }
-        // Fall back to localStorage
-        if (!draft) {
-          const rawV2 = localStorage.getItem('xh_mentor_register_draft_v2');
-          if (rawV2) draft = JSON.parse(rawV2);
-          else {
-            const rawV1 = localStorage.getItem('xh_mentor_register_draft_v1');
-            if (rawV1) draft = JSON.parse(rawV1);
-          }
-        }
-      } catch (e) {}
-      if (draft && (draft.realName || draft.phone || draft.chsiCode || (draft.subjects && draft.subjects.length))) {
-        applyMentorDraft(draft);
-      } else {
+    function restoreMentorDraftIfNeeded() {
+      if (__mentorDraftApplied || !mentorOnboardIsOpen()) return false;
+      var draft = readStoredMentorDraft();
+      if (!draft || !mentorDraftHasUserInput(draft)) {
+        if (draft) clearStoredMentorDraft();
         refreshMentorPreviewGate();
+        return false;
       }
+      __mentorDraftApplied = true;
+      return applyMentorDraft(draft);
+    }
+
+    function loadMentorDraftOnBoot() {
+      if (!mentorOnboardIsOpen()) {
+        var parked = readStoredMentorDraft();
+        if (parked && !mentorDraftHasUserInput(parked)) clearStoredMentorDraft();
+        refreshMentorPreviewGate();
+        return;
+      }
+      restoreMentorDraftIfNeeded();
     }
 
     function bindMentorL2DraftHooks() {
@@ -2914,6 +2990,7 @@
 
     function enterAsMentor() {
       showMentorOnboardFlow();
+      restoreMentorDraftIfNeeded();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
