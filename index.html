@@ -670,37 +670,37 @@
               <p class="text-xs text-slate-500 mt-1.5 leading-tight">登录学信档案，申请「教育部学籍在线验证报告」，复制报告上的在线验证码（报告查询页：<a href="https://www.chsi.com.cn/xlcx/bgcx.jsp" target="_blank" rel="noopener" class="text-teal-600 hover:underline">chsi.com.cn/xlcx/bgcx.jsp</a>）</p>
             </div>
 
-            <!-- 学信网自动校验报告反馈面板 (动态解析结果呈现) -->
-            <div id="chsiResultPanel" class="hidden bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-3.5 text-xs space-y-2">
-              <div class="flex items-center justify-between border-b border-emerald-200/60 pb-2">
-                <span class="font-bold text-emerald-900 flex items-center gap-1.5">
-                  <i class="fa-solid fa-shield-check text-emerald-600 text-sm"></i>
-                  学信网《教育部学籍在线验证报告》解析成功
+            <!-- 学信码演示记录：没有学信网接口，不能写成已核验 -->
+            <div id="chsiResultPanel" class="hidden bg-amber-50/80 border border-amber-200 rounded-2xl p-3.5 text-xs space-y-2">
+              <div class="flex items-center justify-between border-b border-amber-200/80 pb-2">
+                <span class="font-bold text-amber-950 flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-info text-amber-600 text-sm"></i>
+                  演示：学信码已记下，尚未联网核验
                 </span>
-                <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono font-semibold">
-                  MATCH: 100% 一致
+                <span class="text-xs bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-semibold">
+                  演示
                 </span>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600">
                 <div>
-                  <span class="text-slate-500 text-xs block">核验姓名</span>
+                  <span class="text-slate-500 text-xs block">填写姓名</span>
                   <span class="font-bold text-slate-800" id="chsiReportName">--</span>
                 </div>
                 <div>
-                  <span class="text-slate-500 text-xs block">学籍高校</span>
+                  <span class="text-slate-500 text-xs block">填写高校</span>
                   <span class="font-bold text-slate-800 truncate block" id="chsiReportSchool">--</span>
                 </div>
                 <div>
                   <span class="text-slate-500 text-xs block">学籍状态</span>
-                  <span class="font-bold text-emerald-700" id="chsiReportStatus">在籍 (注册学籍)</span>
+                  <span class="font-bold text-amber-800" id="chsiReportStatus">待核验</span>
                 </div>
                 <div>
                   <span class="text-slate-500 text-xs block">报告有效期</span>
-                  <span class="font-bold text-slate-700" id="chsiReportExpire">有效 (至2026-12)</span>
+                  <span class="font-bold text-slate-700" id="chsiReportExpire">未核验</span>
                 </div>
               </div>
-              <p class="text-xs text-emerald-700/90 leading-tight">
-                * 平台已将解析结果结构化加密建档，并纳入入驻资质审核记录。
+              <p class="text-xs text-amber-900/90 leading-tight">
+                本页没有学信网接口。这段记录不会当成核验通过。
               </p>
             </div>
 
@@ -1207,7 +1207,7 @@
               </div>
 
               <!-- 拖拽/点击上传交互区域 -->
-              <div onclick="document.getElementById('certFileInput').click()" class="border-2 border-dashed border-teal-300 hover:border-teal-500 hover:bg-teal-50/40 rounded-xl p-4 text-center cursor-pointer transition bg-white group">
+              <div id="certDropZone" onclick="document.getElementById('certFileInput').click()" class="border-2 border-dashed border-teal-300 hover:border-teal-500 hover:bg-teal-50/40 rounded-xl p-4 text-center cursor-pointer transition bg-white group">
                 <input type="file" id="certFileInput" multiple accept=".jpg,.jpeg,.png,.pdf" onchange="handleFileUpload(event)" class="hidden">
                 <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
                   <i class="fa-solid fa-cloud-arrow-up text-base"></i>
@@ -1216,7 +1216,7 @@
                   点击上传或拖拽文件至此处
                 </p>
                 <p class="text-xs text-slate-500 mt-0.5">
-                  单文件上限 15MB，已加密存入银行合作电子凭证柜，仅用于平台资质审核
+                  单文件上限 15MB。文件先留在本页，提交后随资质材料进入审核。
                 </p>
               </div>
 
@@ -1239,7 +1239,11 @@
               <p class="text-xs text-slate-500 mt-1">主要考察逻辑表达、智能白板书写规范与提炼总结能力，审核通过后获得金牌导师 V 认证。</p>
             </div>
 
-            <div class="pt-2">
+            <div class="pt-2 space-y-2">
+              <button type="button" onclick="submitApplication()" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                <span>提交入库申请</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+              </button>
               <button type="button" onclick="goToStep(1)" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm transition">
                 返回修改 L1 资质信息
               </button>
@@ -1269,8 +1273,8 @@
                   <i class="fa-solid fa-id-badge text-teal-600"></i>
                   <span class="text-xs font-bold tracking-wider text-slate-800">星火导师专属档案证</span>
                 </div>
-                <span class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-mono">
-                  VERIFIED-OK
+                <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">
+                  待审核
                 </span>
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs">
@@ -1340,10 +1344,10 @@
             <!-- 顶部装饰背景 -->
             <div class="h-16 -mx-5 -mt-5 bg-gradient-to-r from-teal-100 via-teal-50 to-slate-100 p-3 flex justify-between items-start border-b border-teal-100">
               <span class="text-xs text-teal-800 bg-white/80 px-2 py-0.5 rounded border border-teal-100">
-                <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>合规实名认证
+                <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>实名待审核
               </span>
-              <span class="text-xs font-bold text-amber-600 flex items-center gap-0.5">
-                <i class="fa-solid fa-star text-xs"></i> 5.0 (新入驻)
+              <span class="text-xs font-bold text-amber-700 flex items-center gap-0.5">
+                <i class="fa-solid fa-hourglass-half text-xs"></i> 待审核
               </span>
             </div>
 
@@ -1398,12 +1402,12 @@
             </div>
 
             <!-- 家长端佐证材料已核验状态标签 -->
-            <div class="mb-3 flex items-center justify-between text-xs bg-emerald-50/80 rounded-xl px-2.5 py-1.5 border border-emerald-200/70">
-              <span class="text-emerald-800 font-medium flex items-center gap-1.5">
-                <i class="fa-solid fa-file-circle-check text-emerald-600"></i>
-                <span>平台已核验证据链</span>
+            <div class="mb-3 flex items-center justify-between text-xs bg-amber-50/80 rounded-xl px-2.5 py-1.5 border border-amber-200/70">
+              <span class="text-amber-900 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-file-lines text-amber-700"></i>
+                <span>材料待审核</span>
               </span>
-              <span class="text-xs font-bold text-emerald-700" id="liveCertCountBadge">2 项实证材料</span>
+              <span class="text-xs font-bold text-amber-800" id="liveCertCountBadge">2 项实证材料</span>
             </div>
 
             <!-- 擅长科目 -->
@@ -1749,10 +1753,39 @@
       document.getElementById('chsiResultPanel').classList.add('hidden');
     }
 
+    function noteChsiDemoPending() {
+      const realName = (document.getElementById('realName')?.value || '').trim();
+      const university = (document.getElementById('finalUniversityValue')?.value || '').trim();
+      const vcode = (document.getElementById('chsiCode')?.value || '').trim();
+      if (!vcode || vcode.length < 12) return;
+      chsiVerifiedResult = {
+        valid: false,
+        trusted: false,
+        simulated: true,
+        name: realName,
+        university: university,
+        status: '待核验'
+      };
+      const statusBadge = document.getElementById('chsiVerifyStatusBadge');
+      if (statusBadge) {
+        statusBadge.className = "text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-800 border border-amber-200";
+        statusBadge.innerText = "演示 · 待核验";
+      }
+      const setText = function (id, value) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+      };
+      setText('chsiReportName', realName || '--');
+      setText('chsiReportSchool', university || '--');
+      setText('chsiReportStatus', '待核验');
+      setText('chsiReportExpire', '未核验');
+      const panel = document.getElementById('chsiResultPanel');
+      if (panel) panel.classList.remove('hidden');
+    }
+
     function triggerChsiAutoVerification() {
       const vcode = document.getElementById('chsiCode').value.trim();
       const realName = document.getElementById('realName').value.trim();
-      const university = document.getElementById('finalUniversityValue').value.trim() || document.getElementById('universitySelect')?.value;
 
       if (!realName) {
         showToast('请先填写上方真实姓名，以便比对报告！', 'warning');
@@ -1765,19 +1798,8 @@
         return;
       }
 
-      const statusBadge = document.getElementById('chsiVerifyStatusBadge');
-      // 本页没有学信网接口。按钮只记下验证码，不写成已核验。
-      chsiVerifiedResult = {
-        valid: false,
-        trusted: false,
-        name: realName,
-        university: university || '',
-        status: '待核验'
-      };
-      statusBadge.className = "text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-800 border border-amber-200";
-      statusBadge.innerText = "待核验";
-      document.getElementById('chsiResultPanel').classList.add('hidden');
-      showToast('学信码已记下，当前状态为待核验');
+      noteChsiDemoPending();
+      showToast('学信码已记下，当前为演示待核验');
     }
 
     // 添加自定义/特色科目逻辑
@@ -1951,18 +1973,39 @@
       });
     }
 
-    function handleFileUpload(event) {
-      const files = event.target.files;
-      if (!files || files.length === 0) return;
-
-      for (let i = 0; i < files.length; i++) {
-        placeUploadedMaterial(uploadedMaterials, files[i], '新上传');
-      }
+    function ingestCertFiles(fileList) {
+      const files = fileList ? Array.prototype.slice.call(fileList) : [];
+      if (!files.length) return;
+      files.forEach(function (file) {
+        placeUploadedMaterial(uploadedMaterials, file, '新上传');
+      });
       renderUploadedFiles();
       updateLiveCard();
       scheduleMentorDraftSave(false);
-      showToast(`已成功添加 ${files.length} 份资历证明材料！`);
+      showToast('已成功添加 ' + files.length + ' 份资历证明材料！');
+    }
+
+    function handleFileUpload(event) {
+      ingestCertFiles(event.target.files);
       event.target.value = '';
+    }
+
+    function bindCertDropZone() {
+      const zone = document.getElementById('certDropZone');
+      if (!zone || zone.getAttribute('data-drop-bound')) return;
+      zone.setAttribute('data-drop-bound', '1');
+      zone.addEventListener('dragover', function (event) {
+        event.preventDefault();
+        zone.classList.add('bg-teal-50');
+      });
+      zone.addEventListener('dragleave', function () {
+        zone.classList.remove('bg-teal-50');
+      });
+      zone.addEventListener('drop', function (event) {
+        event.preventDefault();
+        zone.classList.remove('bg-teal-50');
+        ingestCertFiles(event.dataTransfer && event.dataTransfer.files);
+      });
     }
 
     function handleEduOtherProofUpload(event) {
@@ -2432,7 +2475,7 @@
           return;
         }
 
-        // 填写学信码即可进入下一步，不在本地写成已核验。
+        if (chsiCode && chsiCode.length >= 12) noteChsiDemoPending();
 
         // 切换视图
         document.getElementById('step1-card').classList.add('hidden');
@@ -3297,6 +3340,7 @@
 
     window.onload = function() {
       xhInitHeroMotion();
+      bindCertDropZone();
       if (redirectApprovedMentorHome()) return;
       if (shouldOpenParentBrowse()) {
         showParentBrowseFlow();
