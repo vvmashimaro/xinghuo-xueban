@@ -117,7 +117,21 @@ function maskPhone(phone) {
 }
 
 // 创建认证中间件（注入 db 依赖）
-const { requireAuth, requireAdmin, requireAdminModule, requireAdminToken } = auth.createAuthMiddleware(db);
+const { requireAuth, requireAdmin, requireAdminModule, requirePrimaryAdmin, requireAdminToken } =
+  auth.createAuthMiddleware(db);
+
+function failOp(res, result) {
+  const code = (result && result.code) || 'BAD_REQUEST';
+  const status = code === 'NOT_FOUND' || code === 'TEACHING_POINT_NOT_FOUND' ? 404 : 400;
+  const body = {
+    ok: false,
+    error: (result && result.error) || '操作失败',
+    code
+  };
+  if (result && result.bookingIds) body.bookingIds = result.bookingIds;
+  if (result && result.orderIds) body.orderIds = result.orderIds;
+  return res.status(status).json(body);
+}
 
 function denyAdminResource(req, res, resource) {
   if (req.user.role !== 'admin') return false;
@@ -417,8 +431,10 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
       profile: user
     };
     if (role === 'admin') {
+      const isPrimaryAdmin = adminRbac.isPrimaryAdminPhone(phone);
       payload.adminRbac = {
-        isSuperAdmin: adminRbac.isSuperAdminPhone(phone),
+        isPrimaryAdmin,
+        isSuperAdmin: isPrimaryAdmin,
         modules: adminRbac.getEffectiveModules(db, phone),
         catalog: adminRbac.getCatalog()
       };
@@ -435,8 +451,10 @@ app.get('/api/admin/rbac/me', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') {
     return fail(res, 403, '需要管理员权限');
   }
+  const isPrimaryAdmin = adminRbac.isPrimaryAdminPhone(req.user.phone);
   ok(res, {
-    isSuperAdmin: adminRbac.isSuperAdminPhone(req.user.phone),
+    isPrimaryAdmin,
+    isSuperAdmin: isPrimaryAdmin,
     modules: adminRbac.getEffectiveModules(db, req.user.phone),
     catalog: adminRbac.getCatalog()
   });
@@ -451,6 +469,7 @@ app.get('/api/admin/rbac/staff', requireAdminModule('permissions'), (req, res) =
       const stored = db.getAdminStaffPermissions(phone);
       return {
         phone,
+        isPrimaryAdmin: isSuper,
         isSuperAdmin: isSuper,
         modules,
         updatedAt: stored && stored.updatedAt ? stored.updatedAt : '',
@@ -471,7 +490,7 @@ app.patch('/api/admin/rbac/staff/:phone', requireAdminModule('permissions'), (re
       return fail(res, 400, '手机号无效');
     }
     if (!auth.isAdminPhone(targetPhone)) {
-      return fail(res, 400, '该手机号不在管理员白名单中，请先在环境变量 ADMIN_PHONES 中配置');
+      return fail(res, 400, '该手机号还不是管理员，请由主管理员先添加');
     }
     if (adminRbac.isSuperAdminPhone(targetPhone)) {
       return fail(res, 400, '最高管理权限账号的模块不可修改');
@@ -489,6 +508,30 @@ app.patch('/api/admin/rbac/staff/:phone', requireAdminModule('permissions'), (re
   } catch (error) {
     console.error('[Admin RBAC Patch Error]', error);
     fail(res, 500, '保存权限失败');
+  }
+});
+
+app.post('/api/admin/rbac/staff', requirePrimaryAdmin, (req, res) => {
+  try {
+    const result = db.provisionAdminPhone((req.body && req.body.phone) || '', {
+      createdBy: req.user.phone
+    });
+    if (!result.ok) return failOp(res, result);
+    ok(res, result);
+  } catch (error) {
+    console.error('[Admin Provision Error]', error);
+    fail(res, 500, '添加管理员失败');
+  }
+});
+
+app.delete('/api/admin/rbac/staff/:phone', requirePrimaryAdmin, (req, res) => {
+  try {
+    const result = db.revokeAdminPhone(req.params.phone, { actorPhone: req.user.phone });
+    if (!result.ok) return failOp(res, result);
+    ok(res, result);
+  } catch (error) {
+    console.error('[Admin Revoke Error]', error);
+    fail(res, 500, '移除管理员失败');
   }
 });
 
@@ -1445,6 +1488,7 @@ app.post('/api/parents', requireAuth, (req, res) => {
   if (req.user.role !== 'parent' && req.user.role !== 'admin') {
     return fail(res, 403, '无权限');
   }
+  if (req.user.role === 'admin' && denyAdminModule(req, res, 'parents')) return;
   const body = Object.assign({}, req.body || {});
   if (req.user.role === 'parent') {
     body.id = req.user.userId;
@@ -1452,6 +1496,50 @@ app.post('/api/parents', requireAuth, (req, res) => {
   }
   const parent = db.saveParent(body);
   ok(res, parent);
+});
+
+app.post('/api/admin/parents', requireAdminModule('parents'), (req, res) => {
+  try {
+    const result = db.createStaffParent(req.body || {}, { createdBy: req.user.phone });
+    if (!result.ok) return failOp(res, result);
+    ok(res, result.parent);
+  } catch (error) {
+    console.error('[Admin Create Parent]', error);
+    fail(res, 500, '添加家长失败');
+  }
+});
+
+app.delete('/api/admin/parents/:id', requireAdminModule('parents'), (req, res) => {
+  try {
+    const result = db.softDeleteParent(req.params.id, { deletedBy: req.user.phone });
+    if (!result.ok) return failOp(res, result);
+    ok(res, result);
+  } catch (error) {
+    console.error('[Admin Delete Parent]', error);
+    fail(res, 500, '删除家长失败');
+  }
+});
+
+app.post('/api/admin/mentors', requireAdminModule('mentors'), (req, res) => {
+  try {
+    const result = db.createStaffMentor(req.body || {}, { createdBy: req.user.phone });
+    if (!result.ok) return failOp(res, result);
+    ok(res, result.mentor);
+  } catch (error) {
+    console.error('[Admin Create Mentor]', error);
+    fail(res, 500, '添加导师失败');
+  }
+});
+
+app.delete('/api/admin/mentors/:id', requireAdminModule('mentors'), (req, res) => {
+  try {
+    const result = db.softDeleteMentor(req.params.id, { deletedBy: req.user.phone });
+    if (!result.ok) return failOp(res, result);
+    ok(res, result);
+  } catch (error) {
+    console.error('[Admin Delete Mentor]', error);
+    fail(res, 500, '删除导师失败');
+  }
 });
 
 app.get('/api/parents/phone/:phone', requireAuth, (req, res) => {
@@ -2061,6 +2149,28 @@ app.patch('/api/admin/teaching-points/:id', requireAdminModule('teaching-points'
     });
   }
   ok(res, result.teachingPoint);
+});
+
+app.post('/api/admin/teaching-points', requireAdminModule('teaching-points'), (req, res) => {
+  try {
+    const result = db.addTeachingPoint(req.body || {});
+    if (!result.ok) return failOp(res, result);
+    ok(res, result.teachingPoint);
+  } catch (error) {
+    console.error('[Admin Create Teaching Point]', error);
+    fail(res, 500, '添加教学点失败');
+  }
+});
+
+app.delete('/api/admin/teaching-points/:id', requireAdminModule('teaching-points'), (req, res) => {
+  try {
+    const result = db.deleteTeachingPoint(req.params.id);
+    if (!result.ok) return failOp(res, result);
+    ok(res, result);
+  } catch (error) {
+    console.error('[Admin Delete Teaching Point]', error);
+    fail(res, 500, '删除教学点失败');
+  }
 });
 
 app.get('/api/admin/teaching-points/:id/occupancy', requireAdminModule('teaching-points'), (req, res) => {

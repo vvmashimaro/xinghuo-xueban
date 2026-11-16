@@ -8,6 +8,7 @@ const pricing = require('./pricing');
 const bookingFields = require('./booking-fields');
 const subjectCatalog = require('./subject-catalog');
 const bookingSchedule = require('./booking-schedule');
+const phoneCrypto = require('./phone-crypto');
 
 const fs = require('fs');
 const path = require('path');
@@ -64,33 +65,49 @@ function buildDefaultTeachingPoints(spaceNames) {
 }
 
 function ensureTeachingPoints(state) {
-  if (!state.teachingPoints || !state.teachingPoints.length) {
-    state.teachingPoints = buildDefaultTeachingPoints(SPACE_OPTIONS);
+  if (!state.teachingPoints) state.teachingPoints = [];
+  let changed = false;
+  if (!state.teachingPointsSeeded) {
+    if (!state.teachingPoints.length) {
+      state.teachingPoints = buildDefaultTeachingPoints(SPACE_OPTIONS);
+      changed = true;
+    } else {
+      const byName = {};
+      state.teachingPoints.forEach((tp) => {
+        if (tp && tp.name) byName[tp.name] = tp;
+      });
+      SPACE_OPTIONS.forEach((name, index) => {
+        if (!byName[name]) {
+          const id = 'TP-' + _teachingPointSlug(state.teachingPoints.length);
+          const created = {
+            id,
+            name,
+            boothCount: DEFAULT_BOOTH_COUNT,
+            booths: buildBoothsForTeachingPoint(id, DEFAULT_BOOTH_COUNT)
+          };
+          state.teachingPoints.push(created);
+          byName[name] = created;
+          changed = true;
+        } else if (!byName[name].booths || !byName[name].booths.length) {
+          const tp = byName[name];
+          tp.boothCount = tp.boothCount || DEFAULT_BOOTH_COUNT;
+          tp.booths = buildBoothsForTeachingPoint(
+            tp.id || 'TP-' + _teachingPointSlug(index),
+            tp.boothCount || DEFAULT_BOOTH_COUNT
+          );
+          changed = true;
+        }
+      });
+    }
+    state.teachingPointsSeeded = true;
     return true;
   }
-  let changed = false;
-  const byName = {};
-  state.teachingPoints.forEach((tp) => {
-    if (tp && tp.name) byName[tp.name] = tp;
-  });
-  SPACE_OPTIONS.forEach((name, index) => {
-    if (!byName[name]) {
-      const id = 'TP-' + _teachingPointSlug(state.teachingPoints.length);
-      state.teachingPoints.push({
-        id,
-        name,
-        boothCount: DEFAULT_BOOTH_COUNT,
-        booths: buildBoothsForTeachingPoint(id, DEFAULT_BOOTH_COUNT)
-      });
-      changed = true;
-    } else if (!byName[name].booths || !byName[name].booths.length) {
-      byName[name].boothCount = DEFAULT_BOOTH_COUNT;
-      byName[name].booths = buildBoothsForTeachingPoint(
-        byName[name].id || 'TP-' + _teachingPointSlug(index),
-        DEFAULT_BOOTH_COUNT
-      );
-      changed = true;
-    }
+  (state.teachingPoints || []).forEach((tp) => {
+    if (!tp || (tp.booths && tp.booths.length)) return;
+    const count = tp.boothCount || DEFAULT_BOOTH_COUNT;
+    tp.boothCount = count;
+    tp.booths = buildBoothsForTeachingPoint(tp.id || _uid('TP'), count);
+    changed = true;
   });
   return changed;
 }
@@ -756,6 +773,7 @@ function emptySnapshot() {
     assessments: [],
     feedbackTickets: [],
     teachingPoints: buildDefaultTeachingPoints(SPACE_OPTIONS),
+    teachingPointsSeeded: true,
     featureFlags: {
       FEATURE_SMART_WAREHOUSE: false
     },
@@ -763,6 +781,7 @@ function emptySnapshot() {
     phoneAuditLogs: [],
     authTokens: [],
     adminStaff: [],
+    adminDirectory: [],
     seeded: true
   };
 }
@@ -839,6 +858,10 @@ function load() {
     
     // 迁移：删除旧的共享 session 字段
     let needMigration = false;
+    if (!state.adminDirectory) {
+      state.adminDirectory = [];
+      needMigration = true;
+    }
     if (ensureTeachingPoints(state)) needMigration = true;
     if (state.session !== undefined) {
       delete state.session;
@@ -949,22 +972,31 @@ function seedIfEmpty() {
 }
 
 /* ---------- Mentors ---------- */
+function isLiveAccount(row) {
+  return !!(row && !row.deletedAt);
+}
+
 function getMentors() {
-  return getState().mentors.slice();
+  return getState().mentors.filter(isLiveAccount);
 }
 
 function getMentorById(id) {
-  return getState().mentors.find((m) => m.id === id) || null;
+  return getState().mentors.find((m) => m.id === id && isLiveAccount(m)) || null;
 }
 
 function getMentorByPhone(phone) {
   if (!phone) return null;
   const p = String(phone).trim();
-  return getState().mentors.find((m) => m.phone && String(m.phone).trim() === p) || null;
+  return (
+    getState().mentors.find((m) => isLiveAccount(m) && m.phone && String(m.phone).trim() === p) || null
+  );
 }
 
 function addMentor(mentor) {
   const s = getState();
+  const src = Object.assign({}, mentor || {});
+  delete src.deletedAt;
+  delete src.deletedBy;
   const record = Object.assign(
     {
       id: _uid('AP'),
@@ -979,7 +1011,7 @@ function addMentor(mentor) {
       styles: [],
       subjects: []
     },
-    mentor || {}
+    src
   );
   const normalized = withMentorDefaults(record);
   s.mentors.unshift(normalized);
@@ -992,7 +1024,14 @@ function updateMentor(id, patch, options) {
   const idx = s.mentors.findIndex((m) => m.id === id);
   if (idx < 0) return null;
   const opts = options || {};
-  const next = Object.assign({}, s.mentors[idx], patch || {}, { updatedAt: _now() });
+  const prev = s.mentors[idx];
+  const next = Object.assign({}, prev, patch || {}, { updatedAt: _now() });
+  if (!opts.allowDeleteFlag) {
+    if (prev.deletedAt) next.deletedAt = prev.deletedAt;
+    else delete next.deletedAt;
+    if (prev.deletedBy) next.deletedBy = prev.deletedBy;
+    else delete next.deletedBy;
+  }
   if (opts.sensitiveChange) {
     next.status = 'pending';
     next.sensitiveChangePending = true;
@@ -1060,26 +1099,32 @@ function normalizeParentProfile(p) {
 }
 
 function getParents() {
-  return getState().parents.slice();
+  return getState().parents.filter(isLiveAccount);
 }
 
 function getParentByPhone(phone) {
   if (!phone) return null;
   const p = String(phone).trim();
-  const found = getState().parents.find((x) => x.phone && String(x.phone).trim() === p);
+  const found = getState().parents.find(
+    (x) => isLiveAccount(x) && x.phone && String(x.phone).trim() === p
+  );
   return found ? normalizeParentProfile(found) : null;
 }
 
 function saveParent(profile) {
   const s = getState();
   const incoming = normalizeParentProfile(profile || {}) || {};
+  delete incoming.deletedAt;
+  delete incoming.deletedBy;
   let idx = -1;
   if (incoming.id) {
-    idx = s.parents.findIndex((p) => p.id === incoming.id);
+    idx = s.parents.findIndex((p) => p.id === incoming.id && isLiveAccount(p));
   }
   if (idx < 0 && incoming.phone) {
     const phone = String(incoming.phone).trim();
-    idx = s.parents.findIndex((p) => p.phone && String(p.phone).trim() === phone);
+    idx = s.parents.findIndex(
+      (p) => isLiveAccount(p) && p.phone && String(p.phone).trim() === phone
+    );
   }
   const record = Object.assign(
     {
@@ -1092,8 +1137,15 @@ function saveParent(profile) {
   if (idx >= 0) {
     record.id = s.parents[idx].id;
     record.createdAt = s.parents[idx].createdAt || record.createdAt;
+    if (s.parents[idx].deletedAt) record.deletedAt = s.parents[idx].deletedAt;
+    if (s.parents[idx].deletedBy) record.deletedBy = s.parents[idx].deletedBy;
     s.parents[idx] = record;
   } else {
+    if (record.id && s.parents.some((p) => p.id === record.id)) {
+      record.id = _uid('PAR');
+    }
+    delete record.deletedAt;
+    delete record.deletedBy;
     s.parents.unshift(record);
   }
   persist();
@@ -1107,7 +1159,6 @@ function getBookings() {
 
 function getTeachingPoints() {
   const s = getState();
-  ensureTeachingPoints(s);
   if (ensureTeachingPoints(s)) persist();
   return (s.teachingPoints || []).slice();
 }
@@ -1159,6 +1210,103 @@ function updateTeachingPointBoothCount(teachingPointId, boothCount) {
   s.teachingPoints[idx] = tp;
   persist();
   return { ok: true, teachingPoint: tp };
+}
+
+/** 进行中的预约，或已完成但仍冻结/未支付的履约，阻止删除账号与教学点 */
+function bookingBlocksAccountDelete(booking) {
+  if (!booking) return false;
+  const st = String(booking.status || '');
+  if (st === 'declined' || st === 'cancelled') return false;
+  if (st === 'completed') {
+    if (booking.escrowStatus === 'frozen' || booking.escrowStatus === 'pending_payment') return true;
+    if (booking.paymentStatus === 'unpaid') return true;
+    return false;
+  }
+  return true;
+}
+
+function payOrderBlocksAccountDelete(order) {
+  const st = String((order && order.status) || '');
+  if (!st) return false;
+  const terminal = new Set(['SUCCESS', 'PAID', 'REFUND', 'REFUNDED', 'CLOSED', 'PAYERROR', 'REVOKED']);
+  return !terminal.has(st);
+}
+
+function bookingsForAccount(role, user) {
+  const s = getState();
+  return (s.bookings || []).filter((b) => {
+    if (!b) return false;
+    if (role === 'parent') {
+      return b.parentId === user.id || (user.phone && String(b.parentPhone || '') === String(user.phone));
+    }
+    return b.mentorId === user.id || b.tutorId === user.id;
+  });
+}
+
+function collectAccountDeleteBlockers(role, user) {
+  const bookings = bookingsForAccount(role, user);
+  const bookingIds = new Set(bookings.map((b) => b.id));
+  const activeBookings = bookings.filter(bookingBlocksAccountDelete);
+  const orders = (getState().payOrders || []).filter((o) => {
+    if (!o) return false;
+    if (o.bookingId && bookingIds.has(o.bookingId)) return true;
+    if (role === 'parent' && user.phone && o.parentPhone && String(o.parentPhone) === String(user.phone)) {
+      return true;
+    }
+    return false;
+  });
+  const openOrders = orders.filter(payOrderBlocksAccountDelete);
+  return {
+    blocked: activeBookings.length > 0 || openOrders.length > 0,
+    bookingIds: activeBookings.map((b) => b.id),
+    orderIds: openOrders.map((o) => o.outTradeNo || o.id).filter(Boolean)
+  };
+}
+
+function addTeachingPoint(input) {
+  const s = getState();
+  ensureTeachingPoints(s);
+  const name = String((input && input.name) || '').trim();
+  if (!name) return { ok: false, error: '请填写教学点名称', code: 'NAME_REQUIRED' };
+  if (name.length > 40) return { ok: false, error: '教学点名称不能超过 40 个字', code: 'NAME_TOO_LONG' };
+  const dup = (s.teachingPoints || []).find((tp) => tp && String(tp.name || '').trim() === name);
+  if (dup) return { ok: false, error: '已存在同名教学点', code: 'DUPLICATE_NAME' };
+  const id = _uid('TP');
+  const teachingPoint = {
+    id,
+    name,
+    boothCount: DEFAULT_BOOTH_COUNT,
+    booths: buildBoothsForTeachingPoint(id, DEFAULT_BOOTH_COUNT),
+    createdAt: _now(),
+    updatedAt: _now()
+  };
+  s.teachingPoints.push(teachingPoint);
+  s.teachingPointsSeeded = true;
+  persist();
+  return { ok: true, teachingPoint };
+}
+
+function deleteTeachingPoint(id) {
+  const s = getState();
+  ensureTeachingPoints(s);
+  const idx = (s.teachingPoints || []).findIndex((tp) => tp && tp.id === id);
+  if (idx < 0) return { ok: false, error: '教学点不存在', code: 'TEACHING_POINT_NOT_FOUND' };
+  const tp = s.teachingPoints[idx];
+  const blocked = (s.bookings || []).filter(
+    (b) => bookingBlocksAccountDelete(b) && bookingUsesTeachingPoint(b, tp)
+  );
+  if (blocked.length) {
+    return {
+      ok: false,
+      error: '无法删除教学点：仍有进行中的预约或占用中的仓位（请先取消、完成或改期）',
+      code: 'TEACHING_POINT_IN_USE',
+      bookingIds: blocked.map((b) => b.id)
+    };
+  }
+  s.teachingPoints.splice(idx, 1);
+  s.teachingPointsSeeded = true;
+  persist();
+  return { ok: true, id: tp.id, name: tp.name };
 }
 
 function sessionMatchesOccupancyQuery(session, query) {
@@ -2136,6 +2284,247 @@ function setAdminStaffPermissions(phone, modules, meta) {
   return record;
 }
 
+function adminDirectoryState() {
+  const s = getState();
+  if (!Array.isArray(s.adminDirectory)) s.adminDirectory = [];
+  return s.adminDirectory;
+}
+
+function getAdminDirectory() {
+  return adminDirectoryState().map((row) => Object.assign({}, row));
+}
+
+function getAdminDirectoryEntry(phone) {
+  const p = String(phone || '').trim();
+  if (!p) return null;
+  const found = adminDirectoryState().find((row) => row && String(row.phone).trim() === p);
+  return found ? Object.assign({}, found) : null;
+}
+
+function cleanName(value, max) {
+  return String(value || '').trim().slice(0, max || 32);
+}
+
+function cleanStringList(value, maxItems) {
+  const raw = Array.isArray(value)
+    ? value
+    : String(value || '')
+        .split(/[,，、]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+  const out = [];
+  raw.forEach((item) => {
+    const s = String(item || '').trim().slice(0, 24);
+    if (!s || out.indexOf(s) >= 0) return;
+    out.push(s);
+  });
+  return out.slice(0, maxItems || 12);
+}
+
+function phoneTakenByOtherRole(phone, role) {
+  if (role !== 'parent' && getParentByPhone(phone)) {
+    return { ok: false, error: '该手机号已注册为家长', code: 'PHONE_TAKEN_PARENT' };
+  }
+  if (role !== 'mentor' && getMentorByPhone(phone)) {
+    return { ok: false, error: '该手机号已注册为导师', code: 'PHONE_TAKEN_MENTOR' };
+  }
+  try {
+    const auth = require('./auth');
+    if (auth.isAdminPhone(phone)) {
+      return { ok: false, error: '该手机号为管理员账号，不能同时作为家长或导师', code: 'PHONE_IS_ADMIN' };
+    }
+  } catch (e) {
+    /* auth 未就绪时不拦截 */
+  }
+  return null;
+}
+
+function createStaffParent(input, meta) {
+  const body = input || {};
+  const phone = String(body.phone || '').trim();
+  const parentName = cleanName(body.parentName, 32);
+  const studentNickname = cleanName(body.studentNickname, 32);
+  if (!phoneCrypto.isValidPhone(phone)) {
+    return { ok: false, error: '请填写有效的 11 位手机号', code: 'INVALID_PHONE' };
+  }
+  if (!parentName) return { ok: false, error: '请填写家长姓名', code: 'NAME_REQUIRED' };
+  if (!studentNickname) return { ok: false, error: '请填写学员昵称', code: 'STUDENT_REQUIRED' };
+  const taken = phoneTakenByOtherRole(phone, 'parent');
+  if (taken) return taken;
+  if (getParentByPhone(phone)) {
+    return { ok: false, error: '该手机号已注册为家长', code: 'PHONE_TAKEN' };
+  }
+  const record = saveParent({
+    phone,
+    parentName,
+    studentNickname,
+    parentRole: cleanName(body.parentRole || '家长', 16) || '家长',
+    studentGrade: cleanName(body.studentGrade, 40),
+    cityDistrict: cleanName(body.cityDistrict, 20),
+    subjects: cleanStringList(body.subjects, 12),
+    createdBy: meta && meta.createdBy ? String(meta.createdBy).trim() : ''
+  });
+  return { ok: true, parent: record };
+}
+
+function createStaffMentor(input, meta) {
+  const body = input || {};
+  const phone = String(body.phone || '').trim();
+  const realName = cleanName(body.realName, 32);
+  if (!phoneCrypto.isValidPhone(phone)) {
+    return { ok: false, error: '请填写有效的 11 位手机号', code: 'INVALID_PHONE' };
+  }
+  if (!realName) return { ok: false, error: '请填写真实姓名', code: 'NAME_REQUIRED' };
+  const taken = phoneTakenByOtherRole(phone, 'mentor');
+  if (taken) return taken;
+  if (getMentorByPhone(phone)) {
+    return { ok: false, error: '该手机号已注册为导师', code: 'PHONE_TAKEN' };
+  }
+  const payload = {
+    phone,
+    realName,
+    university: cleanName(body.university, 40),
+    subjects: cleanStringList(body.subjects, 12),
+    createdBy: meta && meta.createdBy ? String(meta.createdBy).trim() : ''
+  };
+  if (body.hourlyRate != null && String(body.hourlyRate).trim() !== '') {
+    const rate = parseInt(body.hourlyRate, 10);
+    if (!rate || rate < 1 || rate > 2000) {
+      return { ok: false, error: '时薪需为 1-2000 的整数', code: 'INVALID_RATE' };
+    }
+    payload.hourlyRate = rate;
+  }
+  const mentor = addMentor(payload);
+  return { ok: true, mentor };
+}
+
+function accountDeleteFailure(blockers, roleLabel) {
+  return {
+    ok: false,
+    error: '该' + roleLabel + '仍有进行中的预约或未完结订单，无法删除',
+    code: 'USER_DELETE_BLOCKED',
+    bookingIds: blockers.bookingIds,
+    orderIds: blockers.orderIds
+  };
+}
+
+function softDeleteParent(id, meta) {
+  const s = getState();
+  const idx = s.parents.findIndex((p) => p.id === id && isLiveAccount(p));
+  if (idx < 0) return { ok: false, error: '家长不存在', code: 'NOT_FOUND' };
+  const parent = s.parents[idx];
+  const blockers = collectAccountDeleteBlockers('parent', parent);
+  if (blockers.blocked) return accountDeleteFailure(blockers, '家长');
+  const deletedAt = _now();
+  s.parents[idx] = Object.assign({}, parent, {
+    deletedAt,
+    deletedBy: meta && meta.deletedBy ? String(meta.deletedBy).trim() : '',
+    updatedAt: deletedAt
+  });
+  revokeAuthTokensForPhone(parent.phone, 'parent');
+  persist();
+  return { ok: true, id: parent.id, deletedAt };
+}
+
+function softDeleteMentor(id, meta) {
+  const s = getState();
+  const idx = s.mentors.findIndex((m) => m.id === id && isLiveAccount(m));
+  if (idx < 0) return { ok: false, error: '导师不存在', code: 'NOT_FOUND' };
+  const mentor = s.mentors[idx];
+  const blockers = collectAccountDeleteBlockers('mentor', mentor);
+  if (blockers.blocked) return accountDeleteFailure(blockers, '导师');
+  const deletedAt = _now();
+  s.mentors[idx] = Object.assign({}, mentor, {
+    deletedAt,
+    deletedBy: meta && meta.deletedBy ? String(meta.deletedBy).trim() : '',
+    updatedAt: deletedAt
+  });
+  revokeAuthTokensForPhone(mentor.phone, 'mentor');
+  persist();
+  return { ok: true, id: mentor.id, deletedAt };
+}
+
+function provisionAdminPhone(phone, meta) {
+  const p = String(phone || '').trim();
+  if (!phoneCrypto.isValidPhone(p)) {
+    return { ok: false, error: '请填写有效的 11 位手机号', code: 'INVALID_PHONE' };
+  }
+  const adminRbac = require('./admin-rbac');
+  if (adminRbac.isPrimaryAdminPhone(p)) {
+    return { ok: false, error: '主管理员已存在，无需重复添加', code: 'IS_PRIMARY' };
+  }
+  const auth = require('./auth');
+  if (auth.isAdminPhone(p)) {
+    return { ok: false, error: '该手机号已是管理员', code: 'ALREADY_ADMIN' };
+  }
+  if (getParentByPhone(p) || getMentorByPhone(p)) {
+    return { ok: false, error: '该手机号已是家长或导师，不能添加为管理员', code: 'PHONE_IN_USE' };
+  }
+  const actor = meta && (meta.createdBy || meta.updatedBy) ? String(meta.createdBy || meta.updatedBy).trim() : '';
+  const list = adminDirectoryState();
+  const idx = list.findIndex((row) => row && String(row.phone).trim() === p);
+  if (idx >= 0) {
+    list[idx] = Object.assign({}, list[idx], {
+      phone: p,
+      revoked: false,
+      revokedAt: '',
+      revokedBy: '',
+      updatedAt: _now(),
+      updatedBy: actor
+    });
+  } else {
+    list.push({
+      phone: p,
+      revoked: false,
+      createdAt: _now(),
+      createdBy: actor,
+      updatedAt: _now(),
+      updatedBy: actor
+    });
+  }
+  setAdminStaffPermissions(p, [], { updatedBy: actor });
+  return { ok: true, phone: p, modules: [], isPrimaryAdmin: false, isSuperAdmin: false };
+}
+
+function revokeAdminPhone(phone, meta) {
+  const p = String(phone || '').trim();
+  const adminRbac = require('./admin-rbac');
+  const actor = meta && meta.actorPhone ? String(meta.actorPhone).trim() : '';
+  if (!p) return { ok: false, error: '手机号无效', code: 'INVALID_PHONE' };
+  if (adminRbac.isPrimaryAdminPhone(p)) {
+    return { ok: false, error: '不能移除主管理员', code: 'PRIMARY_PROTECTED' };
+  }
+  if (actor && actor === p) {
+    return { ok: false, error: '不能移除自己', code: 'CANNOT_REMOVE_SELF' };
+  }
+  const auth = require('./auth');
+  if (!auth.isAdminPhone(p)) {
+    return { ok: false, error: '该手机号不是管理员', code: 'NOT_ADMIN' };
+  }
+  const remaining = auth.listConfiguredAdminPhones().filter((item) => item !== p);
+  if (!remaining.length || !remaining.some((item) => adminRbac.isPrimaryAdminPhone(item))) {
+    return { ok: false, error: '不能移除最后一位主管理员', code: 'LAST_PRIMARY' };
+  }
+  const list = adminDirectoryState();
+  const idx = list.findIndex((row) => row && String(row.phone).trim() === p);
+  const now = _now();
+  const record = {
+    phone: p,
+    revoked: true,
+    revokedAt: now,
+    revokedBy: actor,
+    updatedAt: now,
+    updatedBy: actor,
+    createdAt: idx >= 0 && list[idx].createdAt ? list[idx].createdAt : now,
+    createdBy: idx >= 0 && list[idx].createdBy ? list[idx].createdBy : ''
+  };
+  if (idx >= 0) list[idx] = Object.assign({}, list[idx], record);
+  else list.push(record);
+  setAdminStaffPermissions(p, [], { updatedBy: actor });
+  const revokedSessions = revokeAuthTokensForPhone(p, 'admin');
+  return { ok: true, phone: p, revokedSessions };
+}
+
 /* ---------- Feature flags ---------- */
 const DEFAULT_FEATURE_FLAGS = {
   FEATURE_SMART_WAREHOUSE: false
@@ -2268,16 +2657,17 @@ function mentorToTutorCard(mentor, parentProfile) {
 
 function matchTutors(parentProfile) {
   seedIfEmpty();
-  const parent = parentProfile || getState().parents[0] || getSeedParent();
+  const liveParent = getState().parents.find(isLiveAccount);
+  const parent = parentProfile || liveParent || getSeedParent();
   const approved = getState().mentors.filter(
-    (m) => m.status === 'approved' && m.acceptingOrders !== false
+    (m) => isLiveAccount(m) && m.status === 'approved' && m.acceptingOrders !== false
   );
   let tutors = approved.map((m) => mentorToTutorCard(m, parent));
   tutors.sort((a, b) => b.matchScore - a.matchScore);
   if (tutors.length === 0) {
     seedIfEmpty();
     tutors = getState()
-      .mentors.filter((m) => m.status === 'approved' && m.acceptingOrders !== false)
+      .mentors.filter((m) => isLiveAccount(m) && m.status === 'approved' && m.acceptingOrders !== false)
       .map((m) => mentorToTutorCard(m, parent));
     tutors.sort((a, b) => b.matchScore - a.matchScore);
   }
@@ -2567,6 +2957,22 @@ function deleteAuthToken(tokenHash) {
   return true;
 }
 
+function revokeAuthTokensForPhone(phone, role) {
+  const s = getState();
+  if (!s.authTokens) s.authTokens = [];
+  const p = String(phone || '').trim();
+  if (!p) return 0;
+  const before = s.authTokens.length;
+  s.authTokens = s.authTokens.filter((t) => {
+    if (!t || String(t.phone || '').trim() !== p) return true;
+    if (role && t.role && t.role !== role) return true;
+    return false;
+  });
+  const removed = before - s.authTokens.length;
+  if (removed > 0) persist();
+  return removed;
+}
+
 /**
  * 清理过期令牌
  */
@@ -2595,6 +3001,8 @@ module.exports = {
   getTeachingPoints,
   getTeachingPointById,
   updateTeachingPointBoothCount,
+  addTeachingPoint,
+  deleteTeachingPoint,
   getTeachingPointOccupancy,
   DB_PATH,
   load,
@@ -2642,6 +3050,15 @@ module.exports = {
   getAdminStaffList,
   getAdminStaffPermissions,
   setAdminStaffPermissions,
+  getAdminDirectory,
+  getAdminDirectoryEntry,
+  createStaffParent,
+  createStaffMentor,
+  softDeleteParent,
+  softDeleteMentor,
+  provisionAdminPhone,
+  revokeAdminPhone,
+  revokeAuthTokensForPhone,
   bookingAmountFen: pricing.bookingAmountFen,
   bookingAmountYuan: pricing.bookingAmountYuan,
   isBookingPayable: pricing.isBookingPayable,

@@ -3,6 +3,7 @@
  */
 'use strict';
 
+/** 主管理员：启动时写死的引导账号，不因白名单里还有其他管理员而扩散 */
 const SUPER_ADMIN_PHONE = '13540012341';
 
 /** 与 admin-saas 侧栏 data-nav 一致 */
@@ -34,6 +35,11 @@ const ADMIN_LIST_RESOURCE_MODULES = {
 
 function isSuperAdminPhone(phone) {
   return String(phone || '').trim() === SUPER_ADMIN_PHONE;
+}
+
+/** 主管理员与最高管理权限是同一个引导账号，不是全体管理员 */
+function isPrimaryAdminPhone(phone) {
+  return isSuperAdminPhone(phone);
 }
 
 function getModuleLabel(key) {
@@ -97,6 +103,7 @@ module.exports = {
   ADMIN_MODULES,
   ALL_MODULE_KEYS,
   isSuperAdminPhone,
+  isPrimaryAdminPhone,
   getCatalog,
   normalizeModuleList,
   getEffectiveModules,
