@@ -124,6 +124,17 @@
     });
   }
 
+  function maskedMentorName(m) {
+    if (!m) return '导师';
+    const real = String(m.realName || '').trim();
+    const preset = String(m.maskedName || '').trim();
+    if (preset && preset !== real) return preset;
+    const source = real || preset;
+    if (!source) return '导师';
+    if (/^[\u4e00-\u9fa5A-Za-z]老师$/.test(source)) return source;
+    return source.charAt(0) + '老师';
+  }
+
   function stripForBrowse(m) {
     if (!m) return m;
     const out = Object.assign({}, m);
@@ -134,6 +145,8 @@
     delete out.chsiCode;
     delete out.lectureUrl;
     delete out.reviewComment;
+    out.maskedName = maskedMentorName(m);
+    delete out.realName;
     return out;
   }
 
@@ -150,7 +163,7 @@
   async function loadMentors() {
     if (global.StorageService && StorageService.fetchPublicMentorsForBrowse) {
       const remote = await StorageService.fetchPublicMentorsForBrowse();
-      if (Array.isArray(remote) && remote.length) return remote;
+      if (Array.isArray(remote) && remote.length) return remote.map(stripForBrowse);
     }
     return localApprovedMentors();
   }
@@ -239,7 +252,7 @@
 
   function openLoginWall(mentor) {
     persistState();
-    const name = (mentor && (mentor.maskedName || mentor.realName)) || '导师';
+    const name = maskedMentorName(mentor);
     const ret = encodeURIComponent(buildReturnUrl());
     const url =
       'login.html?role=parent&return=' +
@@ -398,58 +411,47 @@
     if (controls) controls.style.display = '';
 
     const m = state.queue[state.idx];
-    const letter = (m.maskedName || m.realName || '导').charAt(0);
+    if (!card) return;
+    const displayName = maskedMentorName(m);
+    const letter = displayName.charAt(0) || '导';
     const subjects = (m.subjects || []).slice(0, 4);
     const styles = (m.styles || []).slice(0, 2);
     const slots = displaySlots(m);
     const hl = m.scoreHighlight || '阳光合规 · 实名入库导师';
-    const uni = (m.university || '双一流高校').split(/[·/]/)[0];
+    const uni = String(m.university || '双一流高校').split(/[·/]/)[0];
     const color = avatarGradient(m.id);
 
-    card.innerHTML =
-      '<div class="flex justify-center mb-3">' +
-      '<div class="w-16 h-16 rounded-2xl text-white text-2xl font-black flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,' +
-      color +
-      ',#173d32)">' +
-      letter +
-      '</div></div>' +
-      '<h2 class="text-center text-xl font-black text-slate-900">' +
-      (m.maskedName || m.realName || '导师') +
-      '</h2>' +
-      '<p class="text-center text-sm text-slate-500 mt-1">' +
-      uni +
-      (m.degree ? ' · ' + m.degree : '') +
-      '</p>' +
-      '<p class="text-center text-sm text-slate-700 mt-4 flex-1 leading-relaxed">' +
-      hl +
-      '</p>' +
-      '<div class="flex flex-wrap gap-1 justify-center mt-3">' +
-      subjects
-        .map(
-          (s) =>
-            '<span class="text-xs bg-teal-50 text-teal-800 px-2 py-0.5 rounded-md border border-teal-100">' +
-            s +
-            '</span>'
-        )
-        .join('') +
-      styles
-        .map(
-          (s) =>
-            '<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">' +
-            s +
-            '</span>'
-        )
-        .join('') +
-      '</div>' +
-      '<div class="flex flex-wrap gap-1 justify-center mt-3">' +
-      slots
-        .map((s) => '<span class="ec-slot-pill">' + s + '</span>')
-        .join('') +
-      '</div>' +
-      '<p class="text-center text-sm font-bold text-teal-700 mt-4">' +
-      priceBand(m) +
-      (m.spacePreference ? ' · ' + m.spacePreference : '') +
-      '</p>';
+    function node(tag, className, text) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text != null) el.textContent = text;
+      return el;
+    }
+
+    const avatarWrap = node('div', 'flex justify-center mb-3');
+    const avatar = node('div', 'w-16 h-16 rounded-2xl text-white text-2xl font-black flex items-center justify-center shadow-lg', letter);
+    avatar.style.background = 'linear-gradient(135deg,' + color + ',#173d32)';
+    avatarWrap.appendChild(avatar);
+    const tags = node('div', 'flex flex-wrap gap-1 justify-center mt-3');
+    subjects.forEach(function (s) {
+      tags.appendChild(node('span', 'text-xs bg-teal-50 text-teal-800 px-2 py-0.5 rounded-md border border-teal-100', String(s)));
+    });
+    styles.forEach(function (s) {
+      tags.appendChild(node('span', 'text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md', String(s)));
+    });
+    const slotRow = node('div', 'flex flex-wrap gap-1 justify-center mt-3');
+    slots.forEach(function (s) {
+      slotRow.appendChild(node('span', 'ec-slot-pill', String(s)));
+    });
+    card.replaceChildren(
+      avatarWrap,
+      node('h2', 'text-center text-xl font-black text-slate-900', displayName),
+      node('p', 'text-center text-sm text-slate-500 mt-1', uni + (m.degree ? ' · ' + m.degree : '')),
+      node('p', 'text-center text-sm text-slate-700 mt-4 flex-1 leading-relaxed', hl),
+      tags,
+      slotRow,
+      node('p', 'text-center text-sm font-bold text-teal-700 mt-4', priceBand(m) + (m.spacePreference ? ' · ' + m.spacePreference : ''))
+    );
   }
 
   function nextSwipe(dir, didLike) {

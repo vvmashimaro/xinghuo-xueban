@@ -124,7 +124,7 @@
         </view>
       </view>
 
-      <button class="btn-primary" style="width:100%;margin-top:16rpx;" bindtap="goL2">完成 L1 核验与签约，进入 L2 能力画像</button>
+      <button class="btn-primary" style="width:100%;margin-top:16rpx;" bindtap="goL2">L1 身份与清算账户已填写，进入 L2 能力画像</button>
     </view>
   </block>
 
