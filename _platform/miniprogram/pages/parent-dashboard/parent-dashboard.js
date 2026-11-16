@@ -1015,7 +1015,11 @@ Page({
   },
 
   goLogin() {
-    confirmUserLogout({ onBeforeNavigate: () => this.closeSettingsDrawer() });
+    this.closeSettingsDrawer();
+    confirmUserLogout({
+      onBeforeShow: () => this.closeSettingsDrawer(),
+      onBeforeNavigate: () => this.closeSettingsDrawer()
+    });
   },
 
   goProfile() {
