@@ -158,6 +158,12 @@
         animation: none;
         transform: none;
       }
+      .xh-compliance-dot:not(.is-playing) {
+        animation: none !important;
+      }
+    }
+    html.xh-motion-paused .xh-compliance-dot {
+      animation: none !important;
     }
   </style>
   <link rel="stylesheet" href="css/parent-browse-ec-hybrid.css">
@@ -180,12 +186,12 @@
           <i class="fa-solid fa-pause" aria-hidden="true"></i>
           <span class="hidden sm:inline ml-1">暂停动画</span>
         </button>
-        <button type="button" onclick="safeNavigate('login.html?role=parent', '家长登录')" class="xh-home-login text-xs bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-200 transition font-medium cursor-pointer">
+        <button type="button" id="xhHeaderLogin" onclick="goHeaderLogin()" class="xh-home-login text-xs bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-200 transition font-medium cursor-pointer">
           <i class="fa-solid fa-right-to-bracket text-slate-500"></i>
           <span class="hidden sm:inline ml-1">登录</span>
         </button>
         <span class="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-semibold border border-emerald-200">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="xh-compliance-dot w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           合规通道开放中
         </span>
       </div>
@@ -311,6 +317,7 @@
     <div class="absolute -right-20 -bottom-20 w-72 h-72 bg-sage/80 rounded-full blur-3xl pointer-events-none"></div>
 
     <div class="max-w-5xl mx-auto relative z-10">
+      <button type="button" onclick="returnToRoleGate()" class="text-xs text-slate-500 hover:text-teal-800 underline cursor-pointer mb-3">返回身份选择</button>
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-600 text-white text-xs font-semibold mb-2">
@@ -1742,7 +1749,6 @@
       document.getElementById('chsiResultPanel').classList.add('hidden');
     }
 
-    // 触发学信网 API 自动校验时序逻辑
     function triggerChsiAutoVerification() {
       const vcode = document.getElementById('chsiCode').value.trim();
       const realName = document.getElementById('realName').value.trim();
@@ -1759,49 +1765,19 @@
         return;
       }
 
-      // UI 状态进入联网校验中
-      const btn = document.getElementById('btnVerifyChsi');
-      const btnText = document.getElementById('chsiVerifyBtnText');
-      const btnIcon = document.getElementById('chsiVerifyIcon');
       const statusBadge = document.getElementById('chsiVerifyStatusBadge');
-
-      btn.disabled = true;
-      btnIcon.className = "fa-solid fa-spinner fa-spin text-xs";
-      btnText.innerText = "核验中...";
-
-      statusBadge.className = "text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-700 border border-amber-200";
-      statusBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>正在调阅学信网';
-
-      // 模拟向服务端 POST /api/verify/chsi 触发自动化结构化解析与一致性比对时序
-      // 生产联调可参考教育部学籍在线验证报告查询：https://www.chsi.com.cn/xlcx/bgcx.jsp
-      setTimeout(() => {
-        btn.disabled = false;
-        btnIcon.className = "fa-solid fa-check text-xs";
-        btnText.innerText = "已验证";
-
-        // 成功提取与比对数据
-        chsiVerifiedResult = {
-          valid: true,
-          name: realName,
-          university: university || "四川大学",
-          status: "在籍 (注册学籍)",
-          expire: "有效 (至2026-12)",
-          major: "数学与应用数学专业"
-        };
-
-        // 更新结果面板
-        document.getElementById('chsiReportName').innerText = chsiVerifiedResult.name;
-        document.getElementById('chsiReportSchool').innerText = chsiVerifiedResult.university;
-        document.getElementById('chsiReportStatus').innerText = chsiVerifiedResult.status;
-        document.getElementById('chsiReportExpire').innerText = chsiVerifiedResult.expire;
-
-        document.getElementById('chsiResultPanel').classList.remove('hidden');
-
-        statusBadge.className = "text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
-        statusBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-xs"></i>验证一致';
-
-        showToast(`学信网核验成功：【${realName} - ${chsiVerifiedResult.university}】在籍有效！`);
-      }, 1200);
+      // 本页没有学信网接口。按钮只记下验证码，不写成已核验。
+      chsiVerifiedResult = {
+        valid: false,
+        trusted: false,
+        name: realName,
+        university: university || '',
+        status: '待核验'
+      };
+      statusBadge.className = "text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-800 border border-amber-200";
+      statusBadge.innerText = "待核验";
+      document.getElementById('chsiResultPanel').classList.add('hidden');
+      showToast('学信码已记下，当前状态为待核验');
     }
 
     // 添加自定义/特色科目逻辑
@@ -2449,15 +2425,7 @@
           return;
         }
 
-        if (chsiCode && chsiCode.length >= 12 && !chsiVerifiedResult) {
-          chsiVerifiedResult = {
-            valid: true,
-            name: realName,
-            university: university,
-            status: "在籍 (自动核验)",
-            expire: "有效 (至2026-12)"
-          };
-        }
+        // 填写学信码即可进入下一步，不在本地写成已核验。
 
         // 切换视图
         document.getElementById('step1-card').classList.add('hidden');
@@ -2648,6 +2616,7 @@
 
         const chsiTrim = chsiCodeEl ? chsiCodeEl.value.trim() : '';
         const universityTrim = finalUniversityEl.value.trim();
+        const chsiTrusted = !!(chsiVerifiedResult && chsiVerifiedResult.trusted === true);
         
         const profile = {
           realName: realNameEl.value.trim(),
@@ -2657,10 +2626,10 @@
           province: (document.getElementById('provinceSelect') && document.getElementById('provinceSelect').value) || '四川',
           degree: (document.getElementById('educationLevel') && document.getElementById('educationLevel').value) || '',
           chsiCode: chsiTrim,
-          chsiStatus: chsiTrim
-            ? ((chsiVerifiedResult && chsiVerifiedResult.status) || '待核验')
-            : '未填写',
-          chsiMajor: chsiTrim && chsiVerifiedResult && chsiVerifiedResult.university
+          chsiStatus: !chsiTrim
+            ? '未填写'
+            : (chsiTrusted ? (chsiVerifiedResult.status || '待核验') : '待核验'),
+          chsiMajor: chsiTrim && chsiTrusted && chsiVerifiedResult.university
             ? (chsiVerifiedResult.university + ' · 在籍核验')
             : (universityTrim + ' · 待学籍核验'),
           publicTeacherCompliance: true,
@@ -3130,16 +3099,41 @@
       });
     }
 
-    function shouldOpenMentorOnboard() {
+    function mentorEntryIsExplicit() {
       try {
         var q = new URLSearchParams(window.location.search || '');
         var entry = (q.get('entry') || q.get('role') || '').toLowerCase();
         if (entry === 'mentor' || entry === 'onboard' || q.get('onboard') === '1') return true;
         if ((window.location.hash || '').indexOf('onboard') >= 0) return true;
+      } catch (e) {}
+      return false;
+    }
+
+    function shouldOpenMentorOnboard() {
+      if (mentorEntryIsExplicit()) {
+        try { sessionStorage.removeItem('xhStayOnRoleGate'); } catch (e) {}
+        return true;
+      }
+      try {
+        if (sessionStorage.getItem('xhStayOnRoleGate') === '1') return false;
         var session = window.StorageService && StorageService.getSession && StorageService.getSession();
         if (session && session.role === 'mentor') return true;
       } catch (e) {}
       return false;
+    }
+
+    function goHeaderLogin() {
+      var flow = document.getElementById('mentorOnboardFlow');
+      var browse = document.getElementById('parentBrowseFlow');
+      if (flow && flow.classList.contains('is-on')) {
+        safeNavigate('login.html?role=mentor', '导师登录');
+        return;
+      }
+      if (browse && browse.classList.contains('is-on')) {
+        safeNavigate('login.html?role=parent', '家长登录');
+        return;
+      }
+      safeNavigate('login.html', '统一登录');
     }
 
     function showMentorOnboardFlow() {
@@ -3159,6 +3153,7 @@
     }
 
     function enterAsMentor() {
+      try { sessionStorage.removeItem('xhStayOnRoleGate'); } catch (e) {}
       showMentorOnboardFlow();
       restoreMentorDraftIfNeeded();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3174,13 +3169,23 @@
       try {
         var url = new URL(window.location.href);
         url.searchParams.delete('entry');
+        url.searchParams.delete('onboard');
+        if ((url.searchParams.get('role') || '').toLowerCase() === 'mentor') url.searchParams.delete('role');
         url.searchParams.delete('grade');
         url.searchParams.delete('subject');
         url.searchParams.delete('time');
         url.searchParams.delete('step');
         url.searchParams.delete('liked');
-        history.replaceState({}, '', url.pathname + (url.search || '') + url.hash);
+        var hash = url.hash || '';
+        if (hash.indexOf('onboard') >= 0) hash = '';
+        history.replaceState({}, '', url.pathname + (url.search || '') + hash);
       } catch (e) {}
+    }
+
+    function returnToRoleGate() {
+      try { sessionStorage.setItem('xhStayOnRoleGate', '1'); } catch (e) {}
+      showRoleGate();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function showParentBrowseFlow() {
@@ -3228,7 +3233,13 @@
     function xhApplyHeroMotion(mode) {
       var img = document.querySelector('.xh-home-hero-img');
       var btn = document.getElementById('xhHeroMotion');
+      var dot = document.querySelector('.xh-compliance-dot');
       var paused = mode !== 'play';
+      document.documentElement.classList.toggle('xh-motion-paused', paused);
+      if (dot) {
+        dot.classList.toggle('is-playing', !paused);
+        dot.classList.toggle('animate-pulse', !paused);
+      }
       if (img) {
         img.classList.toggle('is-paused', paused);
         img.classList.toggle('is-playing', !paused);
