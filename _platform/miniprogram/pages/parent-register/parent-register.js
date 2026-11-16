@@ -1,4 +1,5 @@
 const Storage = require('../../utils/storage');
+const ChengduDistricts = require('../../utils/chengdu-districts');
 const { showToast } = require('../../utils/toast');
 const appConfig = require('../../utils/config');
 const {
@@ -31,8 +32,9 @@ Page({
       '艺体专项 · 中考体考/体育', '艺体专项 · 舞蹈/播音艺考'
     ],
     gradeIndex: 4,
-    districts: ['青羊区', '武侯区', '高新区', '锦江区', '成华区', '金牛区'],
-    districtIndex: 0,
+    districts: ChengduDistricts.PARENT_DISTRICT_OPTIONS.slice(),
+    districtIndex: Math.max(0, ChengduDistricts.PARENT_DISTRICT_OPTIONS.indexOf('青羊区')),
+    spaceHint: '就近推荐：' + ChengduDistricts.spaceShortLabel(ChengduDistricts.suggestSpaceForDistrict('青羊区')),
     spaces: Storage.SPACE_OPTIONS || ['青羊金沙文化微网点', '高新大源中央微网点', '武侯川大望江微网点'],
     spaceIndex: 0,
     subjectOptions: PARENT_TARGET_SUBJECTS_DEFAULT.slice(),
@@ -135,8 +137,10 @@ Page({
     const spaces = this.data.spaces;
     let gradeIndex = grades.indexOf(parent.studentGrade);
     if (gradeIndex < 0) gradeIndex = 4;
-    let districtIndex = districts.indexOf(parent.cityDistrict);
-    if (districtIndex < 0) districtIndex = 0;
+    const normalizedDistrict = ChengduDistricts.districtOptionFor(parent.cityDistrict) || districts[0];
+    let districtIndex = districts.indexOf(normalizedDistrict);
+    if (districtIndex < 0) districtIndex = Math.max(0, districts.indexOf('青羊区'));
+    if (parent.selectedSpace) this._spaceTouched = true;
     let spaceIndex = spaces.indexOf(parent.selectedSpace);
     if (spaceIndex < 0) spaceIndex = 0;
 
@@ -159,6 +163,9 @@ Page({
       gradeIndex,
       districtIndex,
       spaceIndex,
+      spaceHint: '就近推荐：' + ChengduDistricts.spaceShortLabel(
+        ChengduDistricts.suggestSpaceForDistrict(districts[districtIndex])
+      ),
       selectedSubjects,
       subjectPlans: plans,
       budgetMin: Number(parent.budgetMin) || 80,
@@ -371,8 +378,24 @@ Page({
       this.refreshSubjectOptionChips();
     });
   },
-  onDistrict(e) { this.setData({ districtIndex: Number(e.detail.value) }); },
-  onSpace(e) { this.setData({ spaceIndex: Number(e.detail.value) }); },
+  onDistrict(e) {
+    const districtIndex = Number(e.detail.value) || 0;
+    const district = this.data.districts[districtIndex];
+    const suggested = ChengduDistricts.suggestSpaceForDistrict(district);
+    const patch = {
+      districtIndex: districtIndex,
+      spaceHint: '就近推荐：' + ChengduDistricts.spaceShortLabel(suggested)
+    };
+    if (!this._spaceTouched) {
+      const idx = (this.data.spaces || []).indexOf(suggested);
+      if (idx >= 0) patch.spaceIndex = idx;
+    }
+    this.setData(patch);
+  },
+  onSpace(e) {
+    this._spaceTouched = true;
+    this.setData({ spaceIndex: Number(e.detail.value) });
+  },
   onToggleConsent() { this.setData({ consent: !this.data.consent }); },
 
   onBudgetMin(e) {

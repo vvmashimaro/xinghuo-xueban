@@ -1,3 +1,6 @@
+.basic-card .label { font-size: 30rpx; }
+.basic-card .input { font-size: 32rpx; min-height: 92rpx; }
+
 .chip-wrap { 
   display: flex; 
   flex-wrap: wrap; 

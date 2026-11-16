@@ -5,6 +5,7 @@
 'use strict';
 
 const config = require('./config.js');
+const ChengduDistricts = require('./chengdu-districts');
 const Avail = require('./mentor-availability.js');
 const XhLoading = require('./loading');
 const API_BASE = (config && config.API_BASE) || 'http://127.0.0.1:8787';
@@ -678,6 +679,9 @@ const StorageService = {
   normalizeParentProfile(p) {
     if (!p || typeof p !== 'object') return p;
     const out = Object.assign({}, p);
+    if (out.cityDistrict != null && String(out.cityDistrict).trim()) {
+      out.cityDistrict = ChengduDistricts.normalizeCityDistrict(out.cityDistrict);
+    }
     if (out.budgetMin == null && out.budgetMax == null && out.budgetRate != null) {
       const mid = Number(out.budgetRate) || 130;
       out.budgetMin = Math.max(70, mid - 30);

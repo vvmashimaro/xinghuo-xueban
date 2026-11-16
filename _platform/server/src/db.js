@@ -9,6 +9,7 @@ const bookingFields = require('./booking-fields');
 const subjectCatalog = require('./subject-catalog');
 const bookingSchedule = require('./booking-schedule');
 const phoneCrypto = require('./phone-crypto');
+const chengduDistricts = require('../../../js/chengdu-districts');
 
 const fs = require('fs');
 const path = require('path');
@@ -1052,6 +1053,9 @@ function updateMentor(id, patch, options) {
 function normalizeParentProfile(p) {
   if (!p || typeof p !== 'object') return p;
   const out = Object.assign({}, p);
+  if (out.cityDistrict != null && String(out.cityDistrict).trim()) {
+    out.cityDistrict = chengduDistricts.normalizeCityDistrict(out.cityDistrict);
+  }
   if (out.budgetMin == null && out.budgetMax == null && out.budgetRate != null) {
     const mid = Number(out.budgetRate) || 130;
     out.budgetMin = Math.max(70, mid - 30);
