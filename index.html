@@ -1216,7 +1216,7 @@
                   点击上传或拖拽文件至此处
                 </p>
                 <p class="text-xs text-slate-500 mt-0.5">
-                  单文件上限 15MB。文件先留在本页，提交后随资质材料进入审核。
+                  单文件上限 15MB。文件留在本页，提交时只带上文件名和大小。
                 </p>
               </div>
 
@@ -1973,16 +1973,45 @@
       });
     }
 
+    var CERT_FILE_ACCEPT = ['.jpg', '.jpeg', '.png', '.pdf'];
+    var CERT_FILE_MAX_BYTES = 15 * 1024 * 1024;
+
+    function certFileRejectReason(file) {
+      var name = String(file && file.name || '').toLowerCase();
+      var dot = name.lastIndexOf('.');
+      var ext = dot >= 0 ? name.slice(dot) : '';
+      if (CERT_FILE_ACCEPT.indexOf(ext) < 0) return '仅支持 JPG、PNG、PDF';
+      if (file.size > CERT_FILE_MAX_BYTES) return '单文件不能超过 15MB';
+      return '';
+    }
+
     function ingestCertFiles(fileList) {
       const files = fileList ? Array.prototype.slice.call(fileList) : [];
       if (!files.length) return;
+      const accepted = [];
+      const rejected = [];
       files.forEach(function (file) {
+        const reason = certFileRejectReason(file);
+        if (reason) rejected.push(reason);
+        else accepted.push(file);
+      });
+      accepted.forEach(function (file) {
         placeUploadedMaterial(uploadedMaterials, file, '新上传');
       });
-      renderUploadedFiles();
-      updateLiveCard();
-      scheduleMentorDraftSave(false);
-      showToast('已成功添加 ' + files.length + ' 份资历证明材料！');
+      if (accepted.length) {
+        renderUploadedFiles();
+        updateLiveCard();
+        scheduleMentorDraftSave(false);
+      }
+      if (rejected.length) {
+        const reason = rejected[0];
+        const same = rejected.every(function (item) { return item === reason; });
+        const detail = same ? reason : '仅支持 JPG、PNG、PDF，且单文件不超过 15MB';
+        const prefix = accepted.length ? '已添加 ' + accepted.length + ' 份。' : '';
+        showToast(prefix + detail + '！', 'warning');
+        return;
+      }
+      showToast('已成功添加 ' + accepted.length + ' 份资历证明材料！');
     }
 
     function handleFileUpload(event) {
