@@ -1257,7 +1257,7 @@
               <i class="fa-solid fa-shield-check"></i>
             </div>
             <div>
-              <h3 class="text-xl font-black text-slate-900">恭喜！导师入库档案已建立</h3>
+              <h3 class="text-xl font-black text-slate-900">申请已提交，等待审核</h3>
               <p class="text-sm text-slate-500 max-w-sm mx-auto mt-1.5 leading-relaxed hidden" data-warehouse-only>
                 您的资质信息已进入平台合规智囊库。教研审核组将在 24 小时内完成试讲核验，并向您的手机推送智能教学仓首期免费使用体验码。
               </p>
@@ -1271,7 +1271,7 @@
               <div class="flex items-center justify-between border-b border-teal-100 pb-3">
                 <div class="flex items-center gap-2">
                   <i class="fa-solid fa-id-badge text-teal-600"></i>
-                  <span class="text-xs font-bold tracking-wider text-slate-800">星火导师专属档案证</span>
+                  <span class="text-xs font-bold tracking-wider text-slate-800">星火导师申请回执</span>
                 </div>
                 <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">
                   待审核
@@ -2489,7 +2489,7 @@
         document.getElementById('progress-bar-1').style.width = '100%';
 
         window.scrollTo({ top: 380, behavior: 'smooth' });
-        showToast('L1 身份与清算账户签约通过！');
+        showToast('L1 身份与清算账户已填写，进入 L2');
         __l1WasComplete = true;
         persistMentorDraft(false);
         ensureOnboardAvailabilityPicker();
