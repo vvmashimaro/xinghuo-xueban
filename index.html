@@ -167,11 +167,21 @@
     }
   </style>
   <link rel="stylesheet" href="css/parent-browse-ec-hybrid.css">
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search || '');
+        var entry = (q.get('entry') || q.get('role') || '').toLowerCase();
+        var onboard = entry === 'mentor' || entry === 'onboard' || q.get('onboard') === '1' || (location.hash || '').indexOf('onboard') >= 0;
+        if (onboard) document.documentElement.setAttribute('data-xh-archive', 'mentor');
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
   <!-- 顶部系统通知与品牌栏 -->
-  <header class="xh-home-bar sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+  <header class="xh-home-bar sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300" data-xh-shell="home">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <img src="assets/brand/spark-logo-forest-noface-192.png" alt="星火学伴" width="36" height="36" class="w-9 h-9 rounded-full shrink-0 object-cover" decoding="async" />
@@ -3233,7 +3243,20 @@
       safeNavigate('login.html', '统一登录');
     }
 
+    function setArchiveShell(mode) {
+      [document.documentElement, document.body].forEach(function (el) {
+        if (!el) return;
+        if (mode) el.setAttribute('data-xh-archive', mode);
+        else el.removeAttribute('data-xh-archive');
+      });
+      var header = document.querySelector('header.xh-home-bar');
+      if (!header) return;
+      if (mode === 'mentor') header.setAttribute('aria-label', '新建导师档案');
+      else header.removeAttribute('aria-label');
+    }
+
     function showMentorOnboardFlow() {
+      setArchiveShell('mentor');
       var gate = document.getElementById('roleGate');
       var browse = document.getElementById('parentBrowseFlow');
       var flow = document.getElementById('mentorOnboardFlow');
@@ -3257,6 +3280,7 @@
     }
 
     function showRoleGate() {
+      setArchiveShell('');
       var gate = document.getElementById('roleGate');
       var browse = document.getElementById('parentBrowseFlow');
       var flow = document.getElementById('mentorOnboardFlow');
@@ -3286,6 +3310,7 @@
     }
 
     function showParentBrowseFlow() {
+      setArchiveShell('');
       var gate = document.getElementById('roleGate');
       var browse = document.getElementById('parentBrowseFlow');
       var flow = document.getElementById('mentorOnboardFlow');

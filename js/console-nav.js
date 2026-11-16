@@ -55,6 +55,19 @@
     } catch (e) {}
   }
 
+  function archiveCreateHidesConsole() {
+    var mode = '';
+    try {
+      mode =
+        (document.body && document.body.getAttribute('data-xh-archive')) ||
+        (document.documentElement && document.documentElement.getAttribute('data-xh-archive')) ||
+        '';
+    } catch (e) {
+      mode = '';
+    }
+    return mode === 'student' || mode === 'student-edit' || mode === 'mentor';
+  }
+
   function UserConsoleNav(role, options) {
     this.role = role;
     this.tabs = (options && options.tabs) || PRESETS[role] || PRESETS.parent;
@@ -65,6 +78,7 @@
   }
 
   UserConsoleNav.prototype.mount = function () {
+    if (archiveCreateHidesConsole()) return;
     injectStyles();
     var header = document.querySelector('header');
     if (!header) return;
@@ -149,6 +163,10 @@
   };
 
   function init(role, options) {
+    if (archiveCreateHidesConsole()) {
+      global.UserConsoleNav = null;
+      return null;
+    }
     var nav = new UserConsoleNav(role, options || {});
     nav.mount();
     global.UserConsoleNav = nav;

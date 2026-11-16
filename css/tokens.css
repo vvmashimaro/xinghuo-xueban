@@ -118,3 +118,12 @@ body {
   color: #115645;
   border: 1px solid #d3e7bf;
 }
+
+/* 新建档案页不挂用户主控台。student-edit（更新已有画像）可保留「返回主控」；
+   家长/导师工作台与运营中台不设 data-xh-archive，主控台照常显示。 */
+html[data-xh-archive="student"] [data-xh-console],
+body[data-xh-archive="student"] [data-xh-console],
+html[data-xh-archive="mentor"] [data-xh-console],
+body[data-xh-archive="mentor"] [data-xh-console] {
+  display: none !important;
+}
