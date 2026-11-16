@@ -4,7 +4,7 @@
     <view class="hero-sub">{{heroSub}}</view>
   </view>
 
-  <view class="card">
+  <view class="card basic-card">
     <view class="card-title">基础信息</view>
     <view class="field">
       <text class="label">家长称呼</text>
@@ -21,10 +21,11 @@
       </picker>
     </view>
     <view class="field">
-      <text class="label">所在城区</text>
+      <text class="label">常住行政区</text>
       <picker mode="selector" range="{{districts}}" value="{{districtIndex}}" bindchange="onDistrict">
         <view class="input">{{districts[districtIndex]}}</view>
       </picker>
+      <view class="muted" style="margin-top:8rpx;">{{spaceHint}}</view>
     </view>
     <view class="field">
       <text class="label">{{spacePrefLabel}}</text>

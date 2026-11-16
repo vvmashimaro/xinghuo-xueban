@@ -1151,6 +1151,14 @@
     normalizeParentProfile: function (p) {
       if (!p || typeof p !== 'object') return p;
       const out = Object.assign({}, p);
+      if (out.cityDistrict != null && String(out.cityDistrict).trim()) {
+        const api = global.ChengduDistricts;
+        if (api && typeof api.normalizeCityDistrict === 'function') {
+          out.cityDistrict = api.normalizeCityDistrict(out.cityDistrict);
+        } else if (out.cityDistrict === '温江/其他' || out.cityDistrict === '温江') {
+          out.cityDistrict = '温江区';
+        }
+      }
       if (out.budgetMin == null && out.budgetMax == null && out.budgetRate != null) {
         const mid = Number(out.budgetRate) || 130;
         out.budgetMin = Math.max(70, mid - 30);

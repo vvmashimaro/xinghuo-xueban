@@ -25,6 +25,23 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function fillParentGuardianCards(page, fields) {
+  await page.waitForSelector('#guardianCard1:not(.hidden)', { timeout: 8000 });
+  await page.type('#parentName', fields.name);
+  await page.click('#btnGuardianNext1');
+  await page.waitForSelector('#parentPhone', { visible: true, timeout: 8000 });
+  await page.type('#parentPhone', fields.phone);
+  await page.click('#btnSendParentSms');
+  await delay(500);
+  await page.type('#parentSmsCode', fields.code || CODE);
+  await page.click('#btnGuardianNext2');
+  await page.waitForSelector('#studentNickname', { visible: true, timeout: 8000 });
+  await page.type('#studentNickname', fields.nick);
+  if (fields.grade) await page.select('#studentGrade', fields.grade);
+  await page.click('#btnGuardianNext3');
+  await page.waitForSelector('#btnGuardianToStep2', { visible: true, timeout: 8000 });
+}
+
 async function screenshot(page, name) {
   const filepath = path.join(ARTIFACTS_DIR, `${name}.png`);
   await page.screenshot({ path: filepath, fullPage: true });
@@ -43,24 +60,14 @@ async function testNewParentRegistration(browser) {
     await page.goto(`${BASE_URL}/parent_register.html`, { waitUntil: 'networkidle0', timeout: 10000 });
     await delay(1000);
     
-    // Step 1: Fill basic info and SMS
-    await page.type('#parentName', '测试家长');
-    await page.type('#parentPhone', NEW_PARENT_PHONE);
-    await page.type('#studentNickname', '小测');
-    await page.select('#studentGrade', '初三 (中考冲刺)');
-    
-    // Send SMS code
-    await page.click('#btnSendParentSms');
-    await delay(500);
-    
-    // Enter SMS code
-    await page.type('#parentSmsCode', CODE);
-    await delay(500);
-    
+    await fillParentGuardianCards(page, {
+      name: '测试家长',
+      phone: NEW_PARENT_PHONE,
+      nick: '小测',
+      grade: '初三 (中考冲刺)'
+    });
     await screenshot(page, 'parent-register-step1');
-    
-    // Go to step 2
-    const step2Btn = await page.$('button[onclick="goToStep(2)"]');
+    const step2Btn = await page.$('#btnGuardianToStep2');
     if (!step2Btn) {
       console.log('  ⚠ Step 2 button not found');
       throw new Error('Step 2 button not found');
@@ -393,19 +400,12 @@ async function testDuplicatePhoneRegistration(browser) {
     await page.goto(`${BASE_URL}/parent_register.html`, { waitUntil: 'networkidle0', timeout: 10000 });
     await delay(1000);
     
-    // Fill step 1 with existing phone
-    await page.type('#parentName', '重复家长');
-    await page.type('#parentPhone', PARENT_PHONE);
-    await page.type('#studentNickname', '小重');
-    await page.select('#studentGrade', '初三 (中考冲刺)');
-    
-    // Send SMS code
-    await page.click('#btnSendParentSms');
-    await delay(500);
-    await page.type('#parentSmsCode', CODE);
-    await delay(500);
-    
-    // Go to step 2
+    await fillParentGuardianCards(page, {
+      name: '重复家长',
+      phone: PARENT_PHONE,
+      nick: '小重',
+      grade: '初三 (中考冲刺)'
+    });
     await page.evaluate(() => goToStep(2));
     await delay(1000);
     

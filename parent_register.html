@@ -107,6 +107,60 @@
       background: #f8fafc !important;
       pointer-events: none;
     }
+    /* 家长建档顶栏：森林色渐变，替换近黑横条。浅端 #1a7d62 仍保证奶油字对比度。 */
+    .parent-trust-banner {
+      background-color: #166b56;
+      background-image:
+        radial-gradient(120% 160% at 100% 0%, rgba(47, 143, 110, 0.42) 0%, rgba(47, 143, 110, 0) 58%),
+        linear-gradient(105deg, #173d32 0%, #115645 42%, #166b56 78%, #1a7d62 100%);
+      color: #f6f6ee;
+      border-bottom: 1px solid rgba(23, 61, 50, 0.35);
+    }
+    .parent-trust-banner .parent-trust-pill {
+      background: rgba(255, 255, 255, 0.16);
+      color: #f6f6ee;
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+    .parent-trust-banner .parent-trust-desc {
+      color: #e7f3e4;
+    }
+    .parent-trust-banner .parent-trust-icon {
+      color: #d3e7bf;
+    }
+    .guardian-card .g-label {
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    .guardian-card .g-input {
+      font-size: 16px;
+      line-height: 1.45;
+      padding-top: 0.8rem;
+      padding-bottom: 0.8rem;
+    }
+    .guardian-card .g-pill {
+      font-size: 16px;
+      line-height: 1.35;
+      min-height: 44px;
+    }
+    .guardian-card .g-next,
+    .guardian-card .g-back {
+      font-size: 16px;
+      line-height: 1.35;
+      min-height: 48px;
+    }
+    .guardian-card .g-help {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    /* 信息卡显隐不依赖 Tailwind CDN；不要用裸 .hidden !important，以免盖掉 hidden sm:inline */
+    .guardian-card.hidden,
+    #stepCard2.hidden,
+    #stepCard3.hidden,
+    #parentPhoneLockedBlock.hidden,
+    #btnUnlockStep1.hidden,
+    .guardian-card input.hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900" data-xh-archive="student">
@@ -145,12 +199,12 @@
   </header>
 
   <!-- ======================= 顶部四重信任盾牌 Banner ======================= -->
-  <section class="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-4 sm:py-5 border-b border-teal-900/40 relative overflow-hidden">
-    <div class="absolute -right-24 -top-24 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <section class="parent-trust-banner text-white px-4 py-4 sm:py-5 relative overflow-hidden">
+    <div class="absolute -right-24 -top-24 w-80 h-80 bg-teal-300/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
       <div>
-        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-400/30 mb-1.5">
-          <i class="fa-solid fa-shield-halved text-teal-400"></i>
+        <div class="parent-trust-pill inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border mb-1.5">
+          <i class="fa-solid fa-shield-halved parent-trust-icon"></i>
           <span>教育部合规指引 · 一课一消资金保障</span>
         </div>
         <h1 class="text-base sm:text-lg md:text-xl font-black tracking-tight leading-tight">
@@ -160,42 +214,42 @@
 
       <!-- 四大核心承诺胶囊 -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
-          <i class="fa-solid fa-hand-holding-dollar text-teal-400 text-xs shrink-0"></i>
+        <div class="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
+          <i class="fa-solid fa-hand-holding-dollar parent-trust-icon text-xs shrink-0"></i>
           <div>
             <div class="font-bold text-xs text-white">0 预存·单次约</div>
-            <div class="text-xs text-slate-500">一课一消·托管划拨</div>
+            <div class="parent-trust-desc text-xs">一课一消·托管划拨</div>
           </div>
         </div>
 
-        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm hidden" data-warehouse-only>
-          <i class="fa-solid fa-door-closed text-teal-400 text-xs shrink-0"></i>
+        <div class="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm hidden" data-warehouse-only>
+          <i class="fa-solid fa-door-closed parent-trust-icon text-xs shrink-0"></i>
           <div>
             <div class="font-bold text-xs text-white">社区智能隔音仓</div>
-            <div class="text-xs text-slate-500">免进陌生家庭隐患</div>
+            <div class="parent-trust-desc text-xs">免进陌生家庭隐患</div>
           </div>
         </div>
-        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm" data-warehouse-off>
-          <i class="fa-solid fa-location-dot text-teal-400 text-xs shrink-0"></i>
+        <div class="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm" data-warehouse-off>
+          <i class="fa-solid fa-location-dot parent-trust-icon text-xs shrink-0"></i>
           <div>
             <div class="font-bold text-xs text-white">约定合规网点</div>
-            <div class="text-xs text-slate-500">就近选择上课地点</div>
+            <div class="parent-trust-desc text-xs">就近选择上课地点</div>
           </div>
         </div>
 
-        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
-          <i class="fa-solid fa-id-badge text-teal-400 text-xs shrink-0"></i>
+        <div class="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
+          <i class="fa-solid fa-id-badge parent-trust-icon text-xs shrink-0"></i>
           <div>
             <div class="font-bold text-xs text-white">导师学籍资质审核</div>
-            <div class="text-xs text-slate-500">双一流学霸真实在籍</div>
+            <div class="parent-trust-desc text-xs">双一流学霸真实在籍</div>
           </div>
         </div>
 
-        <div class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
-          <i class="fa-solid fa-circle-play text-teal-400 text-xs shrink-0"></i>
+        <div class="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
+          <i class="fa-solid fa-circle-play parent-trust-icon text-xs shrink-0"></i>
           <div>
             <div class="font-bold text-xs text-white">试讲录播可查</div>
-            <div class="text-xs text-slate-500">教研评分一目了然</div>
+            <div class="parent-trust-desc text-xs">教研评分一目了然</div>
           </div>
         </div>
       </div>
@@ -245,189 +299,274 @@
         <form id="parentRegisterForm" onsubmit="event.preventDefault(); handleParentSubmit();" class="space-y-4">
 
           <!-- =================================================================
-               STEP 1: 监护人身份与孩子学段基础信息
+               STEP 1: 监护人身份与孩子学段基础信息（四张信息卡，一次只显示一张）
                ================================================================= -->
-          <div id="stepCard1" class="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4.5 fade-in">
+          <div id="stepCard1" class="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4 fade-in">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-2">
               <div>
-                <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-                  <span class="w-2 h-4 bg-teal-600 rounded-sm"></span>
+                <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <span class="w-2 h-5 bg-teal-600 rounded-sm"></span>
                   监护人信息与孩子基础学段
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5" id="step1Hint">
+                <p class="text-sm text-slate-500 mt-1" id="step1Hint">
                   用于建立家庭辅导电子档案，严格遵循隐私保护指引
                 </p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <button type="button" id="btnUnlockStep1" onclick="unlockProfileStep1()" class="hidden text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                <button type="button" id="btnUnlockStep1" onclick="unlockProfileStep1()" class="hidden text-sm font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-lg transition cursor-pointer">
                   修改
                 </button>
-                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">步骤 1/3</span>
+                <span id="step1Badge" class="text-sm bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold">步骤 1/3 · 1/4</span>
               </div>
             </div>
 
-            <!-- 家长姓名与称谓角色 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  家长姓名/尊称 <span class="text-rose-500">*</span>
-                </label>
-                <div class="relative">
-                  <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                  <input type="text" id="parentName" oninput="onParentStepFieldChange()" placeholder="例：刘女士 / 陈先生" required class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium">
+            <div id="guardianSubstep" class="flex items-center justify-between gap-1 text-sm" aria-label="步骤 1 信息卡">
+              <button type="button" onclick="goToGuardianCard(1)" id="gSubTab1" class="flex items-center gap-1.5 font-bold text-teal-800 cursor-pointer">
+                <span id="gSubIcon1" class="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold">1</span>
+                <span class="hidden sm:inline">监护人</span>
+              </button>
+              <div class="flex-1 h-0.5 bg-slate-200 mx-1 rounded-full overflow-hidden"><div id="gSubProgress1" class="h-full bg-teal-600 transition-all w-0"></div></div>
+              <button type="button" onclick="goToGuardianCard(2)" id="gSubTab2" class="flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer">
+                <span id="gSubIcon2" class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">2</span>
+                <span class="hidden sm:inline">手机验证</span>
+              </button>
+              <div class="flex-1 h-0.5 bg-slate-200 mx-1 rounded-full overflow-hidden"><div id="gSubProgress2" class="h-full bg-teal-600 transition-all w-0"></div></div>
+              <button type="button" onclick="goToGuardianCard(3)" id="gSubTab3" class="flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer">
+                <span id="gSubIcon3" class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">3</span>
+                <span class="hidden sm:inline">孩子学段</span>
+              </button>
+              <div class="flex-1 h-0.5 bg-slate-200 mx-1 rounded-full overflow-hidden"><div id="gSubProgress3" class="h-full bg-teal-600 transition-all w-0"></div></div>
+              <button type="button" onclick="goToGuardianCard(4)" id="gSubTab4" class="flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer">
+                <span id="gSubIcon4" class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">4</span>
+                <span class="hidden sm:inline">常住区域</span>
+              </button>
+            </div>
+
+            <!-- 信息卡 A -->
+            <div id="guardianCard1" data-guardian-card="1" class="guardian-card rounded-2xl border border-teal-100 bg-cream p-4 sm:p-5 space-y-4">
+              <p class="g-help text-slate-600">先确认监护人称呼与关系，填完再进入手机验证。</p>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label class="g-label block font-bold text-slate-800 mb-2" for="parentName">
+                    家长姓名/尊称 <span class="text-rose-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-base"></i>
+                    <input type="text" id="parentName" oninput="onParentStepFieldChange()" placeholder="例：刘女士 / 陈先生" required class="g-input w-full pl-10 pr-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium">
+                  </div>
+                </div>
+                <div>
+                  <label class="g-label block font-bold text-slate-800 mb-2">
+                    与学员关系 <span class="text-rose-500">*</span>
+                  </label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center">
+                      <input type="radio" name="parentRole" value="妈妈" onchange="onParentStepFieldChange()" checked class="hidden">
+                      <span>妈妈</span>
+                    </label>
+                    <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center">
+                      <input type="radio" name="parentRole" value="爸爸" onchange="onParentStepFieldChange()" class="hidden">
+                      <span>爸爸</span>
+                    </label>
+                    <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center">
+                      <input type="radio" name="parentRole" value="学员本人" onchange="onParentStepFieldChange()" class="hidden">
+                      <span>学员本人</span>
+                    </label>
+                    <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center">
+                      <input type="radio" name="parentRole" value="其他亲属" onchange="onParentStepFieldChange()" class="hidden">
+                      <span>其他</span>
+                    </label>
+                  </div>
                 </div>
               </div>
+              <button type="button" id="btnGuardianNext1" onclick="goToGuardianCard(2)" class="g-next w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold rounded-xl transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                <span>下一步：填写手机与验证码</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
 
+            <!-- 信息卡 B -->
+            <div id="guardianCard2" data-guardian-card="2" class="guardian-card hidden rounded-2xl border border-teal-100 bg-cream p-4 sm:p-5 space-y-4">
+              <p class="g-help text-slate-600">手机号用于接收匹配与约课短信。验证码填好后进入孩子信息。</p>
+              <div id="parentPhoneLockedBlock" class="hidden">
+                <label class="g-label block font-bold text-slate-800 mb-2">登录手机号（不可更改）</label>
+                <div class="flex items-center gap-2 px-3 py-3 rounded-xl border border-slate-200 bg-white">
+                  <span class="text-slate-500 text-base font-bold">+86</span>
+                  <span id="parentPhoneLockedDisplay" class="font-mono text-base font-semibold text-teal-800">—</span>
+                  <span class="text-sm text-slate-500 ml-auto">账号绑定号码</span>
+                </div>
+              </div>
+              <div id="parentPhoneAuthBlock" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label class="g-label block font-bold text-slate-800 mb-2" for="parentPhone">
+                    <span class="hidden" data-warehouse-only>手机号码（接收匹配与开仓短信）</span><span data-warehouse-off>手机号码（接收匹配与约课短信）</span><span class="text-rose-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-base font-bold pr-2 border-r border-slate-200 select-none pointer-events-none" aria-hidden="true">+86</span>
+                    <input type="tel" id="parentPhone" maxlength="11" placeholder="例：138****8000" required oninput="onParentPhoneEdit()" autocomplete="tel-national" class="g-input w-full pl-16 pr-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono font-medium">
+                  </div>
+                </div>
+                <div id="parentSmsBlock">
+                  <label class="g-label block font-bold text-slate-800 mb-2" for="parentSmsCode">
+                    短信免密校验码 <span class="text-rose-500">*</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <div class="relative flex-1">
+                      <i class="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                      <input type="text" id="parentSmsCode" maxlength="6" placeholder="请输入 6 位验证码" oninput="onParentStepFieldChange()" class="g-input w-full pl-9 pr-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono tracking-wider">
+                    </div>
+                    <button type="button" id="btnSendParentSms" onclick="sendParentSmsCode()" class="g-next shrink-0 bg-white hover:bg-teal-50 text-teal-800 font-bold px-4 rounded-xl border border-teal-200 transition cursor-pointer">
+                      获取验证码
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <button type="button" id="btnGuardianBack2" onclick="goToGuardianCard(1)" class="g-back w-1/3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-200 transition cursor-pointer">上一张</button>
+                <button type="button" id="btnGuardianNext2" onclick="goToGuardianCard(3)" class="g-next w-2/3 bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold rounded-xl transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>下一步：填写孩子学段</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 信息卡 C -->
+            <div id="guardianCard3" data-guardian-card="3" class="guardian-card hidden rounded-2xl border border-teal-100 bg-cream p-4 sm:p-5 space-y-4">
+              <p class="g-help text-slate-600">孩子姓名和年级会联动后面的考纲考点。</p>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label class="g-label block font-bold text-slate-800 mb-2" for="studentNickname">
+                    孩子姓名或小名 <span class="text-rose-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <i class="fa-solid fa-child absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input type="text" id="studentNickname" oninput="onParentStepFieldChange()" placeholder="例：乐乐同学 / 张同学" required class="g-input w-full pl-10 pr-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
+                  </div>
+                </div>
+                <div>
+                  <label class="g-label block font-bold text-slate-800 mb-2" for="studentGrade">
+                    当前就读年级（自动联动大纲考点）<span class="text-rose-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <select id="studentGrade" onchange="onGradeChange()" class="g-input w-full px-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white font-bold text-slate-800 cursor-pointer">
+                      <optgroup label="初中阶段 (重点中考与拔高)">
+                        <option value="初三 (中考冲刺)" selected>初三 (中考冲刺重点推荐)</option>
+                        <option value="初二 (代数与几何动点分化期)">初二 (代数与几何分水岭)</option>
+                        <option value="初一 (小初衔接与适应)">初一 (小初衔接与思维习惯)</option>
+                      </optgroup>
+                      <optgroup label="高中阶段 (高考突破与培优)">
+                        <option value="高一 (必修基础与物理衔接)">高一 (必修函数与物理衔接)</option>
+                        <option value="高二 (选修分科与导数圆锥)">高二 (选科突破/导数立体几何)</option>
+                        <option value="高三 (高考一轮/二轮总复习)">高三 (高考总复习与冲尖)</option>
+                      </optgroup>
+                      <optgroup label="小学阶段 (高年级启蒙)">
+                        <option value="小六 (小升初衔接)">小六 (小升初思维拓展)</option>
+                        <option value="小五 (小学应用题与奥数)">小五 (应用题与习惯塑造)</option>
+                        <option value="小四及以下 (基础答疑辅导)">小四及以下 (作业清零习惯)</option>
+                      </optgroup>
+                      <optgroup label="考研攻读">
+                        <option value="考研公共课冲刺 (英/数/政)">考研公共课冲刺 (英/数/政)</option>
+                        <option value="考研专业课一对一备考">考研专业课一对一备考</option>
+                      </optgroup>
+                      <optgroup label="艺体特长">
+                        <option value="艺体专项 · 中考体考/体育">艺体专项 · 中考体考/体育</option>
+                        <option value="艺体专项 · 舞蹈/播音艺考">艺体专项 · 舞蹈/播音艺考</option>
+                      </optgroup>
+                      <optgroup label="特色方向">
+                        <option value="高三艺考文化课冲刺">美术/音乐艺考文化课百日冲刺</option>
+                        <option value="初高中竞赛与自招拔尖">数学/物理奥赛强基拔尖</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <button type="button" id="btnGuardianBack3" onclick="goToGuardianCard(2)" class="g-back w-1/3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-200 transition cursor-pointer">上一张</button>
+                <button type="button" id="btnGuardianNext3" onclick="goToGuardianCard(4)" class="g-next w-2/3 bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold rounded-xl transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>下一步：选择常住行政区</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 信息卡 D：行政区单独成卡 -->
+            <div id="guardianCard4" data-guardian-card="4" class="guardian-card hidden rounded-2xl border border-teal-100 bg-cream p-4 sm:p-5 space-y-4">
+              <p class="g-help text-slate-600">选好常住行政区后，进入学科与自适应考纲考点。</p>
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  与学员关系 <span class="text-rose-500">*</span>
+                <label class="g-label block font-bold text-slate-800 mb-2">
+                  常住行政区（就近推荐智能自习仓与同城学霸）<span class="text-rose-500">*</span>
                 </label>
-                <div class="grid grid-cols-4 gap-1.5 text-xs">
-                  <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="妈妈" onchange="onParentStepFieldChange()" checked class="hidden">
-                    <span>妈妈</span>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="锦江区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>锦江区</span>
                   </label>
-                  <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="爸爸" onchange="onParentStepFieldChange()" class="hidden">
-                    <span>爸爸</span>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="青羊区" onchange="onCityDistrictChange()" checked class="hidden">
+                    <span>青羊区</span>
                   </label>
-                  <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="学员本人" onchange="onParentStepFieldChange()" class="hidden">
-                    <span>学员本人</span>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="金牛区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>金牛区</span>
                   </label>
-                  <label class="border border-slate-200 rounded-xl py-2 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 text-base">
-                    <input type="radio" name="parentRole" value="其他亲属" onchange="onParentStepFieldChange()" class="hidden">
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="武侯区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>武侯区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="成华区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>成华区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="龙泉驿区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>龙泉驿区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="青白江区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>青白江区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="新都区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>新都区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="温江区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>温江区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="双流区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>双流区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="郫都区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>郫都区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="新津区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>新津区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="高新区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>高新区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="天府新区" onchange="onCityDistrictChange()" class="hidden">
+                    <span>天府新区</span>
+                  </label>
+                  <label class="g-pill border border-slate-200 rounded-xl py-2.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900 flex items-center justify-center bg-white">
+                    <input type="radio" name="cityDistrict" value="其他" onchange="onCityDistrictChange()" class="hidden">
                     <span>其他</span>
                   </label>
                 </div>
+                <p id="districtSpaceHint" class="g-help text-teal-800 mt-3 font-medium">就近推荐上课网点：青羊金沙微网点</p>
               </div>
-            </div>
-
-            <!-- 手机号与免密验证码（更新画像模式下手机号只读，无需短信验证） -->
-            <div id="parentPhoneLockedBlock" class="hidden">
-              <label class="block text-xs font-bold text-slate-700 mb-1.5">登录手机号（不可更改）</label>
-              <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50">
-                <span class="text-slate-500 text-xs font-bold">+86</span>
-                <span id="parentPhoneLockedDisplay" class="font-mono text-sm font-semibold text-teal-800">—</span>
-                <span class="text-xs text-slate-500 ml-auto">账号绑定号码</span>
+              <div class="flex gap-3">
+                <button type="button" id="btnGuardianBack4" onclick="goToGuardianCard(3)" class="g-back w-1/3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-200 transition cursor-pointer">上一张</button>
+                <button type="button" id="btnGuardianToStep2" onclick="goToStep(2)" class="g-next w-2/3 bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold rounded-xl transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>下一步：选择学科与自适应考纲考点</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
               </div>
-            </div>
-            <div id="parentPhoneAuthBlock" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  <span class="hidden" data-warehouse-only>手机号码（接收匹配与开仓短信）</span><span data-warehouse-off>手机号码（接收匹配与约课短信）</span><span class="text-rose-500">*</span>
-                </label>
-                <div class="relative">
-                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold pr-2 border-r border-slate-200 select-none pointer-events-none" aria-hidden="true">+86</span>
-                  <input type="tel" id="parentPhone" maxlength="11" placeholder="例：138****8000" required oninput="onParentPhoneEdit()" autocomplete="tel-national" class="w-full pl-14 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono font-medium">
-                </div>
-              </div>
-
-              <div id="parentSmsBlock">
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  短信免密校验码 <span class="text-rose-500">*</span>
-                </label>
-                <div class="flex gap-2">
-                  <div class="relative flex-1">
-                    <i class="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                    <input type="text" id="parentSmsCode" maxlength="6" placeholder="请输入 6 位验证码" oninput="onParentStepFieldChange()" class="w-full pl-8 pr-2 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono tracking-wider">
-                  </div>
-                  <button type="button" id="btnSendParentSms" onclick="sendParentSmsCode()" class="shrink-0 bg-slate-100 hover:bg-slate-200 text-teal-800 text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">
-                    获取验证码
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 孩子昵称与当前年级 (关键联动点) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  孩子姓名或小名 <span class="text-rose-500">*</span>
-                </label>
-                <div class="relative">
-                  <i class="fa-solid fa-child absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                  <input type="text" id="studentNickname" oninput="onParentStepFieldChange()" placeholder="例：乐乐同学 / 张同学" required class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                  当前就读年级（自动联动大纲考点）<span class="text-rose-500">*</span>
-                </label>
-                <div class="relative">
-                  <select id="studentGrade" onchange="onGradeChange()" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white font-bold text-slate-800 cursor-pointer">
-                    <optgroup label="初中阶段 (重点中考与拔高)">
-                      <option value="初三 (中考冲刺)" selected>初三 (中考冲刺重点推荐)</option>
-                      <option value="初二 (代数与几何动点分化期)">初二 (代数与几何分水岭)</option>
-                      <option value="初一 (小初衔接与适应)">初一 (小初衔接与思维习惯)</option>
-                    </optgroup>
-                    <optgroup label="高中阶段 (高考突破与培优)">
-                      <option value="高一 (必修基础与物理衔接)">高一 (必修函数与物理衔接)</option>
-                      <option value="高二 (选修分科与导数圆锥)">高二 (选科突破/导数立体几何)</option>
-                      <option value="高三 (高考一轮/二轮总复习)">高三 (高考总复习与冲尖)</option>
-                    </optgroup>
-                    <optgroup label="小学阶段 (高年级启蒙)">
-                      <option value="小六 (小升初衔接)">小六 (小升初思维拓展)</option>
-                      <option value="小五 (小学应用题与奥数)">小五 (应用题与习惯塑造)</option>
-                      <option value="小四及以下 (基础答疑辅导)">小四及以下 (作业清零习惯)</option>
-                    </optgroup>
-                    <optgroup label="考研攻读">
-                      <option value="考研公共课冲刺 (英/数/政)">考研公共课冲刺 (英/数/政)</option>
-                      <option value="考研专业课一对一备考">考研专业课一对一备考</option>
-                    </optgroup>
-                    <optgroup label="艺体特长">
-                      <option value="艺体专项 · 中考体考/体育">艺体专项 · 中考体考/体育</option>
-                      <option value="艺体专项 · 舞蹈/播音艺考">艺体专项 · 舞蹈/播音艺考</option>
-                    </optgroup>
-                    <optgroup label="特色方向">
-                      <option value="高三艺考文化课冲刺">美术/音乐艺考文化课百日冲刺</option>
-                      <option value="初高中竞赛与自招拔尖">数学/物理奥赛强基拔尖</option>
-                    </optgroup>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- 常住区域 (成都市主要辖区) -->
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                常住行政区（就近推荐智能自习仓与同城学霸）<span class="text-rose-500">*</span>
-              </label>
-              <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-xs">
-                <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="青羊区" onchange="onParentStepFieldChange()" checked class="hidden">
-                  <span>青羊区</span>
-                </label>
-                <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="锦江区" onchange="onParentStepFieldChange()" class="hidden">
-                  <span>锦江区</span>
-                </label>
-                <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="高新区" onchange="onParentStepFieldChange()" class="hidden">
-                  <span>高新区</span>
-                </label>
-                <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="武侯区" onchange="onParentStepFieldChange()" class="hidden">
-                  <span>武侯区</span>
-                </label>
-                <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="金牛区" onchange="onParentStepFieldChange()" class="hidden">
-                  <span>金牛区</span>
-                </label>
-                <label class="border border-slate-200 rounded-xl py-1.5 text-center cursor-pointer hover:border-teal-500 transition font-medium has-[:checked]:bg-teal-50 has-[:checked]:border-teal-600 has-[:checked]:text-teal-900">
-                  <input type="radio" name="cityDistrict" value="温江/其他" onchange="onParentStepFieldChange()" class="hidden">
-                  <span>温江/其他</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- 下一步按钮 -->
-            <div class="pt-2">
-              <button type="button" onclick="goToStep(2)" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm transition shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer">
-                <span>下一步：选择学科与自适应考纲考点</span>
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-              </button>
             </div>
           </div>
 
@@ -1036,6 +1175,7 @@
     <script src="js/config.js"></script>
     <script src="js/xh-loading.js"></script>
     <script src="js/feature-flags.js"></script>
+    <script src="js/chengdu-districts.js"></script>
     <script src="js/storage-service.js"></script>
 
     <script>
@@ -1051,6 +1191,9 @@
     'use strict';
 
     let currentStep = 1;
+    let currentGuardianCard = 1;
+    let spaceChosenByUser = false;
+    const GUARDIAN_CARD_COUNT = 4;
 
     const SYLLABUS_DATABASE = {
       // 初中各科考纲专题
@@ -1489,17 +1632,147 @@
     }
 
     /* ==========================================================================
-       步骤切换逻辑
+       步骤 1 信息卡（一次一张）与大步骤切换
        ========================================================================== */
+    function isGuardianPhoneLocked() {
+      if (profileUpdateMode) return true;
+      const auth = document.getElementById('parentPhoneAuthBlock');
+      return !!(auth && auth.classList.contains('hidden'));
+    }
+
+    function validateGuardianCard(n) {
+      if (n === 1) {
+        const name = (document.getElementById('parentName')?.value || '').trim();
+        if (!name) return '请填写家长姓名/尊称';
+        if (!document.querySelector('input[name="parentRole"]:checked')) return '请选择与学员关系';
+        return '';
+      }
+      if (n === 2) {
+        if (isGuardianPhoneLocked()) return '';
+        const phone = (document.getElementById('parentPhone')?.value || '').trim();
+        if (!phone || phone.length !== 11) return '请输入有效的 11 位手机号码！';
+        const sms = (document.getElementById('parentSmsCode')?.value || '').trim();
+        if (!sms || sms.length !== 6) return '请输入 6 位短信验证码！';
+        return '';
+      }
+      if (n === 3) {
+        const nick = (document.getElementById('studentNickname')?.value || '').trim();
+        if (!nick) return '请填写孩子姓名或小名';
+        if (!document.getElementById('studentGrade')?.value) return '请选择当前就读年级';
+        return '';
+      }
+      if (n === 4) {
+        if (!document.querySelector('input[name="cityDistrict"]:checked')) return '请选择常住行政区';
+        return '';
+      }
+      return '';
+    }
+
+    function firstInvalidGuardianCard() {
+      for (let i = 1; i <= GUARDIAN_CARD_COUNT; i++) {
+        const message = validateGuardianCard(i);
+        if (message) return { card: i, message: message };
+      }
+      return null;
+    }
+
+    function updateGuardianChrome(n) {
+      const badge = document.getElementById('step1Badge');
+      if (badge) badge.textContent = '步骤 1/3 · ' + n + '/' + GUARDIAN_CARD_COUNT;
+      for (let i = 1; i <= GUARDIAN_CARD_COUNT; i++) {
+        const tab = document.getElementById('gSubTab' + i);
+        const icon = document.getElementById('gSubIcon' + i);
+        if (tab) {
+          tab.className = i === n
+            ? 'flex items-center gap-1.5 font-bold text-teal-800 cursor-pointer text-sm'
+            : 'flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer text-sm';
+        }
+        if (icon) {
+          if (i < n) {
+            icon.className = 'w-7 h-7 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center text-sm font-bold';
+            icon.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+          } else if (i === n) {
+            icon.className = 'w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold';
+            icon.textContent = String(i);
+          } else {
+            icon.className = 'w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold';
+            icon.textContent = String(i);
+          }
+        }
+        const prog = document.getElementById('gSubProgress' + i);
+        if (prog) prog.style.width = i < n ? '100%' : '0%';
+      }
+    }
+
+    function revealGuardianCard(n) {
+      const target = Math.min(GUARDIAN_CARD_COUNT, Math.max(1, parseInt(n, 10) || 1));
+      currentGuardianCard = target;
+      for (let i = 1; i <= GUARDIAN_CARD_COUNT; i++) {
+        const el = document.getElementById('guardianCard' + i);
+        if (!el) continue;
+        if (i === target) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+      updateGuardianChrome(target);
+    }
+
+    function goToGuardianCard(n) {
+      const target = Math.min(GUARDIAN_CARD_COUNT, Math.max(1, parseInt(n, 10) || 1));
+      if (target > currentGuardianCard) {
+        for (let i = currentGuardianCard; i < target; i++) {
+          const message = validateGuardianCard(i);
+          if (message) {
+            showToast(message, 'warning');
+            revealGuardianCard(i);
+            return;
+          }
+        }
+      }
+      revealGuardianCard(target);
+      if (typeof __restoringDraft === 'undefined' || !__restoringDraft) scheduleParentDraftSave(false);
+    }
+
+    function selectCityDistrict(raw) {
+      const api = window.ChengduDistricts;
+      const value = api && api.districtOptionFor
+        ? (api.districtOptionFor(raw) || '青羊区')
+        : String(raw || '').trim();
+      const radio = value
+        ? document.querySelector('input[name="cityDistrict"][value="' + value + '"]')
+        : null;
+      if (radio) radio.checked = true;
+    }
+
+    function refreshDistrictSpaceHint(allowRetarget) {
+      const api = window.ChengduDistricts;
+      const selected = document.querySelector('input[name="cityDistrict"]:checked');
+      const district = selected ? selected.value : '青羊区';
+      if (!api || !api.suggestSpaceForDistrict) return;
+      const suggested = api.suggestSpaceForDistrict(district);
+      const hint = document.getElementById('districtSpaceHint');
+      if (hint) hint.textContent = '就近推荐上课网点：' + api.spaceShortLabel(suggested);
+      if (allowRetarget && suggested) {
+        const radio = document.querySelector('input[name="selectedSpace"][value="' + suggested + '"]');
+        if (radio) radio.checked = true;
+      }
+    }
+
+    function onCityDistrictChange() {
+      refreshDistrictSpaceHint(!spaceChosenByUser);
+      onParentStepFieldChange();
+    }
+
     function goToStep(step) {
       if (step === 2) {
-        const parentName = document.getElementById('parentName')?.value.trim();
-        const parentPhone = document.getElementById('parentPhone')?.value.trim();
-        const studentNick = document.getElementById('studentNickname')?.value.trim();
-
-        if (!parentName || !parentPhone || !studentNick) {
-          showToast('请完整填写家长姓名、手机号与孩子称谓！', 'warning');
-          return;
+        const gate = firstInvalidGuardianCard();
+        if (gate) {
+          showToast(gate.message, 'warning');
+          currentGuardianCard = gate.card;
+          if (currentStep === 1) {
+            revealGuardianCard(gate.card);
+            return;
+          }
+          step = 1;
         }
       }
       if (step === 3) {
@@ -1548,6 +1821,7 @@
         if(icon1) icon1.className = "w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
         if(p1) p1.style.width = '0%';
         if(p2) p2.style.width = '0%';
+        revealGuardianCard(currentGuardianCard);
       } else if (step === 2) {
         if(tab1) tab1.className = "flex items-center gap-2 font-bold text-teal-700 cursor-pointer group";
         if(icon1) {
@@ -1772,6 +2046,7 @@
 
     function applyParentProfileToForm(parent) {
       if (!parent) return;
+      spaceChosenByUser = true;
       const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
       setVal('parentName', parent.parentName || '');
       setVal('studentNickname', parent.studentNickname || '');
@@ -1781,10 +2056,7 @@
         const r = document.querySelector('input[name="parentRole"][value="' + parent.parentRole + '"]');
         if (r) r.checked = true;
       }
-      if (parent.cityDistrict) {
-        const r = document.querySelector('input[name="cityDistrict"][value="' + parent.cityDistrict + '"]');
-        if (r) r.checked = true;
-      }
+      if (parent.cityDistrict) selectCityDistrict(parent.cityDistrict);
       if (parent.selectedSpace) {
         const r = document.querySelector('input[name="selectedSpace"][value="' + parent.selectedSpace + '"]');
         if (r) r.checked = true;
@@ -1807,6 +2079,7 @@
       syncBudgetFill();
       updateGradeLabel();
       renderSubjectPlanChips();
+      refreshDistrictSpaceHint(false);
       updateLivePreview();
     }
 
@@ -1903,12 +2176,14 @@
       
       if (!phone || phone.length !== 11) {
         showToast('请输入有效的 11 位手机号码！', 'warning');
+        currentGuardianCard = 2;
         goToStep(1);
         return;
       }
 
       if (!profileUpdateMode && (!code || code.length !== 6)) {
         showToast('请输入 6 位短信验证码！', 'warning');
+        currentGuardianCard = 2;
         goToStep(1);
         return;
       }
@@ -1993,6 +2268,7 @@
             btn.innerHTML = '<i class="fa-solid fa-sparkles text-xs"></i><span>完成建档 · 智能召回优选导师</span>';
           }
           showToast(verifyResult.error || '验证码错误，请重试', 'error');
+          currentGuardianCard = 2;
           goToStep(1);
           return;
         }
@@ -2273,6 +2549,7 @@
       });
       return {
         currentStep: currentStep,
+        guardianCard: currentGuardianCard,
         parentName: document.getElementById('parentName')?.value || '',
         parentRole: document.querySelector('input[name="parentRole"]:checked')?.value || '妈妈',
         parentPhone: document.getElementById('parentPhone')?.value || '',
@@ -2330,6 +2607,7 @@
     }
 
     function onParentPrefFieldChange() {
+      spaceChosenByUser = true;
       updateLivePreview();
       scheduleParentDraftSave(false);
     }
@@ -2361,13 +2639,14 @@
           const r = document.querySelector('input[name="parentRole"][value="' + draft.parentRole + '"]');
           if (r) r.checked = true;
         }
-        if (draft.cityDistrict) {
-          const r = document.querySelector('input[name="cityDistrict"][value="' + draft.cityDistrict + '"]');
-          if (r) r.checked = true;
-        }
+        if (draft.cityDistrict) selectCityDistrict(draft.cityDistrict);
         if (draft.selectedSpace) {
+          spaceChosenByUser = true;
           const r = document.querySelector('input[name="selectedSpace"][value="' + draft.selectedSpace + '"]');
           if (r) r.checked = true;
+        }
+        if (draft.guardianCard) {
+          currentGuardianCard = Math.min(GUARDIAN_CARD_COUNT, Math.max(1, parseInt(draft.guardianCard, 10) || 1));
         }
         if (draft.budgetMin != null) {
           const el = document.getElementById('budgetMinRange');
@@ -2393,6 +2672,7 @@
         __step1WasValid = isParentStep1ReadyForAdvance();
         __step2WasValid = isParentStep2Valid();
         goToStep(step);
+        refreshDistrictSpaceHint(!spaceChosenByUser);
         updateLivePreview();
         showToast('已恢复未完成的注册草稿');
         return true;
@@ -2422,7 +2702,8 @@
       syncBudgetFill();
       renderSubjectPlanChips();
       updateLivePreview();
-      bindWizardAutoAdvanceHooks();
+      refreshDistrictSpaceHint(false);
+      if (typeof bindWizardAutoAdvanceHooks === 'function') bindWizardAutoAdvanceHooks();
       const profileLoaded = await initProfileUpdateFromSession();
       if (profileLoaded) {
         scheduleParentDraftSave(false);

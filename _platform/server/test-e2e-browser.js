@@ -27,6 +27,27 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function fillParentGuardianAndAdvance(page, fields) {
+  await page.waitForSelector('#guardianCard1:not(.hidden)', { timeout: 8000 });
+  await page.type('#parentName', fields.name);
+  await page.click('#btnGuardianNext1');
+  await page.waitForSelector('#parentPhone', { visible: true, timeout: 8000 });
+  await page.type('#parentPhone', fields.phone);
+  const sendBtn = await page.$('#btnSendParentSms');
+  if (sendBtn) {
+    await sendBtn.click();
+    await delay(1500);
+  }
+  await page.type('#parentSmsCode', fields.code || CODE);
+  await page.click('#btnGuardianNext2');
+  await page.waitForSelector('#studentNickname', { visible: true, timeout: 8000 });
+  await page.type('#studentNickname', fields.nick);
+  if (fields.grade) await page.select('#studentGrade', fields.grade);
+  await page.click('#btnGuardianNext3');
+  await page.waitForSelector('#btnGuardianToStep2', { visible: true, timeout: 8000 });
+  await page.click('#btnGuardianToStep2');
+}
+
 async function screenshot(page, name) {
   const filepath = path.join(ARTIFACTS_DIR, `${name}.png`);
   await page.screenshot({ path: filepath, fullPage: true });
@@ -201,24 +222,12 @@ async function testNewParentRegistration(browser) {
   try {
     await page.goto(`${BASE_URL}/parent_register.html`, { waitUntil: 'networkidle2' });
     
-    // Fill step 1
-    await page.type('#parentName', '新家长');
-    await page.type('#parentPhone', NEW_PARENT_PHONE);
-    await page.type('#studentNickname', '小明');
-    await page.select('#studentGrade', '初三 (中考冲刺)');
-    
-    // Send SMS
-    const sendBtn = await page.$('#sendParentSmsBtn');
-    if (sendBtn) {
-      await sendBtn.click();
-      await delay(1500);
-      
-      await page.type('#parentSmsCode', CODE);
-      await delay(300);
-    }
-    
-    // Go to step 2
-    await page.click('button[onclick="goToStep(2)"]');
+    await fillParentGuardianAndAdvance(page, {
+      name: '新家长',
+      phone: NEW_PARENT_PHONE,
+      nick: '小明',
+      grade: '初三 (中考冲刺)'
+    });
     await delay(1000);
     await screenshot(page, 'parent-register-step2');
     
@@ -369,20 +378,12 @@ async function testDuplicateRegistration(browser) {
   try {
     await page.goto(`${BASE_URL}/parent_register.html`, { waitUntil: 'networkidle2' });
     
-    await page.type('#parentName', '重复家长');
-    await page.type('#parentPhone', PARENT_PHONE); // Existing phone
-    await page.type('#studentNickname', '小红');
-    await page.select('#studentGrade', '初三 (中考冲刺)');
-    
-    const sendBtn = await page.$('#sendParentSmsBtn');
-    if (sendBtn) {
-      await sendBtn.click();
-      await delay(1500);
-      await page.type('#parentSmsCode', CODE);
-    }
-    
-    // Quick path: try to submit with minimal data
-    await page.click('button[onclick="goToStep(2)"]');
+    await fillParentGuardianAndAdvance(page, {
+      name: '重复家长',
+      phone: PARENT_PHONE,
+      nick: '小红',
+      grade: '初三 (中考冲刺)'
+    });
     await delay(500);
     
     await page.click('input[name="targetSubject"][value="数学"]');
