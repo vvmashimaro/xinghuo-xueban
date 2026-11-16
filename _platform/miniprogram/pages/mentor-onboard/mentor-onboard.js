@@ -210,7 +210,7 @@ Page({
       });
     }
     this.setData({ step: 2 });
-    showToast('L1 身份与清算账户签约通过！');
+    showToast('L1 身份与清算账户已填写，进入 L2');
   },
 
   backL1() { this.setData({ step: 1 }); },
