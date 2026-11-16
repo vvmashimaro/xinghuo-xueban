@@ -29,7 +29,10 @@ const L1_SUBSTEPS = {
       const name = (document.getElementById('realName')?.value || '').trim();
       const phone = (document.getElementById('phone')?.value || '').trim();
       const idCard = (document.getElementById('idCard')?.value || '').trim();
-      return !!(name && phone && phone.length === 11 && idCard && idCard.length === 18);
+      const phoneOk = typeof isMainlandMobile === 'function'
+        ? isMainlandMobile(phone)
+        : /^1[3-9]\d{9}$/.test(phone);
+      return !!(name && phoneOk && idCard && idCard.length === 18);
     }
   },
   2: {  // 院校与学历
@@ -470,7 +473,18 @@ function addL2SubStepNavigation() {
  */
 function goToL1SubStep(step) {
   if (step < 1 || step > 4) return;
-  
+  if (step > currentL1SubStep && currentL1SubStep === 1) {
+    const phone = (document.getElementById('phone')?.value || '').trim();
+    const phoneOk = typeof isMainlandMobile === 'function'
+      ? isMainlandMobile(phone)
+      : /^1[3-9]\d{9}$/.test(phone);
+    if (!phoneOk) {
+      if (typeof markL1FieldError === 'function') markL1FieldError('phone');
+      if (typeof showToast === 'function') showToast('请输入有效的大陆手机号', 'warning');
+      return;
+    }
+  }
+
   currentL1SubStep = step;
 
   // Hide all substeps

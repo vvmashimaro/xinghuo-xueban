@@ -2331,6 +2331,10 @@
       if (el) el.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
     }
 
+    function isMainlandMobile(phone) {
+      return /^1[3-9]\d{9}$/.test(String(phone || '').trim());
+    }
+
     function getL1FieldState() {
       const realName = (document.getElementById('realName')?.value || '').trim();
       const phone = (document.getElementById('phone')?.value || '').trim();
@@ -2341,7 +2345,7 @@
       const privacy = !!document.getElementById('privacyAuthAgree')?.checked;
       return {
         realName: !!realName,
-        phone: /^1[3-9]\d{9}$/.test(phone) || (phone.length === 11),
+        phone: isMainlandMobile(phone),
         idCard: idCard.length >= 15,
         university: !!university,
         chsiCode: chsiCode.length >= 12,
@@ -2392,12 +2396,15 @@
         const privacyAgree = document.getElementById('privacyAuthAgree').checked;
         const hint = document.getElementById('l1ValidationHint');
 
-        if (!realName || !phone || !idCard) {
+        if (!realName || !isMainlandMobile(phone) || !idCard) {
           if (!realName) markL1FieldError('realName');
-          if (!phone) markL1FieldError('phone');
+          if (!isMainlandMobile(phone)) markL1FieldError('phone');
           if (!idCard) markL1FieldError('idCard');
-          if (hint) { hint.classList.remove('hidden'); hint.innerText = '请完整填写姓名、手机号码及身份证号'; }
-          showToast('请完整填写姓名、手机号码及身份证号！', 'error');
+          const phoneMsg = phone && !isMainlandMobile(phone)
+            ? '请输入有效的大陆手机号！'
+            : '请完整填写姓名、手机号码及身份证号！';
+          if (hint) { hint.classList.remove('hidden'); hint.innerText = phoneMsg; }
+          showToast(phoneMsg, 'error');
           return;
         }
         if (!university) {
@@ -3114,10 +3121,28 @@
         try { sessionStorage.removeItem('xhStayOnRoleGate'); } catch (e) {}
         return true;
       }
+      return false;
+    }
+
+    function loggedInMentorRecord(session) {
+      if (!session || session.role !== 'mentor' || !window.StorageService) return null;
+      if (session.mentorId && StorageService.getMentorById) {
+        var byId = StorageService.getMentorById(session.mentorId);
+        if (byId) return byId;
+      }
+      if (StorageService.getMentorForAuthUser) return StorageService.getMentorForAuthUser(session);
+      return null;
+    }
+
+    function redirectApprovedMentorHome() {
+      if (mentorEntryIsExplicit() || shouldOpenParentBrowse()) return false;
       try {
-        if (sessionStorage.getItem('xhStayOnRoleGate') === '1') return false;
         var session = window.StorageService && StorageService.getSession && StorageService.getSession();
-        if (session && session.role === 'mentor') return true;
+        var mentor = loggedInMentorRecord(session);
+        if (mentor && mentor.status === 'approved') {
+          window.location.replace('mentor_dashboard.html');
+          return true;
+        }
       } catch (e) {}
       return false;
     }
@@ -3272,6 +3297,7 @@
 
     window.onload = function() {
       xhInitHeroMotion();
+      if (redirectApprovedMentorHome()) return;
       if (shouldOpenParentBrowse()) {
         showParentBrowseFlow();
       } else if (shouldOpenMentorOnboard()) {
