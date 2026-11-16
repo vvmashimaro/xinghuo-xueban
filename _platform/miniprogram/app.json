@@ -14,10 +14,10 @@
     "pages/admin-audit/admin-audit"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#0f172a",
+    "navigationBarBackgroundColor": "#f6f6ee",
     "navigationBarTitleText": "星火伴学o2o",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#f8fafc",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f6ee",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

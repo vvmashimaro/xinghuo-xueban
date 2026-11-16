@@ -78,7 +78,7 @@
         </view>
         <view class="muted">选填 · 学生证、学历证、在校成绩单等（JPG/PNG/PDF）</view>
         <view class="proof-upload-zone" bindtap="chooseEduProofFiles">
-          <view style="font-weight:800;color:#0f766e;">点击选择文件上传</view>
+          <view style="font-weight:800;color:#115645;">点击选择文件上传</view>
         </view>
         <view wx:if="{{proofFiles.length}}">
           <view class="proof-chip" wx:for="{{proofFiles}}" wx:key="id">
@@ -168,7 +168,7 @@
         </view>
         <view class="muted">选填 · 成绩单/竞赛证书等可提升审核权重（JPG/PNG/PDF）</view>
         <view class="proof-upload-zone" bindtap="chooseProofFiles">
-          <view style="font-weight:800;color:#0f766e;">点击选择文件上传</view>
+          <view style="font-weight:800;color:#115645;">点击选择文件上传</view>
           <view class="muted" style="margin-top:6rpx;">上传后将在资质审核中归档</view>
         </view>
         <view wx:if="{{proofFiles.length}}">

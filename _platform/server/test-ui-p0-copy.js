@@ -89,7 +89,7 @@ function main() {
   const pulseGif = fs.readFileSync(path.join(ROOT, 'assets/loading/xinghuo-loading-pulse.gif'));
   assert.strictEqual(pulseGif.slice(0, 6).toString('ascii'), 'GIF89a', 'Web pulse GIF 应为 GIF89a');
   const svg = read('assets/loading/xinghuo-loading.svg');
-  assert.ok(svg.includes('#0d9488'), 'loading SVG 使用 teal #0d9488');
+  assert.ok(svg.includes('#166b56'), 'loading SVG 使用 forest #166b56');
   assert.ok(svg.includes('@keyframes pulse'), 'loading SVG 含 CSS pulse');
   assert.ok(read('assets/loading/xinghuo-loading-overlay.css').includes('#xhLoading'), 'overlay CSS 存在');
   const xhLoading = read('js/xh-loading.js');

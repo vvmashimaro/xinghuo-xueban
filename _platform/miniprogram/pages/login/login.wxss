@@ -7,20 +7,20 @@
   flex: 1;
   text-align: center;
   padding: 18rpx 8rpx;
-  border-radius: 16rpx;
+  border-radius: 999rpx;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e8dc;
   font-size: 24rpx;
   font-weight: 700;
   color: #64748b;
 }
 .role-tab.on {
-  background: #f0fdfa;
-  border-color: #14b8a6;
-  color: #0f766e;
+  background: #e7f3e4;
+  border-color: #2f8f6e;
+  color: #115645;
 }
 .link {
-  color: #0f766e;
+  color: #115645;
   text-decoration: underline;
   font-weight: 600;
 }

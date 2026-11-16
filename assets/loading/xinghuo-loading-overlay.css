@@ -22,7 +22,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.18), 0 0 28px rgba(13, 148, 136, 0.22);
+  box-shadow: 0 0 0 1px rgba(22, 107, 86, 0.18), 0 0 28px rgba(22, 107, 86, 0.22);
 }
 #xhLoading .xh-logo {
   width: 72px;

@@ -156,7 +156,7 @@
   }
 
   function avatarGradient(id) {
-    const hues = ['#0d9488', '#14b8a6', '#0f766e', '#115e59', '#134e4a'];
+    const hues = ['#166b56', '#2f8f6e', '#115645', '#0e4639', '#173d32'];
     let n = 0;
     String(id || '').split('').forEach((c) => {
       n += c.charCodeAt(0);
@@ -410,7 +410,7 @@
       '<div class="flex justify-center mb-3">' +
       '<div class="w-16 h-16 rounded-2xl text-white text-2xl font-black flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,' +
       color +
-      ',#134e4a)">' +
+      ',#173d32)">' +
       letter +
       '</div></div>' +
       '<h2 class="text-center text-xl font-black text-slate-900">' +

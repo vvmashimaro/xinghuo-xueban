@@ -28,11 +28,11 @@
     }
     .card-hover-effect:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 28px -6px rgba(15, 118, 110, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 12px 28px -6px rgba(17, 86, 69, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.04);
     }
 
     .shimmer-badge {
-      background: linear-gradient(90deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.35) 50%, rgba(20, 184, 166, 0.15) 100%);
+      background: linear-gradient(90deg, rgba(47, 143, 110, 0.15) 0%, rgba(47, 143, 110, 0.35) 50%, rgba(47, 143, 110, 0.15) 100%);
       background-size: 200% 100%;
       animation: shimmer 2.2s infinite;
     }
@@ -48,15 +48,13 @@
     [data-matching-banner].is-compact { display: none; }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
+<body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
       <!-- 品牌标识与当前学员身份卡 -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-teal-600/20 shrink-0">
-          <i class="fa-solid fa-graduation-cap"></i>
-        </div>
+        <img src="assets/brand/spark-logo-forest-noface-192.png" alt="星火学伴" width="40" height="40" class="w-10 h-10 rounded-full shrink-0 object-cover" decoding="async" />
         <div>
           <div class="flex items-center gap-2">
             <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
@@ -317,7 +315,7 @@
         <div class="head-icon"><i class="fa-solid fa-id-card-clip"></i></div>
         <div>
           <h3><span id="tutorBossDrawerTitle">导师详情</span>
-            <span id="tutorBossDrawerCode" style="font-size:.65rem;font-family:ui-monospace,monospace;background:rgba(20,184,166,.25);color:#99f6e4;padding:.1rem .35rem;border-radius:4px;margin-left:.35rem;font-weight:700"></span>
+            <span id="tutorBossDrawerCode" style="font-size:.65rem;font-family:ui-monospace,monospace;background:rgba(47, 143, 110,.25);color:#d3e7bf;padding:.1rem .35rem;border-radius:4px;margin-left:.35rem;font-weight:700"></span>
           </h3>
           <div class="sub">官方实名存证已备案 · 点击卡片打开本抽屉</div>
         </div>
@@ -883,7 +881,7 @@
       </div>
 
       <!-- 护照卡片内容 -->
-      <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-cyan-50 text-slate-800 p-4 rounded-2xl space-y-3 shadow-sm border border-teal-100">
+      <div class="bg-gradient-to-br from-teal-50 via-slate-50 to-teal-50 text-slate-800 p-4 rounded-2xl space-y-3 shadow-sm border border-teal-100">
         <div class="flex items-center justify-between text-xs">
           <span class="font-bold text-teal-800">乐乐同学 (初三中考)</span>
           <span class="text-xs bg-white/80 text-slate-600 px-2 py-0.5 rounded font-mono border border-teal-100">成都市 · 青羊区</span>
@@ -1577,8 +1575,8 @@
           '<div class="boss-tags" style="margin-bottom:.65rem">' + topicTags + '</div>' +
           '<div class="boss-tags" style="margin-bottom:.75rem">' + styleTags + '</div>' +
           '<div style="font-size:.75rem;color:#64748b;margin-bottom:.5rem">' +
-            '<i class="fa-solid fa-location-dot" style="color:#0d9488;margin-right:.25rem"></i>' +
-            (tutor.space || '') + ' · <span style="color:#0f766e;font-weight:800;font-family:ui-monospace,monospace">¥' + tutor.hourlyRate + '/h</span>' +
+            '<i class="fa-solid fa-location-dot" style="color:#166b56;margin-right:.25rem"></i>' +
+            (tutor.space || '') + ' · <span style="color:#115645;font-weight:800;font-family:ui-monospace,monospace">¥' + tutor.hourlyRate + '/h</span>' +
             ' · <span class="boss-match-pill">' + tutor.matchScore + '% 契合</span>' +
           '</div>' +
           '<span class="boss-section-label">可约时段</span>' +

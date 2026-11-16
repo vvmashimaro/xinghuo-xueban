@@ -1,6 +1,6 @@
 <view class="container">
   <view class="card passport-hero">
-    <view style="font-weight:800;color:#0f766e;">{{studentNickname}} · {{studentGrade}}</view>
+    <view style="font-weight:800;color:#115645;">{{studentNickname}} · {{studentGrade}}</view>
     <view class="muted" style="margin-top:8rpx;">{{cityDistrict}} · {{passportSpace}}</view>
     <view class="muted" style="margin-top:8rpx;">期望课酬 {{passportBudget}}</view>
   </view>

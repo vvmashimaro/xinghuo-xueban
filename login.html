@@ -15,54 +15,53 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .glass-panel {
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: #ffffff;
+      border: 1px solid #e3e8dc;
+      box-shadow: 0 18px 40px rgba(23, 61, 50, 0.08);
     }
     .field-soft {
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: #f6f6ee;
+      border: 1px solid #e3e8dc;
     }
     .field-soft:focus {
-      background: rgba(255, 255, 255, 0.55);
+      background: #ffffff;
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900 relative overflow-x-hidden max-w-[100vw]">
+<body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900 relative overflow-x-hidden max-w-[100vw]">
 
   <!-- 背景光影装饰 -->
   <div class="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-    <div class="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -top-32 -right-24 w-[28rem] h-[28rem] bg-sage rounded-full blur-3xl opacity-80"></div>
+    <div class="absolute -bottom-40 -left-24 w-[24rem] h-[24rem] bg-teal-100 rounded-full blur-3xl opacity-90"></div>
   </div>
 
   <!-- 顶部轻量系统栏：左侧品牌，右侧角色切换 -->
   <header class="w-full px-5 sm:px-8 py-4 flex items-center justify-between relative z-10 gap-3">
     <div class="flex items-center space-x-2.5 min-w-0">
       <img
-        src="assets/brand/spark-logo-teal-noface-192.png"
+        src="assets/brand/spark-logo-forest-noface-192.png"
         alt="星火学伴"
         width="36"
         height="36"
-        class="w-9 h-9 rounded-xl shrink-0 object-contain"
+        class="w-9 h-9 rounded-full shrink-0 object-cover"
         decoding="async"
       />
       <div class="min-w-0">
         <div class="flex items-center gap-2">
-          <span class="font-black text-white text-base tracking-tight leading-none">星火学伴</span>
+          <span class="font-black text-ink text-base tracking-tight leading-none">星火学伴</span>
         </div>
-        <span class="text-xs text-slate-400 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
+        <span class="text-xs text-slate-500 font-medium truncate block">阳光合规课辅 · 智能共享空间</span>
       </div>
     </div>
 
     <!-- 角色切换：右上角紧凑分段控件 -->
-    <div id="roleSwitchBar" class="flex items-center gap-0.5 p-0.5 rounded-full bg-white/10 backdrop-blur-md shrink-0" role="tablist" aria-label="登录角色">
-      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer" role="tab" aria-selected="true" aria-label="找学伴">
-        <i class="fa-solid fa-user-group text-xs text-teal-600"></i>
+    <div id="roleSwitchBar" class="flex items-center gap-0.5 p-0.5 rounded-full bg-white border border-teal-200 shadow-sm shrink-0" role="tablist" aria-label="登录角色">
+      <button type="button" id="tabParent" onclick="switchRole('parent')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-teal-600 text-white shadow-sm cursor-pointer" role="tab" aria-selected="true" aria-label="找学伴">
+        <i class="fa-solid fa-user-group text-xs"></i>
         <span>找学伴</span>
       </button>
-      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer" role="tab" aria-selected="false" aria-label="去授课">
+      <button type="button" id="tabMentor" onclick="switchRole('mentor')" class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-600 hover:text-teal-800 cursor-pointer" role="tab" aria-selected="false" aria-label="去授课">
         <i class="fa-solid fa-chalkboard-user text-xs opacity-70"></i>
         <span>去授课</span>
       </button>
@@ -88,12 +87,12 @@
 
     <div class="login-card-wrap">
     <!-- 无边框、强融合背景的半透明面板 -->
-    <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-5 transition-all">
+    <div class="glass-panel rounded-[1.75rem] p-6 sm:p-8 space-y-5 transition-all">
 
       <!-- 动态标题说明 -->
       <div class="space-y-1">
-        <h1 id="roleTitle" class="text-xl font-black text-white tracking-tight">家长 / 学员登录</h1>
-        <p id="roleSubtitle" class="text-sm text-slate-300/80 leading-relaxed">
+        <h1 id="roleTitle" class="text-xl font-black text-ink tracking-tight">家长 / 学员登录</h1>
+        <p id="roleSubtitle" class="text-sm text-slate-600 leading-relaxed">
           按次约课 · 试讲评级可见
         </p>
       </div>
@@ -103,24 +102,24 @@
 
         <!-- 手机号输入 -->
         <div>
-          <label class="block text-xs font-bold text-slate-200/90 mb-1.5">手机号码</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">手机号码</label>
           <div class="relative">
             <div class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-500 text-xs font-bold pr-2 select-none pointer-events-none" aria-hidden="true">
               <span>+86</span>
             </div>
-            <input type="tel" id="loginMobile" required maxlength="11" autocomplete="tel-national" placeholder="例：138****8000（入库登记或预留手机号）" class="field-soft w-full text-sm pl-14 pr-3.5 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition font-medium text-slate-800 placeholder:text-slate-500/70">
+            <input type="tel" id="loginMobile" required maxlength="11" autocomplete="tel-national" placeholder="例：138****8000（入库登记或预留手机号）" class="field-soft w-full text-sm pl-14 pr-3.5 py-2.5 rounded-2xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-600/30 transition font-medium text-slate-800 placeholder:text-slate-400">
           </div>
         </div>
 
         <!-- 登录方式一：短信验证码（默认免密优先） -->
         <div id="codeLoginSection" class="space-y-1.5">
-          <label class="block text-xs font-bold text-slate-200/90">短信验证码</label>
+          <label class="block text-xs font-bold text-slate-700">短信验证码</label>
           <div class="flex gap-2">
             <div class="relative flex-1">
               <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-              <input type="text" id="smsCodeInput" maxlength="6" placeholder="请输入 6 位短信验证码" class="field-soft w-full text-sm pl-9 pr-3 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition font-mono tracking-wider text-slate-800 placeholder:text-slate-500/70">
+              <input type="text" id="smsCodeInput" maxlength="6" placeholder="请输入 6 位短信验证码" class="field-soft w-full text-sm pl-9 pr-3 py-2.5 rounded-2xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-600/30 transition font-mono tracking-wider text-slate-800 placeholder:text-slate-400">
             </div>
-            <button type="button" id="btnSendCode" onclick="sendSmsCode()" class="shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm">
+            <button type="button" id="btnSendCode" onclick="sendSmsCode()" class="shrink-0 bg-teal-50 hover:bg-teal-100 active:scale-95 text-teal-800 text-xs font-bold px-3.5 py-2.5 rounded-full border border-teal-200 transition cursor-pointer">
               获取验证码
             </button>
           </div>
@@ -128,10 +127,10 @@
 
         <!-- 登录方式二：账户密码（默认隐藏，点击切换呼出） -->
         <div id="pwdLoginSection" class="space-y-1.5 hidden">
-          <label class="block text-xs font-bold text-slate-200/90">登录密码</label>
+          <label class="block text-xs font-bold text-slate-700">登录密码</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="password" id="passwordInput" placeholder="请输入您的账户密码" class="field-soft w-full text-sm pl-9 pr-10 py-2.5 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-400/60 transition text-slate-800 placeholder:text-slate-500/70">
+            <input type="password" id="passwordInput" placeholder="请输入您的账户密码" class="field-soft w-full text-sm pl-9 pr-10 py-2.5 rounded-2xl border-0 focus:outline-none focus:ring-2 focus:ring-teal-600/30 transition text-slate-800 placeholder:text-slate-400">
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer">
               <i class="fa-solid fa-eye-slash text-xs" id="eyeIcon"></i>
             </button>
@@ -140,40 +139,40 @@
 
         <!-- 密码登录切换（保留 DOM，默认隐藏） -->
         <div class="hidden flex items-center justify-between text-xs pt-0.5" aria-hidden="true">
-          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-300 hover:text-teal-200 font-semibold flex items-center gap-1 transition cursor-pointer" tabindex="-1">
+          <button type="button" id="toggleLoginModeBtn" onclick="toggleLoginMode()" class="text-teal-700 hover:text-teal-900 font-semibold flex items-center gap-1 transition cursor-pointer" tabindex="-1">
             <i class="fa-solid fa-rotate text-xs"></i>
             <span id="toggleLoginModeText">改用账号密码登录</span>
           </button>
-          <button type="button" onclick="showToast('请联系平台教研客服或使用免密短信重置')" class="text-slate-400 hover:text-slate-200 transition cursor-pointer" tabindex="-1">
+          <button type="button" onclick="showToast('请联系平台教研客服或使用免密短信重置')" class="text-slate-500 hover:text-slate-800 transition cursor-pointer" tabindex="-1">
             忘记密码？
           </button>
         </div>
 
         <!-- 合规知情授权勾选 -->
         <div class="pt-1">
-          <label class="flex items-start gap-2 text-xs text-slate-400 cursor-pointer select-none">
-            <input type="checkbox" id="agreementCheckbox" class="w-3.5 h-3.5 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-0 bg-white/40">
-            <span class="text-xs leading-tight text-slate-300">
+          <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" id="agreementCheckbox" class="w-3.5 h-3.5 mt-0.5 rounded text-teal-600 focus:ring-teal-600 border border-teal-200 bg-white">
+            <span class="text-xs leading-tight text-slate-600">
               已阅读并同意
-              <button type="button" onclick="openServiceAgreement(event)" class="text-teal-300 underline font-medium cursor-pointer p-0 bg-transparent border-none">《服务协议》</button>
+              <button type="button" onclick="openServiceAgreement(event)" class="text-teal-700 underline font-medium cursor-pointer p-0 bg-transparent border-none">《服务协议》</button>
               与
-              <button type="button" onclick="openPrivacyPolicy(event)" class="text-teal-300 underline font-medium cursor-pointer p-0 bg-transparent border-none">《个人信息保护政策》</button>
+              <button type="button" onclick="openPrivacyPolicy(event)" class="text-teal-700 underline font-medium cursor-pointer p-0 bg-transparent border-none">《个人信息保护政策》</button>
             </span>
           </label>
         </div>
 
         <!-- 提交登录按钮 -->
-        <button type="submit" id="btnSubmitLogin" class="w-full bg-teal-500/90 hover:bg-teal-400 active:scale-[0.99] text-slate-950 text-sm font-bold py-3 rounded-xl shadow-lg shadow-teal-500/25 transition flex items-center justify-center gap-2 cursor-pointer">
+        <button type="submit" id="btnSubmitLogin" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white text-sm font-bold py-3 rounded-full shadow-lg shadow-teal-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
           <span>安全登录</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
 
         <!-- 跳转失败时的手动进入兜底 -->
         <div id="manualEnterFallback" class="hidden mt-2 text-center">
-          <p class="text-xs text-amber-200/90 bg-amber-500/15 rounded-xl px-3 py-2 mb-2">
+          <p class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-2">
             页面未自动跳转？请点击下方手动进入
           </p>
-          <a id="manualEnterLink" href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-teal-200 hover:text-white bg-teal-500/20 hover:bg-teal-500/30 px-4 py-2 rounded-xl transition">
+          <a id="manualEnterLink" href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-teal-800 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-4 py-2 rounded-full transition">
             <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
             <span>手动进入</span>
           </a>
@@ -183,8 +182,8 @@
 
       <!-- 底部入驻指引（无分割线） -->
       <div id="registerPromptBox" class="pt-2 flex items-center justify-between text-xs gap-2">
-        <span class="text-slate-400 shrink-0">首次约课辅导？</span>
-        <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+        <span class="text-slate-500 shrink-0">首次约课辅导？</span>
+        <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-800 hover:text-teal-900 flex items-center gap-1 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-full transition cursor-pointer">
           <span>前往学情建档注册</span>
           <i class="fa-solid fa-angle-right text-xs"></i>
         </button>
@@ -194,15 +193,15 @@
     </div>
 
     <!-- 底部合规说明 -->
-    <div class="login-compliance mt-5 text-center text-xs text-slate-400 space-y-1">
+    <div class="login-compliance mt-5 text-center text-xs text-slate-600 space-y-1">
       <div class="flex items-center justify-center gap-3 flex-wrap">
         <span class="flex items-center gap-1">
-          <i class="fa-solid fa-shield-check text-teal-400"></i>
+          <i class="fa-solid fa-shield-check text-teal-600"></i>
           合规实名与学籍核验
         </span>
         <span class="text-slate-600">·</span>
         <span class="flex items-center gap-1">
-          <i class="fa-solid fa-building-columns text-teal-400"></i>
+          <i class="fa-solid fa-building-columns text-teal-600"></i>
           课酬资金保障
         </span>
       </div>
@@ -281,8 +280,8 @@
     let pendingNavUrl = null;
     let pendingNavWatch = null;
 
-    const ROLE_TAB_ACTIVE = "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-white/90 text-slate-900 shadow-sm cursor-pointer";
-    const ROLE_TAB_IDLE = "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer";
+    const ROLE_TAB_ACTIVE = "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 bg-teal-600 text-white shadow-sm cursor-pointer";
+    const ROLE_TAB_IDLE = "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold transition-all flex items-center gap-1 text-slate-600 hover:text-teal-800 cursor-pointer";
 
     function showManualEnterFallback(targetUrl) {
       const box = document.getElementById('manualEnterFallback');
@@ -345,8 +344,8 @@
           ? window.getLoginRoleSubtitle('mentor')
           : '资金保障 · 按次接单不捆绑';
         regBox.innerHTML = `
-          <span class="text-slate-400 shrink-0">还未通过资质核验？</span>
-          <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <span class="text-slate-500 shrink-0">还未通过资质核验？</span>
+          <button type="button" onclick="safeNavigate('index.html?entry=mentor', '导师认证与建库 (L1/L2)')" class="font-bold text-teal-800 hover:text-teal-900 flex items-center gap-1 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-full transition cursor-pointer">
             <span>进入导师认证与建库 (L1/L2)</span>
             <i class="fa-solid fa-angle-right text-xs"></i>
           </button>
@@ -359,8 +358,8 @@
           ? window.getLoginRoleSubtitle('parent')
           : '按次约课 · 试讲评级可见';
         regBox.innerHTML = `
-          <span class="text-slate-400 shrink-0">首次约课辅导？</span>
-          <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <span class="text-slate-500 shrink-0">首次约课辅导？</span>
+          <button type="button" onclick="safeNavigate('parent_register.html', '学情建档与注册')" class="font-bold text-teal-800 hover:text-teal-900 flex items-center gap-1 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-full transition cursor-pointer">
             <span>前往学情建档注册</span>
             <i class="fa-solid fa-angle-right text-xs"></i>
           </button>
@@ -426,7 +425,7 @@
         if (response.ok && result.success) {
           countdown = 60;
           btn.innerText = `${countdown}s 重发`;
-          btn.className = "shrink-0 bg-white/10 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-not-allowed backdrop-blur-sm";
+          btn.className = "shrink-0 bg-slate-100 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-full border border-slate-200 cursor-not-allowed";
 
           timerInterval = setInterval(() => {
             countdown--;
@@ -436,7 +435,7 @@
               clearInterval(timerInterval);
               btn.disabled = false;
               btn.innerText = "获取验证码";
-              btn.className = "shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm";
+              btn.className = "shrink-0 bg-teal-50 hover:bg-teal-100 active:scale-95 text-teal-800 text-xs font-bold px-3.5 py-2.5 rounded-full border border-teal-200 transition cursor-pointer";
             }
           }, 1000);
 
@@ -460,7 +459,7 @@
         countdown = 60;
         btn.disabled = true;
         btn.innerText = `${countdown}s 重发`;
-        btn.className = "shrink-0 bg-white/10 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-not-allowed backdrop-blur-sm";
+        btn.className = "shrink-0 bg-slate-100 text-slate-500 text-xs font-bold px-3.5 py-2.5 rounded-full border border-slate-200 cursor-not-allowed";
         timerInterval = setInterval(() => {
           countdown--;
           if (countdown > 0) {
@@ -469,7 +468,7 @@
             clearInterval(timerInterval);
             btn.disabled = false;
             btn.innerText = "获取验证码";
-            btn.className = "shrink-0 bg-white/25 hover:bg-white/35 active:scale-95 text-teal-100 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer backdrop-blur-sm";
+            btn.className = "shrink-0 bg-teal-50 hover:bg-teal-100 active:scale-95 text-teal-800 text-xs font-bold px-3.5 py-2.5 rounded-full border border-teal-200 transition cursor-pointer";
           }
         }, 1000);
         showToast('API 连接失败，请检查网络后重试', 'warning');
