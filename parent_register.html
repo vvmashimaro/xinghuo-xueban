@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-xh-archive="student">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -109,10 +109,10 @@
     }
   </style>
 </head>
-<body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
+<body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900" data-xh-archive="student">
 
   <!-- ======================= 顶部系统导航栏 ======================= -->
-  <header class="sticky top-0 z-40 glass-header border-b border-slate-200/90 shadow-xs transition-all">
+  <header class="sticky top-0 z-40 glass-header border-b border-slate-200/90 shadow-xs transition-all" aria-label="新建学生档案">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
       <!-- 品牌标识与定位 -->
       <div class="flex items-center space-x-3">
@@ -133,7 +133,7 @@
 
       <!-- 快捷操作区 -->
       <div class="flex items-center gap-2.5">
-        <button type="button" onclick="safeNavigate('parent_dashboard.html', '家长主控台')" class="text-xs text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer">
+        <button type="button" id="btnHeaderConsole" data-xh-console hidden onclick="safeNavigate('parent_dashboard.html', '家长主控台')" class="hidden text-xs text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer" aria-hidden="true">
           主控台
         </button>
         <button type="button" onclick="safeNavigate('login.html', '统一登录中心')" class="text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer">
@@ -1810,8 +1810,25 @@
       updateLivePreview();
     }
 
+    function setArchiveShell(mode) {
+      [document.documentElement, document.body].forEach(function (el) {
+        if (!el) return;
+        if (mode) el.setAttribute('data-xh-archive', mode);
+        else el.removeAttribute('data-xh-archive');
+      });
+      var header = document.querySelector('header');
+      if (header) header.setAttribute('aria-label', mode === 'student-edit' ? '更新学情档案' : '新建学生档案');
+      var btn = document.getElementById('btnHeaderConsole');
+      if (!btn) return;
+      var showConsole = mode === 'student-edit';
+      btn.hidden = !showConsole;
+      btn.classList.toggle('hidden', !showConsole);
+      btn.setAttribute('aria-hidden', showConsole ? 'false' : 'true');
+    }
+
     function enterProfileUpdateMode(parent) {
       profileUpdateMode = true;
+      setArchiveShell('student-edit');
       editingParentId = parent.id || null;
       storedParentPhone = parent.phone || '';
       document.title = '星火学伴 - 更新学情与考纲目标';

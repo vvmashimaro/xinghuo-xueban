@@ -100,6 +100,45 @@ function main() {
   assert.ok(!appWxss.includes('.fab-settings') && !appWxss.includes('.console-fab-sheet'), '小程序已清退重复 FAB 样式');
   assert.ok(!miniParentJs.includes('toggleConsoleFab') && !miniMentorJs.includes('toggleConsoleFab'), '小程序 JS 不再保留 FAB 入口');
 
+  // 7) 新建学生/导师档案不出现主控台；工作台与运营中台仍保留
+  const parentReg = read('parent_register.html');
+  const mentorDash = read('mentor_dashboard.html');
+  const adminHtml = read('admin-saas/index.html');
+  const miniParentReg = read('_platform/miniprogram/pages/parent-register/parent-register.wxml');
+  const miniMentorOnboard = read('_platform/miniprogram/pages/mentor-onboard/mentor-onboard.wxml');
+
+  assert.ok(parentReg.includes('data-xh-archive="student"'), '新建学生档案默认标记为 student');
+  assert.ok(/id="btnHeaderConsole"[^>]*data-xh-console[^>]*\bhidden\b/.test(parentReg), '新建学生档案顶栏主控台默认隐藏');
+  assert.ok(parentReg.includes("setArchiveShell('student-edit')"), '仅更新已有画像时恢复返回主控');
+  assert.ok(parentReg.includes("mode === 'student-edit'"), '返回主控只在 student-edit 打开');
+  assert.ok(!parentReg.includes('console-nav.js'), '建档页不引入主控台分段脚本');
+  assert.ok(!parentReg.includes('UserConsoleNavInit'), '建档页不挂分段主控台');
+
+  assert.ok(indexHtml.includes("setAttribute('data-xh-archive', 'mentor')"), '导师建档直链在绘制前打上 mentor 标记');
+  assert.ok(indexHtml.includes("setArchiveShell('mentor')"), '进入导师建档设置布局标记');
+  assert.ok(indexHtml.includes("setArchiveShell('')"), '离开导师建档清除布局标记');
+  assert.ok(!indexHtml.includes('主控台'), '新建导师档案页没有主控台入口');
+  assert.ok(!indexHtml.includes('console-nav.js') && !indexHtml.includes('UserConsoleNavInit'), '导师建档页不挂分段主控台');
+
+  assert.ok(tokens.includes('html[data-xh-archive="student"] [data-xh-console]'), '学生建档用布局标记隐藏主控台');
+  assert.ok(tokens.includes('html[data-xh-archive="mentor"] [data-xh-console]'), '导师建档用布局标记隐藏主控台');
+  assert.ok(!/data-xh-archive="student-edit"\]\s*\[data-xh-console\]/.test(tokens), '更新画像仍可显示返回主控');
+
+  assert.ok(consoleNav.includes('archiveCreateHidesConsole'), '分段主控台识别建档壳');
+  assert.ok(consoleNav.includes("mode === 'student'") && consoleNav.includes("mode === 'mentor'") && consoleNav.includes("mode === 'student-edit'"), '新建与更新档案都不挂分段条');
+
+  assert.ok(parentDash.includes('js/console-nav.js') && parentDash.includes('UserConsoleNavInit'), '家长主控台仍挂分段条');
+  assert.ok(!parentDash.includes('data-xh-archive'), '家长主控台不是建档壳');
+  assert.ok(mentorDash.includes('js/console-nav.js') && mentorDash.includes('UserConsoleNavInit'), '导师工作台仍挂分段条');
+  assert.ok(!mentorDash.includes('data-xh-archive'), '导师工作台不是建档壳');
+
+  assert.ok(adminHtml.includes('<aside') && adminHtml.includes('data-nav="dashboard"'), '运营中台首页仍保留侧栏与总览');
+  assert.ok(!adminHtml.includes('data-xh-archive'), '运营中台不走建档壳');
+
+  assert.ok(!miniParentReg.includes('console-tab') && !miniParentReg.includes('主控台'), '小程序新建学生档案无主控台分段');
+  assert.ok(!miniMentorOnboard.includes('console-tab') && !miniMentorOnboard.includes('主控台'), '小程序新建导师档案无主控台分段');
+  assert.ok(miniParentWxml.includes('console-tab-bar') && miniMentorWxml.includes('console-tab-bar'), '小程序工作台仍保留主控台分段');
+
   console.log('✓ UI 中期静态结构 / 文案断言通过');
 }
 
