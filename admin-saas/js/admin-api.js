@@ -64,8 +64,15 @@
     processEscrow: () => request('POST', '/api/bookings/process-escrow', {}),
     getSubjectCatalog: () => request('GET', '/api/subject-catalog'),
     listTeachingPoints: () => request('GET', '/api/admin/teaching-points'),
+    createTeachingPoint: (body) => request('POST', '/api/admin/teaching-points', body),
+    deleteTeachingPoint: (id) =>
+      request('DELETE', '/api/admin/teaching-points/' + encodeURIComponent(id)),
     patchTeachingPoint: (id, patch) =>
       request('PATCH', '/api/admin/teaching-points/' + encodeURIComponent(id), patch),
+    createParent: (body) => request('POST', '/api/admin/parents', body),
+    deleteParent: (id) => request('DELETE', '/api/admin/parents/' + encodeURIComponent(id)),
+    createMentor: (body) => request('POST', '/api/admin/mentors', body),
+    deleteMentor: (id) => request('DELETE', '/api/admin/mentors/' + encodeURIComponent(id)),
     getTeachingPointOccupancy: (id, query) => {
       const qs = new URLSearchParams(query || {}).toString();
       return request(
@@ -77,6 +84,9 @@
     getAdminRbacMe: () => request('GET', '/api/admin/rbac/me'),
     listAdminRbacStaff: () => request('GET', '/api/admin/rbac/staff'),
     patchAdminRbacStaff: (phone, modules) =>
-      request('PATCH', '/api/admin/rbac/staff/' + encodeURIComponent(phone), { modules })
+      request('PATCH', '/api/admin/rbac/staff/' + encodeURIComponent(phone), { modules }),
+    createAdminStaff: (phone) => request('POST', '/api/admin/rbac/staff', { phone }),
+    deleteAdminStaff: (phone) =>
+      request('DELETE', '/api/admin/rbac/staff/' + encodeURIComponent(phone))
   };
 })(typeof window !== 'undefined' ? window : globalThis);

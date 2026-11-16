@@ -120,15 +120,102 @@ async function run() {
   );
   console.log('✓ Subject catalog includes 考研/艺体/体育');
 
+  const limitedToken = auth.createToken('ADMIN-LIMITED-TP', 'admin', '18080141668', db);
+  const noModule = await request(base, 'POST', '/api/admin/teaching-points', { name: '无权教学点' }, limitedToken);
+  assert(noModule.status === 403, 'admin without warehouse module cannot add');
+  const parentAdd = await request(base, 'POST', '/api/admin/teaching-points', { name: '家长教学点' }, parentToken);
+  assert(parentAdd.status === 403, 'parent cannot add teaching point');
+  const anon = await request(base, 'DELETE', '/api/admin/teaching-points/' + tp.id, null, null);
+  assert(anon.status === 401, 'anonymous delete rejected');
+
+  const missingName = await request(base, 'POST', '/api/admin/teaching-points', { name: '  ' }, adminToken);
+  assert(missingName.status === 400 && missingName.json.code === 'NAME_REQUIRED', 'name required');
+
+  const created = await request(
+    base,
+    'POST',
+    '/api/admin/teaching-points',
+    { name: '测试锦江独立教学点' },
+    adminToken
+  );
+  assert(created.status === 200 && created.json.booths && created.json.booths.length === 3, 'new point has 3 booths');
+  assert(created.json.name === '测试锦江独立教学点', 'name saved');
+  const dup = await request(
+    base,
+    'POST',
+    '/api/admin/teaching-points',
+    { name: '测试锦江独立教学点' },
+    adminToken
+  );
+  assert(dup.status === 400 && dup.json.code === 'DUPLICATE_NAME', 'duplicate name rejected');
+
+  const beforeBookings = db.getBookings().length;
+  const active = {
+    id: 'BK-TP-ACTIVE',
+    parentId: 'PAR-X',
+    parentPhone: '13900008888',
+    mentorId: 'AP-8802',
+    tutorId: 'AP-8802',
+    status: 'pending_accept',
+    escrowStatus: 'frozen',
+    space: created.json.name,
+    teachingPointId: created.json.id,
+    boothId: created.json.booths[0].id,
+    subject: '初中数学'
+  };
+  const bookings = db.getBookings();
+  bookings.push(active);
+  db.replaceSnapshot({ bookings });
+
+  const blocked = await request(
+    base,
+    'DELETE',
+    '/api/admin/teaching-points/' + created.json.id,
+    null,
+    adminToken
+  );
+  assert(blocked.status === 400 && blocked.json.code === 'TEACHING_POINT_IN_USE', 'active booking blocks delete');
+  assert(blocked.json.bookingIds && blocked.json.bookingIds.indexOf('BK-TP-ACTIVE') >= 0, 'returns booking id');
+  const stillThere = db.getTeachingPoints().find((item) => item.id === created.json.id);
+  assert(stillThere, 'point remains after blocked delete');
+  assert(db.getBookings().some((b) => b.id === 'BK-TP-ACTIVE'), 'booking not destroyed');
+
+  const cancelled = db.getBookings().map((b) =>
+    b.id === 'BK-TP-ACTIVE' ? Object.assign({}, b, { status: 'cancelled' }) : b
+  );
+  db.replaceSnapshot({ bookings: cancelled });
+  const removed = await request(
+    base,
+    'DELETE',
+    '/api/admin/teaching-points/' + created.json.id,
+    null,
+    adminToken
+  );
+  assert(removed.status === 200, 'delete allowed after booking cancelled');
+  assert(!db.getTeachingPoints().some((item) => item.id === created.json.id), 'point gone');
+  assert(db.getBookings().length === beforeBookings + 1, 'booking row kept');
+  const again = await request(base, 'GET', '/api/admin/teaching-points', null, adminToken);
+  assert(!again.json.some((item) => item.id === created.json.id), 'deleted point is not reseeded');
+
+  const idle = again.json.find((item) => item.name === '武侯川大望江微网点');
+  assert(idle, 'idle default point exists');
+  const dropIdle = await request(base, 'DELETE', '/api/admin/teaching-points/' + idle.id, null, adminToken);
+  assert(dropIdle.status === 200, 'idle default point can be deleted');
+  const afterIdle = await request(base, 'GET', '/api/admin/teaching-points', null, adminToken);
+  assert(!afterIdle.json.some((item) => item.name === '武侯川大望江微网点'), 'deleted default stays deleted');
+
+  console.log('✓ Add/delete teaching point safeguards OK');
   console.log('=== Admin teaching-point tests passed ===');
+  if (fs.existsSync(TMP_DB)) fs.unlinkSync(TMP_DB);
+  process.exit(0);
 }
 
 run()
   .catch((e) => {
     console.error(e);
-    process.exit(1);
+    process.exitCode = 1;
   })
   .finally(() => {
     if (fs.existsSync(TMP_DB)) fs.unlinkSync(TMP_DB);
-    process.exit(0);
+    if (process.exitCode) process.exit(process.exitCode);
   });

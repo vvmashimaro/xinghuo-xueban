@@ -5,6 +5,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const adminRbac = require('./admin-rbac');
 
 // Verification tickets (short-lived, in-memory)
 // { ticketHash: { phone, issuedAt, expiresAt } }
@@ -27,25 +28,49 @@ function isProduction() {
   return process.env.NODE_ENV === 'production';
 }
 
-/**
- * 检查手机号是否为管理员
- * 默认管理员: 13540012341, 18080141668
- * ADMIN_PHONES 环境变量可覆盖或扩展
- */
-function isAdminPhone(phone) {
+/** 环境变量 ADMIN_PHONES 覆盖默认白名单；未配置时为两个内置管理员手机号 */
+function listEnvAdminPhones() {
   const DEFAULT_ADMIN_PHONES = ['13540012341', '18080141668'];
   const adminPhonesEnv = process.env.ADMIN_PHONES;
-  
-  let list = [];
   if (adminPhonesEnv) {
-    // ADMIN_PHONES 可以覆盖默认列表，或使用逗号分隔添加更多
-    list = adminPhonesEnv.split(',').map(p => p.trim()).filter(Boolean);
-  } else {
-    // 使用默认管理员列表
-    list = DEFAULT_ADMIN_PHONES;
+    return adminPhonesEnv.split(',').map((p) => p.trim()).filter(Boolean);
   }
-  
-  return list.includes(String(phone).trim());
+  return DEFAULT_ADMIN_PHONES.slice();
+}
+
+function readAdminDirectory() {
+  try {
+    const db = require('./db');
+    if (!db || typeof db.getAdminDirectory !== 'function') return [];
+    return db.getAdminDirectory() || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function readAdminDirectoryEntry(phone) {
+  try {
+    const db = require('./db');
+    if (!db || typeof db.getAdminDirectoryEntry !== 'function') return null;
+    return db.getAdminDirectoryEntry(phone);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * 检查手机号是否为管理员。
+ * 主管理员始终有效；库内撤销记录可拿掉环境变量白名单中的其他管理员；
+ * 主管理员添加的账号记在 adminDirectory，无需改 ADMIN_PHONES。
+ */
+function isAdminPhone(phone) {
+  const p = String(phone || '').trim();
+  if (!p) return false;
+  if (adminRbac.isPrimaryAdminPhone(p)) return true;
+  const entry = readAdminDirectoryEntry(p);
+  if (entry && entry.revoked) return false;
+  if (entry && entry.phone) return true;
+  return listEnvAdminPhones().includes(p);
 }
 
 /**
@@ -209,15 +234,18 @@ function safeCompare(a, b) {
 /**
  * 创建 Express 中间件工厂（需要传入 db）
  */
-const adminRbac = require('./admin-rbac');
-
 function listConfiguredAdminPhones() {
-  const DEFAULT_ADMIN_PHONES = ['13540012341', '18080141668'];
-  const adminPhonesEnv = process.env.ADMIN_PHONES;
-  if (adminPhonesEnv) {
-    return adminPhonesEnv.split(',').map((p) => p.trim()).filter(Boolean);
-  }
-  return DEFAULT_ADMIN_PHONES;
+  const set = new Set(listEnvAdminPhones());
+  set.add(adminRbac.SUPER_ADMIN_PHONE);
+  readAdminDirectory().forEach((row) => {
+    if (!row || !row.phone) return;
+    const phone = String(row.phone).trim();
+    if (!phone) return;
+    if (row.revoked && !adminRbac.isPrimaryAdminPhone(phone)) set.delete(phone);
+    else set.add(phone);
+  });
+  set.add(adminRbac.SUPER_ADMIN_PHONE);
+  return Array.from(set);
 }
 
 function createAuthMiddleware(db) {
@@ -288,6 +316,28 @@ function createAuthMiddleware(db) {
     };
   }
 
+  /** 仅主管理员（引导手机号）可添加或移除管理员 */
+  function requirePrimaryAdmin(req, res, next) {
+    const token = extractTokenFromRequest(req);
+    const user = verifyToken(token, db);
+
+    if (!user) {
+      return res.status(401).json({ error: '未登录或会话已过期' });
+    }
+
+    if (user.role !== 'admin') {
+      return res.status(403).json({ error: '需要管理员权限' });
+    }
+
+    attachAdminUser(req, user, token);
+
+    if (!adminRbac.isPrimaryAdminPhone(user.phone)) {
+      return res.status(403).json({ error: '仅主管理员可添加或移除管理员' });
+    }
+
+    next();
+  }
+
   /**
    * Express 中间件：要求管理员权限（支持会话 token 和 X-Admin-Token）
    */
@@ -314,7 +364,14 @@ function createAuthMiddleware(db) {
     next();
   }
 
-  return { requireAuth, requireAdmin, requireAdminModule, requireAdminToken, attachAdminUser };
+  return {
+    requireAuth,
+    requireAdmin,
+    requireAdminModule,
+    requirePrimaryAdmin,
+    requireAdminToken,
+    attachAdminUser
+  };
 }
 
 /**

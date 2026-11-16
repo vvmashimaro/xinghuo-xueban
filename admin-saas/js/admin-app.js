@@ -54,6 +54,7 @@
     subjectTagFilter: '',
     subjectCatalog: null,
     teachingPoints: [],
+    teachingPointsLoaded: false,
     tpOccupancyDate: '',
     tpOccupancyTpId: '',
     tpOccupancy: null,
@@ -71,10 +72,61 @@
     selectedAssessmentId: null,
     assessmentDetail: null,
     bookingDetailId: null,
-    adminRbac: { modules: [], isSuperAdmin: false, catalog: [] },
+    adminRbac: { modules: [], isSuperAdmin: false, isPrimaryAdmin: false, catalog: [] },
     rbacStaff: [],
-    rbacDraft: {}
+    rbacDraft: {},
+    parentFormOpen: false,
+    parentDraft: { phone: '', parentName: '', studentNickname: '', studentGrade: '', parentRole: '家长' },
+    mentorFormOpen: false,
+    mentorDraft: { phone: '', realName: '', university: '', hourlyRate: '' },
+    teachingPointFormOpen: false,
+    teachingPointDraftName: ''
   };
+
+  function isPrimaryAdminUser() {
+    return !!(state.adminRbac && (state.adminRbac.isPrimaryAdmin || state.adminRbac.isSuperAdmin));
+  }
+
+  function confirmAction(opts) {
+    const modal = document.getElementById('adminConfirmModal');
+    const title = document.getElementById('adminConfirmTitle');
+    const message = document.getElementById('adminConfirmMessage');
+    const okBtn = document.getElementById('adminConfirmOk');
+    const cancelBtn = document.getElementById('adminConfirmCancel');
+    const backdrop = document.getElementById('adminConfirmBackdrop');
+    const text = (opts && opts.message) || '确认删除？';
+    if (!modal || !okBtn || !cancelBtn || !title || !message) {
+      return Promise.resolve(window.confirm(text));
+    }
+    title.textContent = (opts && opts.title) || '确认删除';
+    message.textContent = text;
+    okBtn.textContent = (opts && opts.confirmLabel) || '确认删除';
+    modal.classList.remove('hidden');
+    return new Promise((resolve) => {
+      const finish = (value) => {
+        modal.classList.add('hidden');
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        if (backdrop) backdrop.removeEventListener('click', onCancel);
+        document.removeEventListener('keydown', onKey);
+        resolve(value);
+      };
+      const onOk = () => finish(true);
+      const onCancel = () => finish(false);
+      const onKey = (e) => {
+        if (e.key === 'Escape') onCancel();
+      };
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      if (backdrop) backdrop.addEventListener('click', onCancel);
+      document.addEventListener('keydown', onKey);
+      okBtn.focus();
+    });
+  }
+
+  function apiErrorMessage(e, fallback) {
+    return (e && e.data && e.data.error) || (e && e.message) || fallback || '操作失败';
+  }
 
   function hasAdminModule(key) {
     if (state.adminRbac && state.adminRbac.isSuperAdmin) return true;
@@ -361,8 +413,10 @@
     if (hasAdminModule('teaching-points')) {
       try {
         state.teachingPoints = normalizeTeachingPoints(await AdminApi.listTeachingPoints());
+        state.teachingPointsLoaded = true;
       } catch (e) {
         state.teachingPoints = [];
+        state.teachingPointsLoaded = false;
       }
     } else {
       state.teachingPoints = [];
@@ -379,7 +433,7 @@
     main.innerHTML =
       '<div class="max-w-lg space-y-3">' +
       '<h1 class="text-xl font-semibold text-slate-900">暂无可用模块</h1>' +
-      '<p class="text-sm text-slate-600">您的管理员账号尚未开通任何运营模块。请联系最高管理权限账号（13540012341）在「权限设置」中勾选授权。</p>' +
+      '<p class="text-sm text-slate-600">您的管理员账号尚未开通任何运营模块。请联系主管理员（13540012341）在「权限设置」中勾选授权。</p>' +
       '</div>';
   }
 
@@ -857,7 +911,59 @@
       .join('');
   }
 
+  function captureParentDraft() {
+    const phone = document.getElementById('addParentPhone');
+    if (!phone) return;
+    state.parentDraft = {
+      phone: phone.value || '',
+      parentName: (document.getElementById('addParentName') || {}).value || '',
+      studentNickname: (document.getElementById('addParentStudent') || {}).value || '',
+      studentGrade: (document.getElementById('addParentGrade') || {}).value || '',
+      parentRole: (document.getElementById('addParentRole') || {}).value || '家长'
+    };
+  }
+
+  function renderParentForm() {
+    if (!state.parentFormOpen) return '';
+    const d = state.parentDraft || {};
+    const role = d.parentRole || '家长';
+    const roles = ['家长', '妈妈', '爸爸', '其他'];
+    return (
+      '<form id="addParentForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">' +
+      '<div class="font-bold text-slate-800">添加家长</div>' +
+      '<p class="text-xs text-slate-500">必填：手机号、家长姓名、学员昵称。不发送短信、不设置密码；家长之后用该手机号收取验证码登录。</p>' +
+      '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">手机号</span>' +
+      '<input id="addParentPhone" required maxlength="11" value="' +
+      esc(d.phone || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="11 位手机号"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">家长姓名</span>' +
+      '<input id="addParentName" required maxlength="32" value="' +
+      esc(d.parentName || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="例：刘女士"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">学员昵称</span>' +
+      '<input id="addParentStudent" required maxlength="32" value="' +
+      esc(d.studentNickname || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="例：乐乐同学"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">学员年级（可选）</span>' +
+      '<input id="addParentGrade" maxlength="40" value="' +
+      esc(d.studentGrade || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="例：初三"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">关系（可选）</span>' +
+      '<select id="addParentRole" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2">' +
+      roles
+        .map((r) => '<option value="' + esc(r) + '"' + (r === role ? ' selected' : '') + '>' + esc(r) + '</option>')
+        .join('') +
+      '</select></label></div>' +
+      '<div class="flex gap-2">' +
+      '<button type="submit" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">确认添加</button>' +
+      '<button type="button" id="btnCancelAddParent" class="text-sm px-4 py-2 rounded-xl border border-slate-200 font-bold">取消</button>' +
+      '</div></form>'
+    );
+  }
+
   function renderParents() {
+    captureParentDraft();
     const q = document.getElementById('parentSearch');
     const needle = (q && q.value) || '';
     const tag = state.subjectTagFilter;
@@ -870,68 +976,134 @@
       return matchesSubjectTag(subs + ' ' + (p.studentGrade || ''), tag);
     });
     return (
-      '<div class="space-y-4"><h1 class="text-xl font-semibold">家长用户</h1>' +
+      '<div class="space-y-4">' +
+      '<div class="flex flex-wrap items-center justify-between gap-3">' +
+      '<h1 class="text-xl font-semibold">家长用户</h1>' +
+      '<button type="button" id="btnOpenAddParent" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">添加家长</button>' +
+      '</div>' +
+      renderParentForm() +
       subjectFilterBarHtml() +
       '<input id="parentSearch" placeholder="手机号 / 姓名" class="border border-slate-300 rounded-xl px-3 py-2 text-sm w-full max-w-xs" value="' +
       esc(needle) +
       '"/>' +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学员</th><th class="text-left p-3">目标学科</th></tr></thead><tbody>' +
-      rows
-        .map(
-          (p) =>
-            '<tr class="border-t border-slate-100"><td class="p-3">' +
-            esc(p.parentName) +
-            '</td><td class="p-3 font-mono">' +
-            esc(p.phone) +
-            '</td><td class="p-3">' +
-            esc(p.studentNickname) +
-            ' / ' +
-            esc(p.studentGrade) +
-            '</td><td class="p-3 text-xs text-slate-600">' +
-            esc((p.subjects || []).join('、') || '—') +
-            '</td></tr>'
-        )
-        .join('') +
+      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学员</th><th class="text-left p-3">目标学科</th><th class="text-left p-3">操作</th></tr></thead><tbody>' +
+      (rows.length
+        ? rows
+            .map(
+              (p) =>
+                '<tr class="border-t border-slate-100"><td class="p-3">' +
+                esc(p.parentName) +
+                '</td><td class="p-3 font-mono">' +
+                esc(p.phone) +
+                '</td><td class="p-3">' +
+                esc(p.studentNickname) +
+                ' / ' +
+                esc(p.studentGrade) +
+                '</td><td class="p-3 text-xs text-slate-600">' +
+                esc((p.subjects || []).join('、') || '—') +
+                '</td><td class="p-3"><button type="button" data-delete-parent="' +
+                esc(p.id) +
+                '" data-delete-label="' +
+                esc((p.parentName || '该家长') + ' ' + (p.phone || '')) +
+                '" class="text-rose-700 text-xs font-bold">删除</button></td></tr>'
+            )
+            .join('')
+        : '<tr><td colspan="5" class="p-6 text-center text-slate-500">暂无家长</td></tr>') +
       '</tbody></table></div></div>'
     );
   }
 
-  function renderMentorsList() {
+  function captureMentorDraft() {
+    const phone = document.getElementById('addMentorPhone');
+    if (!phone) return;
+    state.mentorDraft = {
+      phone: phone.value || '',
+      realName: (document.getElementById('addMentorName') || {}).value || '',
+      university: (document.getElementById('addMentorUniversity') || {}).value || '',
+      hourlyRate: (document.getElementById('addMentorRate') || {}).value || ''
+    };
+  }
+
+  function renderMentorForm() {
+    if (!state.mentorFormOpen) return '';
+    const d = state.mentorDraft || {};
     return (
-      '<div class="space-y-4"><h1 class="text-xl font-semibold">导师用户</h1>' +
+      '<form id="addMentorForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">' +
+      '<div class="font-bold text-slate-800">添加导师</div>' +
+      '<p class="text-xs text-slate-500">必填：手机号、真实姓名。新建后为待审核，不发送短信、不设置密码；导师用该手机号验证码登录后可补全资料。</p>' +
+      '<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">手机号</span>' +
+      '<input id="addMentorPhone" required maxlength="11" value="' +
+      esc(d.phone || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="11 位手机号"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">真实姓名</span>' +
+      '<input id="addMentorName" required maxlength="32" value="' +
+      esc(d.realName || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="例：李老师"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">院校（可选）</span>' +
+      '<input id="addMentorUniversity" maxlength="40" value="' +
+      esc(d.university || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2"/></label>' +
+      '<label class="text-sm block"><span class="text-xs text-slate-500">期望时薪（可选）</span>' +
+      '<input id="addMentorRate" inputmode="numeric" value="' +
+      esc(d.hourlyRate || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="元/小时"/></label></div>' +
+      '<div class="flex gap-2">' +
+      '<button type="submit" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">确认添加</button>' +
+      '<button type="button" id="btnCancelAddMentor" class="text-sm px-4 py-2 rounded-xl border border-slate-200 font-bold">取消</button>' +
+      '</div></form>'
+    );
+  }
+
+  function renderMentorsList() {
+    captureMentorDraft();
+    const rows = state.mentors.filter((m) => {
+      const tag = state.subjectTagFilter;
+      if (!tag) return true;
+      const subs = (m.subjects || []).concat(m.customSubjects || []).join(' ');
+      return matchesSubjectTag(subs, tag);
+    });
+    return (
+      '<div class="space-y-4">' +
+      '<div class="flex flex-wrap items-center justify-between gap-3">' +
+      '<h1 class="text-xl font-semibold">导师用户</h1>' +
+      '<button type="button" id="btnOpenAddMentor" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">添加导师</button>' +
+      '</div>' +
+      renderMentorForm() +
       subjectFilterBarHtml() +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
-      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">评级</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th></th></tr></thead><tbody>' +
-      state.mentors
-        .filter((m) => {
-          const tag = state.subjectTagFilter;
-          if (!tag) return true;
-          const subs = (m.subjects || []).concat(m.customSubjects || []).join(' ');
-          return matchesSubjectTag(subs, tag);
-        })
-        .map((m) => {
-          return (
-            '<tr class="border-t border-slate-100"><td class="p-3 font-medium">' +
-            esc(m.realName) +
-            '</td><td class="p-3 font-mono">' +
-            esc(m.phone) +
-            '</td><td class="p-3 text-xs max-w-[200px] truncate" title="' +
-            esc((m.subjects || []).join('、')) +
-            '">' +
-            esc((m.subjects || []).slice(0, 3).join('、') || '—') +
-            '</td><td class="p-3">' +
-            esc(m.evalGrade || '待教研评级') +
-            '</td><td class="p-3">' +
-            esc(STATUS_LABEL[m.status] || m.status) +
-            '</td><td class="p-3">' +
-            (m.acceptingOrders === false ? '暂停' : '正常') +
-            '</td><td class="p-3"><button type="button" data-toggle-accept="' +
-            esc(m.id) +
-            '" class="text-teal-700 text-xs font-bold">切换接单</button></td></tr>'
-          );
-        })
-        .join('') +
+      '<table class="admin-dense w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="text-left p-3">姓名</th><th class="text-left p-3">手机</th><th class="text-left p-3">学科</th><th class="text-left p-3">评级</th><th class="text-left p-3">状态</th><th class="text-left p-3">接单</th><th class="text-left p-3">操作</th></tr></thead><tbody>' +
+      (rows.length
+        ? rows
+            .map((m) => {
+              return (
+                '<tr class="border-t border-slate-100"><td class="p-3 font-medium">' +
+                esc(m.realName) +
+                '</td><td class="p-3 font-mono">' +
+                esc(m.phone) +
+                '</td><td class="p-3 text-xs max-w-[200px] truncate" title="' +
+                esc((m.subjects || []).join('、')) +
+                '">' +
+                esc((m.subjects || []).slice(0, 3).join('、') || '—') +
+                '</td><td class="p-3">' +
+                esc(m.evalGrade || '待教研评级') +
+                '</td><td class="p-3">' +
+                esc(STATUS_LABEL[m.status] || m.status) +
+                '</td><td class="p-3">' +
+                (m.acceptingOrders === false ? '暂停' : '正常') +
+                '</td><td class="p-3 whitespace-nowrap"><button type="button" data-toggle-accept="' +
+                esc(m.id) +
+                '" class="text-teal-700 text-xs font-bold">切换接单</button>' +
+                '<button type="button" data-delete-mentor="' +
+                esc(m.id) +
+                '" data-delete-label="' +
+                esc((m.realName || '该导师') + ' ' + (m.phone || '')) +
+                '" class="text-rose-700 text-xs font-bold ml-3">删除</button></td></tr>'
+              );
+            })
+            .join('')
+        : '<tr><td colspan="7" class="p-6 text-center text-slate-500">暂无导师</td></tr>') +
       '</tbody></table></div></div>'
     );
   }
@@ -1008,9 +1180,33 @@
     );
   }
 
+  function captureTeachingPointDraft() {
+    const input = document.getElementById('addTeachingPointName');
+    if (!input) return;
+    state.teachingPointDraftName = input.value || '';
+  }
+
+  function renderTeachingPointForm() {
+    if (!state.teachingPointFormOpen) return '';
+    return (
+      '<form id="addTeachingPointForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">' +
+      '<div class="font-bold text-slate-800">添加教学点</div>' +
+      '<p class="text-xs text-slate-500">只需填写名称。保存后按当前规则自动生成 3 个编号仓位。</p>' +
+      '<label class="text-sm block max-w-md"><span class="text-xs text-slate-500">教学点名称</span>' +
+      '<input id="addTeachingPointName" required maxlength="40" value="' +
+      esc(state.teachingPointDraftName || '') +
+      '" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2" placeholder="例：锦江春熙微网点"/></label>' +
+      '<div class="flex gap-2">' +
+      '<button type="submit" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">确认添加</button>' +
+      '<button type="button" id="btnCancelAddTeachingPoint" class="text-sm px-4 py-2 rounded-xl border border-slate-200 font-bold">取消</button>' +
+      '</div></form>'
+    );
+  }
+
   function renderTeachingPoints() {
+    captureTeachingPointDraft();
     let tps = state.teachingPoints || [];
-    if (!tps.length && window.StorageService && StorageService.SPACE_OPTIONS) {
+    if (!tps.length && !state.teachingPointsLoaded && window.StorageService && StorageService.SPACE_OPTIONS) {
       tps = StorageService.SPACE_OPTIONS.map((name, idx) => ({
         id: 'TP-LOCAL-' + idx,
         name: name,
@@ -1067,8 +1263,12 @@
     }
     return (
       '<div class="space-y-6">' +
+      '<div class="flex flex-wrap items-center justify-between gap-3">' +
       '<h1 class="text-xl font-semibold">教学点仓位管理</h1>' +
-      '<p class="text-sm text-slate-500">默认每网点 3 个编号仓位；缩减仓位前须确保无有效预约占用将被移除的仓位。智能仓 IoT 功能保持关闭。</p>' +
+      '<button type="button" id="btnOpenAddTeachingPoint" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">添加教学点</button>' +
+      '</div>' +
+      '<p class="text-sm text-slate-500">默认每网点 3 个编号仓位；缩减仓位前须确保无有效预约占用将被移除的仓位。删除教学点时，若仍有进行中的预约或占用仓位会被拒绝。智能仓 IoT 功能保持关闭。</p>' +
+      renderTeachingPointForm() +
       '<div class="space-y-4">' +
       tps
         .map((tp) => {
@@ -1094,6 +1294,11 @@
             '<button type="button" data-tp-save="' +
             esc(tp.id) +
             '" class="text-xs font-bold bg-teal-600 text-white px-3 py-1.5 rounded-lg">保存</button>' +
+            '<button type="button" data-tp-delete="' +
+            esc(tp.id) +
+            '" data-tp-name="' +
+            esc(tp.name) +
+            '" class="text-xs font-bold text-rose-700 px-2 py-1.5">删除</button>' +
             '</div></div>' +
             '<div class="flex flex-wrap gap-1">' +
             boothTags +
@@ -1101,6 +1306,7 @@
           );
         })
         .join('') +
+      (tps.length ? '' : '<p class="text-sm text-slate-500">还没有教学点。点击「添加教学点」新建，系统会生成 3 个编号仓位。</p>') +
       '</div>' +
       '<section class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">' +
       '<h2 class="font-bold text-slate-800">仓位占用一览</h2>' +
@@ -1539,10 +1745,11 @@
     const staffRows = (state.rbacStaff || [])
       .map((row) => {
         const draft = state.rbacDraft[row.phone] || row.modules || [];
-        const disabled = row.isSuperAdmin ? 'disabled' : '';
+        const primaryRowEarly = !!(row.isPrimaryAdmin || row.isSuperAdmin);
+        const disabled = primaryRowEarly ? 'disabled' : '';
         const checks = catalog
           .map((mod) => {
-            const on = draft.indexOf(mod.key) >= 0 || row.isSuperAdmin;
+            const on = draft.indexOf(mod.key) >= 0 || primaryRowEarly;
             return (
               '<label class="inline-flex items-center gap-1 text-xs mr-3 mb-1" title="' +
               esc(mod.label) +
@@ -1562,33 +1769,51 @@
             );
           })
           .join('');
+        const primaryRow = !!(row.isPrimaryAdmin || row.isSuperAdmin);
+        let actions = '不可修改';
+        if (!primaryRow) {
+          actions =
+            '<button type="button" data-rbac-save="' +
+            esc(row.phone) +
+            '" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold">保存</button>';
+          if (isPrimaryAdminUser()) {
+            actions +=
+              '<button type="button" data-rbac-remove="' +
+              esc(row.phone) +
+              '" class="ml-2 px-3 py-1.5 rounded-lg border border-rose-200 text-rose-700 text-xs font-bold">移除</button>';
+          }
+        }
         return (
           '<tr class="border-b border-slate-100 align-top">' +
           '<td class="py-3 pr-4 font-mono text-sm">' +
           esc(row.phone) +
-          (row.isSuperAdmin ? '<div class="text-xs text-amber-600 font-bold mt-1">最高管理权限</div>' : '') +
+          (primaryRow ? '<div class="text-xs text-amber-700 font-bold mt-1">主管理员</div>' : '') +
           '</td><td class="py-3">' +
           checks +
           '</td><td class="py-3 text-xs text-slate-500 whitespace-nowrap">' +
-          (row.isSuperAdmin
-            ? '不可修改'
-            : '<button type="button" data-rbac-save="' +
-              esc(row.phone) +
-              '" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold">保存</button>') +
+          actions +
           '</td></tr>'
         );
       })
       .join('');
+    const addAdminForm = isPrimaryAdminUser()
+      ? '<form id="addAdminForm" class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-end gap-3">' +
+        '<label class="text-sm block"><span class="text-xs text-slate-500">管理员手机号</span>' +
+        '<input id="addAdminPhone" required maxlength="11" class="mt-1 border border-slate-300 rounded-xl px-3 py-2" placeholder="11 位手机号"/></label>' +
+        '<button type="submit" class="text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">添加管理员</button>' +
+        '<p class="text-xs text-slate-500 w-full">新管理员默认可登录，但没有任何模块权限，需在下表勾选后保存。不发送短信、不设置密码。</p></form>'
+      : '<p class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">添加或移除管理员仅主管理员可操作。</p>';
     return (
       '<div class="space-y-4">' +
       '<h1 class="text-xl font-semibold text-slate-900">权限设置</h1>' +
-      '<p class="text-sm text-slate-600">为白名单内的其他管理员勾选可访问的运营模块。手机号 <span class="font-mono">13540012341</span> 为最高管理权限，始终拥有全部模块且不可被修改。</p>' +
+      '<p class="text-sm text-slate-600">为其他管理员勾选可访问的运营模块。手机号 <span class="font-mono">13540012341</span> 是主管理员，始终拥有全部模块，不能被移除，也不能被改权限。</p>' +
+      addAdminForm +
       '<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">' +
       '<table class="admin-dense w-full text-left"><thead class="bg-slate-50 text-xs text-slate-500 uppercase">' +
       '<tr><th class="p-3">管理员手机号</th><th class="p-3">模块权限</th><th class="p-3">操作</th></tr></thead><tbody>' +
       (staffRows || '<tr><td colspan="3" class="p-6 text-slate-500">暂无管理员</td></tr>') +
       '</tbody></table></div>' +
-      '<p class="text-xs text-slate-500">说明：未在白名单 ENV <code class="bg-slate-100 px-1 rounded">ADMIN_PHONES</code> 中的账号无法登录管理端；新加入白名单的管理员默认无任何模块，需在此授权。</p>' +
+      '<p class="text-xs text-slate-500">说明：未配置环境变量 <code class="bg-slate-100 px-1 rounded">ADMIN_PHONES</code> 时，内置白名单可登录管理端。主管理员也可在此直接添加管理员；新管理员默认无任何模块，需勾选后保存。</p>' +
       '</div>'
     );
   }
@@ -1886,6 +2111,227 @@
           renderMain();
         } catch (e) {
           toast(e.message || '保存失败', 'error');
+        }
+      });
+    });
+    const openAddParent = document.getElementById('btnOpenAddParent');
+    if (openAddParent) {
+      openAddParent.addEventListener('click', () => {
+        state.parentFormOpen = !state.parentFormOpen;
+        renderMain();
+      });
+    }
+    const cancelAddParent = document.getElementById('btnCancelAddParent');
+    if (cancelAddParent) {
+      cancelAddParent.addEventListener('click', () => {
+        state.parentFormOpen = false;
+        state.parentDraft = { phone: '', parentName: '', studentNickname: '', studentGrade: '', parentRole: '家长' };
+        renderMain();
+      });
+    }
+    const addParentForm = document.getElementById('addParentForm');
+    if (addParentForm) {
+      addParentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        captureParentDraft();
+        const draft = state.parentDraft;
+        try {
+          await AdminApi.createParent({
+            phone: String(draft.phone || '').trim(),
+            parentName: String(draft.parentName || '').trim(),
+            studentNickname: String(draft.studentNickname || '').trim(),
+            studentGrade: String(draft.studentGrade || '').trim(),
+            parentRole: draft.parentRole || '家长'
+          });
+          state.parentFormOpen = false;
+          state.parentDraft = { phone: '', parentName: '', studentNickname: '', studentGrade: '', parentRole: '家长' };
+          await reloadCore();
+          toast('家长已添加');
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '添加家长失败'), 'error');
+        }
+      });
+    }
+    document.querySelectorAll('[data-delete-parent]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-delete-parent');
+        const label = btn.getAttribute('data-delete-label') || '该家长';
+        const yes = await confirmAction({
+          title: '删除家长',
+          message:
+            '确认删除家长「' +
+            label +
+            '」？进行中的预约或未完结订单会阻止删除。历史预约与支付记录会保留，该手机号将无法再登录。'
+        });
+        if (!yes) return;
+        try {
+          await AdminApi.deleteParent(id);
+          await reloadCore();
+          toast('家长已删除');
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '删除家长失败'), 'error');
+        }
+      });
+    });
+    const openAddMentor = document.getElementById('btnOpenAddMentor');
+    if (openAddMentor) {
+      openAddMentor.addEventListener('click', () => {
+        state.mentorFormOpen = !state.mentorFormOpen;
+        renderMain();
+      });
+    }
+    const cancelAddMentor = document.getElementById('btnCancelAddMentor');
+    if (cancelAddMentor) {
+      cancelAddMentor.addEventListener('click', () => {
+        state.mentorFormOpen = false;
+        state.mentorDraft = { phone: '', realName: '', university: '', hourlyRate: '' };
+        renderMain();
+      });
+    }
+    const addMentorForm = document.getElementById('addMentorForm');
+    if (addMentorForm) {
+      addMentorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        captureMentorDraft();
+        const draft = state.mentorDraft;
+        const payload = {
+          phone: String(draft.phone || '').trim(),
+          realName: String(draft.realName || '').trim(),
+          university: String(draft.university || '').trim()
+        };
+        if (String(draft.hourlyRate || '').trim()) payload.hourlyRate = String(draft.hourlyRate).trim();
+        try {
+          await AdminApi.createMentor(payload);
+          state.mentorFormOpen = false;
+          state.mentorDraft = { phone: '', realName: '', university: '', hourlyRate: '' };
+          await reloadCore();
+          toast('导师已添加，状态为待审核');
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '添加导师失败'), 'error');
+        }
+      });
+    }
+    document.querySelectorAll('[data-delete-mentor]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-delete-mentor');
+        const label = btn.getAttribute('data-delete-label') || '该导师';
+        const yes = await confirmAction({
+          title: '删除导师',
+          message:
+            '确认删除导师「' +
+            label +
+            '」？进行中的预约或未完结订单会阻止删除。历史预约、支付与佐证材料记录会保留，该手机号将无法再登录。'
+        });
+        if (!yes) return;
+        try {
+          await AdminApi.deleteMentor(id);
+          await reloadCore();
+          toast('导师已删除');
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '删除导师失败'), 'error');
+        }
+      });
+    });
+    const openAddTp = document.getElementById('btnOpenAddTeachingPoint');
+    if (openAddTp) {
+      openAddTp.addEventListener('click', () => {
+        state.teachingPointFormOpen = !state.teachingPointFormOpen;
+        renderMain();
+      });
+    }
+    const cancelAddTp = document.getElementById('btnCancelAddTeachingPoint');
+    if (cancelAddTp) {
+      cancelAddTp.addEventListener('click', () => {
+        state.teachingPointFormOpen = false;
+        state.teachingPointDraftName = '';
+        renderMain();
+      });
+    }
+    const addTpForm = document.getElementById('addTeachingPointForm');
+    if (addTpForm) {
+      addTpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        captureTeachingPointDraft();
+        try {
+          await AdminApi.createTeachingPoint({ name: String(state.teachingPointDraftName || '').trim() });
+          state.teachingPointFormOpen = false;
+          state.teachingPointDraftName = '';
+          await reloadCore();
+          toast('教学点已添加，已生成 3 个仓位');
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '添加教学点失败'), 'error');
+        }
+      });
+    }
+    document.querySelectorAll('[data-tp-delete]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-tp-delete');
+        const name = btn.getAttribute('data-tp-name') || '该教学点';
+        const yes = await confirmAction({
+          title: '删除教学点',
+          message:
+            '确认删除教学点「' +
+            name +
+            '」及其编号仓位？若仍有进行中的预约或占用仓位，系统会拒绝删除。已结束的预约记录会保留。'
+        });
+        if (!yes) return;
+        try {
+          await AdminApi.deleteTeachingPoint(id);
+          if (state.tpOccupancyTpId === id) {
+            state.tpOccupancyTpId = '';
+            state.tpOccupancy = null;
+          }
+          await reloadCore();
+          toast('教学点已删除');
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '删除教学点失败'), 'error');
+        }
+      });
+    });
+    const addAdminForm = document.getElementById('addAdminForm');
+    if (addAdminForm) {
+      addAdminForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!isPrimaryAdminUser()) {
+          toast('仅主管理员可添加管理员', 'error');
+          return;
+        }
+        const phone = String((document.getElementById('addAdminPhone') || {}).value || '').trim();
+        try {
+          await AdminApi.createAdminStaff(phone);
+          toast('管理员已添加，请勾选模块后保存');
+          await loadRbacStaff();
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '添加管理员失败'), 'error');
+        }
+      });
+    }
+    document.querySelectorAll('[data-rbac-remove]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!isPrimaryAdminUser()) {
+          toast('仅主管理员可移除管理员', 'error');
+          return;
+        }
+        const phone = btn.getAttribute('data-rbac-remove');
+        const yes = await confirmAction({
+          title: '移除管理员',
+          message: '确认移除管理员 ' + phone + '？移除后该手机号将无法登录运营中台。主管理员不能被移除。'
+        });
+        if (!yes) return;
+        try {
+          await AdminApi.deleteAdminStaff(phone);
+          toast('管理员已移除');
+          await loadRbacStaff();
+          renderMain();
+        } catch (err) {
+          toast(apiErrorMessage(err, '移除管理员失败'), 'error');
         }
       });
     });
