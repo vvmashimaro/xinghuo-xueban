@@ -126,14 +126,17 @@
 
   const RELOGIN_ADMIN = '当前登录已不是管理员，请重新登录中台';
 
+  function isPrimarySession(me) {
+    return !!(me && me.adminRbac && (me.adminRbac.isPrimaryAdmin || me.adminRbac.isSuperAdmin));
+  }
+
   function identityText(me) {
     if (!me) return '未登录';
     const phone = me.phone || '';
-    const primary = me.adminRbac && (me.adminRbac.isPrimaryAdmin || me.adminRbac.isSuperAdmin);
-    let who = '用户';
-    if (me.role === 'admin') who = primary ? '主管理员' : '管理员';
-    else if (me.role === 'parent') who = '家长';
-    else if (me.role === 'mentor') who = '导师';
+    let who = '其他账号';
+    if (me.role === 'admin') who = isPrimarySession(me) ? '主管理员' : '管理员';
+    else if (me.role === 'parent') who = '当前是家长登录';
+    else if (me.role === 'mentor') who = '当前是导师登录';
     else if (me.role) who = String(me.role);
     return phone ? who + ' · ' + phone : who;
   }
@@ -141,15 +144,69 @@
   function paintIdentity(me) {
     const text = identityText(me);
     state.adminLabel = text;
-    const bar = document.getElementById('adminIdentity');
+    const identity = document.getElementById('adminIdentity');
     const side = document.getElementById('adminUserLabel');
-    if (bar) bar.textContent = text;
+    const status = document.getElementById('adminSessionStatus');
+    const note = document.getElementById('adminSessionNote');
+    const relogin = document.getElementById('adminRelogin');
+    const bar = document.getElementById('adminTopBar');
+    if (identity) identity.textContent = text;
     if (side) side.textContent = text;
+    const adminSession = !!(me && me.role === 'admin');
+    if (adminSession) {
+      if (status) {
+        status.textContent = isPrimarySession(me) ? '主管理员会话' : '管理员会话';
+        status.className =
+          'shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200';
+      }
+      if (note) {
+        note.textContent = '';
+        note.classList.add('hidden');
+      }
+      if (relogin) relogin.classList.add('hidden');
+      if (bar) {
+        bar.className =
+          'shrink-0 bg-white border-b border-slate-200 px-6 lg:px-8 py-3 flex items-center justify-between gap-3';
+      }
+      return;
+    }
+    const replacedBy = me && me.role === 'mentor' ? '导师' : me && me.role === 'parent' ? '家长' : '';
+    if (status) {
+      status.textContent = '会话已不是管理员';
+      status.className =
+        'shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200';
+    }
+    if (note) {
+      note.textContent = replacedBy
+        ? '当前会话已被' + replacedBy + '登录覆盖。' + RELOGIN_ADMIN
+        : RELOGIN_ADMIN;
+      note.classList.remove('hidden');
+    }
+    if (relogin) relogin.classList.remove('hidden');
+    if (bar) {
+      bar.className =
+        'shrink-0 bg-rose-50 border-b border-rose-200 px-6 lg:px-8 py-3 flex items-center justify-between gap-3';
+    }
+  }
+
+  function refreshIdentityAfterTakeover() {
+    if (!window.StorageService || typeof StorageService.getCurrentUser !== 'function') return;
+    if (refreshIdentityAfterTakeover._busy) return;
+    refreshIdentityAfterTakeover._busy = true;
+    StorageService.getCurrentUser()
+      .then((me) => paintIdentity(me))
+      .catch(() => {})
+      .then(() => {
+        refreshIdentityAfterTakeover._busy = false;
+      });
   }
 
   function apiErrorMessage(e, fallback) {
     const raw = (e && e.data && e.data.error) || (e && e.message) || fallback || '操作失败';
-    if (raw === '需要管理员权限') return RELOGIN_ADMIN;
+    if (raw === '需要管理员权限' || raw === RELOGIN_ADMIN) {
+      refreshIdentityAfterTakeover();
+      return RELOGIN_ADMIN;
+    }
     return raw;
   }
 
@@ -332,11 +389,6 @@
       return false;
     }
     if (me.role !== 'admin') {
-      const note = document.getElementById('adminSessionNote');
-      if (note) {
-        note.textContent = RELOGIN_ADMIN;
-        note.classList.remove('hidden');
-      }
       const main = document.getElementById('adminMain');
       if (main) {
         main.innerHTML =
@@ -344,8 +396,8 @@
           '<h1 class="text-xl font-semibold text-slate-900">' +
           RELOGIN_ADMIN +
           '</h1>' +
-          '<p class="text-sm text-slate-600">顶栏是当前会话身份。请退出后用管理员手机号重新登录。</p>' +
-          '<a href="../login.html" class="inline-flex text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">重新登录</a>' +
+          '<p class="text-sm text-slate-600">顶栏标出当前会话。家长或导师登录会覆盖原来的管理员令牌。</p>' +
+          '<a href="../login.html" class="inline-flex text-sm bg-rose-600 text-white px-4 py-2 rounded-xl font-bold">重新登录中台</a>' +
           '</div>';
       }
       return false;

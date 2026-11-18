@@ -53,6 +53,11 @@ function assertMidPlatformCopy() {
   );
   assert(appJs.indexOf("raw === '需要管理员权限'") >= 0, 'old admin-permission text is rewritten in the UI');
   assert(html.indexOf('id="adminIdentity"') >= 0, 'top bar shows the active session');
+  assert(html.indexOf('id="adminSessionStatus"') >= 0, 'top bar states whether the session is still admin');
+  assert(html.indexOf('>重新登录中台<') >= 0, 'top bar offers 重新登录中台');
+  assert(appJs.indexOf('会话已不是管理员') >= 0, 'replaced session is labeled in the top bar');
+  assert(appJs.indexOf('当前会话已被') >= 0, 'parent or tutor overwrite is named in the top bar');
+  assert(appJs.indexOf('管理员会话') >= 0, 'an admin session is labeled in the top bar');
   assert(!/session\.role = role \|\| user\.role/.test(storage), 'login does not keep the requested role over the server role');
   assert(storage.indexOf('user.role || role') >= 0, 'login keeps the server-issued role');
 }
