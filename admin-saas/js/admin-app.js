@@ -376,6 +376,40 @@
     el._t = setTimeout(() => el.classList.add('hidden'), 3200);
   }
 
+  function bindLogout() {
+    const btn = document.getElementById('btnLogout');
+    if (!btn || btn.dataset.logoutBound === '1') return;
+    btn.dataset.logoutBound = '1';
+    btn.addEventListener('click', async () => {
+      if (window.StorageService && typeof StorageService.confirmAndLogout === 'function') {
+        await StorageService.confirmAndLogout('../login.html');
+        return;
+      }
+      window.location.href = '../login.html';
+    });
+  }
+
+  async function clearSessionAndRelogin(event) {
+    if (event) event.preventDefault();
+    try {
+      if (window.StorageService && typeof StorageService.logout === 'function') {
+        await StorageService.logout();
+      }
+    } catch (e) {
+      /* StorageService.logout already clears the local token when the request fails. */
+    }
+    window.location.href = '../login.html';
+  }
+
+  function bindRelogin(root) {
+    const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+    scope.querySelectorAll('[data-admin-relogin]').forEach((el) => {
+      if (el.dataset.reloginBound === '1') return;
+      el.dataset.reloginBound = '1';
+      el.addEventListener('click', clearSessionAndRelogin);
+    });
+  }
+
   async function ensureAdmin() {
     if (!window.StorageService || !StorageService.isLoggedIn()) {
       window.location.href = '../login.html';
@@ -397,9 +431,11 @@
           RELOGIN_ADMIN +
           '</h1>' +
           '<p class="text-sm text-slate-600">顶栏标出当前会话。家长或导师登录会覆盖原来的管理员令牌。</p>' +
-          '<a href="../login.html" class="inline-flex text-sm bg-rose-600 text-white px-4 py-2 rounded-xl font-bold">重新登录中台</a>' +
+          '<a data-admin-relogin href="../login.html" class="inline-flex text-sm bg-rose-600 text-white px-4 py-2 rounded-xl font-bold">重新登录中台</a>' +
           '</div>';
       }
+      bindLogout();
+      bindRelogin(document);
       return false;
     }
     if (me.adminRbac) {
@@ -2450,6 +2486,8 @@
   }
 
   async function init() {
+    bindLogout();
+    bindRelogin(document);
     const ok = await ensureAdmin();
     if (!ok) return;
     await reloadCore();
@@ -2461,9 +2499,6 @@
         e.preventDefault();
         setRoute(el.getAttribute('data-nav'));
       });
-    });
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await StorageService.confirmAndLogout('../login.html');
     });
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');

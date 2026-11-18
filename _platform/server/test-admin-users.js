@@ -58,6 +58,13 @@ function assertMidPlatformCopy() {
   assert(appJs.indexOf('会话已不是管理员') >= 0, 'replaced session is labeled in the top bar');
   assert(appJs.indexOf('当前会话已被') >= 0, 'parent or tutor overwrite is named in the top bar');
   assert(appJs.indexOf('管理员会话') >= 0, 'an admin session is labeled in the top bar');
+  const nonAdmin = appJs.slice(appJs.indexOf("if (me.role !== 'admin')"));
+  const bindAt = nonAdmin.indexOf('bindLogout()');
+  const returnAt = nonAdmin.indexOf('return false');
+  assert(bindAt >= 0 && returnAt >= 0 && bindAt < returnAt, 'logout is bound before ensureAdmin returns false');
+  assert(nonAdmin.indexOf('bindRelogin(') >= 0 && nonAdmin.indexOf('bindRelogin(') < returnAt, 're-login is bound before ensureAdmin returns false');
+  assert(appJs.indexOf('await StorageService.logout()') >= 0, '重新登录中台 clears the current token');
+  assert(html.indexOf('data-admin-relogin') >= 0, 'top bar re-login entry clears the token before navigation');
   assert(!/session\.role = role \|\| user\.role/.test(storage), 'login does not keep the requested role over the server role');
   assert(storage.indexOf('user.role || role') >= 0, 'login keeps the server-issued role');
 }
