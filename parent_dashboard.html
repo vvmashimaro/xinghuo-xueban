@@ -3836,7 +3836,21 @@
           }
         });
       }
+      openBookingFromLandingQuery();
     };
+
+    function openBookingFromLandingQuery() {
+      var bookId = '';
+      try {
+        bookId = new URLSearchParams(window.location.search || '').get('book') || '';
+      } catch (e) { return; }
+      if (!bookId) return;
+      if (typeof goDiscoverTab === 'function') goDiscoverTab();
+      var tutor = (TUTOR_DATABASE || []).find(function (t) {
+        return t && (t.mentorId === bookId || t.id === bookId || t.id === 'TUTOR-' + bookId);
+      });
+      if (tutor) openBookingDrawer(tutor.id);
+    }
   </script>
 </body>
 </html>
