@@ -428,7 +428,34 @@ function createMockPrepay(bookingId, amount, description) {
   };
 }
 
-async function createRealPrepay(bookingId, amount, description, openid, payType = 'JSAPI') {
+const MOCK_OPENID_JSAPI_ERROR =
+  '真实微信支付不能使用模拟 openid。WX_SESSION_MODE 优先于 WX_PHONE_MODE，请设置为 production 后再支付';
+
+const PREPAY_CLIENT_ERROR = '支付暂时无法完成，请稍后重试或联系管理员';
+const PREPAY_CLIENT_CODE = 'PAY_TEMPORARILY_UNAVAILABLE';
+
+function prepayClientFailure(error) {
+  const technical = error && error.message ? String(error.message) : String(error || '创建预支付订单失败');
+  console.error('[WeChat Pay Prepay Error]', technical);
+  return {
+    error: PREPAY_CLIENT_ERROR,
+    code: PREPAY_CLIENT_CODE
+  };
+}
+
+function isMockSessionOpenid(openid) {
+  return typeof openid === 'string' && openid.startsWith('oMOCK-');
+}
+
+function assertRealJsapiPayer(openid, payType, sessionMock) {
+  const normalizedType = String(payType || 'JSAPI').toUpperCase();
+  if (normalizedType === 'NATIVE') return;
+  if (sessionMock === true || isMockSessionOpenid(openid)) {
+    throw new Error(MOCK_OPENID_JSAPI_ERROR);
+  }
+}
+
+async function createRealPrepay(bookingId, amount, description, openid, payType = 'JSAPI', sessionMock = false) {
   const config = getWeChatPayConfig();
   const normalizedType = String(payType || 'JSAPI').toUpperCase();
   const isNative = normalizedType === 'NATIVE';
@@ -447,6 +474,7 @@ async function createRealPrepay(bookingId, amount, description, openid, payType 
   };
 
   if (!isNative) {
+    assertRealJsapiPayer(openid, normalizedType, sessionMock);
     if (!openid) {
       throw new Error('JSAPI 支付需要 openid，请先调用 wx.login 并绑定微信会话');
     }
@@ -477,7 +505,7 @@ async function createRealPrepay(bookingId, amount, description, openid, payType 
 }
 
 async function createPrepay(params) {
-  const { bookingId, amount, description, openid, payType } = params;
+  const { bookingId, amount, description, openid, payType, sessionMock } = params;
 
   if (!bookingId || !amount) {
     throw new Error('缺少必要参数：bookingId 或 amount');
@@ -490,7 +518,8 @@ async function createPrepay(params) {
     throw new Error('微信支付配置不完整，无法创建预支付订单');
   }
 
-  return await createRealPrepay(bookingId, amount, description, openid, payType);
+  assertRealJsapiPayer(openid, payType, sessionMock);
+  return await createRealPrepay(bookingId, amount, description, openid, payType, sessionMock === true);
 }
 
 function mockConfirmPayment(outTradeNo) {
@@ -848,6 +877,9 @@ function getOrderStatus(outTradeNo) {
 
 module.exports = {
   createPrepay,
+  prepayClientFailure,
+  PREPAY_CLIENT_ERROR,
+  PREPAY_CLIENT_CODE,
   mockConfirmPayment,
   handlePaymentNotify,
   getOrderStatus,

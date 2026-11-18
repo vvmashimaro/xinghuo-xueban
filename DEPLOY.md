@@ -132,6 +132,8 @@
    WECHAT_MCH_SERIAL_NO=your-serial-no
    WECHAT_PRIVATE_KEY_PEM=your-private-key-content-with-\n
    WECHAT_NOTIFY_URL=https://your-api.onrender.com/api/pay/wechat/notify
+   # 生产必须设置 WX_SESSION_MODE=production。该变量优先于 WX_PHONE_MODE。
+   WX_SESSION_MODE=production
    
    # API 公开地址
    API_PUBLIC_URL=https://your-api.onrender.com

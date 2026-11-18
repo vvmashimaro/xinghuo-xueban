@@ -10,6 +10,37 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const wechatPay = require('./src/wechat-pay');
+const wechatSession = require('./src/wechat-session');
+
+function assertLocalMockOpenidError(err) {
+  assert.ok(err, 'expected a local mock-openid error');
+  const message = String(err && err.message);
+  assert.ok(/模拟 openid/.test(message), message);
+  assert.ok(!/无效的\s*openid/i.test(message), message);
+}
+
+function assertPrepayApiHidesTechnicalError(err) {
+  const logged = [];
+  const originalError = console.error;
+  console.error = function () {
+    logged.push(Array.prototype.map.call(arguments, String).join(' '));
+  };
+  let body;
+  try {
+    body = wechatPay.prepayClientFailure(err);
+  } finally {
+    console.error = originalError;
+  }
+  assert.strictEqual(body.error, '支付暂时无法完成，请稍后重试或联系管理员');
+  assert.strictEqual(body.code, 'PAY_TEMPORARILY_UNAVAILABLE');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(body, 'message'), false);
+  const packed = JSON.stringify(body);
+  assert.ok(!/模拟|oMOCK-|WECHAT_APP_SECRET|WX_SESSION_MODE|无效的\s*openid/i.test(packed), packed);
+  assert.ok(
+    logged.some((line) => line.indexOf(String(err.message)) !== -1),
+    'technical prepay reason must stay in the server log'
+  );
+}
 
 function genAesGcmPayload(plaintext, apiV3Key, associatedData, nonce) {
   const key = Buffer.from(apiV3Key, 'utf8');
@@ -37,6 +68,45 @@ async function run() {
   assert.strictEqual(mockPrepay.mock, true);
   assert.ok(mockPrepay.prepayId);
   assert.ok(mockPrepay.outTradeNo);
+
+  const savedSessionMode = process.env.WX_SESSION_MODE;
+  const savedPhoneMode = process.env.WX_PHONE_MODE;
+  const savedAppSecret = process.env.WECHAT_APP_SECRET;
+  process.env.WX_SESSION_MODE = 'mock';
+  process.env.WX_PHONE_MODE = 'production';
+  assert.strictEqual(wechatSession.sessionMode(), 'mock');
+  const devSession = await wechatSession.code2Session('MOCK_WX_LOGIN');
+  assert.strictEqual(devSession.mock, true);
+  assert.strictEqual(devSession.openid, 'oMOCK-openid-parent-001');
+  const devJsapi = await wechatPay.createPrepay({
+    bookingId: 'BK-DEV-MOCK-OID',
+    amount: 100,
+    description: 'dev mock openid stays local',
+    openid: devSession.openid,
+    payType: 'JSAPI',
+    sessionMock: true
+  });
+  assert.strictEqual(devJsapi.mock, true);
+
+  delete process.env.WX_SESSION_MODE;
+  process.env.WX_PHONE_MODE = 'production';
+  delete process.env.WECHAT_APP_SECRET;
+  let missingSecret = null;
+  try {
+    await wechatSession.code2Session('prod-login-code');
+  } catch (err) {
+    missingSecret = err;
+  }
+  assert.ok(missingSecret, 'production session mode must not mock a missing AppSecret');
+  assert.ok(/WECHAT_APP_SECRET/.test(missingSecret.message));
+  assert.ok(!/无效的\s*openid/i.test(missingSecret.message));
+  assertPrepayApiHidesTechnicalError(missingSecret);
+  if (savedAppSecret === undefined) delete process.env.WECHAT_APP_SECRET;
+  else process.env.WECHAT_APP_SECRET = savedAppSecret;
+  if (savedSessionMode === undefined) delete process.env.WX_SESSION_MODE;
+  else process.env.WX_SESSION_MODE = savedSessionMode;
+  if (savedPhoneMode === undefined) delete process.env.WX_PHONE_MODE;
+  else process.env.WX_PHONE_MODE = savedPhoneMode;
 
   wechatPay.mockConfirmPayment(mockPrepay.outTradeNo);
   wechatPay.markOrderPaid(mockPrepay.outTradeNo, {
@@ -161,7 +231,7 @@ async function run() {
   process.env.WECHAT_NOTIFY_URL = 'https://example.com/api/pay/wechat/notify';
 
   const fetchCalls = [];
-  wechatPay.setWechatPayFetch(async (url, init) => {
+  async function wechatPayFetchOk(url, init) {
     fetchCalls.push({ url, init });
     const pathName = String(url).replace(/^https:\/\/api\.mch\.weixin\.qq.com/, '');
     let payload = {};
@@ -177,7 +247,8 @@ async function run() {
       payload = { out_trade_no: 'BK-Q-1', trade_state: 'NOTPAY' };
     }
     return { status: 200, text: async () => JSON.stringify(payload) };
-  });
+  }
+  wechatPay.setWechatPayFetch(wechatPayFetchOk);
 
   await wechatPay.wechatPayRequest('GET', '/v3/certificates');
   const jsapi = await wechatPay.createPrepay({
@@ -189,6 +260,90 @@ async function run() {
   });
   assert.strictEqual(jsapi.mock, false);
   assert.strictEqual(jsapi.prepayId, 'wx-prepay-mock');
+
+  const jsapiCallsBeforeReject = fetchCalls.length;
+  const savedRealSessionMode = process.env.WX_SESSION_MODE;
+  const savedRealPhoneMode = process.env.WX_PHONE_MODE;
+  wechatPay.setWechatPayFetch(async (url, init) => {
+    fetchCalls.push({ url, init });
+    return {
+      status: 400,
+      text: async () => JSON.stringify({ code: 'PARAM_ERROR', message: '无效的openid' })
+    };
+  });
+  process.env.WX_SESSION_MODE = 'mock';
+  process.env.WX_PHONE_MODE = 'production';
+  assert.strictEqual(wechatPay.isConfigComplete(), true);
+  assert.strictEqual(wechatSession.sessionMode(), 'mock');
+  let mockSessionErr = null;
+  try {
+    const session = await wechatSession.code2Session('wx-login-from-mini');
+    await wechatPay.createPrepay({
+      bookingId: 'BK-REAL-MOCK-SESSION',
+      amount: 100,
+      description: 'continue pay must not call wechat',
+      openid: session.openid,
+      payType: 'JSAPI',
+      sessionMock: session.mock === true
+    });
+  } catch (err) {
+    mockSessionErr = err;
+  }
+  assertLocalMockOpenidError(mockSessionErr);
+  assertPrepayApiHidesTechnicalError(mockSessionErr);
+  assert.strictEqual(fetchCalls.length, jsapiCallsBeforeReject, 'mock session must not reach WeChat Pay');
+
+  let prefixErr = null;
+  try {
+    await wechatPay.createPrepay({
+      bookingId: 'BK-STORED-MOCK-OID',
+      amount: 100,
+      description: 'stored oMOCK openid',
+      openid: 'oMOCK-openid-parent-001',
+      payType: 'JSAPI'
+    });
+  } catch (err) {
+    prefixErr = err;
+  }
+  assertLocalMockOpenidError(prefixErr);
+  assertPrepayApiHidesTechnicalError(prefixErr);
+
+  let flagErr = null;
+  try {
+    await wechatPay.createPrepay({
+      bookingId: 'BK-SESSION-MOCK-FLAG',
+      amount: 100,
+      description: 'session.mock flag',
+      openid: 'o-real-looking',
+      payType: 'JSAPI',
+      sessionMock: true
+    });
+  } catch (err) {
+    flagErr = err;
+  }
+  assertLocalMockOpenidError(flagErr);
+  assertPrepayApiHidesTechnicalError(flagErr);
+  assert.strictEqual(fetchCalls.length, jsapiCallsBeforeReject, 'mock openid must not reach WeChat Pay');
+
+  const secretDuringRealPay = process.env.WECHAT_APP_SECRET;
+  delete process.env.WECHAT_APP_SECRET;
+  let realPaySecretErr = null;
+  try {
+    await wechatSession.code2Session('wx-login-from-mini');
+  } catch (err) {
+    realPaySecretErr = err;
+  }
+  assertLocalMockOpenidError(realPaySecretErr);
+  assert.ok(/WECHAT_APP_SECRET/.test(realPaySecretErr.message));
+  assertPrepayApiHidesTechnicalError(realPaySecretErr);
+  if (secretDuringRealPay === undefined) delete process.env.WECHAT_APP_SECRET;
+  else process.env.WECHAT_APP_SECRET = secretDuringRealPay;
+  if (savedRealSessionMode === undefined) delete process.env.WX_SESSION_MODE;
+  else process.env.WX_SESSION_MODE = savedRealSessionMode;
+  if (savedRealPhoneMode === undefined) delete process.env.WX_PHONE_MODE;
+  else process.env.WX_PHONE_MODE = savedRealPhoneMode;
+
+  wechatPay.setWechatPayFetch(wechatPayFetchOk);
 
   const refundLive = await wechatPay.refundOrder({
     outTradeNo: 'BK-UA-LIVE-1',
@@ -325,6 +480,14 @@ async function run() {
   assert.ok(
     !/const refreshed = booking \? db\.getBookings\(\)/.test(indexSrc),
     'syncPayOrderWithRemote must not reference undefined booking'
+  );
+  assert.ok(
+    indexSrc.includes('wechatPay.prepayClientFailure(error)'),
+    'prepay catch must map failures through prepayClientFailure'
+  );
+  assert.ok(
+    !indexSrc.includes("fail(res, 500, error.message || '创建预支付订单失败')"),
+    'prepay catch must not return the technical error.message to the client'
   );
 
   console.log('test-wechat-pay: OK');

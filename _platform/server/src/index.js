@@ -1034,9 +1034,11 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
     const amountFen = payable.amountFen;
 
     let resolvedOpenid = openid;
+    let sessionMock = false;
     if (wxCode) {
       const session = await wechatSession.code2Session(wxCode);
       resolvedOpenid = session.openid;
+      sessionMock = session.mock === true;
       if (req.user.role === 'parent') {
         const parents = db.getParents();
         const parent = parents.find((p) => p.id === req.user.userId);
@@ -1056,7 +1058,8 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
       amount: amountFen,
       description: description || '星火学伴 · 课程预约',
       openid: resolvedOpenid,
-      payType: resolvedPayType
+      payType: resolvedPayType,
+      sessionMock
     });
 
     if (result && result.outTradeNo) {
@@ -1078,8 +1081,8 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
     
     ok(res, Object.assign({}, result, { amountFen, amountYuan: payable.amountYuan }));
   } catch (error) {
-    console.error('[WeChat Pay Prepay Error]', error);
-    fail(res, 500, error.message || '创建预支付订单失败');
+    const body = wechatPay.prepayClientFailure(error);
+    res.status(500).json(body);
   }
 });
 
