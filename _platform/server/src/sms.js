@@ -207,6 +207,36 @@ function maskPhoneForLog(phone) {
   return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
 }
 
+/** Shown when Tencent rejects a verification-code send for the per-number daily cap. */
+const OTP_PHONE_DAILY_LIMIT_COPY =
+  '该手机号今天验证码次数已用完，请明天再试，或更换号码。';
+const TENCENT_PHONE_DAILY_LIMIT_CODE = 'LimitExceeded.PhoneNumberDailyLimit';
+const TENCENT_PHONE_DAILY_LIMIT_TEXT =
+  'the number of sms messages sent from a single mobile number every day exceeds the upper limit';
+
+function providerSmsError(message, tencentCode) {
+  const err = new Error(message || '短信发送失败');
+  if (tencentCode) err.tencentCode = String(tencentCode);
+  return err;
+}
+
+function isTencentPhoneDailyLimitError(error) {
+  if (!error) return false;
+  if (String(error.tencentCode || '') === TENCENT_PHONE_DAILY_LIMIT_CODE) return true;
+  const msg = String(error.message || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  if (!msg) return false;
+  if (msg.includes(TENCENT_PHONE_DAILY_LIMIT_CODE.toLowerCase())) return true;
+  return msg.includes(TENCENT_PHONE_DAILY_LIMIT_TEXT);
+}
+
+function otpSendClientError(error) {
+  if (isTencentPhoneDailyLimitError(error)) return OTP_PHONE_DAILY_LIMIT_COPY;
+  return '短信发送失败，请稍后重试';
+}
+
 async function sendMockSMS(phone, code, scene, auth = null) {
   const maskedPhone = maskPhoneForLog(phone);
   const codePart = isProduction() ? 'code=******' : `code=${code}`;
@@ -340,7 +370,12 @@ async function sendTencentTemplateSMS(phone, scene, payload) {
 
           if (result.Response && result.Response.Error) {
             console.error('[SMS Tencent] API Error:', result.Response.Error);
-            reject(new Error(result.Response.Error.Message || '腾讯云短信发送失败'));
+            reject(
+              providerSmsError(
+                result.Response.Error.Message || '腾讯云短信发送失败',
+                result.Response.Error.Code
+              )
+            );
             return;
           }
 
@@ -351,7 +386,7 @@ async function sendTencentTemplateSMS(phone, scene, payload) {
               resolve({ success: true, provider: 'tencent', message: '短信已发送' });
             } else {
               console.error('[SMS Tencent] 发送失败:', status.Message);
-              reject(new Error(status.Message || '短信发送失败'));
+              reject(providerSmsError(status.Message || '短信发送失败', status.Code));
             }
           } else {
             reject(new Error('未知的响应格式'));
@@ -460,7 +495,7 @@ async function sendSMS(phone, scene = 'login', auth = null, clientIp = '') {
     else sendCooldown.delete(phone);
 
     if (isProduction() && provider === 'tencent') {
-      return { success: false, error: '短信发送失败，请稍后重试' };
+      return { success: false, error: otpSendClientError(error) };
     }
 
     return { success: true, provider: 'mock-fallback', message: '验证码已发送，请查收' };
