@@ -76,6 +76,12 @@
   font-size: 11px;
   font-weight: 700;
 }
+.xh-ccard-highlight {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #173d32;
+}
 .xh-ccard-price {
   margin-top: 18px;
   font-size: 20px;
@@ -152,6 +158,8 @@
 .xh-ccard-row .xh-ccard-top { display: none; }
 .xh-ccard-row .xh-ccard-name { font-size: 15px; margin: 0; }
 .xh-ccard-row .xh-ccard-role { margin-top: 2px; }
+.xh-ccard-row .xh-ccard-stamps { margin-top: 8px; }
+.xh-ccard-row .xh-ccard-price { margin-top: 10px; font-size: 16px; }
 .xh-ccard-row .xh-ccard-body { min-width: 0; }
 .xh-ccard-row.is-on {
   border-color: #166b56;

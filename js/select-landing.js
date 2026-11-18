@@ -1,6 +1,7 @@
 /**
  * 家长「选择学伴」：年级 → 科目 → 风格，或随便看看。
- * 名单来自现有公开导师接口，卡片用 XinghuoCompanionCard。
+ * 按需匹配读取现有公开导师接口。
+ * 「随便看看」只读 XINGHUO_BROWSE_DISPLAY_ROSTER，不进入预约。
  */
 (function (global) {
   'use strict';
@@ -21,9 +22,12 @@
     index: 0,
     list: [],
     all: [],
+    matchList: [],
     loading: false,
     loaded: false,
-    pickedName: ''
+    matchLoaded: false,
+    pickedName: '',
+    pickedNote: ''
   };
 
   function cardApi() {
@@ -47,7 +51,7 @@
   }
 
   async function ensureMentors() {
-    if (state.loaded) return state.all;
+    if (state.matchLoaded) return state.matchList;
     state.loading = true;
     var list = [];
     try {
@@ -59,10 +63,26 @@
     if (!list.length && global.StorageService && StorageService.getApprovedMentors) {
       try { list = StorageService.getApprovedMentors() || []; } catch (e2) { list = []; }
     }
-    state.all = (list || []).map(stripSensitive);
-    state.loaded = true;
+    state.matchList = (list || []).map(stripSensitive);
+    state.matchLoaded = true;
     state.loading = false;
-    return state.all;
+    return state.matchList;
+  }
+
+  function displayRoster() {
+    var api = cardApi();
+    var raw = global.XINGHUO_BROWSE_DISPLAY_ROSTER;
+    if (!api || !api.normalizeDisplayRoster) return [];
+    return api.normalizeDisplayRoster(raw);
+  }
+
+  function rosterEntry(id) {
+    if (!id) return null;
+    var hit = null;
+    displayRoster().forEach(function (item) {
+      if (!hit && String(item.id) === String(id)) hit = item;
+    });
+    return hit;
   }
 
   function applyFilter() {
@@ -85,9 +105,25 @@
 
   function continueWith(mentor) {
     if (!mentor) return;
+    var api = cardApi();
+    var fromRoster = rosterEntry(mentor.id);
+    var subject = fromRoster || mentor;
+    if (fromRoster || (api.isDisplayOnly && api.isDisplayOnly(mentor))) {
+      state.pickedName = '';
+      state.pickedNote = api.displayName(subject) + '尚未审核，暂不能预约。';
+      state.view = 'cards';
+      state.casual = true;
+      state.all = displayRoster();
+      state.loading = false;
+      applyFilter();
+      render();
+      if (typeof global.showToast === 'function') global.showToast(state.pickedNote, 'warning');
+      return;
+    }
     var id = mentor.id || '';
-    var name = cardApi().displayName(mentor);
+    var name = api.displayName(mentor);
     state.pickedName = name;
+    state.pickedNote = '';
     var ret = 'index.html?entry=browse&pick=' + encodeURIComponent(id) + '&resume=1';
     if (!isParentSession()) {
       navigate(
@@ -188,9 +224,11 @@
         footerHtml: '<button class="xl-btn" type="button" data-show="' + i + '">查看</button>'
       });
     }).join('');
-    var picked = state.pickedName
-      ? '<div class="xl-picked">已选择 ' + api.esc(state.pickedName) + '。可继续登录或预约试讲。</div>'
-      : '';
+    var picked = state.pickedNote
+      ? '<div class="xl-picked">' + api.esc(state.pickedNote) + '</div>'
+      : (state.pickedName
+        ? '<div class="xl-picked">已选择 ' + api.esc(state.pickedName) + '。可继续登录或预约试讲。</div>'
+        : '');
     return (
       '<section class="xl-match">' + head +
         '<div class="xl-board">' +
@@ -204,7 +242,7 @@
   function render() {
     var app = document.getElementById('xhSelectApp');
     if (!app) return;
-    if (state.loading && !state.loaded) {
+    if (state.loading && !state.matchLoaded && !state.casual) {
       app.innerHTML = '<p class="xl-empty">正在读取可选择的学伴…</p>';
       return;
     }
@@ -259,6 +297,7 @@
     state.step = 0;
     state.casual = false;
     state.pickedName = '';
+    state.pickedNote = '';
     render();
     showBrowse();
   }
@@ -267,13 +306,10 @@
     state.view = 'cards';
     state.casual = true;
     state.pickedName = '';
-    showBrowse();
-    if (!state.loaded) {
-      state.loading = true;
-      render();
-    }
-    await ensureMentors();
+    state.pickedNote = '';
     state.loading = false;
+    state.all = displayRoster();
+    showBrowse();
     applyFilter();
     render();
   }
@@ -282,12 +318,15 @@
     state.view = 'cards';
     state.casual = false;
     state.pickedName = '';
+    state.pickedNote = '';
     showBrowse();
-    if (!state.loaded) {
+    if (!state.matchLoaded) {
       state.loading = true;
       render();
     }
-    await ensureMentors();
+    var list = await ensureMentors();
+    state.all = list.slice();
+    state.loaded = true;
     state.loading = false;
     applyFilter();
     render();
@@ -296,9 +335,9 @@
   async function mountHomeTeaser() {
     var el = document.getElementById('xhHomeTeaser');
     if (!el) return;
-    await ensureMentors();
+    var list = await ensureMentors();
     var api = cardApi();
-    var cards = state.all.slice(0, 3);
+    var cards = list.slice(0, 3);
     if (!cards.length) {
       el.innerHTML = '<article class="xh-ccard xh-ccard-teaser c1"><p class="xh-ccard-school">暂时没有可展示的学伴。</p></article>';
       return;
@@ -317,22 +356,34 @@
     state.grade = q.get('grade') || '';
     state.subject = q.get('subject') || '';
     state.style = q.get('style') || '';
-    await ensureMentors();
+    var step = q.get('step') || '';
+    var casual = q.get('casual') === '1' || step === 'casual';
     if (q.get('resume') === '1' && q.get('pick')) {
-      var id = q.get('pick');
+      var pickedId = q.get('pick');
+      var display = rosterEntry(pickedId);
+      if (display) {
+        continueWith(display);
+        return;
+      }
+      await ensureMentors();
+      state.all = state.matchList.slice();
       var mentor = null;
-      state.all.forEach(function (m) { if (!mentor && String(m.id) === String(id)) mentor = m; });
-      continueWith(mentor || { id: id });
+      state.all.forEach(function (m) { if (!mentor && String(m.id) === String(pickedId)) mentor = m; });
+      continueWith(mentor || { id: pickedId });
       return;
     }
-    var step = q.get('step') || '';
-    if (q.get('casual') === '1' || step === 'casual') {
+    if (casual) {
       state.casual = true;
       state.view = 'cards';
+      state.all = displayRoster();
+      state.loading = false;
       applyFilter();
       render();
       return;
     }
+    await ensureMentors();
+    state.all = state.matchList.slice();
+    state.loaded = true;
     if (step === 'swipe' || step === 'cards' || (state.grade && state.subject)) {
       state.casual = false;
       state.view = 'cards';

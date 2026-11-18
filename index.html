@@ -1172,6 +1172,7 @@
     <script src="js/availability-picker.js"></script>
     <script src="js/mentor-wizard.js"></script>
     <script src="js/companion-card.js"></script>
+    <script src="js/browse-display-roster.js"></script>
     <script src="js/select-landing.js"></script>
 
     <script>
@@ -2010,7 +2011,9 @@
         university = isManualMode ? '待输入高校全称' : (document.getElementById('universitySelect')?.value || '四川大学');
       }
 
-      const teacherName = getPrivacyTeacherName(rawName);
+      const cardName = window.XinghuoCompanionCard
+        ? XinghuoCompanionCard.maskName(rawName)
+        : rawName;
       const checkedSubjects = Array.from(document.querySelectorAll('input[name="subject"]:checked')).map(cb => cb.value);
       const allDisplaySubjects = [...checkedSubjects, ...customSubjectList];
       const selectedStyles = Array.from(document.querySelectorAll('#styleTagContainer > span'))
@@ -2028,17 +2031,19 @@
 
       const panel = document.getElementById('liveCardPanel');
       if (panel && window.XinghuoCompanionCard) {
+        const highlight = (document.getElementById('scoreHighlight') && document.getElementById('scoreHighlight').value.trim()) || '';
         const model = XinghuoCompanionCard.buildModel({
           id: 'live-preview',
-          maskedName: teacherName,
-          realName: teacherName,
+          maskedName: cardName,
+          realName: rawName,
           university: university,
           subjects: allDisplaySubjects,
           styles: selectedStyles,
           hourlyRate: Number(rate) || 0,
+          scoreHighlight: highlight,
           status: verify.status,
           chsiStatus: verify.chsiStatus
-        }, { name: teacherName });
+        });
         panel.innerHTML = XinghuoCompanionCard.render(model, { variant: 'live' });
       }
       refreshMentorPreviewGate();
