@@ -214,6 +214,12 @@ html[data-xh-archive="mentor"] #mentorOnboardFlow {
   font-size: 14px;
   color: #173d32;
 }
+.xl-filters { display: grid; gap: 12px; margin: 4px 0 22px; }
+.xl-filter-row { display: flex; gap: 10px; align-items: flex-start; }
+.xl-filter-label { flex: 0 0 auto; margin-top: 10px; font-size: 13px; font-weight: 700; color: #173d32; }
+.xl-casual-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.xl-casual-grid .xh-ccard-actions { grid-template-columns: 1fr; margin-top: 16px; }
+.xh-ccard-stage { margin-top: 4px; font-size: 13px; line-height: 1.5; color: #3d5c52; }
 
 .xl-mentor { display: grid; grid-template-columns: 1fr 480px; gap: 48px; align-items: start; }
 .xl-blank {
@@ -277,7 +283,8 @@ html[data-xh-archive="mentor"] #mentorOnboardFlow {
   .xl-q { font-size: 24px; }
   .xl-lead { font-size: 16px; }
   .xl-kicker, .xl-chip { font-size: 13px; }
-  .xl-home, .xl-board, .xl-mentor { grid-template-columns: 1fr; gap: 20px; }
+  .xl-home, .xl-board, .xl-mentor, .xl-casual-grid { grid-template-columns: 1fr; gap: 20px; }
+  .xl-filter-row { display: block; }
   .xl-teaser {
     height: auto;
     width: 100%;

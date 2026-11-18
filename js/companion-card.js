@@ -22,7 +22,16 @@
     '引导启发': ['引导启发', '启发'],
     '拆题耐心': ['拆题', '错题', '漏洞', '重构'],
     '跟读带练': ['跟读', '带练', '陪读', '督学'],
-    '应试提分': ['应试', '提分', '压轴', '模型']
+    '应试提分': ['应试', '提分', '压轴', '模型'],
+    '耐心陪练': ['耐心陪练'],
+    '知识框架梳理': ['知识框架梳理'],
+    '作文审题与素材': ['作文审题与素材'],
+    '项目带练': ['项目带练']
+  };
+
+  var SUBJECT_KEYS = {
+    '编程/信息学': ['编程', '信息学'],
+    '艺考': ['艺考']
   };
 
   function esc(value) {
@@ -116,9 +125,22 @@
   }
 
   function priceParts(mentor) {
+    var band = String((mentor && mentor.priceBand) || '').trim();
+    if (band) {
+      if (/\/时$/.test(band)) return { amount: band.replace(/\/时$/, ''), unit: '/时' };
+      return { amount: band, unit: '' };
+    }
     var rate = Number(mentor && mentor.hourlyRate);
     if (!rate || rate < 0) return { amount: '课酬面议', unit: '' };
     return { amount: '¥' + Math.round(rate), unit: '/时' };
+  }
+
+  function stageLine(mentor) {
+    var label = String((mentor && mentor.stageLabel) || '').trim();
+    if (label) return label;
+    var grades = (mentor && mentor.grades) || [];
+    if (!grades.length) return '';
+    return grades.join('、');
   }
 
   function styleList(mentor) {
@@ -153,7 +175,8 @@
       verifyTone: verify.tone,
       roleType: ROLE_TYPE,
       escrowLabel: ESCROW_STAMP,
-      highlight: extra.highlight != null ? String(extra.highlight).trim() : highlightText(mentor)
+      highlight: extra.highlight != null ? String(extra.highlight).trim() : highlightText(mentor),
+      stageLine: extra.stageLine != null ? String(extra.stageLine).trim() : stageLine(mentor)
     };
   }
 
@@ -208,6 +231,7 @@
           '<h2 class="xh-ccard-name">' + esc(model.name) + '</h2>' +
           '<p class="xh-ccard-role" data-role-type="' + esc(ROLE_TYPE) + '">' + esc(model.roleType) + '</p>' +
           '<p class="xh-ccard-school">' + esc(model.schoolLine) + '</p>' +
+          (model.stageLine ? '<p class="xh-ccard-stage">' + esc(model.stageLine) + '</p>' : '') +
           (showBodyStamps ? stamps : '') +
           tagsHtml(model, variant) +
           highlight +
@@ -229,7 +253,29 @@
     return g;
   }
 
+  function expandGrade(label) {
+    var g = String(label || '');
+    if (g === '初中' || g === '初一–初三' || g === '初一-初三') return ['初一', '初二', '初三'];
+    if (g === '高中' || g === '高一–高三' || g === '高一-高三') return ['高一', '高二', '高三'];
+    if (g === '小学' || g === '一至六年级') return ['小学', '小学低年级', '小学高年级'];
+    if (g === '小学低年级') return ['小学低年级'];
+    if (g === '小学高年级') return ['小学高年级'];
+    if (g === '考研') return ['考研'];
+    return g ? [g] : [];
+  }
+
   function mentorGradeBands(mentor) {
+    if (mentor && Array.isArray(mentor.grades) && mentor.grades.length) {
+      var fromGrades = {};
+      mentor.grades.forEach(function (g) {
+        expandGrade(g).forEach(function (token) {
+          var band = gradeBand(token);
+          if (band) fromGrades[band] = true;
+        });
+      });
+      var listed = Object.keys(fromGrades);
+      if (listed.length) return listed;
+    }
     var subjects = subjectList(mentor);
     var bands = {};
     subjects.forEach(function (s) {
@@ -246,17 +292,28 @@
 
   function mentorMatchesGrade(mentor, grade) {
     if (!grade) return true;
+    if (mentor && Array.isArray(mentor.grades) && mentor.grades.length) {
+      var wanted = expandGrade(grade);
+      var owned = [];
+      mentor.grades.forEach(function (g) {
+        expandGrade(g).forEach(function (token) { owned.push(token); });
+      });
+      return wanted.some(function (token) { return owned.indexOf(token) >= 0; });
+    }
     var band = gradeBand(grade);
     return mentorGradeBands(mentor).indexOf(band) >= 0;
   }
 
   function mentorMatchesSubject(mentor, subject) {
     if (!subject) return true;
-    var key = String(subject);
+    var keys = SUBJECT_KEYS[subject] || [subject];
     return subjectList(mentor).some(function (s) {
-      if (s === key) return true;
-      if (s.indexOf(key) >= 0 || key.indexOf(s) >= 0) return true;
-      return false;
+      return keys.some(function (k) {
+        if (s === k) return true;
+        if (s.indexOf(k) >= 0) return true;
+        if (k.indexOf(s) >= 0 && s.length >= 2) return true;
+        return false;
+      });
     });
   }
 
@@ -266,6 +323,8 @@
     var styles = styleList(mentor);
     if (!styles.length) return false;
     return styles.some(function (s) {
+      if (s === style) return true;
+      if (STYLE_KEYS[s] && s !== style) return false;
       return keys.some(function (k) { return s.indexOf(k) >= 0; });
     });
   }
@@ -274,7 +333,20 @@
     var all = Array.isArray(mentors) ? mentors.slice() : [];
     var opts = criteria || {};
     if (opts.casual) {
-      return { exactMatch: true, list: all, mode: all.length ? 'casual' : 'casual-empty' };
+      var narrowed = !!(opts.grade || opts.subject || opts.style);
+      if (!narrowed) {
+        return { exactMatch: true, list: all, mode: all.length ? 'casual' : 'casual-empty' };
+      }
+      var casualHits = all.filter(function (m) {
+        return mentorMatchesGrade(m, opts.grade) &&
+          mentorMatchesSubject(m, opts.subject) &&
+          mentorMatchesStyle(m, opts.style);
+      });
+      return {
+        exactMatch: casualHits.length > 0,
+        list: casualHits,
+        mode: casualHits.length ? 'casual' : 'casual-none'
+      };
     }
     var exact = all.filter(function (m) {
       return mentorMatchesGrade(m, opts.grade) &&
@@ -304,6 +376,15 @@
         kicker: '随便看看',
         title: '暂时没有可展示的学伴',
         summaryHtml: '你可以改为按年级、科目和风格来匹配。'
+      };
+    }
+    if (mode === 'casual-none') {
+      return {
+        kicker: '随便看看',
+        title: '这个筛选下暂时没有学伴',
+        summaryHtml: joined
+          ? ('按 <b>' + joined + '</b> 没有可浏览的学伴。')
+          : '这个筛选下暂时没有学伴。'
       };
     }
     if (mode === 'exact') {
@@ -348,6 +429,7 @@
     normalizeDisplayRoster: normalizeDisplayRoster,
     schoolLine: schoolLine,
     priceParts: priceParts,
+    stageLine: stageLine,
     buildModel: buildModel,
     render: render,
     gradeBand: gradeBand,

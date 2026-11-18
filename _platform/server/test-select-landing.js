@@ -160,12 +160,71 @@ function main() {
   const roster = require(path.join(ROOT, 'js/browse-display-roster.js'));
   const rosterSrc = read('js/browse-display-roster.js');
   assert.ok(Array.isArray(roster));
-  assert.strictEqual(roster.length, 0, '名册留空，等选定名单再整表替换');
-  assert.ok(rosterSrc.includes('整表替换'));
-  card.normalizeDisplayRoster(roster).forEach(function (item) {
+  assert.strictEqual(roster.length, 10);
+  assert.deepStrictEqual(roster.map(function (item) { return item.maskedName; }), [
+    '陈同学', '周同学', '王同学', '吴同学', '李同学', '赵同学', '刘同学', '黄同学', '孙同学', '郑同学'
+  ]);
+  assert.deepStrictEqual(roster.map(function (item) { return item.university + ' · ' + item.major; }), [
+    '电子科技大学 · 物理学',
+    '西南交通大学 · 英语',
+    '四川大学 · 汉语言文学',
+    '电子科技大学 · 数学与应用数学',
+    '四川大学 · 数学与应用数学',
+    '西华大学 · 小学教育',
+    '电子科技大学 · 数学',
+    '西南大学 · 生物科学',
+    '四川大学 · 汉语言文学',
+    '电子科技大学 · 计算机科学与技术'
+  ]);
+  assert.deepStrictEqual(roster.map(function (item) { return item.priceBand; }), [
+    '¥150–200/时', '¥90–130/时', '¥100–140/时', '¥160–220/时', '¥120–160/时',
+    '¥70–100/时', '¥180–240/时', '¥130–180/时', '¥130–170/时', '¥150–200/时'
+  ]);
+  assert.deepStrictEqual(roster.map(function (item) { return item.stageLabel; }), [
+    '高一–高三', '小学高年级、初一、初二', '小学高年级、初一、初二', '高一–高三', '初一–初三',
+    '一至六年级', '考研', '高一–高三', '高一–高三', '初中、高中'
+  ]);
+  assert.strictEqual(roster[5].scoreHighlight, undefined);
+  assert.strictEqual(roster[0].scoreHighlight, '高考物理 142 分');
+  assert.strictEqual(roster[6].scoreHighlight, '考研数学一 142 分');
+  assert.strictEqual(roster[9].scoreHighlight, 'CSP-J 一等奖');
+  assert.ok(!/已通过|已认证|已核验|5\.0|老师/.test(rosterSrc));
+  const shown = card.normalizeDisplayRoster(roster);
+  shown.forEach(function (item) {
     assert.strictEqual(item.status, 'unaudited');
     assert.strictEqual(item.displayOnly, true);
+    assert.strictEqual(item.chsiStatus, undefined);
+    const html = card.render(card.buildModel(item), { variant: 'feature' });
+    assert.ok(html.includes('未审核'));
+    assert.ok(html.includes('学历认证学伴'));
+    assert.ok(html.includes(item.priceBand.replace('/时', '')));
+    assert.ok(html.includes(item.stageLabel));
+    assert.ok(!html.includes('已通过'));
+    assert.ok(!html.includes('已认证'));
+    assert.ok(!html.includes('已核验'));
+    assert.ok(!html.includes('5.0'));
+    assert.ok(!/>已通过</.test(html));
   });
+  assert.ok(!card.render(card.buildModel(shown[5]), { variant: 'feature' }).includes('xh-ccard-highlight'));
+  function ids(criteria) {
+    return card.filterCompanions(shown, Object.assign({ casual: true }, criteria)).list.map(function (item) { return item.id; });
+  }
+  assert.deepStrictEqual(ids({}), shown.map(function (item) { return item.id; }));
+  assert.deepStrictEqual(ids({ grade: '小学低年级' }), ['browse-06']);
+  assert.deepStrictEqual(ids({ grade: '小学' }), ['browse-02', 'browse-03', 'browse-06']);
+  assert.deepStrictEqual(ids({ grade: '考研' }), ['browse-07']);
+  assert.deepStrictEqual(ids({ subject: '生物' }), ['browse-08']);
+  assert.deepStrictEqual(ids({ subject: '艺考文化课' }), ['browse-09']);
+  assert.deepStrictEqual(ids({ subject: '编程/信息学' }), ['browse-10']);
+  assert.deepStrictEqual(ids({ grade: '高一', subject: '物理', style: '拆题耐心' }), ['browse-01']);
+  assert.deepStrictEqual(ids({ grade: '初三', subject: '数学', style: '引导启发' }), ['browse-05']);
+  assert.deepStrictEqual(ids({ style: '跟读带练' }), ['browse-02']);
+  assert.deepStrictEqual(ids({ style: '项目带练' }), ['browse-10']);
+  const noneCasual = card.filterCompanions(shown, { casual: true, subject: '化学' });
+  assert.strictEqual(noneCasual.mode, 'casual-none');
+  assert.strictEqual(noneCasual.list.length, 0);
+  assert.ok(!/已按/.test(card.matchCopy(noneCasual.mode, { subject: '化学' }).summaryHtml));
+  assert.ok(read('docs/previews/browse-unaudited-roster.html').includes('browse-display-roster.js'));
 
   const indexHtml = read('index.html');
   const landing = read('js/select-landing.js');
@@ -204,6 +263,11 @@ function main() {
   assert.ok(landing.includes('normalizeDisplayRoster'));
   const casualFn = landing.slice(landing.indexOf('async function startCasual'), landing.indexOf('async function finishIntake'));
   assert.ok(casualFn.includes('displayRoster'));
+  assert.ok(landing.includes("var SUBJECTS = ['语文', '数学', '英语', '物理', '化学']"));
+  assert.ok(landing.includes('编程/信息学'));
+  assert.ok(landing.includes('艺考文化课'));
+  assert.ok(landing.includes('BROWSE_GRADES'));
+  assert.ok(landing.includes("grade: '考研'") || landing.includes("'考研'"));
   assert.ok(!casualFn.includes('fetchPublicMentorsForBrowse'));
   assert.ok(!casualFn.includes('getApprovedMentors'));
   const cont = landing.slice(landing.indexOf('function continueWith'), landing.indexOf('function optionButtons'));

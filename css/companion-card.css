@@ -61,6 +61,12 @@
   font-size: 14px;
   line-height: 1.5;
 }
+.xh-ccard-stage {
+  margin: 4px 0 0;
+  color: #3d5c52;
+  font-size: 13px;
+  line-height: 1.5;
+}
 .xh-ccard-tags {
   display: flex;
   flex-wrap: wrap;

@@ -10,6 +10,9 @@
   var GRADES = ['小学低年级', '小学高年级', '初一', '初二', '初三', '高一', '高二', '高三'];
   var SUBJECTS = ['语文', '数学', '英语', '物理', '化学'];
   var STYLES = ['引导启发', '拆题耐心', '跟读带练', '应试提分'];
+  var BROWSE_GRADES = ['小学', '小学低年级', '小学高年级', '初一', '初二', '初三', '高一', '高二', '高三', '考研'];
+  var BROWSE_SUBJECTS = ['语文', '数学', '英语', '物理', '化学', '生物', '艺考文化课', '编程/信息学'];
+  var BROWSE_STYLES = ['引导启发', '拆题耐心', '跟读带练', '应试提分', '耐心陪练', '知识框架梳理', '作文审题与素材', '项目带练'];
 
   var state = {
     view: 'intake',
@@ -208,6 +211,7 @@
         '</div>' +
       '</div>'
     );
+    if (state.casual) return renderCasual(head, list, api);
     if (!list.length) {
       return '<section class="xl-match">' + head + '<p class="xl-empty">暂时没有可展示的学伴。</p></section>';
     }
@@ -239,6 +243,38 @@
     );
   }
 
+  function filterChipRow(label, key, items) {
+    var api = cardApi();
+    var chips = '<button class="xl-opt' + (state[key] ? '' : ' is-on') + '" type="button" data-browse-key="' + api.esc(key) + '" data-browse-val="">全部</button>';
+    chips += items.map(function (item) {
+      var on = state[key] === item ? ' is-on' : '';
+      return '<button class="xl-opt' + on + '" type="button" data-browse-key="' + api.esc(key) + '" data-browse-val="' + api.esc(item) + '">' + api.esc(item) + '</button>';
+    }).join('');
+    return '<div class="xl-filter-row"><span class="xl-filter-label">' + label + '</span><div class="xl-opts">' + chips + '</div></div>';
+  }
+
+  function renderCasual(head, list, api) {
+    var filters = (
+      '<div class="xl-filters">' +
+        filterChipRow('年级', 'grade', BROWSE_GRADES) +
+        filterChipRow('科目', 'subject', BROWSE_SUBJECTS) +
+        filterChipRow('风格', 'style', BROWSE_STYLES) +
+      '</div>'
+    );
+    var note = state.pickedNote
+      ? '<div class="xl-picked">' + api.esc(state.pickedNote) + '</div>'
+      : '';
+    var grid = list.length
+      ? '<div class="xl-casual-grid">' + list.map(function (item) {
+        return api.render(api.buildModel(item), {
+          variant: 'feature',
+          footerHtml: '<div class="xh-ccard-actions"><button class="xl-btn xl-btn-primary" type="button" data-pick="' + api.esc(item.id) + '">选择这位</button></div>'
+        });
+      }).join('') + '</div>'
+      : '<p class="xl-empty">暂时没有可展示的学伴。</p>';
+    return '<section class="xl-match xl-casual">' + head + filters + note + grid + '</section>';
+  }
+
   function render() {
     var app = document.getElementById('xhSelectApp');
     if (!app) return;
@@ -257,6 +293,24 @@
       btn.onclick = function () {
         state[btn.getAttribute('data-key')] = btn.getAttribute('data-val');
         render();
+      };
+    });
+    root.querySelectorAll('[data-browse-key]').forEach(function (btn) {
+      btn.onclick = function () {
+        state[btn.getAttribute('data-browse-key')] = btn.getAttribute('data-browse-val') || '';
+        state.pickedNote = '';
+        applyFilter();
+        render();
+      };
+    });
+    root.querySelectorAll('[data-pick]').forEach(function (btn) {
+      btn.onclick = function () {
+        var id = btn.getAttribute('data-pick');
+        var mentor = null;
+        state.list.forEach(function (item) {
+          if (!mentor && String(item.id) === String(id)) mentor = item;
+        });
+        continueWith(mentor || rosterEntry(id));
       };
     });
     var prev = document.getElementById('xlPrev');
@@ -296,6 +350,9 @@
     state.view = 'intake';
     state.step = 0;
     state.casual = false;
+    if (GRADES.indexOf(state.grade) < 0) state.grade = '';
+    if (SUBJECTS.indexOf(state.subject) < 0) state.subject = '';
+    if (STYLES.indexOf(state.style) < 0) state.style = '';
     state.pickedName = '';
     state.pickedNote = '';
     render();
@@ -305,6 +362,9 @@
   async function startCasual() {
     state.view = 'cards';
     state.casual = true;
+    state.grade = '';
+    state.subject = '';
+    state.style = '';
     state.pickedName = '';
     state.pickedNote = '';
     state.loading = false;
@@ -408,6 +468,9 @@
     render: render,
     GRADES: GRADES,
     SUBJECTS: SUBJECTS,
-    STYLES: STYLES
+    STYLES: STYLES,
+    BROWSE_GRADES: BROWSE_GRADES,
+    BROWSE_SUBJECTS: BROWSE_SUBJECTS,
+    BROWSE_STYLES: BROWSE_STYLES
   };
 })(typeof window !== 'undefined' ? window : globalThis);
