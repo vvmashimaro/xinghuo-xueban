@@ -248,7 +248,26 @@ function listConfiguredAdminPhones() {
   return Array.from(set);
 }
 
+/** 已登录，但当前令牌不是管理员会话（角色字段与管理员手机号都不成立） */
+const NOT_ADMIN_SESSION_MESSAGE = '当前登录已不是管理员，请重新登录中台';
+
 function createAuthMiddleware(db) {
+  /**
+   * 管理员身份以手机号为准。登录会把管理员手机号写成 role=admin，
+   * 但旧令牌或登录页选的家长/导师角色可能仍把 role 写成 parent/mentor。
+   * 主管理员和其他管理员手机号都按管理员会话处理；模块范围仍由 RBAC 决定。
+   */
+  function sessionCountsAsAdmin(user) {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    return isAdminPhone(user.phone);
+  }
+
+  function asAdminSession(user) {
+    if (!user || user.role === 'admin' || !sessionCountsAsAdmin(user)) return user;
+    return Object.assign({}, user, { role: 'admin' });
+  }
+
   /**
    * Express 中间件：验证用户身份
    * 将用户信息附加到 req.user
@@ -266,11 +285,12 @@ function createAuthMiddleware(db) {
   }
 
   function attachAdminUser(req, user, token) {
-    req.user = user;
+    const effective = asAdminSession(user);
+    req.user = effective;
     req.token = token;
-    if (user && user.role === 'admin') {
-      req.adminModules = adminRbac.getEffectiveModules(db, user.phone);
-      req.isSuperAdmin = adminRbac.isSuperAdminPhone(user.phone);
+    if (effective && effective.role === 'admin') {
+      req.adminModules = adminRbac.getEffectiveModules(db, effective.phone);
+      req.isSuperAdmin = adminRbac.isSuperAdminPhone(effective.phone);
     }
   }
 
@@ -282,8 +302,8 @@ function createAuthMiddleware(db) {
       return res.status(401).json({ error: '未登录或会话已过期' });
     }
     
-    if (user.role !== 'admin') {
-      return res.status(403).json({ error: '需要管理员权限' });
+    if (!sessionCountsAsAdmin(user)) {
+      return res.status(403).json({ error: NOT_ADMIN_SESSION_MESSAGE });
     }
     
     attachAdminUser(req, user, token);
@@ -302,8 +322,8 @@ function createAuthMiddleware(db) {
         return res.status(401).json({ error: '未登录或会话已过期' });
       }
 
-      if (user.role !== 'admin') {
-        return res.status(403).json({ error: '需要管理员权限' });
+      if (!sessionCountsAsAdmin(user)) {
+        return res.status(403).json({ error: NOT_ADMIN_SESSION_MESSAGE });
       }
 
       attachAdminUser(req, user, token);
@@ -325,8 +345,8 @@ function createAuthMiddleware(db) {
       return res.status(401).json({ error: '未登录或会话已过期' });
     }
 
-    if (user.role !== 'admin') {
-      return res.status(403).json({ error: '需要管理员权限' });
+    if (!sessionCountsAsAdmin(user)) {
+      return res.status(403).json({ error: NOT_ADMIN_SESSION_MESSAGE });
     }
 
     attachAdminUser(req, user, token);
@@ -345,19 +365,23 @@ function createAuthMiddleware(db) {
     const userToken = extractTokenFromRequest(req);
     const user = verifyToken(userToken, db);
 
-    if (user && user.role === 'admin') {
+    if (user && sessionCountsAsAdmin(user)) {
       attachAdminUser(req, user, userToken);
       return next();
     }
 
     const adminToken = process.env.ADMIN_TOKEN;
     if (!adminToken) {
-      return res.status(403).json({ error: '需要管理员权限' });
+      return res.status(403).json({
+        error: user ? NOT_ADMIN_SESSION_MESSAGE : '需要管理员权限'
+      });
     }
 
     const headerToken = String(req.headers['x-admin-token'] || '').trim() || userToken || '';
     if (!safeCompare(headerToken, adminToken)) {
-      return res.status(403).json({ error: '需要管理员权限' });
+      return res.status(403).json({
+        error: user ? NOT_ADMIN_SESSION_MESSAGE : '需要管理员权限'
+      });
     }
 
     req.user = { userId: 'ADMIN-STATIC', role: 'admin', phone: '' };
@@ -383,6 +407,7 @@ function cleanupExpiredTokens(db) {
 
 module.exports = {
   isAdminPhone,
+  NOT_ADMIN_SESSION_MESSAGE,
   listConfiguredAdminPhones,
   isSuperAdminPhone: adminRbac.isSuperAdminPhone,
   generateToken,

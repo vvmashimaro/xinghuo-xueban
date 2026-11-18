@@ -124,12 +124,94 @@
     });
   }
 
+  const RELOGIN_ADMIN = '当前登录已不是管理员，请重新登录中台';
+
+  function isPrimarySession(me) {
+    return !!(me && me.adminRbac && (me.adminRbac.isPrimaryAdmin || me.adminRbac.isSuperAdmin));
+  }
+
+  function identityText(me) {
+    if (!me) return '未登录';
+    const phone = me.phone || '';
+    let who = '其他账号';
+    if (me.role === 'admin') who = isPrimarySession(me) ? '主管理员' : '管理员';
+    else if (me.role === 'parent') who = '当前是家长登录';
+    else if (me.role === 'mentor') who = '当前是导师登录';
+    else if (me.role) who = String(me.role);
+    return phone ? who + ' · ' + phone : who;
+  }
+
+  function paintIdentity(me) {
+    const text = identityText(me);
+    state.adminLabel = text;
+    const identity = document.getElementById('adminIdentity');
+    const side = document.getElementById('adminUserLabel');
+    const status = document.getElementById('adminSessionStatus');
+    const note = document.getElementById('adminSessionNote');
+    const relogin = document.getElementById('adminRelogin');
+    const bar = document.getElementById('adminTopBar');
+    if (identity) identity.textContent = text;
+    if (side) side.textContent = text;
+    const adminSession = !!(me && me.role === 'admin');
+    if (adminSession) {
+      if (status) {
+        status.textContent = isPrimarySession(me) ? '主管理员会话' : '管理员会话';
+        status.className =
+          'shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200';
+      }
+      if (note) {
+        note.textContent = '';
+        note.classList.add('hidden');
+      }
+      if (relogin) relogin.classList.add('hidden');
+      if (bar) {
+        bar.className =
+          'shrink-0 bg-white border-b border-slate-200 px-6 lg:px-8 py-3 flex items-center justify-between gap-3';
+      }
+      return;
+    }
+    const replacedBy = me && me.role === 'mentor' ? '导师' : me && me.role === 'parent' ? '家长' : '';
+    if (status) {
+      status.textContent = '会话已不是管理员';
+      status.className =
+        'shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200';
+    }
+    if (note) {
+      note.textContent = replacedBy
+        ? '当前会话已被' + replacedBy + '登录覆盖。' + RELOGIN_ADMIN
+        : RELOGIN_ADMIN;
+      note.classList.remove('hidden');
+    }
+    if (relogin) relogin.classList.remove('hidden');
+    if (bar) {
+      bar.className =
+        'shrink-0 bg-rose-50 border-b border-rose-200 px-6 lg:px-8 py-3 flex items-center justify-between gap-3';
+    }
+  }
+
+  function refreshIdentityAfterTakeover() {
+    if (!window.StorageService || typeof StorageService.getCurrentUser !== 'function') return;
+    if (refreshIdentityAfterTakeover._busy) return;
+    refreshIdentityAfterTakeover._busy = true;
+    StorageService.getCurrentUser()
+      .then((me) => paintIdentity(me))
+      .catch(() => {})
+      .then(() => {
+        refreshIdentityAfterTakeover._busy = false;
+      });
+  }
+
   function apiErrorMessage(e, fallback) {
-    return (e && e.data && e.data.error) || (e && e.message) || fallback || '操作失败';
+    const raw = (e && e.data && e.data.error) || (e && e.message) || fallback || '操作失败';
+    if (raw === '需要管理员权限' || raw === RELOGIN_ADMIN) {
+      refreshIdentityAfterTakeover();
+      return RELOGIN_ADMIN;
+    }
+    return raw;
   }
 
   function hasAdminModule(key) {
-    if (state.adminRbac && state.adminRbac.isSuperAdmin) return true;
+    if (state.adminRbac && (state.adminRbac.isSuperAdmin || state.adminRbac.isPrimaryAdmin)) return true;
     const mods = (state.adminRbac && state.adminRbac.modules) || [];
     return mods.indexOf(key) >= 0;
   }
@@ -294,6 +376,40 @@
     el._t = setTimeout(() => el.classList.add('hidden'), 3200);
   }
 
+  function bindLogout() {
+    const btn = document.getElementById('btnLogout');
+    if (!btn || btn.dataset.logoutBound === '1') return;
+    btn.dataset.logoutBound = '1';
+    btn.addEventListener('click', async () => {
+      if (window.StorageService && typeof StorageService.confirmAndLogout === 'function') {
+        await StorageService.confirmAndLogout('../login.html');
+        return;
+      }
+      window.location.href = '../login.html';
+    });
+  }
+
+  async function clearSessionAndRelogin(event) {
+    if (event) event.preventDefault();
+    try {
+      if (window.StorageService && typeof StorageService.logout === 'function') {
+        await StorageService.logout();
+      }
+    } catch (e) {
+      /* StorageService.logout already clears the local token when the request fails. */
+    }
+    window.location.href = '../login.html';
+  }
+
+  function bindRelogin(root) {
+    const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+    scope.querySelectorAll('[data-admin-relogin]').forEach((el) => {
+      if (el.dataset.reloginBound === '1') return;
+      el.dataset.reloginBound = '1';
+      el.addEventListener('click', clearSessionAndRelogin);
+    });
+  }
+
   async function ensureAdmin() {
     if (!window.StorageService || !StorageService.isLoggedIn()) {
       window.location.href = '../login.html';
@@ -301,13 +417,27 @@
     }
     await StorageService.ready();
     const me = await StorageService.getCurrentUser();
-    if (!me || me.role !== 'admin') {
-      toast('需要管理员账号登录', 'error');
+    paintIdentity(me);
+    if (!me) {
       window.location.href = '../login.html';
       return false;
     }
-    state.adminLabel = me.phone || '管理员';
-    document.getElementById('adminUserLabel').textContent = state.adminLabel;
+    if (me.role !== 'admin') {
+      const main = document.getElementById('adminMain');
+      if (main) {
+        main.innerHTML =
+          '<div class="max-w-lg space-y-3">' +
+          '<h1 class="text-xl font-semibold text-slate-900">' +
+          RELOGIN_ADMIN +
+          '</h1>' +
+          '<p class="text-sm text-slate-600">顶栏标出当前会话。家长或导师登录会覆盖原来的管理员令牌。</p>' +
+          '<a data-admin-relogin href="../login.html" class="inline-flex text-sm bg-rose-600 text-white px-4 py-2 rounded-xl font-bold">重新登录中台</a>' +
+          '</div>';
+      }
+      bindLogout();
+      bindRelogin(document);
+      return false;
+    }
     if (me.adminRbac) {
       state.adminRbac = me.adminRbac;
     } else {
@@ -316,7 +446,9 @@
       } catch (e) {
         state.adminRbac = { modules: [], isSuperAdmin: false, catalog: [] };
       }
+      me.adminRbac = state.adminRbac;
     }
+    paintIdentity(me);
     applyNavPermissions();
     return true;
   }
@@ -2354,6 +2486,8 @@
   }
 
   async function init() {
+    bindLogout();
+    bindRelogin(document);
     const ok = await ensureAdmin();
     if (!ok) return;
     await reloadCore();
@@ -2365,9 +2499,6 @@
         e.preventDefault();
         setRoute(el.getAttribute('data-nav'));
       });
-    });
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await StorageService.confirmAndLogout('../login.html');
     });
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');

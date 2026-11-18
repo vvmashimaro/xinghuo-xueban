@@ -49,9 +49,21 @@
         <button type="button" id="btnLogout" class="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200">退出登录</button>
       </div>
     </aside>
-    <main class="flex-1 p-6 lg:p-8 overflow-y-auto" id="adminMain">
-      <p class="text-slate-500">加载中…</p>
-    </main>
+    <div class="flex-1 flex flex-col min-w-0">
+      <header id="adminTopBar" class="shrink-0 bg-white border-b border-slate-200 px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="adminSessionStatus" class="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">正在确认</span>
+            <div id="adminIdentity" class="text-sm font-semibold text-slate-900 truncate">正在确认登录身份…</div>
+          </div>
+          <div id="adminSessionNote" class="hidden text-xs text-rose-700 mt-1"></div>
+        </div>
+        <a id="adminRelogin" data-admin-relogin href="../login.html" class="hidden shrink-0 text-sm bg-rose-600 text-white px-3 py-2 rounded-xl font-bold">重新登录中台</a>
+      </header>
+      <main class="flex-1 p-6 lg:p-8 overflow-y-auto" id="adminMain">
+        <p class="text-slate-500">加载中…</p>
+      </main>
+    </div>
   </div>
   <div id="adminToast" class="hidden fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium bg-slate-900 text-white">
     <span id="adminToastText"></span>

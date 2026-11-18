@@ -41,8 +41,37 @@ async function request(base, method, urlPath, body, token) {
   return { status: res.status, json };
 }
 
+function assertMidPlatformCopy() {
+  const root = path.resolve(__dirname, '../..');
+  const appJs = fs.readFileSync(path.join(root, 'admin-saas/js/admin-app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'admin-saas/index.html'), 'utf8');
+  const storage = fs.readFileSync(path.join(root, 'js/storage-service.js'), 'utf8');
+  assert(appJs.indexOf('当前登录已不是管理员，请重新登录中台') >= 0, 'mid-platform shows re-login copy');
+  assert(
+    appJs.indexOf('state.adminRbac.isSuperAdmin || state.adminRbac.isPrimaryAdmin') >= 0,
+    'module check treats primary admin like super admin'
+  );
+  assert(appJs.indexOf("raw === '需要管理员权限'") >= 0, 'old admin-permission text is rewritten in the UI');
+  assert(html.indexOf('id="adminIdentity"') >= 0, 'top bar shows the active session');
+  assert(html.indexOf('id="adminSessionStatus"') >= 0, 'top bar states whether the session is still admin');
+  assert(html.indexOf('>重新登录中台<') >= 0, 'top bar offers 重新登录中台');
+  assert(appJs.indexOf('会话已不是管理员') >= 0, 'replaced session is labeled in the top bar');
+  assert(appJs.indexOf('当前会话已被') >= 0, 'parent or tutor overwrite is named in the top bar');
+  assert(appJs.indexOf('管理员会话') >= 0, 'an admin session is labeled in the top bar');
+  const nonAdmin = appJs.slice(appJs.indexOf("if (me.role !== 'admin')"));
+  const bindAt = nonAdmin.indexOf('bindLogout()');
+  const returnAt = nonAdmin.indexOf('return false');
+  assert(bindAt >= 0 && returnAt >= 0 && bindAt < returnAt, 'logout is bound before ensureAdmin returns false');
+  assert(nonAdmin.indexOf('bindRelogin(') >= 0 && nonAdmin.indexOf('bindRelogin(') < returnAt, 're-login is bound before ensureAdmin returns false');
+  assert(appJs.indexOf('await StorageService.logout()') >= 0, '重新登录中台 clears the current token');
+  assert(html.indexOf('data-admin-relogin') >= 0, 'top bar re-login entry clears the token before navigation');
+  assert(!/session\.role = role \|\| user\.role/.test(storage), 'login does not keep the requested role over the server role');
+  assert(storage.indexOf('user.role || role') >= 0, 'login keeps the server-issued role');
+}
+
 async function run() {
   console.log('=== Admin parent/mentor user tests ===');
+  assertMidPlatformCopy();
   db.reset();
   require('./src/index.js');
   const base = 'http://127.0.0.1:18790';
@@ -63,6 +92,68 @@ async function run() {
     parentToken
   );
   assert(parentCaller.status === 403, 'parent cannot create parents');
+  assert(
+    parentCaller.json.error === '当前登录已不是管理员，请重新登录中台',
+    'non-admin parent session is told to log in again'
+  );
+
+  const mentorToken = auth.createToken('AP-MENTOR-CALLER', 'mentor', '13800001111', db);
+  const mentorCaller = await request(
+    base,
+    'POST',
+    '/api/admin/mentors',
+    { phone: '13700001009', realName: '周老师' },
+    mentorToken
+  );
+  assert(mentorCaller.status === 403, 'mentor cannot create mentors');
+  assert(
+    mentorCaller.json.error === '当前登录已不是管理员，请重新登录中台',
+    'non-admin mentor session is told to log in again'
+  );
+
+  const stalePrimaryParent = auth.createToken('STALE-PRIMARY-P', 'parent', SUPER, db);
+  const staleParentAdd = await request(
+    base,
+    'POST',
+    '/api/admin/parents',
+    { phone: '13700001021', parentName: '主管理员补录', studentNickname: '小主' },
+    stalePrimaryParent
+  );
+  assert(
+    staleParentAdd.status === 200 && staleParentAdd.json.id,
+    'primary phone can add a parent even when the token role is parent'
+  );
+  const stalePrimaryMentor = auth.createToken('STALE-PRIMARY-M', 'mentor', SUPER, db);
+  const staleMentorAdd = await request(
+    base,
+    'POST',
+    '/api/admin/mentors',
+    { phone: '13700001022', realName: '主管理员导师' },
+    stalePrimaryMentor
+  );
+  assert(
+    staleMentorAdd.status === 200 && staleMentorAdd.json.id,
+    'primary phone can add a mentor even when the token role is mentor'
+  );
+  const staleMe = await request(base, 'GET', '/api/auth/me', null, stalePrimaryParent);
+  assert(
+    staleMe.status === 200 && staleMe.json.role === 'admin' && staleMe.json.adminRbac.isPrimaryAdmin,
+    'auth/me reports the primary phone as the main admin'
+  );
+
+  const staleLimited = auth.createToken('STALE-LIMITED', 'parent', LIMITED, db);
+  const limitedAsParentRole = await request(
+    base,
+    'POST',
+    '/api/admin/parents',
+    { phone: '13700001023', parentName: '不该成功', studentNickname: '小限' },
+    staleLimited
+  );
+  assert(limitedAsParentRole.status === 403, 'ordinary admin still needs the parents module');
+  assert(
+    String(limitedAsParentRole.json.error || '').indexOf('无权访问') >= 0,
+    'ordinary admin is not given every module'
+  );
 
   const noModule = await request(
     base,

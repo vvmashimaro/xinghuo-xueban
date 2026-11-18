@@ -449,7 +449,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 /* ========== 管理员 RBAC ========== */
 app.get('/api/admin/rbac/me', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') {
-    return fail(res, 403, '需要管理员权限');
+    return fail(res, 403, auth.NOT_ADMIN_SESSION_MESSAGE);
   }
   const isPrimaryAdmin = adminRbac.isPrimaryAdminPhone(req.user.phone);
   ok(res, {
@@ -1932,7 +1932,7 @@ app.post('/api/mentors/:id/availability', requireAuth, (req, res) => {
 app.post('/api/bookings/process-escrow', requireAuth, (req, res) => {
   // 只有管理员可以处理托管释放
   if (req.user.role !== 'admin') {
-    return fail(res, 403, '需要管理员权限');
+    return fail(res, 403, auth.NOT_ADMIN_SESSION_MESSAGE);
   }
   if (denyAdminModule(req, res, 'bookings')) return;
 
