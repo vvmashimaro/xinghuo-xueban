@@ -81,8 +81,10 @@ function main() {
 
   // 5) 根路径双入口
   assert.ok(indexHtml.includes('id="roleGate"'), '根路径角色分流');
-  assert.ok(indexHtml.includes('我是家长（找导师）'), '家长入口文案');
-  assert.ok(indexHtml.includes('我是导师（入驻）'), '导师入口文案');
+  assert.ok(indexHtml.includes('我是家长'), '家长入口文案');
+  assert.ok(indexHtml.includes('我是学长学姐'), '学长学姐入口文案');
+  assert.ok(indexHtml.includes('开始选择学伴'), '选择学伴入口');
+  assert.ok(!indexHtml.includes('翻牌'), '落地页不再使用翻牌文案');
   assert.ok(indexHtml.includes('shouldOpenMentorOnboard'), '深链/已登录导师可直达入驻');
   assert.ok(indexHtml.includes('entry=mentor') || indexHtml.includes("entry', 'mentor'"), '入驻路径带 entry=mentor');
   assert.ok(loginHtml.includes('login.html?role=parent') || loginHtml.includes("get('role')"), '登录可读 role 查询');

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>随便看看 · 未审核学伴预览</title>
+<link rel="stylesheet" href="../../css/companion-card.css">
+<link rel="stylesheet" href="../../css/select-landing.css">
+<style>
+  body { margin: 0; background: #e7f3e4; color: #173d32; font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+  .preview-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; }
+  .preview-note { font-size: 13px; color: #3d5c52; margin: 0 0 18px; }
+  .xl-casual-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 860px) {
+    .xl-casual-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="preview-wrap">
+    <div class="xl-kicker">随便看看</div>
+    <h1>先随便看看这些学伴</h1>
+    <p class="preview-note">这十张卡片只供浏览，状态都是未审核。选中不会进入预约。</p>
+    <div id="filters" class="xl-filters"></div>
+    <p id="count" class="xl-summary"></p>
+    <div id="grid" class="xl-casual-grid"></div>
+  </div>
+  <script src="../../js/companion-card.js"></script>
+  <script src="../../js/browse-display-roster.js"></script>
+  <script>
+    var grades = ['小学', '小学低年级', '小学高年级', '初一', '初二', '初三', '高一', '高二', '高三', '考研'];
+    var subjects = ['语文', '数学', '英语', '物理', '化学', '生物', '艺考文化课', '编程/信息学'];
+    var styles = ['引导启发', '拆题耐心', '跟读带练', '应试提分', '耐心陪练', '知识框架梳理', '作文审题与素材', '项目带练'];
+    var selected = { grade: '', subject: '', style: '' };
+
+    function row(label, key, items) {
+      var html = '<div class="xl-filter-row"><span class="xl-filter-label">' + label + '</span><div class="xl-opts">';
+      html += '<button class="xl-opt' + (selected[key] ? '' : ' is-on') + '" type="button" data-key="' + key + '" data-val="">全部</button>';
+      items.forEach(function (item) {
+        html += '<button class="xl-opt' + (selected[key] === item ? ' is-on' : '') + '" type="button" data-key="' + key + '" data-val="' + item + '">' + item + '</button>';
+      });
+      return html + '</div></div>';
+    }
+
+    function paint() {
+      var people = XinghuoCompanionCard.normalizeDisplayRoster(XINGHUO_BROWSE_DISPLAY_ROSTER);
+      var result = XinghuoCompanionCard.filterCompanions(people, {
+        casual: true,
+        grade: selected.grade,
+        subject: selected.subject,
+        style: selected.style
+      });
+      document.getElementById('filters').innerHTML = row('年级', 'grade', grades) + row('科目', 'subject', subjects) + row('风格', 'style', styles);
+      document.getElementById('count').textContent = '当前 ' + result.list.length + ' 位，全部为未审核。';
+      document.getElementById('grid').innerHTML = result.list.map(function (person) {
+        return XinghuoCompanionCard.render(XinghuoCompanionCard.buildModel(person), { variant: 'feature' });
+      }).join('');
+      document.querySelectorAll('#filters .xl-opt').forEach(function (btn) {
+        btn.onclick = function () {
+          selected[btn.getAttribute('data-key')] = btn.getAttribute('data-val') || '';
+          paint();
+        };
+      });
+    }
+    paint();
+  </script>
+</body>
+</html>
