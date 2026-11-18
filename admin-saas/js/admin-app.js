@@ -154,7 +154,7 @@
   }
 
   function hasAdminModule(key) {
-    if (state.adminRbac && state.adminRbac.isSuperAdmin) return true;
+    if (state.adminRbac && (state.adminRbac.isSuperAdmin || state.adminRbac.isPrimaryAdmin)) return true;
     const mods = (state.adminRbac && state.adminRbac.modules) || [];
     return mods.indexOf(key) >= 0;
   }

@@ -47,6 +47,10 @@ function assertMidPlatformCopy() {
   const html = fs.readFileSync(path.join(root, 'admin-saas/index.html'), 'utf8');
   const storage = fs.readFileSync(path.join(root, 'js/storage-service.js'), 'utf8');
   assert(appJs.indexOf('当前登录已不是管理员，请重新登录中台') >= 0, 'mid-platform shows re-login copy');
+  assert(
+    appJs.indexOf('state.adminRbac.isSuperAdmin || state.adminRbac.isPrimaryAdmin') >= 0,
+    'module check treats primary admin like super admin'
+  );
   assert(appJs.indexOf("raw === '需要管理员权限'") >= 0, 'old admin-permission text is rewritten in the UI');
   assert(html.indexOf('id="adminIdentity"') >= 0, 'top bar shows the active session');
   assert(!/session\.role = role \|\| user\.role/.test(storage), 'login does not keep the requested role over the server role');
