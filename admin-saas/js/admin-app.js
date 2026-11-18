@@ -124,8 +124,33 @@
     });
   }
 
+  const RELOGIN_ADMIN = '当前登录已不是管理员，请重新登录中台';
+
+  function identityText(me) {
+    if (!me) return '未登录';
+    const phone = me.phone || '';
+    const primary = me.adminRbac && (me.adminRbac.isPrimaryAdmin || me.adminRbac.isSuperAdmin);
+    let who = '用户';
+    if (me.role === 'admin') who = primary ? '主管理员' : '管理员';
+    else if (me.role === 'parent') who = '家长';
+    else if (me.role === 'mentor') who = '导师';
+    else if (me.role) who = String(me.role);
+    return phone ? who + ' · ' + phone : who;
+  }
+
+  function paintIdentity(me) {
+    const text = identityText(me);
+    state.adminLabel = text;
+    const bar = document.getElementById('adminIdentity');
+    const side = document.getElementById('adminUserLabel');
+    if (bar) bar.textContent = text;
+    if (side) side.textContent = text;
+  }
+
   function apiErrorMessage(e, fallback) {
-    return (e && e.data && e.data.error) || (e && e.message) || fallback || '操作失败';
+    const raw = (e && e.data && e.data.error) || (e && e.message) || fallback || '操作失败';
+    if (raw === '需要管理员权限') return RELOGIN_ADMIN;
+    return raw;
   }
 
   function hasAdminModule(key) {
@@ -301,13 +326,30 @@
     }
     await StorageService.ready();
     const me = await StorageService.getCurrentUser();
-    if (!me || me.role !== 'admin') {
-      toast('需要管理员账号登录', 'error');
+    paintIdentity(me);
+    if (!me) {
       window.location.href = '../login.html';
       return false;
     }
-    state.adminLabel = me.phone || '管理员';
-    document.getElementById('adminUserLabel').textContent = state.adminLabel;
+    if (me.role !== 'admin') {
+      const note = document.getElementById('adminSessionNote');
+      if (note) {
+        note.textContent = RELOGIN_ADMIN;
+        note.classList.remove('hidden');
+      }
+      const main = document.getElementById('adminMain');
+      if (main) {
+        main.innerHTML =
+          '<div class="max-w-lg space-y-3">' +
+          '<h1 class="text-xl font-semibold text-slate-900">' +
+          RELOGIN_ADMIN +
+          '</h1>' +
+          '<p class="text-sm text-slate-600">顶栏是当前会话身份。请退出后用管理员手机号重新登录。</p>' +
+          '<a href="../login.html" class="inline-flex text-sm bg-teal-600 text-white px-4 py-2 rounded-xl font-bold">重新登录</a>' +
+          '</div>';
+      }
+      return false;
+    }
     if (me.adminRbac) {
       state.adminRbac = me.adminRbac;
     } else {
@@ -316,7 +358,9 @@
       } catch (e) {
         state.adminRbac = { modules: [], isSuperAdmin: false, catalog: [] };
       }
+      me.adminRbac = state.adminRbac;
     }
+    paintIdentity(me);
     applyNavPermissions();
     return true;
   }

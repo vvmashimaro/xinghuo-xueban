@@ -715,12 +715,13 @@
           this.setAuthToken(loginResult.token);
           const user = loginResult.user || {};
           const session = this.getSession() || {};
-          session.role = role || user.role || session.role;
+          // 服务端会把管理员手机号改写成 admin。登录页没有管理端选项时，
+          // 请求里的 role 仍是 parent/mentor，不能盖过已签发的角色。
+          const issuedRole = user.role || role || session.role;
+          session.role = issuedRole;
           const uid = user.userId || user.id;
-          if (uid) {
-            if (session.role === 'parent') session.parentId = uid;
-            if (session.role === 'mentor') session.mentorId = uid;
-          }
+          if (uid && issuedRole === 'parent') session.parentId = uid;
+          if (uid && issuedRole === 'mentor') session.mentorId = uid;
           this.setSession(session);
           return { success: true, user: loginResult.user };
         }
