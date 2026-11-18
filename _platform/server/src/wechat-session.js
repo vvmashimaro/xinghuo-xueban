@@ -5,12 +5,45 @@
 
 const https = require('https');
 
-const WECHAT_APP_ID = process.env.WECHAT_APP_ID;
-const WECHAT_APP_SECRET = process.env.WECHAT_APP_SECRET;
-const WX_SESSION_MODE = process.env.WX_SESSION_MODE || process.env.WX_PHONE_MODE || 'mock';
+/**
+ * WX_SESSION_MODE wins over WX_PHONE_MODE. An explicit `mock` copied from the
+ * example env stays mock even when WX_PHONE_MODE=production.
+ * Read on each call so tests and process env stay in sync.
+ */
+function sessionMode() {
+  return String(process.env.WX_SESSION_MODE || process.env.WX_PHONE_MODE || 'mock').trim();
+}
+
+function appCredentials() {
+  return {
+    appId: process.env.WECHAT_APP_ID || '',
+    appSecret: process.env.WECHAT_APP_SECRET || ''
+  };
+}
 
 function isConfigReady() {
-  return !!(WECHAT_APP_ID && WECHAT_APP_SECRET);
+  const { appId, appSecret } = appCredentials();
+  return !!(appId && appSecret);
+}
+
+function realJsapiPrepayEnabled() {
+  const wechatPay = require('./wechat-pay');
+  return typeof wechatPay.isConfigComplete === 'function' && wechatPay.isConfigComplete();
+}
+
+function missingCredentialError(realPay) {
+  const { appId, appSecret } = appCredentials();
+  if (!appSecret) {
+    return new Error(
+      realPay
+        ? '缺少 WECHAT_APP_SECRET，无法换取 openid。真实支付已启用，不能回退到模拟 openid'
+        : '缺少 WECHAT_APP_SECRET，无法换取 openid'
+    );
+  }
+  if (!appId) {
+    return new Error('缺少 WECHAT_APP_ID，无法换取 openid');
+  }
+  return new Error('缺少 WECHAT_APP_ID 或 WECHAT_APP_SECRET，无法换取 openid');
 }
 
 function httpsGetJson(url) {
@@ -59,15 +92,30 @@ async function code2Session(jsCode) {
     throw new Error('缺少微信登录 code');
   }
 
-  if (WX_SESSION_MODE === 'mock' || !isConfigReady()) {
+  const mode = sessionMode();
+  const ready = isConfigReady();
+  const realPay = realJsapiPrepayEnabled();
+
+  if (mode === 'mock') {
+    if (realPay) {
+      if (!ready) throw missingCredentialError(true);
+      throw new Error(
+        '真实微信支付已启用，不能使用模拟 openid。WX_SESSION_MODE 优先于 WX_PHONE_MODE，请设置为 production'
+      );
+    }
     console.log('[WeChat Session] 使用 Mock 模式');
     return mockCode2Session(jsCode);
   }
 
+  if (!ready) {
+    throw missingCredentialError(false);
+  }
+
+  const { appId, appSecret } = appCredentials();
   const url =
     'https://api.weixin.qq.com/sns/jscode2session' +
-    `?appid=${encodeURIComponent(WECHAT_APP_ID)}` +
-    `&secret=${encodeURIComponent(WECHAT_APP_SECRET)}` +
+    `?appid=${encodeURIComponent(appId)}` +
+    `&secret=${encodeURIComponent(appSecret)}` +
     `&js_code=${encodeURIComponent(jsCode)}` +
     '&grant_type=authorization_code';
 
@@ -90,5 +138,6 @@ async function code2Session(jsCode) {
 module.exports = {
   code2Session,
   mockCode2Session,
-  isConfigReady
+  isConfigReady,
+  sessionMode
 };

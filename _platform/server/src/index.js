@@ -1034,9 +1034,11 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
     const amountFen = payable.amountFen;
 
     let resolvedOpenid = openid;
+    let sessionMock = false;
     if (wxCode) {
       const session = await wechatSession.code2Session(wxCode);
       resolvedOpenid = session.openid;
+      sessionMock = session.mock === true;
       if (req.user.role === 'parent') {
         const parents = db.getParents();
         const parent = parents.find((p) => p.id === req.user.userId);
@@ -1056,7 +1058,8 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
       amount: amountFen,
       description: description || '星火学伴 · 课程预约',
       openid: resolvedOpenid,
-      payType: resolvedPayType
+      payType: resolvedPayType,
+      sessionMock
     });
 
     if (result && result.outTradeNo) {
