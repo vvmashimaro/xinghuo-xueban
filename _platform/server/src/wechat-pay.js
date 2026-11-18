@@ -431,6 +431,18 @@ function createMockPrepay(bookingId, amount, description) {
 const MOCK_OPENID_JSAPI_ERROR =
   '真实微信支付不能使用模拟 openid。WX_SESSION_MODE 优先于 WX_PHONE_MODE，请设置为 production 后再支付';
 
+const PREPAY_CLIENT_ERROR = '支付暂时无法完成，请稍后重试或联系管理员';
+const PREPAY_CLIENT_CODE = 'PAY_TEMPORARILY_UNAVAILABLE';
+
+function prepayClientFailure(error) {
+  const technical = error && error.message ? String(error.message) : String(error || '创建预支付订单失败');
+  console.error('[WeChat Pay Prepay Error]', technical);
+  return {
+    error: PREPAY_CLIENT_ERROR,
+    code: PREPAY_CLIENT_CODE
+  };
+}
+
 function isMockSessionOpenid(openid) {
   return typeof openid === 'string' && openid.startsWith('oMOCK-');
 }
@@ -865,6 +877,9 @@ function getOrderStatus(outTradeNo) {
 
 module.exports = {
   createPrepay,
+  prepayClientFailure,
+  PREPAY_CLIENT_ERROR,
+  PREPAY_CLIENT_CODE,
   mockConfirmPayment,
   handlePaymentNotify,
   getOrderStatus,

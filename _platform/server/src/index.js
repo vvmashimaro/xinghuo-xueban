@@ -1081,8 +1081,8 @@ app.post('/api/pay/wechat/prepay', requireAuth, async (req, res) => {
     
     ok(res, Object.assign({}, result, { amountFen, amountYuan: payable.amountYuan }));
   } catch (error) {
-    console.error('[WeChat Pay Prepay Error]', error);
-    fail(res, 500, error.message || '创建预支付订单失败');
+    const body = wechatPay.prepayClientFailure(error);
+    res.status(500).json(body);
   }
 });
 

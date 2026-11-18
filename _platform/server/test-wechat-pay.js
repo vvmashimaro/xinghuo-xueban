@@ -19,6 +19,29 @@ function assertLocalMockOpenidError(err) {
   assert.ok(!/无效的\s*openid/i.test(message), message);
 }
 
+function assertPrepayApiHidesTechnicalError(err) {
+  const logged = [];
+  const originalError = console.error;
+  console.error = function () {
+    logged.push(Array.prototype.map.call(arguments, String).join(' '));
+  };
+  let body;
+  try {
+    body = wechatPay.prepayClientFailure(err);
+  } finally {
+    console.error = originalError;
+  }
+  assert.strictEqual(body.error, '支付暂时无法完成，请稍后重试或联系管理员');
+  assert.strictEqual(body.code, 'PAY_TEMPORARILY_UNAVAILABLE');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(body, 'message'), false);
+  const packed = JSON.stringify(body);
+  assert.ok(!/模拟|oMOCK-|WECHAT_APP_SECRET|WX_SESSION_MODE|无效的\s*openid/i.test(packed), packed);
+  assert.ok(
+    logged.some((line) => line.indexOf(String(err.message)) !== -1),
+    'technical prepay reason must stay in the server log'
+  );
+}
+
 function genAesGcmPayload(plaintext, apiV3Key, associatedData, nonce) {
   const key = Buffer.from(apiV3Key, 'utf8');
   const iv = Buffer.from(nonce, 'utf8');
@@ -77,6 +100,7 @@ async function run() {
   assert.ok(missingSecret, 'production session mode must not mock a missing AppSecret');
   assert.ok(/WECHAT_APP_SECRET/.test(missingSecret.message));
   assert.ok(!/无效的\s*openid/i.test(missingSecret.message));
+  assertPrepayApiHidesTechnicalError(missingSecret);
   if (savedAppSecret === undefined) delete process.env.WECHAT_APP_SECRET;
   else process.env.WECHAT_APP_SECRET = savedAppSecret;
   if (savedSessionMode === undefined) delete process.env.WX_SESSION_MODE;
@@ -266,6 +290,7 @@ async function run() {
     mockSessionErr = err;
   }
   assertLocalMockOpenidError(mockSessionErr);
+  assertPrepayApiHidesTechnicalError(mockSessionErr);
   assert.strictEqual(fetchCalls.length, jsapiCallsBeforeReject, 'mock session must not reach WeChat Pay');
 
   let prefixErr = null;
@@ -281,6 +306,7 @@ async function run() {
     prefixErr = err;
   }
   assertLocalMockOpenidError(prefixErr);
+  assertPrepayApiHidesTechnicalError(prefixErr);
 
   let flagErr = null;
   try {
@@ -296,6 +322,7 @@ async function run() {
     flagErr = err;
   }
   assertLocalMockOpenidError(flagErr);
+  assertPrepayApiHidesTechnicalError(flagErr);
   assert.strictEqual(fetchCalls.length, jsapiCallsBeforeReject, 'mock openid must not reach WeChat Pay');
 
   const secretDuringRealPay = process.env.WECHAT_APP_SECRET;
@@ -308,6 +335,7 @@ async function run() {
   }
   assertLocalMockOpenidError(realPaySecretErr);
   assert.ok(/WECHAT_APP_SECRET/.test(realPaySecretErr.message));
+  assertPrepayApiHidesTechnicalError(realPaySecretErr);
   if (secretDuringRealPay === undefined) delete process.env.WECHAT_APP_SECRET;
   else process.env.WECHAT_APP_SECRET = secretDuringRealPay;
   if (savedRealSessionMode === undefined) delete process.env.WX_SESSION_MODE;
@@ -452,6 +480,14 @@ async function run() {
   assert.ok(
     !/const refreshed = booking \? db\.getBookings\(\)/.test(indexSrc),
     'syncPayOrderWithRemote must not reference undefined booking'
+  );
+  assert.ok(
+    indexSrc.includes('wechatPay.prepayClientFailure(error)'),
+    'prepay catch must map failures through prepayClientFailure'
+  );
+  assert.ok(
+    !indexSrc.includes("fail(res, 500, error.message || '创建预支付订单失败')"),
+    'prepay catch must not return the technical error.message to the client'
   );
 
   console.log('test-wechat-pay: OK');
