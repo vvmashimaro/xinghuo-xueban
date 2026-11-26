@@ -1,0 +1,233 @@
+/**
+ * 星火学伴 · 全站动效层（配合 js/xh-motion.js）
+ * 动画只在 html.xh-motion 下生效：脚本未加载或用户开启「减少动态效果」时，页面保持静态且内容完整可见。
+ * 位移只用独立的 translate / rotate / scale 属性，不覆盖页面已有的 transform。
+ */
+:root {
+  --xh-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --xh-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --xh-ember-gold: #f2b544;
+  --xh-ember-lime: #a6cd72;
+  --xh-ember-mint: #2f8f6e;
+}
+
+/* ---------- 页面间过渡（支持的浏览器走 View Transitions） ---------- */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: xh-vt-out 0.22s ease both; }
+::view-transition-new(root) { animation: xh-vt-in 0.42s var(--xh-ease-out) both; }
+@keyframes xh-vt-out { to { opacity: 0; } }
+@keyframes xh-vt-in { from { opacity: 0; } }
+
+html.xh-motion body { animation: xh-page-in 0.5s var(--xh-ease-out) backwards; }
+@keyframes xh-page-in { from { opacity: 0; } }
+
+/* ---------- 通用关键帧 ---------- */
+@keyframes xh-rise {
+  from { opacity: 0; translate: 0 18px; filter: blur(4px); }
+  to { opacity: 1; translate: 0 0; filter: blur(0); }
+}
+@keyframes xh-pop {
+  0% { opacity: 0; scale: 0.86; }
+  60% { opacity: 1; scale: 1.03; }
+  100% { opacity: 1; scale: 1; }
+}
+@keyframes xh-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+@keyframes xh-shine {
+  0%, 62% { translate: -120% 0; }
+  100% { translate: 220% 0; }
+}
+@keyframes xh-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 181, 68, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(242, 181, 68, 0); }
+}
+@keyframes xh-ken-burns {
+  from { scale: 1.08; translate: -1% -0.5%; }
+  to { scale: 1; translate: 0 0; }
+}
+@keyframes xh-gradient-pan {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+@keyframes xh-ripple {
+  to { scale: 1; opacity: 0; }
+}
+@keyframes xh-aurora {
+  0% { translate: 0 0; scale: 1; }
+  33% { translate: 6% -4%; scale: 1.08; }
+  66% { translate: -5% 5%; scale: 0.96; }
+  100% { translate: 0 0; scale: 1; }
+}
+
+/* ---------- 入场：首屏依次出现 / 列表内容变化时依次出现 ---------- */
+html.xh-motion [data-xh-enter] {
+  animation: xh-rise 0.7s var(--xh-ease-out) backwards;
+  animation-delay: var(--xh-d, 0ms);
+}
+html.xh-motion .xh-in {
+  animation: xh-rise 0.55s var(--xh-ease-out) backwards;
+  animation-delay: var(--xh-d, 0ms);
+}
+html.xh-motion .xh-reveal-wait { opacity: 0; translate: 0 24px; }
+html.xh-motion .xh-reveal-on {
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity 0.7s var(--xh-ease-out), translate 0.7s var(--xh-ease-out);
+  transition-delay: var(--xh-d, 0ms);
+}
+
+/* 视图切换（display:none → block 时重新播放） */
+html.xh-motion [data-xh-view]:not(.hidden) { animation: xh-rise 0.5s var(--xh-ease-out) backwards; }
+
+/* ---------- 按钮：悬浮抬起、按下回弹、涟漪、高光扫过 ---------- */
+html.xh-motion :is(button, a, [role="button"]) {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform, scale, translate, rotate;
+  transition-duration: 0.18s;
+  transition-timing-function: var(--xh-ease-out);
+}
+html.xh-motion :is(button, [role="button"]):not(:disabled):active { scale: 0.97; }
+html.xh-motion .xh-lift:not(:disabled):hover { translate: 0 -2px; box-shadow: 0 14px 30px rgba(22, 107, 86, 0.28); }
+
+.xh-ripple-host { position: relative; }
+.xh-ripple-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.xh-ripple {
+  position: absolute;
+  border-radius: 50%;
+  scale: 0;
+  opacity: 0.35;
+  pointer-events: none;
+  animation: xh-ripple 0.6s var(--xh-ease-out) forwards;
+}
+
+.xh-shine { position: relative; overflow: hidden; isolation: isolate; }
+html.xh-motion .xh-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.34) 50%, transparent 100%);
+  translate: -120% 0;
+  animation: xh-shine 4.2s ease-in-out 1.6s infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---------- 卡片 3D 倾斜 + 高光 ---------- */
+.xh-tilt { transition: rotate 0.5s var(--xh-ease-out), box-shadow 0.3s ease; will-change: rotate; }
+.xh-tilt.is-tilting { transition: rotate 0.08s linear, box-shadow 0.3s ease; box-shadow: 0 26px 60px rgba(23, 61, 50, 0.2); }
+.xh-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(circle at var(--xh-gx, 50%) var(--xh-gy, 50%), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%);
+  mix-blend-mode: soft-light;
+  z-index: 2;
+}
+.xh-tilt.is-tilting .xh-glare { opacity: 1; }
+
+/* ---------- 跟随鼠标的柔光 ---------- */
+html.xh-motion [data-xh-spotlight] {
+  background-image: radial-gradient(520px circle at var(--xh-mx, 50%) var(--xh-my, -20%), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 60%);
+}
+
+/* ---------- 背景星火粒子画布 ---------- */
+.xh-embers-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.xh-burst-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2147483000;
+}
+
+/* ---------- 文字：流光渐变 ---------- */
+html.xh-motion .xh-flow-text {
+  background: linear-gradient(90deg, #166b56 0%, #2f8f6e 25%, #a6cd72 45%, #166b56 65%, #166b56 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: xh-gradient-pan 6s linear infinite;
+}
+
+/* ---------- 弹窗：弹性缓动（沿用页面原有的 scale/translate 切换类） ---------- */
+html.xh-motion .fixed.inset-0 > .transform:is(.transition-all, .transition-transform) {
+  transition-timing-function: var(--xh-spring);
+  transition-duration: 0.42s;
+}
+html.xh-motion [role="dialog"]:not(.hidden) > .relative { animation: xh-pop 0.38s var(--xh-ease-out) backwards; }
+
+/* ---------- 状态点呼吸（待处理） ---------- */
+html.xh-motion .xh-pulse { animation: xh-breathe 2.2s ease-in-out infinite; }
+
+/* ---------- 滚动进度条（支持滚动驱动动画的浏览器） ---------- */
+.xh-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 60;
+  pointer-events: none;
+  background: linear-gradient(90deg, #a6cd72, #166b56, #f2b544);
+  transform-origin: 0 50%;
+  scale: 0 1;
+}
+@supports (animation-timeline: scroll()) {
+  html.xh-motion .xh-scroll-progress {
+    animation: xh-progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+@supports not (animation-timeline: scroll()) {
+  .xh-scroll-progress { display: none; }
+}
+@keyframes xh-progress { to { scale: 1 1; } }
+
+/* ---------- 焦点、选区、滚动条 ---------- */
+:focus-visible {
+  outline: 2px solid #2f8f6e;
+  outline-offset: 2px;
+}
+::selection { background: rgba(166, 205, 114, 0.45); color: #0e4639; }
+html { scroll-behavior: smooth; }
+
+/* ---------- 减少动态效果 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}
+
+/* ---------- 列表卡片悬浮 ---------- */
+@media (hover: hover) {
+  html.xh-motion .xh-card { transition: translate 0.3s var(--xh-ease-out), box-shadow 0.3s ease, border-color 0.3s ease; }
+  html.xh-motion .xh-card:hover {
+    translate: 0 -2px;
+    border-color: #d3e7bf;
+    box-shadow: 0 14px 30px -10px rgba(17, 86, 69, 0.22);
+  }
+}
