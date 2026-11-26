@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --primary: #166b56; --primary-deep: #0e4639; --primary-muted: #2f8f6e;
+    --soft: #e7f3e4; --sage: #dfefca; --progress: #a6cd72;
+    --ink: #173d32; --muted: #5c6d63; --page: #f6f6ee; --accent: #f2b544;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--page); }
+  body { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; color: var(--ink); }
+  .scene { position: absolute; inset: 0; overflow: hidden; will-change: opacity, transform; }
+  .abs { position: absolute; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(60px); }
+
+  /* Scene 1 */
+  #s1 { background: radial-gradient(circle at 50% 45%, #ffffff 0%, var(--page) 55%, #eef2e2 100%); }
+  #s1 .logo { left: 50%; top: 360px; width: 240px; height: 240px; margin-left: -120px; margin-top: -120px; }
+  #s1 .logo img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 18px 40px rgba(22,107,86,.35)); }
+  #s1 .ring { left: 50%; top: 360px; border-radius: 50%; border: 3px solid var(--progress); }
+  #s1 .title { left: 0; right: 0; top: 540px; text-align: center; font-size: 132px; font-weight: 700; letter-spacing: 24px; color: var(--ink); }
+  #s1 .title span { display: inline-block; }
+  #s1 .sub { left: 0; right: 0; top: 740px; text-align: center; font-size: 40px; color: var(--muted); letter-spacing: 8px; }
+  .spark { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+
+  /* Scene 2 */
+  #s2 { background: var(--page); }
+  #s2 .photo { left: 820px; top: 110px; width: 1000px; height: 860px; border-radius: 40px; overflow: hidden; box-shadow: 0 40px 90px rgba(23,61,50,.25); }
+  #s2 .photo img { width: 100%; height: 100%; object-fit: cover; object-position: 40% 50%; transform-origin: 45% 55%; }
+  #s2 .kicker { left: 130px; top: 300px; font-size: 34px; font-weight: 700; color: var(--primary); background: var(--soft); padding: 12px 28px; border-radius: 999px; }
+  #s2 .h1 { left: 130px; font-size: 96px; line-height: 1.2; font-weight: 700; color: var(--ink); white-space: nowrap; }
+  #s2 .lead { left: 134px; top: 720px; font-size: 36px; color: var(--muted); letter-spacing: 2px; }
+  #s2 .bar { left: 134px; top: 680px; height: 8px; border-radius: 4px; background: var(--progress); }
+
+  /* Scene 3 */
+  #s3 { background: linear-gradient(135deg, #f6f6ee 0%, #eaf3df 100%); }
+  #s3 .head { left: 130px; top: 190px; font-size: 80px; font-weight: 700; }
+  #s3 .head em { font-style: normal; color: var(--primary); }
+  .step { position: absolute; left: 130px; display: flex; align-items: center; gap: 32px; }
+  .step .num { width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; border: 4px solid #cfd6c6; color: #9aa79f; background: #fff; }
+  .step .txt { font-size: 46px; font-weight: 700; color: #9aa79f; }
+  .step .txt small { display: block; font-size: 28px; font-weight: 400; margin-top: 6px; }
+  .step.on .num { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 10px 24px rgba(22,107,86,.35); }
+  .step.on .txt { color: var(--ink); }
+  .step.on .txt small { color: var(--muted); }
+  .card { position: absolute; background: #fff; border-radius: 36px; box-shadow: 0 30px 80px rgba(23,61,50,.18); }
+  #intake { left: 1060px; top: 120px; width: 720px; padding: 48px 52px; }
+  #intake h4 { font-size: 34px; margin-bottom: 26px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 30px; }
+  .chip { font-size: 30px; padding: 12px 30px; border-radius: 999px; border: 3px solid #e3e8dc; color: var(--muted); background: #fbfbf7; }
+  .chip.sel { border-color: var(--primary); background: var(--primary); color: #fff; }
+  .label { font-size: 26px; color: #7a8a82; margin-bottom: 14px; }
+  #mate { left: 1060px; top: 620px; width: 720px; padding: 40px 48px; display: flex; gap: 34px; align-items: center; }
+  .avatar { width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-muted), var(--primary)); color: #fff; font-size: 66px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+  .mate-info { flex: 1; padding-right: 130px; }
+  .mate-info .nm { font-size: 42px; font-weight: 700; display: flex; align-items: center; gap: 16px; }
+  .badge { font-size: 22px; font-weight: 700; color: var(--primary); background: var(--soft); padding: 6px 16px; border-radius: 999px; }
+  .mate-info .meta { font-size: 28px; color: var(--muted); margin: 10px 0 20px; }
+  .meter { height: 16px; border-radius: 8px; background: #edf1e6; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--progress), var(--primary)); border-radius: 8px; }
+  .pct { position: absolute; right: 48px; top: 36px; font-size: 54px; font-weight: 700; color: var(--primary); }
+  .pct small { font-size: 24px; color: var(--muted); font-weight: 400; display: block; text-align: right; }
+  #book { left: 1060px; top: 890px; width: 720px; height: 104px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 38px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 18px; box-shadow: 0 20px 40px rgba(22,107,86,.35); }
+
+  /* Scene 4 */
+  #s4 { background: radial-gradient(circle at 30% 20%, #1d7d65 0%, var(--primary) 40%, var(--primary-deep) 100%); color: #fff; }
+  #s4 .head { left: 0; right: 0; top: 170px; text-align: center; font-size: 88px; font-weight: 700; letter-spacing: 6px; }
+  #s4 .head em { font-style: normal; color: var(--accent); }
+  .trust { position: absolute; top: 420px; width: 380px; height: 440px; border-radius: 36px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.22); padding: 56px 40px; text-align: center; }
+  .trust .ic { width: 128px; height: 128px; margin: 0 auto 38px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .trust .ic svg { width: 68px; height: 68px; }
+  .trust h3 { font-size: 50px; font-weight: 700; letter-spacing: 4px; }
+  .trust p { font-size: 30px; opacity: .82; margin-top: 18px; }
+
+  /* Scene 5 */
+  #s5 { background: radial-gradient(circle at 50% 40%, #ffffff 0%, var(--page) 60%, #e9f0dc 100%); }
+  #s5 .logo { left: 50%; top: 150px; width: 210px; height: 210px; margin-left: -105px; }
+  #s5 .logo img { width: 100%; height: 100%; filter: drop-shadow(0 16px 36px rgba(22,107,86,.3)); }
+  #s5 .name { left: 0; right: 0; top: 390px; text-align: center; font-size: 120px; font-weight: 700; letter-spacing: 20px; }
+  #s5 .slogan { left: 0; right: 0; top: 570px; text-align: center; font-size: 50px; color: var(--ink); letter-spacing: 6px; }
+  #s5 .en { left: 0; right: 0; top: 664px; text-align: center; font-size: 30px; color: var(--primary-muted); letter-spacing: 10px; font-family: "Noto Sans", sans-serif; text-transform: uppercase; }
+  #s5 .cta { left: 50%; top: 770px; width: 520px; margin-left: -260px; height: 112px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 44px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 20px; box-shadow: 0 22px 48px rgba(22,107,86,.38); }
+  #s5 .corp { left: 0; right: 0; top: 990px; text-align: center; font-size: 24px; color: #8a978f; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="star" viewBox="0 0 40 40"><path d="M20 0 C22 13 27 18 40 20 C27 22 22 27 20 40 C18 27 13 22 0 20 C13 18 18 13 20 0Z"/></symbol>
+  </defs>
+</svg>
+
+<!-- Scene 1: brand intro -->
+<section class="scene" id="s1">
+  <div class="blob" style="left:180px;top:620px;width:420px;height:420px;background:#dfefca;opacity:.7"></div>
+  <div class="blob" style="left:1380px;top:80px;width:460px;height:460px;background:#d3e7bf;opacity:.6"></div>
+  <div class="abs ring" id="ring1"></div>
+  <div class="abs ring" id="ring2"></div>
+  <div id="sparks"></div>
+  <div class="abs logo" id="s1logo"><img src="../assets/brand/spark-logo-forest-noface.png" alt=""></div>
+  <div class="abs title" id="s1title"><span>星</span><span>火</span><span>学</span><span>伴</span></div>
+  <div class="abs sub" id="s1sub">学历认证学长学姐 · 一对一课业陪伴</div>
+</section>
+
+<!-- Scene 2: hero -->
+<section class="scene" id="s2">
+  <div class="blob" style="left:-120px;top:-120px;width:520px;height:520px;background:#dfefca;opacity:.8"></div>
+  <div class="abs photo" id="s2photo"><img src="../assets/homepage/tutor-student-hero.jpg" alt=""></div>
+  <div class="abs kicker" id="s2kicker">家长的第一步</div>
+  <div class="abs h1" id="s2l1" style="top:400px">先看看，</div>
+  <div class="abs h1" id="s2l2" style="top:520px">谁适合陪孩子。</div>
+  <div class="abs bar" id="s2bar"></div>
+  <div class="abs lead" id="s2lead">名校学伴 · 一对一 · 因材施教</div>
+</section>
+
+<!-- Scene 3: matching flow -->
+<section class="scene" id="s3">
+  <div class="abs head" id="s3head">三步，找到<em>对的学伴</em></div>
+  <div class="step" id="st1" style="top:420px"><div class="num">1</div><div class="txt">填写需求<small>年级、科目、学习风格</small></div></div>
+  <div class="step" id="st2" style="top:600px"><div class="num">2</div><div class="txt">智能匹配<small>为孩子推荐合适的学伴</small></div></div>
+  <div class="step" id="st3" style="top:780px"><div class="num">3</div><div class="txt">预约上课<small>一课一消，进度可查</small></div></div>
+
+  <div class="card" id="intake">
+    <h4>孩子的情况</h4>
+    <div class="label">年级</div>
+    <div class="chips"><span class="chip">初一</span><span class="chip" id="c1">初二</span><span class="chip">初三</span></div>
+    <div class="label">科目 · 风格</div>
+    <div class="chips" style="margin-bottom:0"><span class="chip" id="c2">数学</span><span class="chip">英语</span><span class="chip" id="c3">耐心细致</span></div>
+  </div>
+  <div class="card" id="mate">
+    <div class="avatar">林</div>
+    <div class="mate-info">
+      <div class="nm">林学姐 <span class="badge">学历已认证</span></div>
+      <div class="meta">985 高校 · 数学专业</div>
+      <div class="meter"><i id="meter"></i></div>
+    </div>
+    <div class="pct"><span id="pctv">0</span>%<small>匹配度</small></div>
+  </div>
+  <div class="abs" id="book"><span id="bookTxt">预约试听课</span></div>
+</section>
+
+<!-- Scene 4: trust -->
+<section class="scene" id="s4">
+  <div class="blob" style="left:1400px;top:700px;width:600px;height:600px;background:#2f8f6e;opacity:.5"></div>
+  <div class="abs head" id="s4head">家长放心，<em>学伴安心</em></div>
+  <div class="trust" id="t1" style="left:160px">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#166b56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
+    <h3>阳光合规</h3><p>身份学历逐一审核</p>
+  </div>
+  <div class="trust" id="t2" style="left:580px">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#166b56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><circle cx="12" cy="15.5" r="1.6"/></svg></div>
+    <h3>课酬托管</h3><p>费用由平台安全托管</p>
+  </div>
+  <div class="trust" id="t3" style="left:1000px">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#166b56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8.5 15l2.5 2.5 4.5-4.5"/></svg></div>
+    <h3>一课一消</h3><p>上完一课，结算一课</p>
+  </div>
+  <div class="trust" id="t4" style="left:1420px">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#166b56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
+    <h3>材料可追溯</h3><p>全程留痕，随时可查</p>
+  </div>
+</section>
+
+<!-- Scene 5: end card -->
+<section class="scene" id="s5">
+  <div class="blob" style="left:120px;top:120px;width:420px;height:420px;background:#dfefca;opacity:.7"></div>
+  <div class="blob" style="left:1400px;top:600px;width:480px;height:480px;background:#d3e7bf;opacity:.6"></div>
+  <div class="abs logo" id="s5logo"><img src="../assets/brand/spark-logo-forest-noface.png" alt=""></div>
+  <div class="abs name" id="s5name">星火学伴</div>
+  <div class="abs slogan" id="s5slogan">让好学伴，点亮孩子的每一步</div>
+  <div class="abs en" id="s5en">Better Learning · Brighter Future</div>
+  <div class="abs cta" id="s5cta">开始选择学伴 <span>→</span></div>
+  <div class="abs corp" id="s5corp">成都励德科技发展有限公司</div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const P = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = p => 1 - Math.pow(1 - p, 3);
+const inOutCubic = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const outBack = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+const inCubic = p => p * p * p;
+
+function show(el, t, a, d = .5, dy = 40, ease = outCubic) {
+  const p = ease(P(t, a, a + d));
+  el.style.opacity = clamp(p);
+  el.style.transform = `translateY(${(1 - p) * dy}px)`;
+  return p;
+}
+
+const sparkData = Array.from({ length: 14 }, (_, i) => {
+  const ang = (i / 14) * Math.PI * 2 + (i % 2 ? .2 : 0);
+  return { ang, dist: 210 + (i * 53 % 120), size: .5 + (i * 37 % 10) / 10, color: i % 3 === 0 ? '#f2b544' : (i % 3 === 1 ? '#a6cd72' : '#2f8f6e') };
+});
+const sparksEl = $('sparks');
+sparkData.forEach(s => {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  el.setAttribute('class', 'spark'); el.setAttribute('viewBox', '0 0 40 40');
+  el.innerHTML = `<use href="#star" fill="${s.color}"/>`;
+  sparksEl.appendChild(el); s.el = el;
+});
+
+function scene(el, t, a, b, fin = .35, fout = .35) {
+  const vis = t >= a - 0.001 && t <= b + 0.001;
+  el.style.display = vis ? 'block' : 'none';
+  return vis;
+}
+
+function render(t) {
+  // ---------- Scene 1 (0 - 2.8) ----------
+  const s1 = $('s1');
+  if (scene(s1, t, 0, 2.8)) {
+    const lp = outBack(P(t, .15, .85));
+    $('s1logo').style.transform = `scale(${lerp(.2, 1, lp)}) rotate(${lerp(-25, 0, lp)}deg)`;
+    $('s1logo').style.opacity = clamp(P(t, .15, .45));
+    [['ring1', .45, 1.4], ['ring2', .7, 1.7]].forEach(([id, a, b]) => {
+      const p = outCubic(P(t, a, b)); const r = lerp(120, 330, p);
+      const el = $(id); el.style.width = el.style.height = r * 2 + 'px';
+      el.style.marginLeft = el.style.marginTop = -r + 'px';
+      el.style.opacity = t < a ? 0 : (1 - p) * .9;
+    });
+    sparkData.forEach((s, i) => {
+      const p = outCubic(P(t, .5 + i * .015, 1.6 + i * .015));
+      const x = 960 + Math.cos(s.ang) * s.dist * p * 1.6;
+      const y = 360 + Math.sin(s.ang) * s.dist * p;
+      s.el.style.left = x + 'px'; s.el.style.top = y + 'px';
+      s.el.style.opacity = t < .5 ? 0 : clamp(Math.sin(p * Math.PI) * 1.4);
+      s.el.style.transform = `scale(${s.size * (0.4 + p)}) rotate(${p * 180}deg)`;
+    });
+    [...$('s1title').children].forEach((c, i) => show(c, t, .8 + i * .1, .5, 60, outBack));
+    show($('s1sub'), t, 1.35, .5, 30);
+    const out = inCubic(P(t, 2.35, 2.8));
+    s1.style.opacity = 1 - out;
+    s1.style.transform = `scale(${1 + out * .15})`;
+  }
+
+  // ---------- Scene 2 (2.5 - 5.9) ----------
+  const s2 = $('s2');
+  if (scene(s2, t, 2.5, 5.9)) {
+    const inp = outCubic(P(t, 2.5, 3.1));
+    s2.style.opacity = inp;
+    const ph = $('s2photo');
+    const pp = outCubic(P(t, 2.55, 3.3));
+    ph.style.transform = `translateX(${(1 - pp) * 300}px)`;
+    ph.style.opacity = pp;
+    ph.firstElementChild.style.transform = `scale(${lerp(1.18, 1.02, inOutCubic(P(t, 2.5, 5.9)))})`;
+    show($('s2kicker'), t, 2.9, .45, 30);
+    show($('s2l1'), t, 3.1, .55, 60);
+    show($('s2l2'), t, 3.35, .55, 60);
+    $('s2bar').style.width = lerp(0, 220, outCubic(P(t, 3.8, 4.4))) + 'px';
+    show($('s2lead'), t, 3.95, .5, 20);
+    const out = inOutCubic(P(t, 5.4, 5.9));
+    s2.style.transform = `translateX(${-out * 1920}px)`;
+  }
+
+  // ---------- Scene 3 (5.6 - 10.1) ----------
+  const s3 = $('s3');
+  if (scene(s3, t, 5.4, 10.1)) {
+    const inp = inOutCubic(P(t, 5.4, 5.9));
+    s3.style.opacity = 1;
+    s3.style.transform = `translateX(${(1 - inp) * 1920}px)`;
+    show($('s3head'), t, 5.75, .5, 30);
+    const stepTimes = [6.0, 7.1, 8.3];
+    ['st1', 'st2', 'st3'].forEach((id, i) => {
+      const el = $(id); show(el, t, 5.85 + i * .12, .45, 30);
+      el.classList.toggle('on', t >= stepTimes[i]);
+      const pulse = Math.sin(P(t, stepTimes[i], stepTimes[i] + .35) * Math.PI);
+      el.querySelector('.num').style.transform = `scale(${1 + pulse * .18})`;
+    });
+    const ic = $('intake');
+    const ip = outBack(P(t, 5.9, 6.5));
+    ic.style.opacity = clamp(P(t, 5.9, 6.2));
+    ic.style.transform = `translateY(${(1 - ip) * 80}px)`;
+    [['c1', 6.35], ['c2', 6.6], ['c3', 6.85]].forEach(([id, a]) => {
+      const el = $(id); el.classList.toggle('sel', t >= a);
+      const pulse = Math.sin(P(t, a, a + .25) * Math.PI);
+      el.style.transform = `scale(${1 + pulse * .12})`;
+    });
+    const mt = $('mate');
+    const mp = outBack(P(t, 7.1, 7.7));
+    mt.style.opacity = clamp(P(t, 7.1, 7.4));
+    mt.style.transform = `translateX(${(1 - mp) * 220}px)`;
+    const pct = outCubic(P(t, 7.5, 8.4));
+    $('pctv').textContent = Math.round(pct * 96);
+    $('meter').style.width = pct * 96 + '%';
+    const bk = $('book');
+    const bp = outCubic(P(t, 8.3, 8.7));
+    bk.style.opacity = bp;
+    const press = Math.sin(P(t, 8.85, 9.1) * Math.PI);
+    bk.style.transform = `translateY(${(1 - bp) * 40}px) scale(${1 - press * .06})`;
+    const done = t >= 9.0;
+    bk.style.background = done ? '#a6cd72' : '';
+    bk.style.color = done ? '#173d32' : '';
+    $('bookTxt').textContent = done ? '✓  预约成功' : '预约试听课';
+    const out = inCubic(P(t, 9.65, 10.1));
+    if (out > 0) { s3.style.opacity = 1 - out; s3.style.transform = `scale(${1 - out * .08})`; }
+  }
+
+  // ---------- Scene 4 (9.8 - 12.9) ----------
+  const s4 = $('s4');
+  if (scene(s4, t, 9.8, 12.9)) {
+    const inp = inOutCubic(P(t, 9.8, 10.3));
+    s4.style.opacity = 1;
+    s4.style.clipPath = `circle(${inp * 140}% at 74% 87%)`;
+    show($('s4head'), t, 9.95, .5, 40);
+    ['t1', 't2', 't3', 't4'].forEach((id, i) => {
+      const el = $(id); const a = 10.15 + i * .16;
+      const p = outBack(P(t, a, a + .55));
+      el.style.opacity = clamp(P(t, a, a + .3));
+      el.style.transform = `translateY(${(1 - p) * 120}px) scale(${lerp(.85, 1, p)})`;
+      const ic = el.querySelector('.ic');
+      const ip = outBack(P(t, a + .25, a + .7));
+      ic.style.transform = `scale(${ip}) rotate(${(1 - ip) * -90}deg)`;
+    });
+    const out = inCubic(P(t, 12.45, 12.9));
+    if (out > 0) s4.style.opacity = 1 - out;
+  }
+
+  // ---------- Scene 5 (12.6 - 15) ----------
+  const s5 = $('s5');
+  if (scene(s5, t, 12.6, 15.1)) {
+    s5.style.opacity = outCubic(P(t, 12.6, 12.95));
+    const lp = outBack(P(t, 12.7, 13.3));
+    $('s5logo').style.transform = `scale(${lp})`;
+    $('s5logo').style.opacity = clamp(P(t, 12.7, 12.9));
+    show($('s5name'), t, 12.95, .5, 50);
+    show($('s5slogan'), t, 13.2, .5, 30);
+    show($('s5en'), t, 13.4, .5, 20);
+    const cp = outBack(P(t, 13.6, 14.1));
+    $('s5cta').style.opacity = clamp(P(t, 13.6, 13.8));
+    const glow = Math.sin(P(t, 14.2, 14.9) * Math.PI);
+    $('s5cta').style.transform = `scale(${lerp(.6, 1, cp) + glow * .04})`;
+    $('s5cta').style.boxShadow = `0 22px 48px rgba(22,107,86,.38), 0 0 0 ${glow * 18}px rgba(166,205,114,${.45 * glow})`;
+    show($('s5corp'), t, 13.8, .5, 10);
+  }
+}
+window.render = render;
+render(0);
+</script>
+</body>
+</html>
