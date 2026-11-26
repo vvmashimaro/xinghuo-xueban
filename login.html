@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/xh-motion.css">
+  <script src="js/xh-motion.js"></script>
   <link rel="stylesheet" href="css/auth-login.css">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,17 +25,21 @@
       background: #f6f6ee;
       border: 1px solid #e3e8dc;
     }
+    .field-soft { transition: background-color .2s, border-color .2s, box-shadow .25s; }
     .field-soft:focus {
       background: #ffffff;
+      border-color: #a6cd72;
+      box-shadow: 0 0 0 4px rgba(166, 205, 114, 0.25);
     }
   </style>
 </head>
 <body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900 relative overflow-x-hidden max-w-[100vw]">
 
   <!-- 背景光影装饰 -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-    <div class="absolute -top-32 -right-24 w-[28rem] h-[28rem] bg-sage rounded-full blur-3xl opacity-80"></div>
-    <div class="absolute -bottom-40 -left-24 w-[24rem] h-[24rem] bg-teal-100 rounded-full blur-3xl opacity-90"></div>
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true" data-xh-embers="light" data-xh-embers-layer="over">
+    <div class="xh-aurora absolute -top-32 -right-24 w-[28rem] h-[28rem] bg-sage rounded-full blur-3xl opacity-80"></div>
+    <div class="xh-aurora absolute -bottom-40 -left-24 w-[24rem] h-[24rem] bg-teal-100 rounded-full blur-3xl opacity-90"></div>
+    <div class="xh-aurora absolute top-1/3 left-1/3 w-[22rem] h-[22rem] rounded-full blur-3xl opacity-40" style="background:#f8e3ae"></div>
   </div>
 
   <!-- 顶部轻量系统栏：左侧品牌，右侧角色切换 -->
@@ -69,15 +75,15 @@
   </header>
 
   <main class="login-main">
-    <aside id="loginPromo" class="login-promo" aria-label="品牌介绍">
-      <div class="login-promo-badge">
+    <aside id="loginPromo" class="login-promo" aria-label="品牌介绍" data-xh-trail>
+      <div class="login-promo-badge" data-xh-enter>
         <span aria-hidden="true">◆</span>
         <span id="promoBadge">星火学伴</span>
       </div>
-      <h2 id="promoHeadline" class="login-promo-headline">
+      <h2 id="promoHeadline" class="login-promo-headline" data-xh-enter>
         <span class="accent">找对学伴</span>，课业路上不慌
       </h2>
-      <ul id="promoLines" class="login-promo-lines">
+      <ul id="promoLines" class="login-promo-lines" data-xh-enter-children data-xh-stagger data-xh-stagger-skip-first>
         <li><strong>智能匹配</strong> · 按学科智能推荐</li>
         <li><strong>透明可见</strong> · 试讲评级可见</li>
         <li><strong>灵活约课</strong> · 按次约课无捆绑</li>
@@ -85,7 +91,7 @@
       </ul>
     </aside>
 
-    <div class="login-card-wrap">
+    <div class="login-card-wrap" data-xh-enter="200">
     <!-- 无边框、强融合背景的半透明面板 -->
     <div class="glass-panel rounded-[1.75rem] p-6 sm:p-8 space-y-5 transition-all">
 
@@ -162,7 +168,7 @@
         </div>
 
         <!-- 提交登录按钮 -->
-        <button type="submit" id="btnSubmitLogin" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white text-sm font-bold py-3 rounded-full shadow-lg shadow-teal-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
+        <button type="submit" id="btnSubmitLogin" class="xh-shine w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white text-sm font-bold py-3 rounded-full shadow-lg shadow-teal-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
           <span>安全登录</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
