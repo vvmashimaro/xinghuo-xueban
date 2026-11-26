@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/xh-motion.css">
+  <script src="js/xh-motion.js"></script>
   <link rel="stylesheet" href="css/parent-find-tutor-boss-a.css">
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,6 +23,10 @@
     .glass-nav {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(14px);
+    }
+    @media (max-width: 639px) {
+      .xh-dash-head > div:last-child > button { padding: 0.45rem 0.6rem; }
+      .xh-dash-head > div:last-child > button > span { display: none; }
     }
     
     .card-hover-effect {
@@ -51,23 +57,23 @@
 <body class="bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+    <div class="xh-dash-head max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
       <!-- 品牌标识与当前学员身份卡 -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 min-w-0">
         <img src="assets/brand/spark-logo-forest-noface-192.png" alt="星火学伴" width="40" height="40" class="w-10 h-10 rounded-full shrink-0 object-cover" decoding="async" />
         <div>
           <div class="flex items-center gap-2">
             <span class="font-black text-slate-900 text-base tracking-tight leading-none">星火学伴</span>
-            <span class="text-xs bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">
+            <span class="hidden sm:inline text-xs bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200 font-mono">
               PARENT-HUB
             </span>
           </div>
           <!-- 快捷学情档案切换 -->
           <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
             <i class="fa-solid fa-circle-user text-teal-600 text-xs"></i>
-            <span class="font-bold text-slate-800" id="headerStudentName">乐乐同学</span>
-            <span class="text-xs bg-slate-100 text-slate-600 px-1.5 rounded font-medium" id="headerGradeBadge">初三 · 中考冲刺</span>
-            <button type="button" onclick="openPassportDrawer()" class="text-teal-700 hover:text-teal-900 font-medium text-xs underline ml-1 cursor-pointer">
+            <span class="font-bold text-slate-800 whitespace-nowrap" id="headerStudentName">乐乐同学</span>
+            <span class="hidden sm:inline text-xs bg-slate-100 text-slate-600 px-1.5 rounded font-medium" id="headerGradeBadge">初三 · 中考冲刺</span>
+            <button type="button" onclick="openPassportDrawer()" class="text-teal-700 hover:text-teal-900 font-medium text-xs underline ml-1 cursor-pointer whitespace-nowrap">
               查阅学情护照
             </button>
           </div>
@@ -75,7 +81,7 @@
       </div>
 
       <!-- 右侧：银行托管钱包简况与快捷导航 -->
-      <div class="flex items-center gap-2.5 sm:gap-4">
+      <div class="flex items-center gap-1.5 sm:gap-4 shrink-0">
         <!-- 银行托管账户资金小微模块 -->
         <div class="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 text-xs max-w-[220px]">
           <div class="w-7 h-7 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-xs shrink-0">
@@ -87,19 +93,19 @@
         </div>
 
         <!-- 页面跳转工具 -->
-        <button type="button" onclick="safeNavigate('assessment.html', '学生学科测评')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+        <button type="button" onclick="safeNavigate('assessment.html', '学生学科测评')" title="学科测评" aria-label="学科测评" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
           <i class="fa-solid fa-clipboard-check text-teal-600 text-xs"></i>
           <span class="hidden sm:inline">学科测评</span>
           <span class="sm:hidden">测评</span>
         </button>
 
-        <button type="button" onclick="safeNavigate('parent_register.html?mode=edit', '学情重构档案')" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+        <button type="button" onclick="safeNavigate('parent_register.html?mode=edit', '学情重构档案')" title="重配学情与考纲" aria-label="重配学情与考纲" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
           <i class="fa-solid fa-sliders text-teal-600 text-xs"></i>
           <span class="hidden sm:inline">重配学情与考纲</span>
           <span class="sm:hidden">改学情</span>
         </button>
 
-        <button type="button" onclick="openParentFeedbackModal()" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
+        <button type="button" onclick="openParentFeedbackModal()" title="反馈投诉" aria-label="反馈投诉" class="text-xs text-slate-600 hover:text-teal-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition font-medium cursor-pointer flex items-center gap-1.5 shadow-2xs">
           <i class="fa-solid fa-comment-dots text-teal-600 text-xs"></i>
           <span class="hidden sm:inline">反馈投诉</span>
           <span class="sm:hidden">反馈</span>
@@ -112,17 +118,17 @@
     </div>
   </header>
 
-  <section data-matching-banner-compact class="matching-banner-compact is-on bg-slate-900 text-white border-b border-teal-900/40">
+  <section data-matching-banner-compact data-xh-embers="dark" data-xh-embers-density="0.8" class="matching-banner-compact is-on bg-slate-900 text-white border-b border-teal-900/40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
       <p class="text-sm text-slate-200">
-        已为您精准召回 <strong id="matchRecallCountCompact" class="text-teal-300">0</strong> 位 &gt;95% 契合度导师
+        已为您精准召回 <strong id="matchRecallCountCompact" data-xh-count class="text-teal-300">0</strong> 位 &gt;95% 契合度导师
       </p>
       <button type="button" onclick="goDiscoverTab()" class="text-sm font-semibold text-teal-300 hover:text-white shrink-0 cursor-pointer">
         去查看 →
       </button>
     </div>
   </section>
-  <section data-matching-banner class="hidden is-compact bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
+  <section data-matching-banner data-xh-embers="dark" class="hidden is-compact bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 text-white px-4 py-5 sm:py-6 border-b border-teal-900/40 relative overflow-hidden">
     <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto relative z-10 space-y-4">
 
@@ -134,7 +140,7 @@
             <span>星火算力匹配引擎 · 基于【初三中考/几何动点/随堂查缺补漏】</span>
           </div>
           <h1 class="text-lg sm:text-xl md:text-2xl font-black tracking-tight leading-tight">
-            已为您精准召回 <span id="matchRecallCount">0</span> 位契合度 > 95% 的金牌学霸导师
+            已为您精准召回 <span id="matchRecallCount" data-xh-count>0</span> 位契合度 > 95% 的金牌学霸导师
           </h1>
         </div>
 
@@ -147,7 +153,7 @@
       </div>
 
       <!-- AI 智能首选导师横向极速推荐滑条 -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="topMatchedTutorsContainer">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="topMatchedTutorsContainer" data-xh-stagger>
         <!-- 动态注入推荐导师卡片 -->
       </div>
 
@@ -177,7 +183,7 @@
         <button type="button" data-filter="declined" onclick="setParentBookingFilter('declined', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
         <button type="button" data-filter="cancelled" onclick="setParentBookingFilter('cancelled', this)" class="parent-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已取消</button>
       </div>
-      <div id="parentBookingsList" class="space-y-2.5 text-xs">
+      <div id="parentBookingsList" class="space-y-2.5 text-xs" data-xh-stagger>
         <div class="text-slate-500 text-center py-4">加载中…</div>
       </div>
       <div id="parentCompletedPanel" class="hidden border-t border-slate-100 pt-3 space-y-2.5 bg-emerald-50/20 -mx-1 px-1 rounded-xl">
@@ -188,7 +194,7 @@
           </h3>
           <span id="parentCompletedCount" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
         </div>
-        <div id="parentCompletedList" class="space-y-2"></div>
+        <div id="parentCompletedList" class="space-y-2" data-xh-stagger></div>
       </div>
     </section>
   </main>
@@ -301,7 +307,7 @@
           </div>
         </div>
 
-        <div class="boss-tutor-list" id="tutorListGrid"></div>
+        <div class="boss-tutor-list" id="tutorListGrid" data-xh-stagger></div>
       </section>
     </div>
 
@@ -766,7 +772,7 @@
     </div>
   </div>
 
-  <div id="podPasscodeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+  <div id="podPasscodeModal" data-xh-celebrate class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 transform transition-all duration-300 scale-95" id="podPasscodeContent">
       <div id="bookingSuccessSimple" class="text-center space-y-4">
         <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
@@ -3326,15 +3332,16 @@
       const slotExpired = booking && window.StorageService && StorageService.bookingPendingConfirmSlotExpired
         ? StorageService.bookingPendingConfirmSlotExpired(booking)
         : false;
-      if (pending && slotExpired && (!st || st === 'scheduled')) {
+      if (pending && slotExpired && (!st || st === 'scheduled' || st === 'pending_accept')) {
         return { text: '已过期', cls: 'bg-rose-50 text-rose-800 border-rose-200' };
       }
-      if (pending && (!st || st === 'scheduled')) {
+      if (pending && (!st || st === 'scheduled' || st === 'pending_accept')) {
         return { text: '待确认档期', cls: 'bg-amber-50 text-amber-800 border-amber-200' };
       }
       const map = {
         scheduled: { text: '已排课', cls: 'bg-slate-50 text-slate-600 border-slate-200' },
         completed: { text: '已结课', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        pending_accept: { text: '待确认档期', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         leave_pending: { text: '请假待确认', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         leave_approved: { text: '已批准请假', cls: 'bg-sky-50 text-sky-800 border-sky-200' },
         leave_too_late: { text: '请假过晚', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
@@ -3703,7 +3710,8 @@
         escrow_locked: { text: '待导师接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         accepted: { text: '导师已接单', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
         declined: { text: '导师已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
-        cancelled: { text: '已撤销 · 已退款', cls: 'bg-slate-100 text-slate-600 border-slate-200' }
+        cancelled: { text: '已撤销 · 已退款', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+        completed: { text: '已完课', cls: 'bg-teal-50 text-teal-800 border-teal-200' }
       };
       box.innerHTML = filtered.map(function(raw) {
         const b = StorageService.normalizeBookingRecord ? StorageService.normalizeBookingRecord(raw) : raw;
@@ -3717,6 +3725,7 @@
         if (!unpaid && slotExpired) {
           st = { text: '已过期', cls: 'bg-rose-50 text-rose-800 border-rose-200' };
         }
+        const stCls = !unpaid && !slotExpired && (b.status === 'pending_accept' || b.status === 'escrow_locked') ? st.cls + ' xh-pulse' : st.cls;
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
         const fund = parentBookingFundCopy(b, unpaid);
@@ -3773,13 +3782,13 @@
           ? '<div class="mt-2 flex flex-wrap gap-2 items-center"><button type="button" onclick="openRenewalBooking(\'' + b.id + '\')" class="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm shadow-teal-600/15"><i class="fa-solid fa-rotate"></i>一键续课</button>' + cancelBtn + '</div>'
           : ((payBtn || cancelBtn) ? '<div class="mt-2 flex flex-wrap gap-2 items-center">' + payBtn + cancelBtn + '</div>' : '');
         const amountCaption = fund.amountCaption;
-        return '<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
+        return '<div class="xh-card rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex flex-col gap-1">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="min-w-0 space-y-0.5">' +
               '<div class="flex items-center gap-2 flex-wrap">' +
                 '<span class="font-bold text-slate-900">' + (b.tutorName || '导师') + '</span>' +
                 typePill +
-                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + stCls + '">' + st.text + '</span>' +
                 (b.sourceBookingId ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-800 border-violet-200">续课</span>' : '') +
               '</div>' +
               '<div class="text-xs text-slate-600">' + (b.subject || '') + ' · ' + (b.studentGrade || '') + '</div>' +
@@ -3789,7 +3798,7 @@
               (b.hasTimeConflict ? '<div class="mt-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (b.timeConflictNote || '与学员其他课程时间冲突，请留意调整日程') + '</div>' : '') +
               reason +
             '</div>' +
-            '<div class="text-right shrink-0">' +
+            '<div class="text-right shrink-0 ml-auto">' +
               '<div class="font-black text-teal-700 font-mono">¥' + Number(b.amount || 0).toFixed(2) + '</div>' +
               '<div class="text-xs text-slate-600">' + amountCaption + '</div>' +
               '<div class="text-xs text-slate-500">' + (b.createdAt || '') + '</div>' +

@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/xh-motion.css">
+  <script src="js/xh-motion.js"></script>
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -199,7 +201,7 @@
   </header>
 
   <!-- ======================= 顶部四重信任盾牌 Banner ======================= -->
-  <section class="parent-trust-banner text-white px-4 py-4 sm:py-5 relative overflow-hidden">
+  <section class="parent-trust-banner text-white px-4 py-4 sm:py-5 relative overflow-hidden" data-xh-embers="dark">
     <div class="absolute -right-24 -top-24 w-80 h-80 bg-teal-300/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
       <div>
@@ -213,7 +215,7 @@
       </div>
 
       <!-- 四大核心承诺胶囊 -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs" data-xh-enter-children>
         <div class="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-sm">
           <i class="fa-solid fa-hand-holding-dollar parent-trust-icon text-xs shrink-0"></i>
           <div>
@@ -820,7 +822,7 @@
           </div>
 
           <!-- 学情卡片主体 -->
-          <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
+          <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm relative overflow-hidden transition-all hover:shadow-md" data-xh-tilt="3">
             <!-- 顶部渐变条饰 -->
             <div class="h-14 -mx-5 -mt-5 bg-gradient-to-r from-teal-100 via-teal-50 to-slate-100 p-3 flex justify-between items-start text-slate-800 border-b border-teal-100">
               <div class="flex items-center gap-1.5 text-xs font-medium bg-white/80 text-teal-800 px-2 py-0.5 rounded-md border border-teal-100">
@@ -1091,7 +1093,7 @@
   </div>
 
   <!-- ======================= 建档成功弹窗 (Match Result Modal) ======================= -->
-  <div id="matchSuccessModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+  <div id="matchSuccessModal" data-xh-celebrate class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 transform transition-all duration-300 scale-95" id="matchModalContent">
       <div class="text-center space-y-1.5">
         <div class="w-14 h-14 bg-teal-50 text-teal-600 border border-teal-200 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
