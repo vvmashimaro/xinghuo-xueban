@@ -612,10 +612,22 @@
         .catch((e) => {
           toast(e.message || '加载权限配置失败', 'error');
           renderMain();
-        });
+        })
+        .then(animateRouteIn);
       return;
     }
     renderMain();
+    animateRouteIn();
+  }
+
+  function animateRouteIn() {
+    const main = document.getElementById('adminMain');
+    if (!main) return;
+    main.classList.remove('xh-route-in');
+    void main.offsetWidth;
+    main.classList.add('xh-route-in');
+    clearTimeout(main._routeInTimer);
+    main._routeInTimer = setTimeout(() => main.classList.remove('xh-route-in'), 600);
   }
 
   function renderMain() {
@@ -680,11 +692,11 @@
   function cardStat(title, value, color) {
     const bg = color === 'amber' ? 'bg-amber-50 text-amber-800' : color === 'blue' ? 'bg-blue-50 text-blue-800' : 'bg-teal-50 text-teal-800';
     return (
-      '<div class="rounded-2xl border border-slate-200 p-4 ' +
+      '<div class="xh-card rounded-2xl border border-slate-200 p-4 ' +
       bg +
       '"><div class="text-xs font-medium opacity-80">' +
       esc(title) +
-      '</div><div class="text-2xl font-semibold mt-1">' +
+      '</div><div class="text-2xl font-semibold mt-1" data-xh-count>' +
       value +
       '</div></div>'
     );
