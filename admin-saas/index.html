@@ -8,16 +8,29 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="../js/tailwind-config.js"></script>
   <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/xh-motion.css">
+  <script src="../js/xh-motion.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .admin-nav-group { padding: 10px 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #64748b; }
     .admin-nav a { font-weight: 500; }
     table.admin-dense th, table.admin-dense td { padding: 0.5rem 0.75rem; font-size: 13px; }
+    .admin-nav a { position: relative; transition: background-color .2s, color .2s, padding-left .25s cubic-bezier(0.22, 1, 0.36, 1); }
+    .admin-nav a.bg-teal-600 { padding-left: 1.1rem; box-shadow: 0 6px 16px rgba(22, 107, 86, 0.35); }
+    .admin-nav a.bg-teal-600::before { content: ""; position: absolute; left: 0.45rem; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: #f2b544; box-shadow: 0 0 8px #f2b544; }
+    html.xh-motion #adminMain.xh-route-in > * { animation: xh-rise .45s var(--xh-ease-out) backwards; }
+    @media (max-width: 1023px) {
+      #adminSidebar { position: fixed; inset: 0 auto 0 0; z-index: 55; height: 100%; translate: -100% 0; transition: translate .35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .35s ease; }
+      body.admin-nav-open #adminSidebar { translate: 0 0; box-shadow: 20px 0 40px rgba(15, 23, 42, 0.25); }
+      body.admin-nav-open #adminNavBackdrop { opacity: 1; pointer-events: auto; }
+    }
+    #adminNavBackdrop { position: fixed; inset: 0; z-index: 54; background: rgba(15, 23, 42, 0.5); opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+    @media (min-width: 1024px) { #adminNavBackdrop, #adminNavToggle { display: none; } }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
   <div class="flex min-h-screen">
-    <aside class="w-56 bg-slate-900 text-slate-200 flex flex-col shrink-0 border-r border-slate-800">
+    <aside id="adminSidebar" class="w-56 bg-slate-900 text-slate-200 flex flex-col shrink-0 border-r border-slate-800">
       <div class="p-4 border-b border-slate-800">
         <div class="flex items-center gap-2">
           <img src="../assets/brand/spark-logo-forest-noface-192.png" alt="" width="32" height="32" class="w-8 h-8 rounded-full object-cover" decoding="async" />
@@ -49,9 +62,13 @@
         <button type="button" id="btnLogout" class="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200">退出登录</button>
       </div>
     </aside>
+    <div id="adminNavBackdrop" aria-hidden="true"></div>
     <div class="flex-1 flex flex-col min-w-0">
-      <header id="adminTopBar" class="shrink-0 bg-white border-b border-slate-200 px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
-        <div class="min-w-0">
+      <header id="adminTopBar" class="shrink-0 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
+        <button type="button" id="adminNavToggle" class="shrink-0 w-9 h-9 rounded-xl border border-slate-200 text-slate-700 flex items-center justify-center" aria-label="打开导航" aria-controls="adminSidebar" aria-expanded="false">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 min-w-0">
             <span id="adminSessionStatus" class="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">正在确认</span>
             <div id="adminIdentity" class="text-sm font-semibold text-slate-900 truncate">正在确认登录身份…</div>
@@ -60,7 +77,7 @@
         </div>
         <a id="adminRelogin" data-admin-relogin href="../login.html" class="hidden shrink-0 text-sm bg-rose-600 text-white px-3 py-2 rounded-xl font-bold">重新登录中台</a>
       </header>
-      <main class="flex-1 p-6 lg:p-8 overflow-y-auto" id="adminMain">
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto" id="adminMain">
         <p class="text-slate-500">加载中…</p>
       </main>
     </div>
@@ -97,5 +114,21 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="js/admin-api.js"></script>
   <script src="js/admin-app.js"></script>
+  <script>
+    (function () {
+      var toggle = document.getElementById('adminNavToggle');
+      var backdrop = document.getElementById('adminNavBackdrop');
+      function setOpen(open) {
+        document.body.classList.toggle('admin-nav-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      toggle.addEventListener('click', function () { setOpen(!document.body.classList.contains('admin-nav-open')); });
+      backdrop.addEventListener('click', function () { setOpen(false); });
+      document.getElementById('adminSidebar').addEventListener('click', function (e) {
+        if (e.target.closest('[data-nav]')) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    })();
+  </script>
 </body>
 </html>

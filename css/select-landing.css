@@ -177,7 +177,7 @@ html[data-xh-archive="mentor"] #mentorOnboardFlow {
   font-size: 14px;
 }
 .xl-btn:disabled { opacity: 0.4; cursor: default; }
-.xl-teaser { position: relative; height: 420px; }
+.xl-teaser { position: relative; height: 300px; }
 
 .xl-wizard { max-width: 640px; margin: 0 auto; }
 .xl-progress { display: flex; gap: 8px; margin-bottom: 28px; }
@@ -309,3 +309,30 @@ html[data-xh-archive="mentor"] #mentorOnboardFlow {
   .xh-bar-inner { padding: 8px 10px; }
   .xh-nav button { padding: 8px 6px; font-size: 12px; }
 }
+
+/* 动效（html.xh-motion 由 js/xh-motion.js 打开） */
+html.xh-motion .xh-scene img { animation: xh-ken-burns 26s ease-out both; }
+html.xh-motion .xh-ccard-teaser { animation: xh-float 6.5s ease-in-out infinite; }
+html.xh-motion .xh-ccard-teaser.c2 { animation-duration: 7.5s; animation-delay: -2.4s; }
+html.xh-motion .xh-ccard-teaser.c3 { animation-duration: 8.5s; animation-delay: -4.8s; }
+.xh-ccard-teaser.c1 { box-shadow: 0 26px 60px rgba(23, 61, 50, 0.16); }
+html.xh-motion .xl-chip { transition: background-color .2s, translate .25s var(--xh-ease-out), box-shadow .25s; }
+html.xh-motion .xl-chip:hover { translate: 0 -2px; background: #fff; box-shadow: 0 8px 18px rgba(23, 61, 50, 0.1); }
+html.xh-motion .xl-opt { transition: background-color .2s, border-color .2s, color .2s, translate .25s var(--xh-ease-out), box-shadow .25s; }
+html.xh-motion .xl-opt:hover { translate: 0 -2px; border-color: #a6cd72; box-shadow: 0 10px 22px rgba(23, 61, 50, 0.1); }
+html.xh-motion .xl-opt.is-on { box-shadow: 0 10px 24px rgba(22, 107, 86, 0.3); }
+.xl-progress i { transition: background-color .4s ease; }
+.xl-btn-primary { box-shadow: 0 10px 24px rgba(22, 107, 86, 0.28); }
+html.xh-motion .xl-btn-primary:not(:disabled):hover { background: #115645; box-shadow: 0 16px 32px rgba(22, 107, 86, 0.34); }
+html.xh-motion .xh-nav button:not(.is-on):hover { background: rgba(255, 255, 255, 0.6); }
+.xl-kicker::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f2b544;
+  margin-right: 8px;
+  box-shadow: 0 0 0 0 rgba(242, 181, 68, 0.5);
+}
+html.xh-motion .xl-kicker::before { animation: xh-breathe 2.2s ease-in-out infinite; }
+.xh-stage { display: flex; flex-direction: column; justify-content: center; }

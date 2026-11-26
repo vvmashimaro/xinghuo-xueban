@@ -120,3 +120,20 @@
     max-width: 28rem;
   }
 }
+
+/* 动效（html.xh-motion 由 js/xh-motion.js 打开） */
+html.xh-motion .xh-aurora { animation: xh-aurora 18s ease-in-out infinite; }
+html.xh-motion .xh-aurora:nth-child(2) { animation-duration: 22s; animation-delay: -7s; }
+html.xh-motion .xh-aurora:nth-child(3) { animation-duration: 26s; animation-delay: -13s; }
+html.xh-motion .login-promo-headline .accent {
+  background: linear-gradient(90deg, #166b56 0%, #2f8f6e 25%, #8cc152 45%, #166b56 65%, #166b56 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: xh-gradient-pan 6s linear infinite;
+}
+.login-promo-lines li { transition: translate .3s var(--xh-ease-out, ease), border-color .3s; }
+html.xh-motion .login-promo-lines li:hover { translate: 6px 0; border-left-color: #f2b544; }
+html.xh-motion .login-card-wrap > .glass-panel { transition: box-shadow .4s ease, translate .4s var(--xh-ease-out, ease); }
+html.xh-motion .login-card-wrap > .glass-panel:focus-within { box-shadow: 0 28px 60px rgba(23, 61, 50, 0.14); translate: 0 -3px; }

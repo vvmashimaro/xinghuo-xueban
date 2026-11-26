@@ -7,13 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/xh-motion.css">
+  <script src="js/xh-motion.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .glass-nav { background: rgba(255,255,255,0.86); backdrop-filter: blur(14px); }
     .q-opt:has(input:checked) { border-color: #166b56; background: #e7f3e4; }
+    html.xh-motion .q-opt:has(input:checked) { animation: xh-pop 0.35s var(--xh-ease-out); box-shadow: 0 6px 16px rgba(22, 107, 86, 0.14); }
+    html.xh-motion .q-opt:hover { translate: 0 -1px; }
+    .xh-quiz-bar { background: linear-gradient(90deg, #a6cd72, #166b56, #a6cd72); background-size: 200% 100%; transition: width .5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    html.xh-motion .xh-quiz-bar { animation: xh-gradient-pan 2.4s linear infinite; }
   </style>
 </head>
-<body class="bg-cream text-slate-800 min-h-screen">
+<body class="bg-cream text-slate-800 min-h-screen" data-xh-progress>
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/90 shadow-2xs">
     <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
       <div class="flex items-center gap-2.5">
@@ -45,7 +51,7 @@
         <h1 class="text-base font-black text-slate-900">选择测评学科</h1>
         <span id="studentHint" class="text-xs text-slate-500">学员：—</span>
       </div>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="subjectTabs"></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="subjectTabs" data-xh-stagger></div>
       <div id="priorResult" class="hidden text-[12px] rounded-xl border border-teal-100 bg-teal-50/70 px-3 py-2 text-teal-900"></div>
     </section>
 
@@ -55,9 +61,9 @@
         <span class="text-xs text-slate-500" id="quizProgress">0 / 0</span>
       </div>
       <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div id="quizBar" class="h-full bg-teal-600 w-0 transition-all"></div>
+        <div id="quizBar" class="xh-quiz-bar h-full bg-teal-600 w-0 transition-all"></div>
       </div>
-      <div id="questionsBox" class="space-y-4"></div>
+      <div id="questionsBox" class="space-y-4" data-xh-stagger></div>
       <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
         <p class="text-xs text-slate-500">请独立完成；结果将写入学情档案供试课/正式课参考。</p>
         <button type="button" id="btnSubmitQuiz" onclick="submitQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-teal-600/20 cursor-pointer inline-flex items-center gap-1.5">
@@ -66,12 +72,12 @@
       </div>
     </section>
 
-    <section id="resultPanel" class="hidden bg-white rounded-2xl border border-teal-200 shadow-sm p-5 space-y-3 text-center">
+    <section id="resultPanel" data-xh-view data-xh-celebrate class="hidden bg-white rounded-2xl border border-teal-200 shadow-sm p-5 space-y-3 text-center">
       <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-2xl">
         <i class="fa-solid fa-award"></i>
       </div>
       <h2 class="text-lg font-black text-slate-900">测评完成</h2>
-      <p class="text-sm text-slate-600"><span id="resultSubject"></span> · 得分 <strong id="resultScore" class="text-teal-700 font-mono text-xl">0</strong> · 等级 <strong id="resultLevel" class="text-teal-800"></strong></p>
+      <p class="text-sm text-slate-600"><span id="resultSubject"></span> · 得分 <strong id="resultScore" data-xh-count class="text-teal-700 font-mono text-xl">0</strong> · 等级 <strong id="resultLevel" class="text-teal-800"></strong></p>
       <p class="text-[12px] text-slate-500" id="resultTime"></p>
       <div class="flex gap-2 justify-center pt-1">
         <button type="button" onclick="restartQuiz()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">再测一次</button>

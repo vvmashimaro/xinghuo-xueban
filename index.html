@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/xh-motion.css">
+  <script src="js/xh-motion.js"></script>
   <link rel="stylesheet" href="css/companion-card.css">
   <link rel="stylesheet" href="css/select-landing.css">
   <!-- Font Awesome Icons -->
@@ -39,7 +41,7 @@
 </head>
 <body class="xh-select-body bg-cream text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden max-w-[100vw]">
 
-  <div class="xh-scene" aria-hidden="true">
+  <div class="xh-scene" aria-hidden="true" data-xh-embers="light" data-xh-embers-layer="over" data-xh-embers-density="1.7">
     <img src="assets/homepage/tutor-student-hero.jpg" alt="">
   </div>
 
@@ -57,46 +59,46 @@
     </div>
   </header>
 
-  <main class="xh-stage" id="xhStage">
-    <section id="roleGate">
+  <main class="xh-stage" id="xhStage" data-xh-spotlight>
+    <section id="roleGate" data-xh-view data-xh-trail>
       <div class="xl-home">
         <div>
-          <div class="xl-kicker">一对一，课酬托管</div>
-          <h1>先看看谁适合陪孩子。</h1>
-          <p class="xl-lead">学历认证学伴一对一，课酬由平台托管。先填一点年级、科目和风格，再为你匹配；也可以先随便看看。</p>
-          <div class="xl-chips">
+          <div class="xl-kicker" data-xh-enter>一对一，课酬托管</div>
+          <h1 data-xh-enter>先看看谁适合<span class="xh-flow-text">陪孩子</span>。</h1>
+          <p class="xl-lead" data-xh-enter>学历认证学伴一对一，课酬由平台托管。先填一点年级、科目和风格，再为你匹配；也可以先随便看看。</p>
+          <div class="xl-chips" data-xh-enter-children>
             <span class="xl-chip">阳光合规</span>
             <span class="xl-chip">课酬托管</span>
             <span class="xl-chip">一课一消</span>
             <span class="xl-chip">材料可追溯</span>
           </div>
-          <div class="xl-ctas">
-            <button class="xl-btn xl-btn-primary" type="button" id="btnStart" onclick="enterParentIntake()">开始选择学伴</button>
+          <div class="xl-ctas" data-xh-enter>
+            <button class="xl-btn xl-btn-primary xh-shine" data-xh-magnet type="button" id="btnStart" onclick="enterParentIntake()">开始选择学伴</button>
             <button class="xl-btn xl-btn-quiet" type="button" id="btnCasual" onclick="enterParentCasual()">先随便看看</button>
           </div>
         </div>
-        <div class="xl-teaser" id="xhHomeTeaser" aria-hidden="true"></div>
+        <div class="xl-teaser" id="xhHomeTeaser" aria-hidden="true" data-xh-enter="320"></div>
       </div>
     </section>
 
-    <section id="parentBrowseFlow">
-      <div id="xhSelectApp"></div>
+    <section id="parentBrowseFlow" data-xh-view>
+      <div id="xhSelectApp" data-xh-stagger=".xl-progress, .xl-q, .xl-q-sub, .xl-opt, .xl-match-head, .xh-ccard, .xh-ccard-row, .xl-filters, .xl-empty"></div>
     </section>
 
-    <section id="mentorIntro">
+    <section id="mentorIntro" data-xh-view data-xh-trail>
       <div class="xl-mentor">
         <div>
           <div class="xl-kicker">填写学伴卡，提交后进入审核</div>
           <h1>把你会的那道题，讲给他们听。</h1>
           <p class="xl-lead">先完善身份与清算账户，再填写能力画像。提交后进入审核，通过后才会出现在家长可选择的学伴里。</p>
         </div>
-        <div class="xl-blank">
+        <div class="xl-blank" data-xh-tilt="4">
           <div class="xl-label">星火学伴申请</div>
           <h2>把这张学伴卡填写完整</h2>
           <div class="xl-mrow"><div><b>L1 身份与清算账户</b><div class="xl-meta">姓名、手机、在籍核验、结算信息</div></div></div>
           <div class="xl-mrow"><div><b>学信码核验</b><div class="xl-meta">在入库表中填写。本页没有学信网接口，不会把它写成已通过。</div></div></div>
           <div class="xl-mrow"><div><b>L2 能力画像</b><div class="xl-meta">科目、年级、风格、可授课时段</div></div></div>
-          <button class="xl-btn xl-btn-primary" type="button" id="btnApply" onclick="enterAsMentor()" style="width:100%;margin-top:22px;height:48px">填写入库申请</button>
+          <button class="xl-btn xl-btn-primary" type="button" id="btnApply" data-xh-magnet onclick="enterAsMentor()" style="width:100%;margin-top:22px;height:48px">填写入库申请</button>
           <p class="xl-note">提交后进入审核，不是立刻上架。成功页只作为申请回执。</p>
           <p class="xl-note"><button class="xl-btn xl-btn-quiet" type="button" onclick="returnToRoleGate()">返回身份选择</button></p>
         </div>

@@ -9,6 +9,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/xh-motion.css">
+  <script src="js/xh-motion.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .glass-nav {
@@ -47,7 +49,7 @@
     </div>
   </header>
 
-  <section class="bg-gradient-to-r from-teal-50 via-slate-50 to-teal-50 text-slate-800 px-4 py-5 sm:py-6 border-b border-teal-100 relative overflow-hidden">
+  <section data-xh-embers="light" data-xh-embers-density="0.9" class="bg-gradient-to-r from-teal-50 via-slate-50 to-teal-50 text-slate-800 px-4 py-5 sm:py-6 border-b border-teal-100 relative overflow-hidden">
     <div class="absolute -right-28 -top-28 w-72 max-w-[50vw] h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="max-w-6xl mx-auto relative z-10 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -225,7 +227,7 @@
           <button type="button" data-filter="completed" onclick="setMentorBookingFilter('completed', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已完课</button>
           <button type="button" data-filter="declined" onclick="setMentorBookingFilter('declined', this)" class="mentor-bk-filter text-xs font-bold px-2.5 py-1 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer">已婉拒</button>
         </div>
-        <div id="bookingInbox" class="p-4 sm:p-5 space-y-3">
+        <div id="bookingInbox" class="p-4 sm:p-5 space-y-3" data-xh-stagger>
           <!-- 动态注入 -->
         </div>
         <div id="completedSessionsPanel" class="hidden border-t border-slate-100 px-4 sm:px-5 py-4 space-y-3 bg-emerald-50/30">
@@ -236,7 +238,7 @@
             </h3>
             <span id="completedSessionsCount" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">0</span>
           </div>
-          <div id="completedSessionsList" class="space-y-2.5"></div>
+          <div id="completedSessionsList" class="space-y-2.5" data-xh-stagger></div>
         </div>
       </section>
       </div>
@@ -273,7 +275,7 @@
             <span>提交反馈</span>
           </button>
         </div>
-        <div id="feedbackTicketsList" class="p-4 sm:p-5 space-y-3">
+        <div id="feedbackTicketsList" class="p-4 sm:p-5 space-y-3" data-xh-stagger>
           <!-- 动态注入 -->
           <div class="text-center text-xs text-slate-500 py-6">
             暂无反馈记录
@@ -500,7 +502,9 @@
       pending_accept: { text: '待接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
       escrow_locked: { text: '待接单', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
       accepted: { text: '已接单', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-      declined: { text: '已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' }
+      declined: { text: '已婉拒', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
+      completed: { text: '已完课', cls: 'bg-teal-50 text-teal-800 border-teal-200' },
+      cancelled: { text: '已取消', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
     };
 
     function maskIdCard(v) {
@@ -644,6 +648,7 @@
       const map = {
         scheduled: { text: '已排课', cls: 'bg-slate-50 text-slate-600 border-slate-200' },
         completed: { text: '已结课', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        pending_accept: { text: '待确认档期', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         leave_pending: { text: '请假待确认', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
         leave_approved: { text: '已批准请假', cls: 'bg-sky-50 text-sky-800 border-sky-200' },
         leave_too_late: { text: '请假过晚', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
@@ -929,6 +934,7 @@
           ? { text: '待家长支付', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
           : (BOOKING_STATUS_LABEL[b.status] || { text: b.status, cls: 'bg-slate-50 text-slate-600 border-slate-200' });
         const canAct = !unpaid && (b.status === 'pending_accept' || b.status === 'escrow_locked');
+        const stCls = canAct ? st.cls + ' xh-pulse' : st.cls;
         const isWeekly = b.type === 'weekly';
         const isTrial = b.type === 'trial';
         const typePill = isTrial
@@ -985,13 +991,13 @@
             }).join('') + '</div>';
         }
 
-        return '<div class="rounded-2xl border border-slate-200 bg-teal-50/30 p-3.5 sm:p-4">' +
+        return '<div class="xh-card rounded-2xl border border-slate-200 bg-teal-50/30 p-3.5 sm:p-4">' +
           '<div class="flex flex-wrap items-start justify-between gap-2">' +
             '<div class="space-y-1 min-w-0">' +
               '<div class="flex items-center gap-2 flex-wrap">' +
                 '<span class="text-sm font-bold text-slate-900">' + escapeHtml(b.studentNickname || '学员') + '</span>' +
                 typePill +
-                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + st.cls + '">' + st.text + '</span>' +
+                '<span class="text-xs font-bold px-2 py-0.5 rounded-full border ' + stCls + '">' + st.text + '</span>' +
               '</div>' +
               '<div class="text-xs text-slate-500">' +
                 escapeHtml(b.studentGrade || '年级待填') + ' · ' + escapeHtml(b.subject || '学科待定') +
